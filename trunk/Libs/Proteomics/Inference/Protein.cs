@@ -1,4 +1,4 @@
-// $Id: Protein.cs 7 2011-03-10 02:07:46Z gorka $
+// $Id$
 // 
 // Protein.cs
 //  
