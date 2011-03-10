@@ -1,4 +1,4 @@
-// $Id: PreferencesDlg.cs 6 2011-03-09 21:08:42Z gorka $
+// $Id$
 // 
 // PreferencesDlg.cs
 //  

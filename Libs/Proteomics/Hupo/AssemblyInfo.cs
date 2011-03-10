@@ -1,4 +1,4 @@
-// $Id: AssemblyInfo.cs 5 2011-03-08 22:09:09Z gorka $
+// $Id$
 // 
 // AssemblyInfo.cs
 //  
