@@ -35,7 +35,7 @@ public partial class MainWindow : Gtk.Window {
 	private AboutDlg m_dlgAbout;
 	private Mapper m_Mapper;
 	private string m_LastDir;
-	private string m_Version = "PAnalyzer v0.7";
+	private string m_Version = "PAnalyzer v0.8";
 	private string m_License = "Released under the GNU General Public License";
 	private string m_Copyright = "(c) 2010-2011 by UPV/EHU";
 	private int m_nFiles;

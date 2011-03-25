@@ -135,11 +135,18 @@ public class Mapper {
 			string seq = element.GetAttribute("SEQUENCE").ToUpper();
 			Peptide f = new Peptide(id, seq);
 			f.Runs.Add( m_Run );
-			Protein p = m_SortedProteins[SortedAccession[pid]];
-			p.Peptides.Add( f );
-			f.Proteins.Add( p );
-			if( !p.Sequence.Contains(f.Sequence) )
-				throw new ApplicationException( "Inconsistent sequence data" );
+			Protein p = null;
+			try {
+				p = m_SortedProteins[SortedAccession[pid]];
+			} catch {
+				Console.WriteLine( "Peptide '" + id + "' references unknown protein '" + pid + "'" );
+			}
+			if( p != null ) {
+				p.Peptides.Add( f );
+				f.Proteins.Add( p );
+				if( !p.Sequence.Contains(f.Sequence) )
+					throw new ApplicationException( "Inconsistent sequence data" );
+			}
 			Peptides.Add( f );
 			if( UseScores )
 				SortedPeptides.Add(mid,f);
