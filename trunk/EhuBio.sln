@@ -1,0 +1,66 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Libs", "Libs", "{5B5CD0B8-82DE-4E59-90A4-6C588E4C85FA}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Database", "Database", "{95B72444-3A16-4354-81CD-9676AF0BE2D2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ebi", "Libs\Database\Ebi\Ebi.csproj", "{24FE7A85-8B58-4B38-B50B-C111DE9A7ADA}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Proteomics", "Proteomics", "{89FE3482-ED6E-4100-893A-C2454864E220}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hupo", "Libs\Proteomics\Hupo\Hupo.csproj", "{89969C87-0FB2-45E7-8B89-E76849528F00}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Inference", "Libs\Proteomics\Inference\Inference.csproj", "{D1CD7960-7D50-4225-A32B-B8A8F95F1ABB}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Apps", "Apps", "{1188D573-AFFC-4B64-BFE8-32FB1742D634}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PAnalyzer", "Apps\PAnalyzer\PAnalyzer.csproj", "{2FE6AFE1-CA36-4EDE-AEF3-2C5938E627A2}"
+EndProject
+Project("{9344bdbb-3e7f-41fc-a0dd-8665d75ee146}") = "Pkgs", "Pkgs\Pkgs.mdproj", "{F3072733-6FF0-4953-8169-9BCC6AED2233}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+		Debug|x86 = Debug|x86
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{24FE7A85-8B58-4B38-B50B-C111DE9A7ADA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{24FE7A85-8B58-4B38-B50B-C111DE9A7ADA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{24FE7A85-8B58-4B38-B50B-C111DE9A7ADA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{24FE7A85-8B58-4B38-B50B-C111DE9A7ADA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2FE6AFE1-CA36-4EDE-AEF3-2C5938E627A2}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{2FE6AFE1-CA36-4EDE-AEF3-2C5938E627A2}.Debug|Any CPU.Build.0 = Debug|x86
+		{2FE6AFE1-CA36-4EDE-AEF3-2C5938E627A2}.Debug|x86.ActiveCfg = Debug|x86
+		{2FE6AFE1-CA36-4EDE-AEF3-2C5938E627A2}.Debug|x86.Build.0 = Debug|x86
+		{2FE6AFE1-CA36-4EDE-AEF3-2C5938E627A2}.Release|Any CPU.ActiveCfg = Release|x86
+		{2FE6AFE1-CA36-4EDE-AEF3-2C5938E627A2}.Release|Any CPU.Build.0 = Release|x86
+		{2FE6AFE1-CA36-4EDE-AEF3-2C5938E627A2}.Release|x86.ActiveCfg = Release|x86
+		{2FE6AFE1-CA36-4EDE-AEF3-2C5938E627A2}.Release|x86.Build.0 = Release|x86
+		{89969C87-0FB2-45E7-8B89-E76849528F00}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{89969C87-0FB2-45E7-8B89-E76849528F00}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{89969C87-0FB2-45E7-8B89-E76849528F00}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{89969C87-0FB2-45E7-8B89-E76849528F00}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D1CD7960-7D50-4225-A32B-B8A8F95F1ABB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D1CD7960-7D50-4225-A32B-B8A8F95F1ABB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D1CD7960-7D50-4225-A32B-B8A8F95F1ABB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D1CD7960-7D50-4225-A32B-B8A8F95F1ABB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F3072733-6FF0-4953-8169-9BCC6AED2233}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F3072733-6FF0-4953-8169-9BCC6AED2233}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{F3072733-6FF0-4953-8169-9BCC6AED2233}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F3072733-6FF0-4953-8169-9BCC6AED2233}.Release|x86.ActiveCfg = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{95B72444-3A16-4354-81CD-9676AF0BE2D2} = {5B5CD0B8-82DE-4E59-90A4-6C588E4C85FA}
+		{89FE3482-ED6E-4100-893A-C2454864E220} = {5B5CD0B8-82DE-4E59-90A4-6C588E4C85FA}
+		{24FE7A85-8B58-4B38-B50B-C111DE9A7ADA} = {95B72444-3A16-4354-81CD-9676AF0BE2D2}
+		{89969C87-0FB2-45E7-8B89-E76849528F00} = {89FE3482-ED6E-4100-893A-C2454864E220}
+		{D1CD7960-7D50-4225-A32B-B8A8F95F1ABB} = {89FE3482-ED6E-4100-893A-C2454864E220}
+		{2FE6AFE1-CA36-4EDE-AEF3-2C5938E627A2} = {1188D573-AFFC-4B64-BFE8-32FB1742D634}
+	EndGlobalSection
+	GlobalSection(MonoDevelopProperties) = preSolution
+		StartupItem = Apps\PAnalyzer\PAnalyzer.csproj
+	EndGlobalSection
+EndGlobal

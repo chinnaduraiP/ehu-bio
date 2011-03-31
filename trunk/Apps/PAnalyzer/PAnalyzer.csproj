@@ -75,15 +75,27 @@
     <Compile Include="gtk-gui\AboutDlg.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
-  <ProjectExtensions>
-    <MonoDevelop>
-      <Properties InternalTargetFrameworkVersion="3.5" />
-    </MonoDevelop>
-  </ProjectExtensions>
   <ItemGroup>
     <ProjectReference Include="..\..\Libs\Proteomics\Inference\Inference.csproj">
       <Project>{D1CD7960-7D50-4225-A32B-B8A8F95F1ABB}</Project>
       <Name>Inference</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\Docs\PAnalyzer\SEPROT2011-EHU.vfinal.pdf">
+      <Gettext-ScanForTranslations>false</Gettext-ScanForTranslations>
+      <Link>SEPROT2011-EHU.vfinal.pdf</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\..\Docs\PAnalyzer\README.pdf">
+      <Gettext-ScanForTranslations>false</Gettext-ScanForTranslations>
+      <Link>README.pdf</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ProjectExtensions>
+    <MonoDevelop>
+      <Properties InternalTargetFrameworkVersion="3.5" />
+    </MonoDevelop>
+  </ProjectExtensions>
 </Project>
