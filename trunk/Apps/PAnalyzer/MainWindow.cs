@@ -35,7 +35,8 @@ public partial class MainWindow : Gtk.Window {
 	private AboutDlg m_dlgAbout;
 	private Mapper m_Mapper;
 	private string m_LastDir;
-	private string m_Version = "PAnalyzer v0.8";
+	private string m_Name = "PAnalyzer";
+	private string m_Version = "0.9";
 	private string m_License = "Released under the GNU General Public License";
 	private string m_Copyright = "(c) 2010-2011 by UPV/EHU";
 	private int m_nFiles;
@@ -80,7 +81,7 @@ public partial class MainWindow : Gtk.Window {
 		m_dlgPrefs.Hide();
 		
 		m_dlgAbout = new AboutDlg();
-		m_dlgAbout.Version = m_Version;
+		m_dlgAbout.Version = m_Name + " v" + m_Version;
 		m_dlgAbout.License = m_License;
 		m_dlgAbout.Copyright = m_Copyright;
 		m_dlgAbout.Hide();
@@ -95,7 +96,8 @@ public partial class MainWindow : Gtk.Window {
 		dialogInfoAction.Sensitive = true;
 		State = States.EMPTY;
 		
-		m_Mapper = new Mapper();
+		m_Mapper = new Mapper( m_Version );
+		m_Mapper.OnNotify += WriteLog;
 		
 		m_nFiles = 0;
 		m_bThresholds = false;
