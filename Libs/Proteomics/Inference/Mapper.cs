@@ -64,6 +64,18 @@ public class Mapper {
 		m_Format = new System.Globalization.NumberFormatInfo();
 		m_Format.NumberDecimalSeparator = ".";
 		m_Run = 0;
+		m_SWVersion = "0.0";
+		m_SWCustomizations = "No customizations";
+	}
+	
+	/// <summary>
+	/// Constructor for exporting to mzIdentML
+	/// </summary>
+	/// <param name="version">
+	/// A <see cref="System.String"/> with the current PAnalyzer version
+	/// </param>
+	public Mapper( string version ) : this() {
+		m_SWVersion = version;
 	}
 	
 	/// <summary>
@@ -93,6 +105,10 @@ public class Mapper {
 			Loadmzid( xmlpath );
 		else
 			LoadWaters( xmlpath, logpath );
+		
+		// Multirun not supported for mzIdentML output
+		if( merge && m_Run > 1 )
+			m_mzid = null;
 	}
 	
 	/// <summary>
@@ -139,7 +155,7 @@ public class Mapper {
 			try {
 				p = m_SortedProteins[SortedAccession[pid]];
 			} catch {
-				Console.WriteLine( "Peptide '" + id + "' references unknown protein '" + pid + "'" );
+				Notify( "Peptide '" + id + "' references unknown protein '" + pid + "'" );
 			}
 			if( p != null ) {
 				p.Peptides.Add( f );
@@ -291,14 +307,23 @@ public class Mapper {
 		// Previous file is required for including MS data
 		if( m_mzid == null )
 			return;
-		
+
 		// Header
 		//m_mzid.AddOntology( "PSI-MS", "Proteomics Standards Initiative Mass Spectrometry Vocabularies", "2.25.0",
-        //    "http://psidev.cvs.sourceforge.net/viewvc/*checkout*/psidev/psi/psi-ms/mzML/controlledVocabulary/psi-ms.obo" );
+        //	"http://psidev.cvs.sourceforge.net/viewvc/*checkout*/psidev/psi/psi-ms/mzML/controlledVocabulary/psi-ms.obo" );
+        foreach( PSIPIanalysissearchAnalysisSoftwareType sw in m_mzid.ListSW )
+        	if( sw.id == "PAnalyzer" ) {
+        		m_mzid.ListSW.Remove(sw);
+        		break;
+        	}
         m_mzid.AddAnalysisSoftware(
-            "PAnalyzer", "UPV/EHU Protein Inference", "0.1", "http://www.ehu.es", "UPV_EHU",
-            "MS:1001267", "software vendor", "PSI-MS",
-            "No customizations" );
+            "PAnalyzer", "UPV/EHU Protein Inference", m_SWVersion, "http://www.ehu.es", "UPV_EHU",
+            "MS:1001267", "software vendor", "PSI-MS", m_SWCustomizations );
+        foreach( FuGECommonAuditOrganizationType org in m_mzid.ListOrganizations )
+        	if( org.id == "UPV_EHU" ) {
+        		m_mzid.ListOrganizations.Remove( org );
+        		break;
+        	}
         m_mzid.AddOrganization( "UPV_EHU", "University of the Basque Country",
             "Barrio Sarriena s/n, 48940 Leioa, Spain", "+34 94 601 200", "secretariageneral@ehu.es" );
         if( org_id != null ) {
@@ -323,6 +348,11 @@ public class Mapper {
         		foreach( Protein p2 in p.Subset )
         			grp.ProteinDetectionHypothesis[i++] = BuildHypothesis( p2 );
         	}
+        	grp.cvParam = new FuGECommonOntologycvParamType[1];
+        	grp.cvParam[0] = new FuGECommonOntologycvParamType(
+        		"ProteomeDiscoverer:ProteinConfidenceCategory",
+        		"MS:1001673", "PSI-MS" );
+        	grp.cvParam[0].value = ParseConfidence( p.Evidence );
         	listGroup.Add( grp );
         }
         PSIPIanalysisprocessProteinDetectionListType analysis = new PSIPIanalysisprocessProteinDetectionListType();
@@ -332,6 +362,20 @@ public class Mapper {
         
         // Save
         m_mzid.Save( mzid );
+	}
+	
+	public string ParseConfidence( Protein.EvidenceType e ) {
+		switch( e ) {
+			case Protein.EvidenceType.Conclusive:
+				return "conclusive";
+			case Protein.EvidenceType.Group:
+				return "ambiguous group";
+			case Protein.EvidenceType.Indistinguishable:
+				return "indistinguishable";
+			case Protein.EvidenceType.NonConclusive:
+				return "non conclusive";
+		}
+		return e.ToString();
 	}
 	
 	/// <summary>
@@ -610,12 +654,29 @@ public class Mapper {
 		//m_Stats.MinProteins = m_Stats.Conclusive + m_Stats.Groups;
 	}
 	
+	private void Notify( string message ) {
+		if( OnNotify != null )
+			OnNotify( message );
+		else
+			Console.WriteLine( message );
+	}
+	
 	/// <summary>
 	/// Returns counts
 	/// </summary>
 	public StatsStruct Stats {
 		get { return m_Stats; }
 	}
+	
+	/// <summary>
+	/// Delegate used for sending messages from the lib to the app instead of using stdout
+	/// </summary>
+	public delegate void NotifyDelegate( string message );
+	
+	/// <summary>
+	/// Event used for sending messages from the lib to the app instead of using stdout
+	/// </summary>
+	public event NotifyDelegate OnNotify;
 	
 	/// <summary>
 	/// Protein list
@@ -633,6 +694,7 @@ public class Mapper {
 	private SortedList<string,Protein> m_SortedProteins;
 	private int m_RunsTh, m_Run;
 	private mzidFile m_mzid;
+	private string m_SWVersion, m_SWCustomizations;
 }
 
 } // namespace EhuBio.Proteomics.Inference

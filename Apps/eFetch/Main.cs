@@ -43,7 +43,8 @@ class MainClass {
 			req.id = id;
 			MessageEFetchResult res = eFetch.run_eFetch( req );
 			foreach( GBSeq seq in res.GBSet ) {
-				Console.WriteLine( '>' + id + '|' + db + '|' + seq.GBSeq_accessionversion + '|' + seq.GBSeq_definition );
+				//Console.WriteLine( ">lcl|" + id + "|gnl|" + db + '|' + seq.GBSeq_accessionversion + ' ' + seq.GBSeq_definition );
+				Console.WriteLine( ">gnl|" + db + '|' + seq.GBSeq_accessionversion + ' ' + seq.GBSeq_definition );
 				Console.WriteLine( seq.GBSeq_sequence + '\n' );
 			}
 		} catch( Exception e ) {
