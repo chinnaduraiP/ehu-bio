@@ -317,7 +317,7 @@ public class Mapper {
         		break;
         	}
         m_mzid.AddAnalysisSoftware(
-            "PAnalyzer", "UPV/EHU Protein Inference", m_SWVersion, "http://www.ehu.es", "UPV_EHU",
+            "PAnalyzer", "UPV/EHU Protein Inference", m_SWVersion, "http://code.google.com/p/ehu-bio/", "UPV_EHU",
             "MS:1001267", "software vendor", "PSI-MS", m_SWCustomizations );
         foreach( FuGECommonAuditOrganizationType org in m_mzid.ListOrganizations )
         	if( org.id == "UPV_EHU" ) {
