@@ -27,8 +27,35 @@ using System;
 namespace EhuBio.Database.Ehu {
 
 public class Fasta {
-	public Fasta() {
+	public enum Type { Protein, Nucleotide };
+	
+	public Fasta( Type type, string header, string sequence ) {
+		mType = type;
+		char[] spaces = { ' ', '\t', '\r', '\n' };
+		mHeader = header.Trim( spaces );
+		mSequence = sequence.Trim( spaces );
+		//Validate();
 	}
+	
+	public void Dump() {
+		Console.WriteLine( '>' + mHeader );
+		int lines = mSequence.Length / 80;
+		int i = 0;
+		for( ; i < lines; i++ )
+			Console.WriteLine( mSequence.Substring(i*80, 80) );
+		Console.WriteLine( mSequence.Substring(i*80) );
+	}
+	
+	public void Validate() {
+		throw new NotImplementedException();
+		/*if( mType == Fasta.Type.Protein ) {
+		} else {
+		}*/
+	}
+	
+	public string mHeader;
+	public string mSequence;
+	public Type mType;
 }
 
 }		// namespace EhuBio.Database.Ehu

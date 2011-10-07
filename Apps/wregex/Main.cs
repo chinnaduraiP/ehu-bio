@@ -23,6 +23,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using System;
+using EhuBio.Database.Ehu;
 
 namespace wregex {
 
@@ -31,7 +32,7 @@ class WregexConsole {
 		if( args.Length != 2 ) {
 			DisplayUsage();
 			return 1;
-		}
+		} 
 		
 		string RegexFile = args[0];
 		string FastaFile = args[1];
