@@ -24,6 +24,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using System;
 using System.IO;
+using System.Collections.Generic;
 using EhuBio.Database.Ehu;
 
 namespace wregex {
@@ -31,26 +32,59 @@ namespace wregex {
 public class WregexManager {
 	public WregexManager( string RegexFile, string FastaFile ) {
 		string line;
-		char[] spaces = { ' ', '\t', '\r', '\n' };
+		
+		// regex
 		TextReader rd = new StreamReader( RegexFile );
+		line = ReadUnixLine( rd );
+		if( line == null )
+			throw new ApplicationException( "Empty regex" );
+		rd.Close();
+		mRegexStr = line;
+		
+		// Fasta
+		List<Fasta> list = new List<Fasta>();
+		rd = new StreamReader( FastaFile );
+		string seq = "";
+		string header = ReadUnixLine( rd );
+		if( header == null || header[0] != '>' )
+			throw new ApplicationException( "FASTA header not found" );
 		do {
-			line = rd.ReadToEnd();
-			if( line == null )
-				break;
-			line = line.Trim( spaces );
-			if( line.Length == 0 || line[0] == '#' )
-				continue;
-			m_regex = line;
-			break;
-		} while( true );
+			line = ReadUnixLine( rd );
+			if( line == null || line[0] == '>' ) {
+				if( seq.Length == 0 )
+					throw new ApplicationException( "FASTA sequence not found" );
+				list.Add( new Fasta( Fasta.Type.Protein, header.Substring(1), seq) );
+				header = line;
+				seq = "";
+			} else
+				seq += line;
+		} while( line != null );
+		mSeqs = list.ToArray();
 	}
 	
 	public void Dump() {
-		Console.WriteLine( "regex: " + (m_regex == null ? "<empty>" : m_regex) );
+		Console.WriteLine( "regex: " + (mRegexStr == null ? "<empty>" : mRegexStr) );
+		foreach( Fasta seq in mSeqs )
+			seq.Dump();
 	}
 	
-	protected string m_regex;
-	protected Fasta[] m_seqs;
+	private string ReadUnixLine( TextReader rd ) {
+		string line;
+		char[] spaces = { ' ', '\t', '\r', '\n' };
+		
+		while( rd.Peek() >= 0 ) {
+			line = rd.ReadLine();
+			line = line.Trim( spaces );
+			if( line.Length == 0 || line[0] == '#' )
+				continue;
+			return line;
+		};
+		
+		return null;
+	}
+	
+	protected string mRegexStr;
+	protected Fasta[] mSeqs;
 }
 
 }	// namespace wregex
