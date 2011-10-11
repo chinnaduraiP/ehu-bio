@@ -25,66 +25,49 @@
 using System;
 using System.IO;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using EhuBio.Database.Ehu;
 
 namespace wregex {
 
+public struct WregexResult {
+	public string Match;
+	public int Index;
+	public int Length;
+	public List<string> Groups;
+	public double Score;	
+}
+
 public class WregexManager {
-	public WregexManager( string RegexFile, string FastaFile ) {
-		string line;
-		
-		// regex
-		TextReader rd = new StreamReader( RegexFile );
-		line = ReadUnixLine( rd );
-		if( line == null )
-			throw new ApplicationException( "Empty regex" );
-		rd.Close();
-		mRegexStr = line;
-		
-		// Fasta
-		List<Fasta> list = new List<Fasta>();
-		rd = new StreamReader( FastaFile );
-		string seq = "";
-		string header = ReadUnixLine( rd );
-		if( header == null || header[0] != '>' )
-			throw new ApplicationException( "FASTA header not found" );
-		do {
-			line = ReadUnixLine( rd );
-			if( line == null || line[0] == '>' ) {
-				if( seq.Length == 0 )
-					throw new ApplicationException( "FASTA sequence not found" );
-				list.Add( new Fasta( Fasta.Type.Protein, header.Substring(1), seq) );
-				header = line;
-				seq = "";
-			} else
-				seq += line;
-		} while( line != null );
-		mSeqs = list.ToArray();
+	public WregexManager( string RegexStr ) {
+		mRegex = new Regex( RegexStr, RegexOptions.IgnoreCase | RegexOptions.ECMAScript | RegexOptions.Multiline | RegexOptions.Compiled );
 	}
 	
-	public void Dump() {
-		Console.WriteLine( "regex: " + (mRegexStr == null ? "<empty>" : mRegexStr) );
-		foreach( Fasta seq in mSeqs )
-			seq.Dump();
+	public override string ToString() {
+		return mRegex == null ? "" : mRegex.ToString();
 	}
 	
-	private string ReadUnixLine( TextReader rd ) {
-		string line;
-		char[] spaces = { ' ', '\t', '\r', '\n' };
+	public List<WregexResult> Search( string seq ) {
+		MatchCollection Matches = mRegex.Matches(seq);
+		if( Matches.Count == 0 )
+			return null;
 		
-		while( rd.Peek() >= 0 ) {
-			line = rd.ReadLine();
-			line = line.Trim( spaces );
-			if( line.Length == 0 || line[0] == '#' )
-				continue;
-			return line;
-		};
-		
-		return null;
+		List<WregexResult> results = new List<WregexResult>();
+		WregexResult result;
+		foreach( Match m in Matches ) {
+			result = new WregexResult();
+			result.Groups = new List<string>();
+			result.Match = m.Value;
+			result.Index = m.Index;
+			result.Length = m.Length;
+			for( int i = 1; i < m.Groups.Count; i++ )
+				result.Groups.Add( m.Groups[i].Value );
+			results.Add( result );
+		}
+		return results;
 	}
 	
-	protected string mRegexStr;
-	protected Fasta[] mSeqs;
+	protected Regex mRegex;
 }
 
 }	// namespace wregex

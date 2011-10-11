@@ -23,6 +23,8 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using System;
+using System.IO;
+using System.Collections.Generic;
 using EhuBio.Database.Ehu;
 
 namespace wregex {
@@ -37,8 +39,10 @@ class WregexConsole {
 		string RegexFile = args[0];
 		string FastaFile = args[1];
 		
-		WregexManager wrx = new WregexManager( RegexFile, FastaFile );
-		wrx.Dump();
+		WregexConsole app = new WregexConsole();
+		app.LoadData( RegexFile, FastaFile );
+		//app.Dump();
+		app.Run();
 		
 		return 0;
 	}
@@ -47,6 +51,82 @@ class WregexConsole {
 		Console.WriteLine( "Usage:" );
 		Console.WriteLine( "\twregex <regex_file> <fasta_file>" );
 	}
+	
+	private static string ReadUnixLine( TextReader rd ) {
+		string line;
+		char[] spaces = { ' ', '\t', '\r', '\n' };
+		
+		while( rd.Peek() >= 0 ) {
+			line = rd.ReadLine();
+			line = line.Trim( spaces );
+			if( line.Length == 0 || line[0] == '#' )
+				continue;
+			return line;
+		};
+		
+		return null;
+	}
+	
+	private void LoadData( string RegexFile, string FastaFile ) {
+		string line;
+		
+		// regex
+		TextReader rd = new StreamReader( RegexFile );
+		line = ReadUnixLine( rd );
+		if( line == null )
+			throw new ApplicationException( "Empty regex" );
+		rd.Close();
+		mRegex = new WregexManager( line );
+		
+		// Fasta
+		mSeqs = new List<Fasta>();
+		rd = new StreamReader( FastaFile );
+		string seq = "";
+		string header = ReadUnixLine( rd );
+		if( header == null || header[0] != '>' )
+			throw new ApplicationException( "FASTA header not found" );
+		do {
+			line = ReadUnixLine( rd );
+			if( line == null || line[0] == '>' ) {
+				if( seq.Length == 0 )
+					throw new ApplicationException( "FASTA sequence not found" );
+				mSeqs.Add( new Fasta( Fasta.Type.Protein, header.Substring(1), seq) );
+				header = line;
+				seq = "";
+			} else
+				seq += line;
+		} while( line != null );
+	}
+	
+	public void Dump() {
+		Console.WriteLine( "regex: " + (mRegex == null ? "<empty>" : mRegex.ToString()) );
+		foreach( Fasta seq in mSeqs )
+			seq.Dump();
+	}
+	
+	public void Run() {
+		Console.WriteLine( "Searching with '" + mRegex + "' ...\n" );
+		List<WregexResult> results;
+		foreach( Fasta seq in mSeqs ) {
+			results = mRegex.Search( seq.mSequence );
+			if( results == null )
+				continue;
+			//Console.WriteLine( seq.mSequence );
+			seq.Dump();
+			foreach( WregexResult result in results ) {
+				Console.Write( "* Match!! -> " + result.Match +
+					" (" + result.Index + ".." + (result.Index+result.Length-1) + ") -> " +
+					result.Groups[0] );
+				for( int i = 1; i < result.Groups.Count; i++ )
+					Console.Write( '-' + result.Groups[i] );
+				Console.WriteLine();
+			}
+			Console.WriteLine();
+		}
+	}
+	
+	private WregexManager mRegex;
+	private List<Fasta> mSeqs;
 }
 
 }	// namespace wregex
