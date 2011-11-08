@@ -31,6 +31,7 @@ using EhuBio.Database.Ehu;
 namespace wregex {
 
 public struct WregexResult {
+	public string Id;
 	public string Match;
 	public int Index;
 	public int Length;
@@ -47,15 +48,16 @@ public class WregexManager {
 		return mRegex == null ? "" : mRegex.ToString();
 	}
 	
-	public List<WregexResult> Search( string seq ) {
-		MatchCollection Matches = mRegex.Matches(seq);
-		if( Matches.Count == 0 )
+	public List<WregexResult> Search( string seq, string id ) {
+		Match m = mRegex.Match(seq);
+		if( !m.Success )
 			return null;
 		
 		List<WregexResult> results = new List<WregexResult>();
 		WregexResult result;
-		foreach( Match m in Matches ) {
+		do {
 			result = new WregexResult();
+			result.Id = id + "@" + m.Index;
 			result.Groups = new List<string>();
 			result.Match = m.Value;
 			result.Index = m.Index;
@@ -63,7 +65,8 @@ public class WregexManager {
 			for( int i = 1; i < m.Groups.Count; i++ )
 				result.Groups.Add( m.Groups[i].Value );
 			results.Add( result );
-		}
+			m = mRegex.Match( seq, result.Index + 1 );
+		} while( m.Success );
 		return results;
 	}
 	
