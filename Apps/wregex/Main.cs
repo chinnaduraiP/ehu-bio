@@ -96,37 +96,86 @@ class WregexConsole {
 			} else
 				seq += line;
 		} while( line != null );
+		
+		mDataId = Path.GetFileNameWithoutExtension( FastaFile );
 	}
 	
-	public void Dump() {
+	private void Dump() {
 		Console.WriteLine( "regex: " + (mRegex == null ? "<empty>" : mRegex.ToString()) );
 		foreach( Fasta seq in mSeqs )
 			seq.Dump();
 	}
 	
-	public void Run() {
+	private void Run() {
+		List<WregexResult> results = GetResults();
+		WriteAln( results );
+	}
+	
+	private List<WregexResult> GetResults() {
+		List<WregexResult> results = new List<WregexResult>();
+		List<WregexResult> tmp_results;
+		char[] sep = new char[]{ ' ' };
+		
 		Console.WriteLine( "Searching with '" + mRegex + "' ...\n" );
-		List<WregexResult> results;
 		foreach( Fasta seq in mSeqs ) {
-			results = mRegex.Search( seq.mSequence );
-			if( results == null )
+			tmp_results = mRegex.Search( seq.mSequence, seq.mHeader.Split(sep)[0] );
+			if( tmp_results == null )
 				continue;
-			//Console.WriteLine( seq.mSequence );
 			seq.Dump();
-			foreach( WregexResult result in results ) {
+			foreach( WregexResult result in tmp_results ) {
+				results.Add( result );
 				Console.Write( "* Match!! -> " + result.Match +
 					" (" + result.Index + ".." + (result.Index+result.Length-1) + ") -> " +
 					result.Groups[0] );
 				for( int i = 1; i < result.Groups.Count; i++ )
-					Console.Write( '-' + result.Groups[i] );
+					Console.Write( "-" + result.Groups[i] );
 				Console.WriteLine();
 			}
 			Console.WriteLine();
 		}
+		
+		return results;
+	}
+	
+	private void WriteAln( List<WregexResult> results ) {
+		int count = results[0].Groups.Count+1;
+		int[] gsizes = new int[count];
+		int i, j, gsize;
+		
+		// Calculate lengths for further alignment
+		for( i = 0; i < count; i++ )
+			gsizes[i] = 0;
+		foreach( WregexResult result in results ) {
+			gsize = result.Id.Length;
+			if( gsize > gsizes[0] )
+				gsizes[0] = gsize;
+			for( i = 1; i < count; i++ ) {
+				gsize = result.Groups[i-1].Length;
+				if( gsizes[i] < gsize )
+					gsizes[i] = gsize;
+			}
+		}
+		
+		TextWriter wr = new StreamWriter( mDataId + ".aln", false );
+		wr.WriteLine( "CLUSTAL 2.1 multiple sequence alignment (by WREGEX)\n\n" );
+		foreach( WregexResult result in results ) {
+			wr.Write( result.Id );
+			for( j = result.Id.Length; j < gsizes[0]+4; j++ )
+				wr.Write( ' ' );
+			for( i = 1; i < count; i++ ) {
+				wr.Write( result.Groups[i-1] );
+				for( j = result.Groups[i-1].Length; j < gsizes[i]; j++ )
+					wr.Write( '-' );
+			}
+			wr.WriteLine();
+		}
+		wr.WriteLine();
+		wr.Close();
 	}
 	
 	private WregexManager mRegex;
 	private List<Fasta> mSeqs;
+	private string mDataId;
 }
 
 }	// namespace wregex
