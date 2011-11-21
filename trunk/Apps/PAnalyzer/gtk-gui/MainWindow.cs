@@ -4,57 +4,32 @@
 public partial class MainWindow
 {
 	private global::Gtk.UIManager UIManager;
-
 	private global::Gtk.Action CargarAction;
-
 	private global::Gtk.Action openAction;
-
 	private global::Gtk.Action saveAction;
-
 	private global::Gtk.Action openAction1;
-
 	private global::Gtk.Action saveAction1;
-
 	private global::Gtk.Action dialogInfoAction;
-
 	private global::Gtk.Action executeAction;
-
 	private global::Gtk.VBox vbox1;
-
 	private global::Gtk.Toolbar toolbar2;
-
 	private global::Gtk.Notebook Tabs;
-
 	private global::Gtk.ScrolledWindow GtkScrolledWindow;
-
 	private global::Gtk.TextView m_Log;
-
 	private global::Gtk.Label label2;
-
 	private global::Gtk.VPaned vpaned1;
-
 	private global::Gtk.ScrolledWindow GtkScrolledWindow2;
-
 	private global::Gtk.NodeView PeptidesView;
-
 	private global::Gtk.ScrolledWindow GtkScrolledWindow5;
-
 	private global::Gtk.TextView textviewFrag;
-
 	private global::Gtk.Label peptides;
-
 	private global::Gtk.VPaned vpaned2;
-
 	private global::Gtk.ScrolledWindow GtkScrolledWindow3;
-
 	private global::Gtk.NodeView ProteinsView;
-
 	private global::Gtk.ScrolledWindow GtkScrolledWindow4;
-
 	private global::Gtk.TextView textviewProt;
-
 	private global::Gtk.Label Proteins;
-
+    
 	protected virtual void Build ()
 	{
 		global::Stetic.Gui.Initialize (this);
@@ -95,7 +70,7 @@ public partial class MainWindow
 		this.toolbar2.ShowArrow = false;
 		this.toolbar2.ToolbarStyle = ((global::Gtk.ToolbarStyle)(2));
 		this.vbox1.Add (this.toolbar2);
-		global::Gtk.Box.BoxChild w2 = ((global::Gtk.Box.BoxChild)(this.vbox1[this.toolbar2]));
+		global::Gtk.Box.BoxChild w2 = ((global::Gtk.Box.BoxChild)(this.vbox1 [this.toolbar2]));
 		w2.Position = 0;
 		w2.Expand = false;
 		w2.Fill = false;
@@ -137,7 +112,7 @@ public partial class MainWindow
 		this.PeptidesView.Name = "PeptidesView";
 		this.GtkScrolledWindow2.Add (this.PeptidesView);
 		this.vpaned1.Add (this.GtkScrolledWindow2);
-		global::Gtk.Paned.PanedChild w6 = ((global::Gtk.Paned.PanedChild)(this.vpaned1[this.GtkScrolledWindow2]));
+		global::Gtk.Paned.PanedChild w6 = ((global::Gtk.Paned.PanedChild)(this.vpaned1 [this.GtkScrolledWindow2]));
 		w6.Resize = false;
 		// Container child vpaned1.Gtk.Paned+PanedChild
 		this.GtkScrolledWindow5 = new global::Gtk.ScrolledWindow ();
@@ -152,7 +127,7 @@ public partial class MainWindow
 		this.GtkScrolledWindow5.Add (this.textviewFrag);
 		this.vpaned1.Add (this.GtkScrolledWindow5);
 		this.Tabs.Add (this.vpaned1);
-		global::Gtk.Notebook.NotebookChild w9 = ((global::Gtk.Notebook.NotebookChild)(this.Tabs[this.vpaned1]));
+		global::Gtk.Notebook.NotebookChild w9 = ((global::Gtk.Notebook.NotebookChild)(this.Tabs [this.vpaned1]));
 		w9.Position = 1;
 		// Notebook tab
 		this.peptides = new global::Gtk.Label ();
@@ -175,7 +150,7 @@ public partial class MainWindow
 		this.ProteinsView.Name = "ProteinsView";
 		this.GtkScrolledWindow3.Add (this.ProteinsView);
 		this.vpaned2.Add (this.GtkScrolledWindow3);
-		global::Gtk.Paned.PanedChild w11 = ((global::Gtk.Paned.PanedChild)(this.vpaned2[this.GtkScrolledWindow3]));
+		global::Gtk.Paned.PanedChild w11 = ((global::Gtk.Paned.PanedChild)(this.vpaned2 [this.GtkScrolledWindow3]));
 		w11.Resize = false;
 		// Container child vpaned2.Gtk.Paned+PanedChild
 		this.GtkScrolledWindow4 = new global::Gtk.ScrolledWindow ();
@@ -190,7 +165,7 @@ public partial class MainWindow
 		this.GtkScrolledWindow4.Add (this.textviewProt);
 		this.vpaned2.Add (this.GtkScrolledWindow4);
 		this.Tabs.Add (this.vpaned2);
-		global::Gtk.Notebook.NotebookChild w14 = ((global::Gtk.Notebook.NotebookChild)(this.Tabs[this.vpaned2]));
+		global::Gtk.Notebook.NotebookChild w14 = ((global::Gtk.Notebook.NotebookChild)(this.Tabs [this.vpaned2]));
 		w14.Position = 2;
 		// Notebook tab
 		this.Proteins = new global::Gtk.Label ();
@@ -199,7 +174,7 @@ public partial class MainWindow
 		this.Tabs.SetTabLabel (this.vpaned2, this.Proteins);
 		this.Proteins.ShowAll ();
 		this.vbox1.Add (this.Tabs);
-		global::Gtk.Box.BoxChild w15 = ((global::Gtk.Box.BoxChild)(this.vbox1[this.Tabs]));
+		global::Gtk.Box.BoxChild w15 = ((global::Gtk.Box.BoxChild)(this.vbox1 [this.Tabs]));
 		w15.Position = 1;
 		this.Add (this.vbox1);
 		if ((this.Child != null)) {
