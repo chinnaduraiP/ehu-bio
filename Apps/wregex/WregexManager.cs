@@ -36,12 +36,26 @@ public struct WregexResult {
 	public int Index;
 	public int Length;
 	public List<string> Groups;
-	public double Score;	
+	public double Score;
+	
+	public override string ToString(){
+		string str;
+		str = Id + " " + Groups[0];
+		for( int i = 1; i < Groups.Count; i++ )
+			str += "-" + Groups[i];
+		str += " score=" + Score;
+		return str;
+	}
 }
 
 public class WregexManager {
 	public WregexManager( string RegexStr ) {
 		mRegex = new Regex( RegexStr, RegexOptions.IgnoreCase | RegexOptions.ECMAScript | RegexOptions.Multiline | RegexOptions.Compiled );
+		mPssm = null;
+	}
+	
+	public WregexManager( string RegexStr, PSSM pssm ) : this( RegexStr ) {
+		mPssm = pssm;
 	}
 	
 	public override string ToString() {
@@ -64,6 +78,7 @@ public class WregexManager {
 			result.Length = m.Length;
 			for( int i = 1; i < m.Groups.Count; i++ )
 				result.Groups.Add( m.Groups[i].Value );
+			result.Score = mPssm != null ? mPssm.GetScore(result) : 0.0;
 			results.Add( result );
 			m = mRegex.Match( seq, result.Index + 1 );
 		} while( m.Success );
@@ -71,6 +86,7 @@ public class WregexManager {
 	}
 	
 	protected Regex mRegex;
+	protected PSSM mPssm;
 }
 
 }	// namespace wregex

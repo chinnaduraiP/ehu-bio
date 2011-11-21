@@ -25,22 +25,34 @@
 using System;
 using System.IO;
 using System.Collections.Generic;
+using System.Threading;
 using EhuBio.Database.Ehu;
 
 namespace wregex {
 
 class WregexConsole {
 	public static int Main( string[] args ) {
-		if( args.Length != 2 ) {
+		if( args.Length < 2 || args.Length > 3 ) {
 			DisplayUsage();
 			return 1;
 		} 
 		
 		string RegexFile = args[0];
-		string FastaFile = args[1];
+		string PssmFile;
+		string FastaFile;
+		if( args.Length == 3 ) {
+			PssmFile = args[1];
+			FastaFile = args[2];
+		} else {
+			PssmFile = "";
+			FastaFile = args[1];
+		}
+		
+		// Use '.' as decimal separator
+        Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo( "en-US", false );
 		
 		WregexConsole app = new WregexConsole();
-		app.LoadData( RegexFile, FastaFile );
+		app.LoadData( RegexFile, PssmFile, FastaFile );
 		//app.Dump();
 		app.Run();
 		
@@ -49,44 +61,32 @@ class WregexConsole {
 	
 	public static void DisplayUsage() {
 		Console.WriteLine( "Usage:" );
-		Console.WriteLine( "\twregex <regex_file> <fasta_file>" );
+		Console.WriteLine( "\twregex <regex_file> [<pssm_file>] <fasta_file>" );
 	}
 	
-	private static string ReadUnixLine( TextReader rd ) {
+	private void LoadData( string RegexFile, string PssmFile, string FastaFile ) {
 		string line;
-		char[] spaces = { ' ', '\t', '\r', '\n' };
-		
-		while( rd.Peek() >= 0 ) {
-			line = rd.ReadLine();
-			line = line.Trim( spaces );
-			if( line.Length == 0 || line[0] == '#' )
-				continue;
-			return line;
-		};
-		
-		return null;
-	}
-	
-	private void LoadData( string RegexFile, string FastaFile ) {
-		string line;
-		
+				
 		// regex
-		TextReader rd = new StreamReader( RegexFile );
-		line = ReadUnixLine( rd );
+		UnixCfg rd = new UnixCfg( RegexFile );
+		line = rd.ReadUnixLine();
 		if( line == null )
 			throw new ApplicationException( "Empty regex" );
 		rd.Close();
-		mRegex = new WregexManager( line );
+		if( PssmFile.Length > 0 )
+			mRegex = new WregexManager( line, new PSSM(PssmFile) );
+		else
+			mRegex = new WregexManager( line );
 		
 		// Fasta
 		mSeqs = new List<Fasta>();
-		rd = new StreamReader( FastaFile );
+		rd = new UnixCfg( FastaFile );
 		string seq = "";
-		string header = ReadUnixLine( rd );
+		string header = rd.ReadUnixLine();
 		if( header == null || header[0] != '>' )
 			throw new ApplicationException( "FASTA header not found" );
 		do {
-			line = ReadUnixLine( rd );
+			line = rd.ReadUnixLine();
 			if( line == null || line[0] == '>' ) {
 				if( seq.Length == 0 )
 					throw new ApplicationException( "FASTA sequence not found" );
@@ -96,6 +96,7 @@ class WregexConsole {
 			} else
 				seq += line;
 		} while( line != null );
+		rd.Close();
 		
 		mDataId = Path.GetFileNameWithoutExtension( FastaFile );
 	}
@@ -109,6 +110,7 @@ class WregexConsole {
 	private void Run() {
 		List<WregexResult> results = GetResults();
 		WriteAln( results );
+		ShowResults( results );
 	}
 	
 	private List<WregexResult> GetResults() {
@@ -124,15 +126,20 @@ class WregexConsole {
 			seq.Dump();
 			foreach( WregexResult result in tmp_results ) {
 				results.Add( result );
-				Console.Write( "* Match!! -> " + result.Match +
+				Console.WriteLine( "* Match!! -> " + result.Match +
 					" (" + result.Index + ".." + (result.Index+result.Length-1) + ") -> " +
-					result.Groups[0] );
-				for( int i = 1; i < result.Groups.Count; i++ )
-					Console.Write( "-" + result.Groups[i] );
-				Console.WriteLine();
+					result.ToString() );
 			}
 			Console.WriteLine();
 		}
+		
+		results.Sort(delegate(WregexResult r1, WregexResult r2) {
+			if( r1.Score > r2.Score )
+				return -1;
+			if( r1.Score < r2.Score )
+				return 1;
+			return 0;
+		});
 		
 		return results;
 	}
@@ -171,6 +178,12 @@ class WregexConsole {
 		}
 		wr.WriteLine();
 		wr.Close();
+	}
+	
+	private void ShowResults( List<WregexResult> results ) {
+		foreach( WregexResult res in results ) {
+			Console.WriteLine( res.ToString() );
+		}
 	}
 	
 	private WregexManager mRegex;
