@@ -113,6 +113,10 @@ public class AminoAcid {
 			mLUT[aa.Letter - 'A'] = aa;
 	}
 	
+	public override string ToString() {
+		return Letter.ToString();
+	}
+	
 	public static readonly AminoAcid Alanine = new AminoAcid("Alanine",'A',"Ala",89.09404,6.01,2.35,9.87,-1.00,true,false,0,true,true,false,false);
 	public static readonly AminoAcid Cysteine = new AminoAcid("Cysteine",'C',"Cys",121.15404,5.05,1.92,10.70,8.18,false,false,0,true,false,false,false);
 	public static readonly AminoAcid Aspartic = new AminoAcid("Aspartic acid",'D',"Asp",133.10384,2.85,1.99,9.90,3.90,false,true,-1,true,false,false,false);

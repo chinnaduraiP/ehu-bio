@@ -47,7 +47,7 @@ public class PSSM {
 		Load( filename );
 	}
 	
-	public void Load( string filename ) {
+	/*public void Load( string filename ) {
 		UnixCfg rd = new UnixCfg( filename );
 		string line = rd.ReadUnixLine();
 		char[] sep = new char[]{ ':' };
@@ -71,6 +71,37 @@ public class PSSM {
 			m_pssm.Add( pos );
 		}
 		rd.Close();
+	}*/
+	
+	public void Load( string filename ) {
+		UnixCfg rd = new UnixCfg( filename );
+		char[] sep = new char[]{ ' ', '\t' };
+		string[] fields;
+		PSSMentry entry;
+		
+		string line = rd.ReadUnixLine();
+		if( line == null ) {
+			rd.Close();
+			return;
+		}
+		fields = line.Split( sep );
+		PSSMposition[] pos = new PSSMposition[fields.Length-1];
+		for( uint i = 0; i < pos.Length; i++ ) {
+			pos[i].order = i;
+			pos[i].entries = new List<PSSMentry>();
+		}
+		do {
+			fields = line.Split( sep );
+			entry.condition = fields[0].Trim();
+			for( uint i = 0; i < pos.Length; i++ ) {
+				entry.score = double.Parse( fields[i+1] );
+				pos[i].entries.Add( entry );
+			}
+			line = rd.ReadUnixLine();
+		} while( line != null );
+		rd.Close();
+		
+		m_pssm.AddRange( pos );
 	}
 	
 	public double GetScore( WregexResult w ) {
@@ -89,10 +120,10 @@ public class PSSM {
 			//Console.WriteLine( "DEBUG: " + w.Groups[i] + ", " + w.Groups[i].Length );
 			len = w.Groups[i].Length;
 			for( k = 0; k < len; k++ )
-				score += GetScore(m_pssm[j], AminoAcid.Get((w.Groups[i])[k]))/len;
+				score += GetScore(m_pssm[j], AminoAcid.Get((w.Groups[i])[k]));///len;
 		}
 			
-		return score;
+		return Math.Pow(10,score/w.Match.Length)*100;
 	}
 	
 	private double GetScore( PSSMposition pos, AminoAcid aa ) {
