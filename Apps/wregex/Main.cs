@@ -109,6 +109,10 @@ class WregexConsole {
 	
 	private void Run() {
 		List<WregexResult> results = GetResults();
+		if( results.Count == 0 ) {
+			Console.WriteLine( "No matches found, please consider reviewing the regex" );
+			return;
+		}
 		WriteAln( results );
 		ShowResults( results );
 	}
