@@ -98,7 +98,7 @@ class WregexConsole {
 		} while( line != null );
 		rd.Close();
 		
-		mDataId = Path.GetFileNameWithoutExtension( FastaFile );
+		mDataId = Path.GetFileNameWithoutExtension( RegexFile );
 	}
 	
 	private void Dump() {
@@ -114,6 +114,7 @@ class WregexConsole {
 			return;
 		}
 		WriteAln( results );
+		WriteCsv( results );
 		ShowResults( results );
 	}
 	
@@ -181,6 +182,15 @@ class WregexConsole {
 			wr.WriteLine();
 		}
 		wr.WriteLine();
+		wr.Close();
+	}
+	
+	private void WriteCsv( List<WregexResult> results ) {
+		TextWriter wr = new StreamWriter( mDataId + ".csv", false );
+		wr.WriteLine( "ID,Entry,Pos,Combinations,Sequence,Alignment,Score" );
+		foreach( WregexResult result in results )
+			wr.WriteLine( result.Id + "," + result.Entry + "," + result.Position + "," + result.Combinations
+				+ "," + result.Match + "," + result.Alignment + "," + result.Score );
 		wr.Close();
 	}
 	

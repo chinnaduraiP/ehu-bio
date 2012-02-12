@@ -32,19 +32,24 @@ namespace wregex {
 
 public struct WregexResult {
 	public string Id;
+	public string Entry;
+	public int Position;
+	public int Combinations;
 	public string Match;
 	public int Index;
 	public int Length;
 	public List<string> Groups;
 	public double Score;
-	
+	public string Alignment {
+		get {
+			string str = Groups[0];
+			for( int i = 1; i < Groups.Count; i++ )
+				str += "-" + Groups[i];
+			return str;
+		}
+	}
 	public override string ToString(){
-		string str;
-		str = Id + " " + Groups[0];
-		for( int i = 1; i < Groups.Count; i++ )
-			str += "-" + Groups[i];
-		str += " score=" + Score;
-		return str;
+		return Id + " (x" + Combinations + ") " + Alignment + " score=" + Score;
 	}
 }
 
@@ -72,6 +77,9 @@ public class WregexManager {
 		do {
 			result = new WregexResult();
 			result.Id = id + "@" + m.Index;
+			result.Entry = id;
+			result.Position = m.Index;
+			result.Combinations = 1;
 			result.Groups = new List<string>();
 			result.Match = m.Value;
 			result.Index = m.Index;
@@ -82,6 +90,31 @@ public class WregexManager {
 			results.Add( result );
 			m = mRegex.Match( seq, result.Index + 1 );
 		} while( m.Success );
+		
+		return Filter(results);
+	}
+	
+	private List<WregexResult> Filter( List<WregexResult> data ) {
+		List<WregexResult> results = new List<WregexResult>();
+		WregexResult result;
+		int i, j, tmp;
+		
+		for( i = 0; i < data.Count; i++ ) {
+			for( j = 0; j < results.Count; j++ )
+				if( results[j].Entry == data[i].Entry && Math.Abs(results[j].Position-data[i].Position) < results[j].Length )
+					break;
+			if( j < results.Count ) {	// Overlap detected
+				if( data[i].Score > results[j].Score ) {
+					tmp = results[j].Combinations + 1;
+					results.RemoveAt( j );
+					result = data[i];
+					result.Combinations = tmp;
+					results.Add( result );
+				}
+			} else
+				results.Add( data[i] );
+		}
+		
 		return results;
 	}
 	
