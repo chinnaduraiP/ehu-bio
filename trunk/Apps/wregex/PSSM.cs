@@ -45,6 +45,7 @@ public class PSSM {
 	
 	public PSSM( string filename ) : this() {
 		Load( filename );
+		Normalize();
 	}
 	
 	/*public void Load( string filename ) {
@@ -102,6 +103,24 @@ public class PSSM {
 		rd.Close();
 		
 		m_pssm.AddRange( pos );
+	}
+	
+	public void Normalize() {
+		int i, j;
+		double max;
+		PSSMentry tmp;
+		
+		for( i = 0; i < m_pssm.Count; i++ ) {
+			max = m_pssm[i].entries[0].score;
+			for( j = 1; j < m_pssm[i].entries.Count; j++ )
+				if( max < m_pssm[i].entries[j].score )
+					max = m_pssm[i].entries[j].score;
+			for( j = 0; j < m_pssm[i].entries.Count; j++ ) {
+				tmp = m_pssm[i].entries[j];
+				tmp.score -= max;
+				m_pssm[i].entries[j] = tmp;
+			}
+		}
 	}
 	
 	public double GetScore( WregexResult w ) {

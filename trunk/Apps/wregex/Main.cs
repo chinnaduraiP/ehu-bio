@@ -98,7 +98,7 @@ class WregexConsole {
 		} while( line != null );
 		rd.Close();
 		
-		mDataId = Path.GetFileNameWithoutExtension( RegexFile );
+		mDataId = Path.GetFileNameWithoutExtension( FastaFile );
 	}
 	
 	private void Dump() {
