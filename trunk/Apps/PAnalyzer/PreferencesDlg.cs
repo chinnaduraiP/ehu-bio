@@ -44,8 +44,17 @@ public partial class PreferencesDlg : Gtk.Dialog {
 		set { ThCombo.Active = (int)value; }
 	}
 	
-	public Mapper.MultiRunMode Mode {
-		get { return (Mapper.MultiRunMode)MultirunCombo.Active; }
-		set { MultirunCombo.Active = (int)value; }
+	public int Runs {
+		set {
+			for( int i = 0; i < 10; i++ )
+				MultirunCombo.RemoveText(0);
+			//MultirunCombo = Gtk.ComboBox.NewText();
+			for( int i = 1; i <= value; i++ )
+				MultirunCombo.AppendText( i.ToString() );
+			MultirunCombo.Active = 0;
+		}
+		get {
+			return MultirunCombo.Active+1;
+		}
 	}
 }

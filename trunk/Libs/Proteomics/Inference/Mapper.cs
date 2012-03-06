@@ -48,11 +48,6 @@ public class Mapper {
 		public int IGroups, Indistinguisable;
 		public int Filtered;
 	}
-	
-	/// <summary>
-	/// Approaches for using peptides from different runs
-	/// </summary>
-	public enum MultiRunMode { VOTE, MERGE };
 
 	/// <summary>
 	/// Default constructor
@@ -407,12 +402,12 @@ public class Mapper {
 	/// A <see cref="Peptide.ConfidenceType"/> indicating a threshold for peptide filtering
 	/// </param>
 	/// <param name="mode">
-	/// A <see cref="MultiRunMode"/> indicating how to merge peptides from different runs
+	/// A <see cref="int"/> indicating in how runs a peptide must be found for beeing considered as valid
 	/// </param>
-	public void Do( Peptide.ConfidenceType th, MultiRunMode mode ) {
-		m_RunsTh = m_Run/2+1;
+	public void Do( Peptide.ConfidenceType th, int runs ) {
+		m_RunsTh = runs;
 		m_Run = 0;
-		FilterPeptides( th, mode );
+		FilterPeptides( th );
 		ClasifyPeptides();
 		ClasifyProteins();
 		DoStats();
@@ -421,7 +416,7 @@ public class Mapper {
 	/// <summary>
 	/// Removes peptides with low score, duplicated (same sequence) or not voted (multirun)
 	/// </summary>
-	private void FilterPeptides( Peptide.ConfidenceType th, MultiRunMode mode ) {
+	private void FilterPeptides( Peptide.ConfidenceType th ) {
 		List<Peptide> peptides = new List<Peptide>();
 		int id = 1;
 		
@@ -459,7 +454,7 @@ public class Mapper {
 		}
 		
 		// Vote peptides
-		if( mode == Mapper.MultiRunMode.VOTE ) {
+		if( m_RunsTh > 1 ) {
 			Peptides = new List<Peptide>();
 			foreach( Peptide f in peptides )
 				if( f.Runs.Count >= m_RunsTh )

@@ -91,8 +91,8 @@ public class WregexManager {
 			m = mRegex.Match( seq, result.Index + 1 );
 		} while( m.Success );
 		
-		//return results;
-		return Filter(results);
+		return results;
+		//return Filter(results);
 	}
 	
 	private List<WregexResult> Filter( List<WregexResult> data ) {
