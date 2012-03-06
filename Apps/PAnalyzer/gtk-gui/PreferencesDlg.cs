@@ -41,7 +41,7 @@ public partial class PreferencesDlg
 		this.label2 = new global::Gtk.Label ();
 		this.label2.Name = "label2";
 		this.label2.Xalign = 0F;
-		this.label2.LabelProp = global::Mono.Unix.Catalog.GetString ("Multi-run mode:");
+		this.label2.LabelProp = global::Mono.Unix.Catalog.GetString ("Multi-run peptide threshold:");
 		this.table1.Add (this.label2);
 		global::Gtk.Table.TableChild w3 = ((global::Gtk.Table.TableChild)(this.table1 [this.label2]));
 		w3.TopAttach = ((uint)(1));
@@ -50,10 +50,7 @@ public partial class PreferencesDlg
 		w3.YOptions = ((global::Gtk.AttachOptions)(4));
 		// Container child table1.Gtk.Table+TableChild
 		this.MultirunCombo = global::Gtk.ComboBox.NewText ();
-		this.MultirunCombo.AppendText (global::Mono.Unix.Catalog.GetString ("Peptide Voting"));
-		this.MultirunCombo.AppendText (global::Mono.Unix.Catalog.GetString ("Peptide Merging"));
 		this.MultirunCombo.Name = "MultirunCombo";
-		this.MultirunCombo.Active = 0;
 		this.table1.Add (this.MultirunCombo);
 		global::Gtk.Table.TableChild w4 = ((global::Gtk.Table.TableChild)(this.table1 [this.MultirunCombo]));
 		w4.TopAttach = ((uint)(1));
@@ -113,8 +110,8 @@ public partial class PreferencesDlg
 		if ((this.Child != null)) {
 			this.Child.ShowAll ();
 		}
-		this.DefaultWidth = 463;
-		this.DefaultHeight = 140;
+		this.DefaultWidth = 471;
+		this.DefaultHeight = 145;
 		this.Show ();
 	}
 }

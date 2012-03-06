@@ -36,9 +36,9 @@ public partial class MainWindow : Gtk.Window {
 	private Mapper m_Mapper;
 	private string m_LastDir;
 	private string m_Name = "PAnalyzer";
-	private string m_Version = "0.9";
+	private string m_Version = "0.10";
 	private string m_License = "Released under the GNU General Public License";
-	private string m_Copyright = "(c) 2010-2011 by UPV/EHU";
+	private string m_Copyright = "(c) 2010-2012 by UPV/EHU";
 	private int m_nFiles;
 	private bool m_bThresholds;
 	
@@ -77,7 +77,7 @@ public partial class MainWindow : Gtk.Window {
 		
 		m_dlgPrefs = new PreferencesDlg();
 		m_dlgPrefs.Threshold = Peptide.ConfidenceType.Yellow;
-		m_dlgPrefs.Mode = Mapper.MultiRunMode.VOTE;
+		m_dlgPrefs.Runs = 1;
 		m_dlgPrefs.Hide();
 		
 		m_dlgAbout = new AboutDlg();
@@ -273,6 +273,7 @@ public partial class MainWindow : Gtk.Window {
 	protected virtual void OnExecuteActionActivated( object sender, System.EventArgs e ) {
 		m_dlgPrefs.ThSensitive = m_bThresholds;
 		m_dlgPrefs.MultiRunSensitive = m_nFiles > 1;
+		m_dlgPrefs.Runs = m_nFiles;
 		
 		// Asks for preferences only when needed
 		if( m_bThresholds || m_nFiles > 1 ) {
@@ -283,7 +284,7 @@ public partial class MainWindow : Gtk.Window {
 		}
 		State = MainWindow.States.EXECUTING;
 		
-		m_Mapper.Do( m_dlgPrefs.Threshold, m_dlgPrefs.Mode );
+		m_Mapper.Do( m_dlgPrefs.Threshold, m_dlgPrefs.Runs );
 		DisplayData();
 		State = MainWindow.States.EXECUTED;
 		WriteLog( "\nStats:" );

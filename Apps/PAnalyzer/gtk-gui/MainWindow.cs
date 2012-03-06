@@ -79,6 +79,7 @@ public partial class MainWindow
 		this.Tabs.CanFocus = true;
 		this.Tabs.Name = "Tabs";
 		this.Tabs.CurrentPage = 0;
+		this.Tabs.ShowBorder = false;
 		this.Tabs.BorderWidth = ((uint)(10));
 		// Container child Tabs.Gtk.Notebook+NotebookChild
 		this.GtkScrolledWindow = new global::Gtk.ScrolledWindow ();
