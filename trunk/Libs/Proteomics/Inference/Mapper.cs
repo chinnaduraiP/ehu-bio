@@ -27,14 +27,13 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Xml;
-using EhuBio.Proteomics.Hupo.mzIdentML;
 
 namespace EhuBio.Proteomics.Inference {
 
 /// <summary>
 /// Infers proteins from peptide identifications
 /// </summary>
-public class Mapper {
+public abstract class Mapper {
 	/// <summary>
 	/// Counts
 	/// </summary>
@@ -59,214 +58,37 @@ public class Mapper {
 		m_Format = new System.Globalization.NumberFormatInfo();
 		m_Format.NumberDecimalSeparator = ".";
 		m_Run = 0;
-		m_SWVersion = "0.0";
-		m_SWCustomizations = "No customizations";
-	}
-	
-	/// <summary>
-	/// Constructor for exporting to mzIdentML
-	/// </summary>
-	/// <param name="version">
-	/// A <see cref="System.String"/> with the current PAnalyzer version
-	/// </param>
-	public Mapper( string version ) : this() {
-		m_SWVersion = version;
 	}
 	
 	/// <summary>
 	/// Loads data from a peptide identification file
 	/// </summary>
-	/// <param name="xmlpath">
-	/// A <see cref="System.String"/> with the file path. This can be a mzIdentML file or a Waters XML file.
-	/// </param>
-	/// <param name="logpath">
-	/// A <see cref="System.String"/> with the txt file containing the peptide thresholds (only use with Waters XML files)
-	/// </param>
 	/// <param name="merge">
 	/// A <see cref="System.Boolean"/> indicating wether merge the new file with the existing data
 	/// </param>
-	public void LoadData( string xmlpath, string logpath, bool merge ) {
+	public void Load( string path, bool merge ) {
 		if( !merge || m_Run == 0 ) {
 			Proteins.Clear();
 			Peptides.Clear();
-			m_pid = m_gid = 1;
+			m_gid = 1;
 			m_SortedProteins = new SortedList<string, Protein>();
 			m_Run = 1;
 		} else
 			m_Run++;
-
-		m_mzid = null;
-		if( xmlpath.ToLower().Contains(".mzid") )
-			Loadmzid( xmlpath );
-		else
-			LoadWaters( xmlpath, logpath );
-		
-		// Multirun not supported for mzIdentML output
-		if( merge && m_Run > 1 )
-			m_mzid = null;
+		Load( path );
 	}
 	
 	/// <summary>
-	/// Loader of Waters XML and TXT files
+	/// Override to support different protein identification input file formats
 	/// </summary>
-	private void LoadWaters( string xmlpath, string logpath ) {
-		SortedList<int,string> SortedAccession = new SortedList<int, string>();
+	protected abstract void Load( string path );
 	
-		XmlDocument doc = new XmlDocument();
-		doc.Load( xmlpath );
-		bool UseScores = (logpath == null ? false : true);
-		if( UseScores )
-			LoadThresholds( logpath );
-		
-		XmlNodeList proteins = doc.GetElementsByTagName( "PROTEIN" );
-		foreach( XmlElement element in proteins ) {
-			int id = int.Parse(element.GetAttribute("ID"));
-			if( SortedAccession.ContainsKey(id) )
-				continue;
-			string acc = element.GetElementsByTagName("ACCESSION")[0].InnerText;
-			SortedAccession.Add( id, acc );
-			if( m_SortedProteins.ContainsKey(acc) )
-				continue;
-			string entry = element.GetElementsByTagName("ENTRY")[0].InnerText;
-			string desc = element.GetElementsByTagName("DESCRIPTION")[0].InnerText.Replace('+',' ');
-			string seq = element.GetElementsByTagName("SEQUENCE")[0].InnerText.ToUpper();
-			Protein p = new Protein(m_pid++, entry, acc, desc, seq);
-			Proteins.Add( p );
-			m_SortedProteins.Add( acc, p );
-		}
-		
-		SortedList<int,Peptide> SortedPeptides = new SortedList<int, Peptide>();
-		XmlNodeList peptides = doc.GetElementsByTagName( "PEPTIDE" );
-		foreach( XmlElement element in peptides ) {
-			int id = int.Parse(element.GetAttribute("ID"));
-			int pid = int.Parse(element.GetAttribute("PROT_ID"));
-			int mid = 0;
-			if( UseScores )
-				mid = int.Parse(element.GetAttribute("QUERY_MASS_ID"));
-			string seq = element.GetAttribute("SEQUENCE").ToUpper();
-			Peptide f = new Peptide(id, seq);
-			f.Runs.Add( m_Run );
-			Protein p = null;
-			try {
-				p = m_SortedProteins[SortedAccession[pid]];
-			} catch {
-				Notify( "Peptide '" + id + "' references unknown protein '" + pid + "'" );
-			}
-			if( p != null ) {
-				p.Peptides.Add( f );
-				f.Proteins.Add( p );
-				if( !p.Sequence.Contains(f.Sequence) )
-					throw new ApplicationException( "Inconsistent sequence data" );
-			}
-			Peptides.Add( f );
-			if( UseScores )
-				SortedPeptides.Add(mid,f);
-		}
-		if( !UseScores )
-			return;
-		
-		XmlNodeList scores = doc.GetElementsByTagName( "MASS_MATCH" );
-		foreach( XmlElement element in scores ) {
-			int id = int.Parse(element.GetAttribute("ID"));
-			double score = double.Parse(element.GetAttribute("SCORE"), m_Format);
-			SortedPeptides[id].Score = score;
-		}
-	}
-
-	/// <summary>
-	/// Loads peptide score thresholds from Waters TXT file
-	/// </summary>
-	private void LoadThresholds( string fpath ) {
-		TextReader r = new StreamReader( fpath );
-		string t = r.ReadLine();
-		while( t != null ) {
-			if( t.Contains("Red-Yellow") ) {
-				string[] f;
-				f = t.Split(new string[]{"Red-Yellow Threshold is ", "Red-Yellow Threshold = "}, StringSplitOptions.None);
-				f = f[1].Split(new char[]{' '});
-				Peptide.YellowTh = double.Parse(f[0], m_Format);
-			}
-			if( t.Contains("Yellow-Green") ) {
-				string[] f;
-				f = t.Split(new string[]{"Yellow-Green Threshold is ", "Yellow-Green Threshold = "}, StringSplitOptions.None);
-				f = f[1].Split(new char[]{' '});
-				Peptide.GreenTh = double.Parse(f[0], m_Format);
-			}
-			t = r.ReadLine();
-		}
-		r.Close();
-	}
 	
 	/// <summary>
-	/// Loads a mzIdentML file
+	/// Saves results to a CSV file. Override to support other output file formats
 	/// </summary>
-	private void Loadmzid( string mzid ) {
-		m_mzid = new mzidFile();
-		m_mzid.Load( mzid );
-		
-		// Proteins
-		SortedList<string,string> SortedAccession = new SortedList<string, string>();
-		foreach( PSIPIanalysissearchDBSequenceType element in m_mzid.ListProteins ) {
-			if( SortedAccession.ContainsKey(element.id) )
-				continue;
-			string acc = element.accession;
-			SortedAccession.Add( element.id, acc );
-			if( m_SortedProteins.ContainsKey(acc) )
-				continue;
-			FuGECommonOntologycvParamType cv;
-			cv = FuGECommonOntologycvParamType.Find( "MS:1001352", element.cvParam );
-			string entry = cv == null ? "" : cv.value;
-			cv = FuGECommonOntologycvParamType.Find( "MS:1001088", element.cvParam );
-			string desc = cv == null ? "" : cv.value;
-			string seq = element.seq;//.ToUpper();
-			Protein p = new Protein(m_pid++, entry, acc, desc, seq);
-			p.DBRef = element.id;
-			Proteins.Add( p );
-			m_SortedProteins.Add( acc, p );
-		}
-		
-		// Peptides
-		SortedList<string,Peptide> SortedPeptides = new SortedList<string, Peptide>();
-		int id = 1;
-		foreach( PSIPIpolypeptidePeptideType element in m_mzid.ListPeptides ) {
-			string seq = element.peptideSequence;//.ToUpper();
-			Peptide f = new Peptide(id++, seq);
-			f.Confidence = Peptide.ConfidenceType.PassThreshold; // It will be filtered later if neccessary
-			SortedPeptides.Add( element.id, f );
-			f.Runs.Add( m_Run );
-			Peptides.Add( f );
-		}
-		
-		// Relations
-		if( m_mzid.Data.DataCollection.AnalysisData.SpectrumIdentificationList.Length != 1 )
-			throw new ApplicationException( "Multiple spectrum identification lists not supported" );
-		foreach( PSIPIanalysissearchSpectrumIdentificationResultType idres in
-			m_mzid.Data.DataCollection.AnalysisData.SpectrumIdentificationList[0].SpectrumIdentificationResult )
-			foreach( PSIPIanalysissearchSpectrumIdentificationItemType item in idres.SpectrumIdentificationItem ) {
-				if( !item.passThreshold )
-					continue;
-				Peptide f = SortedPeptides[item.Peptide_ref];
-				if( item.PeptideEvidence == null )
-					continue;
-				f.Confidence = Peptide.ConfidenceType.PassThreshold;
-				foreach( PSIPIanalysisprocessPeptideEvidenceType relation in item.PeptideEvidence ) {
-					Protein p = m_SortedProteins[SortedAccession[relation.DBSequence_Ref]];
-					if( f.Proteins.Contains(p) )
-						continue;
-					f.Names.Add( relation.DBSequence_Ref, relation.id );
-					p.Peptides.Add( f );
-					f.Proteins.Add( p );
-				}
-			}
-	}
-	
-	/// <summary>
-	/// Saves results to both a CSV and a mzIdentML file
-	/// </summary>
-	public void Save( string fpath ) {
-		SaveCSV( Path.ChangeExtension(fpath,".csv"), ": " );
-		SaveMzid( Path.ChangeExtension(fpath,".mzid"), null, null, null, null );
-		//SaveMzid( Path.ChangeExtension(fpath,".mzid"), "SGIKER", "Proteomics Core Facility-SGIKER", "Dr. Kerman Aloria", "kerman.aloria@ehu.es" );
+	public virtual void Save( string fpath ) {
+		SaveCSV( Path.ChangeExtension(fpath,".csv"), ":" );
 	}
 	
 	/// <summary>
@@ -291,74 +113,7 @@ public class Mapper {
 			w.Write(f.ToString() + ' ');
 		w.WriteLine( sep + p.Sequence );
 	}
-	
-	/// <summary>
-	/// Save results to a mzIdentML file
-	/// </summary>
-	public void SaveMzid(
-		string mzid,
-		string org_id, string org_name,
-		string owner_name, string owner_email ) {
-		// Previous file is required for including MS data
-		if( m_mzid == null )
-			return;
-
-		// Header
-		//m_mzid.AddOntology( "PSI-MS", "Proteomics Standards Initiative Mass Spectrometry Vocabularies", "2.25.0",
-        //	"http://psidev.cvs.sourceforge.net/viewvc/*checkout*/psidev/psi/psi-ms/mzML/controlledVocabulary/psi-ms.obo" );
-        foreach( PSIPIanalysissearchAnalysisSoftwareType sw in m_mzid.ListSW )
-        	if( sw.id == "PAnalyzer" ) {
-        		m_mzid.ListSW.Remove(sw);
-        		break;
-        	}
-        m_mzid.AddAnalysisSoftware(
-            "PAnalyzer", "UPV/EHU Protein Inference", m_SWVersion, "http://code.google.com/p/ehu-bio/", "UPV_EHU",
-            "MS:1001267", "software vendor", "PSI-MS", m_SWCustomizations );
-        foreach( FuGECommonAuditOrganizationType org in m_mzid.ListOrganizations )
-        	if( org.id == "UPV_EHU" ) {
-        		m_mzid.ListOrganizations.Remove( org );
-        		break;
-        	}
-        m_mzid.AddOrganization( "UPV_EHU", "University of the Basque Country",
-            "Barrio Sarriena s/n, 48940 Leioa, Spain", "+34 94 601 200", "secretariageneral@ehu.es" );
-        if( org_id != null ) {
-        	m_mzid.SetProvider( org_id, "DOC_OWNER", "MS:1001271", "researcher", "PSI-MS" );
-        	m_mzid.AddPerson( "DOC_OWNER", owner_name, owner_email, org_id );
-        	m_mzid.AddOrganization( org_id, org_name );
-        }
-        
-        // Analysis
-        List<PSIPIanalysisprocessProteinAmbiguityGroupType> listGroup =
-        	new List<PSIPIanalysisprocessProteinAmbiguityGroupType>();
-        int hit = 1;
-        foreach( Protein p in Proteins ) {
-        	PSIPIanalysisprocessProteinAmbiguityGroupType grp = new PSIPIanalysisprocessProteinAmbiguityGroupType();
-        	grp.id = "PAG_hit_" + (hit++);
-        	int num = (p.Subset.Count == 0 ? 1 : p.Subset.Count);
-        	grp.ProteinDetectionHypothesis = new PSIPIanalysisprocessProteinDetectionHypothesisType[num];
-        	if( p.Subset.Count == 0 )
-        		grp.ProteinDetectionHypothesis[0] = BuildHypothesis( p );
-        	else {
-        		int i = 0;
-        		foreach( Protein p2 in p.Subset )
-        			grp.ProteinDetectionHypothesis[i++] = BuildHypothesis( p2 );
-        	}
-        	grp.cvParam = new FuGECommonOntologycvParamType[1];
-        	grp.cvParam[0] = new FuGECommonOntologycvParamType(
-        		"ProteomeDiscoverer:ProteinConfidenceCategory",
-        		"MS:1001673", "PSI-MS" );
-        	grp.cvParam[0].value = ParseConfidence( p.Evidence );
-        	listGroup.Add( grp );
-        }
-        PSIPIanalysisprocessProteinDetectionListType analysis = new PSIPIanalysisprocessProteinDetectionListType();
-        analysis.id = "PAnalyzer_PDL";
-       	analysis.ProteinAmbiguityGroup = listGroup.ToArray();
-        m_mzid.Data.DataCollection.AnalysisData.ProteinDetectionList = analysis;
-        
-        // Save
-        m_mzid.Save( mzid );
-	}
-	
+		
 	public string ParseConfidence( Protein.EvidenceType e ) {
 		switch( e ) {
 			case Protein.EvidenceType.Conclusive:
@@ -372,29 +127,7 @@ public class Mapper {
 		}
 		return e.ToString();
 	}
-	
-	/// <summary>
-	/// Builds a PDH for the current protein
-	/// </summary>
-	private PSIPIanalysisprocessProteinDetectionHypothesisType BuildHypothesis( Protein p ) {
-		PSIPIanalysisprocessProteinDetectionHypothesisType h = new PSIPIanalysisprocessProteinDetectionHypothesisType();
-		h.id = "PDH_" + p.Accession;
-		h.DBSequence_ref = p.DBRef;
-		if( p.Evidence == Protein.EvidenceType.NonConclusive || p.Evidence == Protein.EvidenceType.Filtered )
-			h.passThreshold = false;
-		else
-			h.passThreshold = true;
-		List<PeptideHypothesisType> listPeptides = new List<PeptideHypothesisType>();
-		foreach( Peptide f in p.Peptides ) {
-			PeptideHypothesisType peptide = new PeptideHypothesisType();
-			peptide.PeptideEvidence_Ref = f.Names[p.DBRef];
-			listPeptides.Add( peptide );
-		}
-		if( listPeptides.Count > 0 )
-			h.PeptideHypothesis = listPeptides.ToArray();
-		return h;
-	}
-	
+		
 	/// <summary>
 	/// Process the loaded data
 	/// </summary>
@@ -683,13 +416,11 @@ public class Mapper {
 	/// </summary>
 	public List<Peptide> Peptides;
 		
-	private int m_pid, m_gid;
+	private int m_gid;
 	private StatsStruct m_Stats;
-	private System.Globalization.NumberFormatInfo m_Format;
-	private SortedList<string,Protein> m_SortedProteins;
-	private int m_RunsTh, m_Run;
-	private mzidFile m_mzid;
-	private string m_SWVersion, m_SWCustomizations;
+	protected System.Globalization.NumberFormatInfo m_Format;
+	protected SortedList<string,Protein> m_SortedProteins;
+	protected int m_RunsTh, m_Run;
 }
 
 } // namespace EhuBio.Proteomics.Inference

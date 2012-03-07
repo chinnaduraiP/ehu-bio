@@ -33,7 +33,8 @@ public partial class MainWindow : Gtk.Window {
 	private Gtk.FileChooserDialog m_dlgSave;
 	private PreferencesDlg m_dlgPrefs;
 	private AboutDlg m_dlgAbout;
-	private Mapper m_Mapper;
+	//private Mapper m_Mapper;
+	private mzIdentML1_0 m_Mapper;
 	private string m_LastDir;
 	private string m_Name = "PAnalyzer";
 	private string m_Version = "0.10";
@@ -96,7 +97,8 @@ public partial class MainWindow : Gtk.Window {
 		dialogInfoAction.Sensitive = true;
 		State = States.EMPTY;
 		
-		m_Mapper = new Mapper( m_Version );
+		//m_Mapper = new Mapper( m_Version );
+		m_Mapper = new mzIdentML1_0( m_Version );
 		m_Mapper.OnNotify += WriteLog;
 		
 		m_nFiles = 0;
@@ -234,7 +236,8 @@ public partial class MainWindow : Gtk.Window {
 				Log.Text += "\nLoading '" + System.IO.Path.GetFileName(xmlpath) + "' ...";
 				if( logpath != null && !File.Exists(logpath) )
 					logpath = null;
-				m_Mapper.LoadData( xmlpath, logpath, true );
+				//m_Mapper.LoadData( xmlpath, logpath, true );
+				m_Mapper.Load( xmlpath, true );
 				m_nFiles++;
 				if( logpath != null ) {
 					WriteLog( "\tLoaded peptide score thresholds from '" + System.IO.Path.GetFileName(logpath) + "'" );
