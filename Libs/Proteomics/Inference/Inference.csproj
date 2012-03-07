@@ -35,9 +35,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
-    <Compile Include="Mapper.cs" />
     <Compile Include="Protein.cs" />
     <Compile Include="Peptide.cs" />
+    <Compile Include="Mapper.cs" />
+    <Compile Include="Parsers\mzIdentML1_1.cs" />
+    <Compile Include="Parsers\mzIdentML1_0.cs" />
+    <Compile Include="Parsers\Plgs.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Database\Ebi\Ebi.csproj">
@@ -50,4 +53,7 @@
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <ItemGroup>
+    <Folder Include="Parsers\" />
+  </ItemGroup>
 </Project>

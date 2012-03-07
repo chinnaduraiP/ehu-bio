@@ -1,4 +1,4 @@
-// $Id$
+// $Id: mzIdentML.cs 3 2011-03-10 19:32:55Z gorka.prieto@gmail.com $
 // 
 // mzIdentML.cs
 //  
@@ -39,11 +39,11 @@ namespace EhuBio.Proteomics.Hupo.mzIdentML {
 /// - Validates mzIdentML 1.0.0 files using internal XSD
 /// - Reads/writes C# objects to a mzIdentML file using deserialization/serialization
 /// </summary>
-public class mzidFile {
+public class mzidFile1_0 {
 	/// <summary>
 	/// Default constructor
 	/// </summary>
-	public mzidFile() {
+	public mzidFile1_0() {
 		Data = new PSIPIMainmzIdentMLType();
 		ListOntology = new List<FuGECommonOntologycvType>();
 		ListSW = new List<PSIPIanalysissearchAnalysisSoftwareType>();

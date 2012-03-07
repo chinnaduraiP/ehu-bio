@@ -36,18 +36,23 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
-    <Compile Include="mzIdentML.cs" />
-    <Compile Include="mzIdentML1_0_0.cs" />
+    <Compile Include="mzIdentML1_0\mzIdentML1_0.cs" />
+    <Compile Include="mzIdentML1_0\wrapper.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
-    <EmbeddedResource Include="mzIdentML1.0.0.xsd" />
-    <EmbeddedResource Include="FuGElightv1.0.0.xsd" />
+    <EmbeddedResource Include="mzIdentML1_0\FuGElightv1.0.0.xsd" />
+    <EmbeddedResource Include="mzIdentML1_0\mzIdentML1.0.0.xsd" />
+    <EmbeddedResource Include="mzIdentML1_1\mzIdentML1.1.0.xsd" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Database\Ebi\Ebi.csproj">
       <Project>{24FE7A85-8B58-4B38-B50B-C111DE9A7ADA}</Project>
       <Name>Ebi</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="mzIdentML1_0\" />
+    <Folder Include="mzIdentML1_1\" />
   </ItemGroup>
 </Project>
