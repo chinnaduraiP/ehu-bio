@@ -34,7 +34,14 @@ namespace EhuBio.Proteomics.Inference {
 /// <summary>
 /// Infers proteins from peptide identifications
 /// </summary>
-public class mzIdentML1_1 : Mapper {
+public class mzId1_1 : Mapper {
+	/// <summary>
+	/// Constructor
+	/// </summary>
+	public mzId1_1(Mapper.Software sw) : base(sw) {
+		//m_SWCustomizations = "No customizations";
+	}
+	
 	protected override void Load (string path) {
 		throw new NotImplementedException ();
 	}

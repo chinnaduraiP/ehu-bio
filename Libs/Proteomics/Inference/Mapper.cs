@@ -49,15 +49,59 @@ public abstract class Mapper {
 	}
 
 	/// <summary>
+	/// Software information.
+	/// </summary>
+	public struct Software {	
+		public string Name;
+		public string Version;
+		public string License;
+		public string Copyright;
+		public string Contact;
+		public string Customizations;
+	}
+	
+	/// <summary>
+	/// Create a new mapper based on the XML file type and version.
+	/// </summary>
+	public static Mapper Create( string xml, Software sw ) {
+		const int size = 2000;
+		char[] buffer = new char[size];
+		TextReader tr = new StreamReader( xml );
+		tr.ReadBlock( buffer, 0, size );
+		tr.Close();
+		String str = new String(buffer);
+		if( str.Contains("GeneratedBy") )
+			return new Plgs(sw);
+		int i = str.IndexOf( "mzIdentML" );
+		if( i == -1 )
+			throw new ApplicationException( "Identification file format not supported" );
+		str = str.Remove(0,i);
+		i = str.IndexOf( "version" );
+		if( i == -1 )
+			throw new ApplicationException( "mzIdentML version not provided" );
+		str = str.Remove(0,i);
+		string version = str.Split(new char[]{'"'})[1];
+		switch( version ) {
+			case "1.0.0":
+				return new mzId1_0(sw);
+			//case "1.1.0":
+				//return new mzId1_1(sw);
+		}
+		throw new ApplicationException( "mzIdentML version '" + version + "' not supported" );
+	}
+
+	/// <summary>
 	/// Default constructor
 	/// </summary>
-	public Mapper() {
+	public Mapper( Software sw ) {
+		m_Software = sw;
 		Proteins = new List<Protein>();
 		Peptides = new List<Peptide>();
 		m_Stats = new StatsStruct();
 		m_Format = new System.Globalization.NumberFormatInfo();
 		m_Format.NumberDecimalSeparator = ".";
 		m_Run = 0;
+		UsingThresholds = false;
 	}
 	
 	/// <summary>
@@ -113,7 +157,10 @@ public abstract class Mapper {
 			w.Write(f.ToString() + ' ');
 		w.WriteLine( sep + p.Sequence );
 	}
-		
+	
+	/// <summary>
+	/// Parses the confidence enum to a string.
+	/// </summary>
 	public string ParseConfidence( Protein.EvidenceType e ) {
 		switch( e ) {
 			case Protein.EvidenceType.Conclusive:
@@ -382,7 +429,7 @@ public abstract class Mapper {
 		//m_Stats.MinProteins = m_Stats.Conclusive + m_Stats.Groups;
 	}
 	
-	private void Notify( string message ) {
+	protected void Notify( string message ) {
 		if( OnNotify != null )
 			OnNotify( message );
 		else
@@ -415,12 +462,18 @@ public abstract class Mapper {
 	/// Peptide list
 	/// </summary>
 	public List<Peptide> Peptides;
+	
+	/// <summary>
+	/// Indicates wether peptide scores and thresholds are used.
+	/// </summary>
+	public bool UsingThresholds;
 		
 	private int m_gid;
 	private StatsStruct m_Stats;
 	protected System.Globalization.NumberFormatInfo m_Format;
 	protected SortedList<string,Protein> m_SortedProteins;
 	protected int m_RunsTh, m_Run;
+	protected Software m_Software;
 }
 
 } // namespace EhuBio.Proteomics.Inference
