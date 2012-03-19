@@ -33,13 +33,9 @@ public partial class MainWindow : Gtk.Window {
 	private Gtk.FileChooserDialog m_dlgSave;
 	private PreferencesDlg m_dlgPrefs;
 	private AboutDlg m_dlgAbout;
-	//private Mapper m_Mapper;
-	private mzIdentML1_0 m_Mapper;
+	private Mapper m_Mapper;
 	private string m_LastDir;
-	private string m_Name = "PAnalyzer";
-	private string m_Version = "0.10";
-	private string m_License = "Released under the GNU General Public License";
-	private string m_Copyright = "(c) 2010-2012 by UPV/EHU";
+	private Mapper.Software m_Software;
 	private int m_nFiles;
 	private bool m_bThresholds;
 	
@@ -47,6 +43,14 @@ public partial class MainWindow : Gtk.Window {
 
 	public MainWindow () : base(Gtk.WindowType.Toplevel) {
 		Build();
+		
+		m_Software.Name      = "PAnalyzer";
+		m_Software.Version   = "0.11";
+		m_Software.License   = "Released under the GNU General Public License";
+		m_Software.Copyright = "(c) 2010-2012 by UPV/EHU";
+		m_Software.Contact   = "gorka.prieto@ehu.es";
+		m_Software.Customizations = "No customizations";
+		
 		m_dlgOpen = new Gtk.FileChooserDialog(
 			"Select data file ...", this, FileChooserAction.Open,
 			Stock.Open, ResponseType.Ok, Stock.Cancel, ResponseType.Cancel );
@@ -82,9 +86,9 @@ public partial class MainWindow : Gtk.Window {
 		m_dlgPrefs.Hide();
 		
 		m_dlgAbout = new AboutDlg();
-		m_dlgAbout.Version = m_Name + " v" + m_Version;
-		m_dlgAbout.License = m_License;
-		m_dlgAbout.Copyright = m_Copyright;
+		m_dlgAbout.Version = m_Software.Name + " v" + m_Software.Version;
+		m_dlgAbout.License = m_Software.License;
+		m_dlgAbout.Copyright = m_Software.Copyright;
 		m_dlgAbout.Hide();
 		
 		/*Log.Text = "".PadRight(80,'*');
@@ -97,10 +101,7 @@ public partial class MainWindow : Gtk.Window {
 		dialogInfoAction.Sensitive = true;
 		State = States.EMPTY;
 		
-		//m_Mapper = new Mapper( m_Version );
-		m_Mapper = new mzIdentML1_0( m_Version );
-		m_Mapper.OnNotify += WriteLog;
-		
+		m_Mapper = null;		
 		m_nFiles = 0;
 		m_bThresholds = false;
 	}
@@ -216,7 +217,7 @@ public partial class MainWindow : Gtk.Window {
         	textviewFrag.Buffer.Text += run + " ";
 	}
 	
-	protected virtual void OnOpenAction1Activated( object sender, System.EventArgs e ) {
+	protected virtual void OnOpenActionActivated( object sender, System.EventArgs e ) {
 		m_dlgOpen.SelectFilename( m_LastDir );
 		int res = m_dlgOpen.Run();
 		m_dlgOpen.Hide();
@@ -225,26 +226,19 @@ public partial class MainWindow : Gtk.Window {
 		m_LastDir = System.IO.Path.GetDirectoryName(m_dlgOpen.Filenames[0]);
 		
 		m_nFiles = 0;
-		m_bThresholds = false;
 		string title = " New Analysis ";
 		int tlen = title.Length;
 		Log.Text = title.PadLeft(40+tlen/2,'*').PadRight(80,'*');
 		State = States.LOADING;
+		m_bThresholds = true;
 		try {
+			m_Mapper = Mapper.Create( m_dlgOpen.Filename, m_Software );
+			m_Mapper.OnNotify += WriteLog;
 			foreach( string xmlpath in m_dlgOpen.Filenames ) {
-				string logpath = xmlpath.Contains("workflow.xml") ? xmlpath.Replace( "workflow.xml", "Log.txt" ) : null;
-				Log.Text += "\nLoading '" + System.IO.Path.GetFileName(xmlpath) + "' ...";
-				if( logpath != null && !File.Exists(logpath) )
-					logpath = null;
-				//m_Mapper.LoadData( xmlpath, logpath, true );
 				m_Mapper.Load( xmlpath, true );
+				if( !m_Mapper.UsingThresholds )
+					m_bThresholds = false;
 				m_nFiles++;
-				if( logpath != null ) {
-					WriteLog( "\tLoaded peptide score thresholds from '" + System.IO.Path.GetFileName(logpath) + "'" );
-					WriteLog( "\t* Red-Yellow threshold: " + Peptide.YellowTh );
-					WriteLog( "\t* Yellow-Green threshold: " + Peptide.GreenTh );
-					m_bThresholds = true;
-				}
 			}
 		} catch( Exception ex ) {
 			WriteLog( "Error loading XML: " + ex.Message );
@@ -258,7 +252,7 @@ public partial class MainWindow : Gtk.Window {
 		State = States.LOADED;
 	}
 	
-	protected virtual void OnSaveAction1Activated( object sender, System.EventArgs e ) {
+	protected virtual void OnSaveActionActivated( object sender, System.EventArgs e ) {
 		int res = m_dlgSave.Run();
 		m_dlgSave.Hide();
 		if( res != (int)ResponseType.Ok )

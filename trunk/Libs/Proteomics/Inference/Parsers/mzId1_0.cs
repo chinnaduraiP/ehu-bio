@@ -27,6 +27,7 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Xml;
+using EhuBio.Proteomics.Hupo.mzIdentML1_0;
 using EhuBio.Proteomics.Hupo.mzIdentML;
 
 namespace EhuBio.Proteomics.Inference {
@@ -34,25 +35,13 @@ namespace EhuBio.Proteomics.Inference {
 /// <summary>
 /// Infers proteins from peptide identifications
 /// </summary>
-public class mzIdentML1_0 : Mapper {
+public class mzId1_0 : Mapper {
 	/// <summary>
-	/// Default constructor
+	/// Constructor
 	/// </summary>
-	public mzIdentML1_0() {
-		m_SWVersion = "0.0";
-		m_SWCustomizations = "No customizations";
+	public mzId1_0(Mapper.Software sw) : base(sw) {
 	}
-	
-	/// <summary>
-	/// Constructor for exporting to mzIdentML
-	/// </summary>
-	/// <param name="version">
-	/// A <see cref="System.String"/> with the current PAnalyzer version
-	/// </param>
-	public mzIdentML1_0( string version ) : this() {
-		m_SWVersion = version;
-	}
-		
+			
 	/// <summary>
 	/// Loads a mzIdentML file
 	/// </summary>
@@ -116,7 +105,7 @@ public class mzIdentML1_0 : Mapper {
 			}
 	}
 
-		/// <summary>
+	/// <summary>
 	/// Save results to a mzIdentML file
 	/// </summary>
 	public void SaveMzid(
@@ -136,8 +125,8 @@ public class mzIdentML1_0 : Mapper {
         		break;
         	}
         m_mzid.AddAnalysisSoftware(
-            "PAnalyzer", "UPV/EHU Protein Inference", m_SWVersion, "http://code.google.com/p/ehu-bio/", "UPV_EHU",
-            "MS:1001267", "software vendor", "PSI-MS", m_SWCustomizations );
+            m_Software.Name, "UPV/EHU Protein Inference", m_Software.Version, "http://code.google.com/p/ehu-bio/", "UPV_EHU",
+            "MS:1001267", "software vendor", "PSI-MS", m_Software.Customizations );
         foreach( FuGECommonAuditOrganizationType org in m_mzid.ListOrganizations )
         	if( org.id == "UPV_EHU" ) {
         		m_mzid.ListOrganizations.Remove( org );
@@ -207,7 +196,6 @@ public class mzIdentML1_0 : Mapper {
 		
 	private int m_pid;
 	private mzidFile1_0 m_mzid;
-	private string m_SWVersion, m_SWCustomizations;
 }
 
 } // namespace EhuBio.Proteomics.Inference

@@ -183,8 +183,8 @@ public partial class MainWindow
 		}
 		this.Show ();
 		this.DeleteEvent += new global::Gtk.DeleteEventHandler (this.OnDeleteEvent);
-		this.openAction1.Activated += new global::System.EventHandler (this.OnOpenAction1Activated);
-		this.saveAction1.Activated += new global::System.EventHandler (this.OnSaveAction1Activated);
+		this.openAction1.Activated += new global::System.EventHandler (this.OnOpenActionActivated);
+		this.saveAction1.Activated += new global::System.EventHandler (this.OnSaveActionActivated);
 		this.dialogInfoAction.Activated += new global::System.EventHandler (this.OnDialogInfoActionActivated);
 		this.executeAction.Activated += new global::System.EventHandler (this.OnExecuteActionActivated);
 	}

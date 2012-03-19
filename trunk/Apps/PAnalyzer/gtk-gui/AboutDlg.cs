@@ -45,7 +45,8 @@ public partial class AboutDlg
 		// Container child vbox2.Gtk.Box+BoxChild
 		this.frame2 = new global::Gtk.Frame ();
 		this.frame2.Name = "frame2";
-		this.frame2.ShadowType = ((global::Gtk.ShadowType)(0));
+		this.frame2.ShadowType = ((global::Gtk.ShadowType)(2));
+		this.frame2.LabelYalign = 0F;
 		// Container child frame2.Gtk.Container+ContainerChild
 		this.GtkAlignment1 = new global::Gtk.Alignment (0F, 0F, 1F, 1F);
 		this.GtkAlignment1.Name = "GtkAlignment1";
@@ -58,7 +59,10 @@ public partial class AboutDlg
 		this.GtkAlignment1.Add (this.VersionLabel);
 		this.frame2.Add (this.GtkAlignment1);
 		this.GtkLabel1 = new global::Gtk.Label ();
+		this.GtkLabel1.WidthRequest = 66;
+		this.GtkLabel1.HeightRequest = 34;
 		this.GtkLabel1.Name = "GtkLabel1";
+		this.GtkLabel1.Xalign = 0F;
 		this.GtkLabel1.LabelProp = global::Mono.Unix.Catalog.GetString ("<b>Version</b>");
 		this.GtkLabel1.UseMarkup = true;
 		this.frame2.LabelWidget = this.GtkLabel1;
@@ -70,7 +74,8 @@ public partial class AboutDlg
 		// Container child vbox2.Gtk.Box+BoxChild
 		this.frame3 = new global::Gtk.Frame ();
 		this.frame3.Name = "frame3";
-		this.frame3.ShadowType = ((global::Gtk.ShadowType)(0));
+		this.frame3.ShadowType = ((global::Gtk.ShadowType)(2));
+		this.frame3.LabelYalign = 0F;
 		// Container child frame3.Gtk.Container+ContainerChild
 		this.GtkAlignment2 = new global::Gtk.Alignment (0F, 0F, 1F, 1F);
 		this.GtkAlignment2.Name = "GtkAlignment2";
@@ -83,6 +88,8 @@ public partial class AboutDlg
 		this.GtkAlignment2.Add (this.LicenseLabel);
 		this.frame3.Add (this.GtkAlignment2);
 		this.GtkLabel2 = new global::Gtk.Label ();
+		this.GtkLabel2.WidthRequest = 67;
+		this.GtkLabel2.HeightRequest = 34;
 		this.GtkLabel2.Name = "GtkLabel2";
 		this.GtkLabel2.LabelProp = global::Mono.Unix.Catalog.GetString ("<b>License</b>");
 		this.GtkLabel2.UseMarkup = true;
@@ -95,7 +102,8 @@ public partial class AboutDlg
 		// Container child vbox2.Gtk.Box+BoxChild
 		this.frame4 = new global::Gtk.Frame ();
 		this.frame4.Name = "frame4";
-		this.frame4.ShadowType = ((global::Gtk.ShadowType)(0));
+		this.frame4.ShadowType = ((global::Gtk.ShadowType)(2));
+		this.frame4.LabelYalign = 0F;
 		// Container child frame4.Gtk.Container+ContainerChild
 		this.GtkAlignment3 = new global::Gtk.Alignment (0F, 0F, 1F, 1F);
 		this.GtkAlignment3.Name = "GtkAlignment3";
@@ -108,6 +116,8 @@ public partial class AboutDlg
 		this.GtkAlignment3.Add (this.CopyrightLabel);
 		this.frame4.Add (this.GtkAlignment3);
 		this.GtkLabel3 = new global::Gtk.Label ();
+		this.GtkLabel3.WidthRequest = 86;
+		this.GtkLabel3.HeightRequest = 34;
 		this.GtkLabel3.Name = "GtkLabel3";
 		this.GtkLabel3.LabelProp = global::Mono.Unix.Catalog.GetString ("<b>Copyright</b>");
 		this.GtkLabel3.UseMarkup = true;
@@ -120,7 +130,8 @@ public partial class AboutDlg
 		// Container child vbox2.Gtk.Box+BoxChild
 		this.frame1 = new global::Gtk.Frame ();
 		this.frame1.Name = "frame1";
-		this.frame1.ShadowType = ((global::Gtk.ShadowType)(0));
+		this.frame1.ShadowType = ((global::Gtk.ShadowType)(2));
+		this.frame1.LabelYalign = 0F;
 		// Container child frame1.Gtk.Container+ContainerChild
 		this.GtkAlignment4 = new global::Gtk.Alignment (0F, 0F, 1F, 1F);
 		this.GtkAlignment4.Name = "GtkAlignment4";
@@ -176,6 +187,8 @@ public partial class AboutDlg
 		this.GtkAlignment4.Add (this.vbox3);
 		this.frame1.Add (this.GtkAlignment4);
 		this.GtkLabel4 = new global::Gtk.Label ();
+		this.GtkLabel4.WidthRequest = 71;
+		this.GtkLabel4.HeightRequest = 34;
 		this.GtkLabel4.Name = "GtkLabel4";
 		this.GtkLabel4.LabelProp = global::Mono.Unix.Catalog.GetString ("<b>Authors</b>");
 		this.GtkLabel4.UseMarkup = true;
@@ -212,7 +225,7 @@ public partial class AboutDlg
 			this.Child.ShowAll ();
 		}
 		this.DefaultWidth = 495;
-		this.DefaultHeight = 445;
+		this.DefaultHeight = 495;
 		this.Show ();
 	}
 }

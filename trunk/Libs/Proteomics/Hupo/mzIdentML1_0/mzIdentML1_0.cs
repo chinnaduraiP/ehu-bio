@@ -31,6 +31,7 @@ using System.Xml.Serialization;
 using System.Collections.Generic;
 using System.Reflection;
 using EhuBio.Database.Ebi;
+using EhuBio.Proteomics.Hupo.mzIdentML1_0;
 
 namespace EhuBio.Proteomics.Hupo.mzIdentML {
 
@@ -291,7 +292,11 @@ public class mzidFile1_0 {
 	}
 }
 
+}	// namespace EhuBio.Proteomics.Hupo.mzIdentML
+
 #region Base nodes
+
+namespace EhuBio.Proteomics.Hupo.mzIdentML1_0 {
 
 /// <summary>
 /// Common Ontology
@@ -624,4 +629,4 @@ public partial class PSIPIpolypeptidePeptideType {
 #endregion
 
 
-}	// namespace EhuBio.Proteomics.Hupo
+}	// namespace EhuBio.Proteomics.Hupo.mzIdentML1_0

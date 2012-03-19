@@ -38,9 +38,9 @@
     <Compile Include="Protein.cs" />
     <Compile Include="Peptide.cs" />
     <Compile Include="Mapper.cs" />
-    <Compile Include="Parsers\mzIdentML1_1.cs" />
-    <Compile Include="Parsers\mzIdentML1_0.cs" />
     <Compile Include="Parsers\Plgs.cs" />
+    <Compile Include="Parsers\mzId1_0.cs" />
+    <Compile Include="Parsers\mzId1_1.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Database\Ebi\Ebi.csproj">
