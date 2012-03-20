@@ -215,6 +215,9 @@ public partial class MainWindow : Gtk.Window {
         textviewFrag.Buffer.Text += "\nRuns: ";
         foreach( int run in f.Runs )
         	textviewFrag.Buffer.Text += run + " ";
+        textviewFrag.Buffer.Text += "\nPTMs: ";
+        foreach( PTM ptm in f.PTMs )
+        	textviewFrag.Buffer.Text += ptm + " ";
 	}
 	
 	protected virtual void OnOpenActionActivated( object sender, System.EventArgs e ) {

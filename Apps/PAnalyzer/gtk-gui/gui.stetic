@@ -394,7 +394,6 @@ Green</property>
               <widget class="Gtk.Frame" id="frame2">
                 <property name="MemberName" />
                 <property name="ShadowType">Out</property>
-                <property name="LabelXalign">0,5</property>
                 <property name="LabelYalign">0</property>
                 <child>
                   <widget class="Gtk.Alignment" id="GtkAlignment1">
@@ -435,7 +434,6 @@ Green</property>
               <widget class="Gtk.Frame" id="frame3">
                 <property name="MemberName" />
                 <property name="ShadowType">Out</property>
-                <property name="LabelXalign">0,5</property>
                 <property name="LabelYalign">0</property>
                 <child>
                   <widget class="Gtk.Alignment" id="GtkAlignment2">
@@ -476,7 +474,6 @@ Green</property>
               <widget class="Gtk.Frame" id="frame4">
                 <property name="MemberName" />
                 <property name="ShadowType">Out</property>
-                <property name="LabelXalign">0,5</property>
                 <property name="LabelYalign">0</property>
                 <child>
                   <widget class="Gtk.Alignment" id="GtkAlignment3">
@@ -517,7 +514,6 @@ Green</property>
               <widget class="Gtk.Frame" id="frame1">
                 <property name="MemberName" />
                 <property name="ShadowType">Out</property>
-                <property name="LabelXalign">0,5</property>
                 <property name="LabelYalign">0</property>
                 <child>
                   <widget class="Gtk.Alignment" id="GtkAlignment4">
