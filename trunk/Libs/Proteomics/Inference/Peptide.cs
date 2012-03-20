@@ -27,6 +27,124 @@ using System;
 using System.Collections.Generic;
 
 namespace EhuBio.Proteomics.Inference {
+	
+/// <summary>
+/// Class for storing PTMs
+/// </summary>
+public class PTM {
+	/// <summary>
+	/// The residue.
+	/// </summary>
+	public char Residue;
+	
+	/// <summary>
+	/// The name.
+	/// </summary>
+	public string Name;
+	
+	/// <summary>
+	/// The position.
+	/// </summary>
+	public int Pos;
+	
+	/// <summary>
+	/// Initializes a new instance of the <see cref="EhuBio.Proteomics.Inference.PTM"/> class.
+	/// </summary>
+	public PTM() {
+		Residue = '?';
+		Pos = -1;
+		Name = "";
+	}
+	
+	/// <summary>
+	/// Initializes a new instance of the <see cref="EhuBio.Proteomics.Inference.PTM"/> class.
+	/// </summary>
+	/// <param name='pos'>
+	/// Position.
+	/// </param>
+	/// <param name='res'>
+	/// Res.
+	/// </param>
+	/// <param name='name'>
+	/// Name.
+	/// </param>
+	public PTM( int pos, char res, string name ) {
+		Pos = pos;
+		Residue = res;
+		Name = name;
+	}
+	
+	/// <summary>
+	/// Determines whether a specified instance of <see cref="PTM"/> is equal to another specified <see cref="PTM"/>.
+	/// </summary>
+	/// <param name='a'>
+	/// The first <see cref="PTM"/> to compare.
+	/// </param>
+	/// <param name='b'>
+	/// The second <see cref="PTM"/> to compare.
+	/// </param>
+	/// <returns>
+	/// <c>true</c> if <c>a</c> and <c>b</c> are equal; otherwise, <c>false</c>.
+	/// </returns>
+	public static bool operator == ( PTM a, PTM b ) {
+		return a.Residue == b.Residue && a.Name == b.Name && a.Pos == b.Pos;
+	}
+	
+	/// <summary>
+	/// Determines whether a specified instance of <see cref="PTM"/> is not equal to another specified <see cref="PTM"/>.
+	/// </summary>
+	/// <param name='a'>
+	/// The first <see cref="PTM"/> to compare.
+	/// </param>
+	/// <param name='b'>
+	/// The second <see cref="PTM"/> to compare.
+	/// </param>
+	/// <returns>
+	/// <c>true</c> if <c>a</c> and <c>b</c> are not equal; otherwise, <c>false</c>.
+	/// </returns>
+	public static bool operator != ( PTM a, PTM b ) {
+		return !(a==b);
+	}
+	
+	/// <summary>
+	/// Determines whether the specified <see cref="System.Object"/> is equal to the current <see cref="EhuBio.Proteomics.Inference.PTM"/>.
+	/// </summary>
+	/// <param name='obj'>
+	/// The <see cref="System.Object"/> to compare with the current <see cref="EhuBio.Proteomics.Inference.PTM"/>.
+	/// </param>
+	/// <returns>
+	/// <c>true</c> if the specified <see cref="System.Object"/> is equal to the current
+	/// <see cref="EhuBio.Proteomics.Inference.PTM"/>; otherwise, <c>false</c>.
+	/// </returns>
+	public override bool Equals( object obj ) {
+		return this == (PTM)obj;
+	}
+	
+	/// <summary>
+	/// Serves as a hash function for a <see cref="EhuBio.Proteomics.Inference.PTM"/> object.
+	/// </summary>
+	/// <returns>
+	/// A hash code for this instance that is suitable for use in hashing algorithms and data structures such as a hash table.
+	/// </returns>
+	public override int GetHashCode () {
+		return Pos;
+	}
+	
+	/// <summary>
+	/// Returns a <see cref="System.String"/> that represents the current <see cref="EhuBio.Proteomics.Inference.PTM"/>.
+	/// </summary>
+	/// <returns>
+	/// A <see cref="System.String"/> that represents the current <see cref="EhuBio.Proteomics.Inference.PTM"/>.
+	/// </returns>
+	public override string ToString () {
+		string str = Name;
+		if( Residue != '?' )
+			str = str + "+" + Residue;
+		if( Pos >= 0 )
+			str = str + "@" + Pos;
+		return str;
+	}
+}
 
 /// <summary>
 /// Class for managing peptide information and relations
@@ -59,6 +177,7 @@ public class Peptide {
 		Proteins = new List<Protein>();
 		Runs = new List<int>();
 		Names = new SortedList<string, string>();
+		PTMs = new List<PTM>();
 	}
 	
 	/// <summary>
@@ -121,6 +240,11 @@ public class Peptide {
 	public List<Protein> Proteins;
 	
 	/// <summary>
+	/// List of modifications
+	/// </summary>
+	public List<PTM> PTMs;
+	
+	/// <summary>
 	/// Peptide identification names used in mzIdentML v1.0
 	/// </summary>
 	public SortedList<string,string> Names;
@@ -134,6 +258,11 @@ public class Peptide {
 	/// Yellow-Green threshold
 	/// </summary>
 	public static double GreenTh = 0.0;
+	
+	public void AddPTM( PTM ptm ) {
+		if( !PTMs.Contains(ptm) )
+			PTMs.Add( ptm );
+	}
 }
 
 } // namespace EhuBio.Proteomics.Inference

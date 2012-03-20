@@ -93,7 +93,17 @@ public class Plgs : Mapper {
 				mid = int.Parse(element.GetAttribute("QUERY_MASS_ID"));
 			string seq = element.GetAttribute("SEQUENCE").ToUpper();
 			Peptide f = new Peptide(id, seq);
+			XmlNodeList mods = element.GetElementsByTagName( "MATCH_MODIFIER" );
 			f.Runs.Add( m_Run );
+			foreach( XmlElement mod in mods ) {
+				PTM ptm = new PTM();
+				string[] strs = mod.GetAttribute("NAME").Split(new char[]{'+'});
+				ptm.Name = strs[0];
+				string str = mod.GetAttribute("POS");
+				ptm.Pos = str.Length == 0 ? -1 : int.Parse(str);
+				ptm.Residue = strs.Length > 1 ? strs[1][0] : (ptm.Pos == -1 ? '?' : seq[ptm.Pos]);
+				f.AddPTM( ptm );
+			}
 			Protein p = null;
 			try {
 				p = m_SortedProteins[SortedAccession[pid]];

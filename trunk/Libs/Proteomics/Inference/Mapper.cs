@@ -217,7 +217,9 @@ public abstract class Mapper {
 					fo.Confidence = f.Confidence;
 				if( !fo.Runs.Contains(f.Runs[0]) )
 					fo.Runs.Add(f.Runs[0]);
-				bool dp = false;	// duplicated protein?
+				foreach( PTM ptm in f.PTMs )
+					fo.AddPTM( ptm );
+				bool dp = false;	// duplicated protein?, needed for PLGS
 				foreach( Protein po in fo.Proteins )
 					if( po.ID == f.Proteins[0].ID ) {
 						dp = true;

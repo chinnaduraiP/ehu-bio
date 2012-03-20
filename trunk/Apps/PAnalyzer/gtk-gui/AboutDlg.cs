@@ -60,9 +60,8 @@ public partial class AboutDlg
 		this.frame2.Add (this.GtkAlignment1);
 		this.GtkLabel1 = new global::Gtk.Label ();
 		this.GtkLabel1.WidthRequest = 66;
-		this.GtkLabel1.HeightRequest = 34;
+		this.GtkLabel1.HeightRequest = 48;
 		this.GtkLabel1.Name = "GtkLabel1";
-		this.GtkLabel1.Xalign = 0F;
 		this.GtkLabel1.LabelProp = global::Mono.Unix.Catalog.GetString ("<b>Version</b>");
 		this.GtkLabel1.UseMarkup = true;
 		this.frame2.LabelWidget = this.GtkLabel1;
@@ -89,7 +88,7 @@ public partial class AboutDlg
 		this.frame3.Add (this.GtkAlignment2);
 		this.GtkLabel2 = new global::Gtk.Label ();
 		this.GtkLabel2.WidthRequest = 67;
-		this.GtkLabel2.HeightRequest = 34;
+		this.GtkLabel2.HeightRequest = 48;
 		this.GtkLabel2.Name = "GtkLabel2";
 		this.GtkLabel2.LabelProp = global::Mono.Unix.Catalog.GetString ("<b>License</b>");
 		this.GtkLabel2.UseMarkup = true;
@@ -117,7 +116,7 @@ public partial class AboutDlg
 		this.frame4.Add (this.GtkAlignment3);
 		this.GtkLabel3 = new global::Gtk.Label ();
 		this.GtkLabel3.WidthRequest = 86;
-		this.GtkLabel3.HeightRequest = 34;
+		this.GtkLabel3.HeightRequest = 48;
 		this.GtkLabel3.Name = "GtkLabel3";
 		this.GtkLabel3.LabelProp = global::Mono.Unix.Catalog.GetString ("<b>Copyright</b>");
 		this.GtkLabel3.UseMarkup = true;
@@ -188,7 +187,7 @@ public partial class AboutDlg
 		this.frame1.Add (this.GtkAlignment4);
 		this.GtkLabel4 = new global::Gtk.Label ();
 		this.GtkLabel4.WidthRequest = 71;
-		this.GtkLabel4.HeightRequest = 34;
+		this.GtkLabel4.HeightRequest = 48;
 		this.GtkLabel4.Name = "GtkLabel4";
 		this.GtkLabel4.LabelProp = global::Mono.Unix.Catalog.GetString ("<b>Authors</b>");
 		this.GtkLabel4.UseMarkup = true;
@@ -225,7 +224,7 @@ public partial class AboutDlg
 			this.Child.ShowAll ();
 		}
 		this.DefaultWidth = 495;
-		this.DefaultHeight = 495;
+		this.DefaultHeight = 551;
 		this.Show ();
 	}
 }
