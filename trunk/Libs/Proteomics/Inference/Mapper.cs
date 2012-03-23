@@ -69,10 +69,32 @@ public abstract class Mapper {
 		TextReader tr = new StreamReader( xml );
 		tr.ReadBlock( buffer, 0, size );
 		tr.Close();
-		String str = new String(buffer);
+		
+		// PLGS
+		string str = new string(buffer);
 		if( str.Contains("GeneratedBy") )
 			return new Plgs(sw);
-		int i = str.IndexOf( "mzIdentML" );
+		
+		// mzIdentML 1.1
+		int i = str.IndexOf( "MzIdentML" );
+		string version;
+		if( i != -1 ) {
+			str = str.Remove(0,i);
+			i = str.IndexOf( "version" );
+			if( i == -1 )
+				throw new ApplicationException( "mzIdentML version not provided" );
+			str = str.Remove(0,i);
+			version = str.Split(new char[]{'"'})[1];
+			switch( version ) {
+				case "1.1.0":
+					return new mzId1_1(sw);
+			}
+			throw new ApplicationException( "mzIdentML version '" + version + "' not supported" );
+		}
+		
+		// mzIdentML 1.0
+		str = new string(buffer);
+		i = str.IndexOf( "mzIdentML" );
 		if( i == -1 )
 			throw new ApplicationException( "Identification file format not supported" );
 		str = str.Remove(0,i);
@@ -80,12 +102,10 @@ public abstract class Mapper {
 		if( i == -1 )
 			throw new ApplicationException( "mzIdentML version not provided" );
 		str = str.Remove(0,i);
-		string version = str.Split(new char[]{'"'})[1];
+		version = str.Split(new char[]{'"'})[1];
 		switch( version ) {
 			case "1.0.0":
 				return new mzId1_0(sw);
-			//case "1.1.0":
-				//return new mzId1_1(sw);
 		}
 		throw new ApplicationException( "mzIdentML version '" + version + "' not supported" );
 	}

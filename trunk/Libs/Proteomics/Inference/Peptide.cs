@@ -215,6 +215,12 @@ public class Peptide {
 	public int ID;
 	
 	/// <summary>
+	/// DBSequence ID used by mzIdentML
+	/// </summary>
+	public string DBRef;
+
+	
+	/// <summary>
 	/// Peptide sequence
 	/// </summary>
 	public string Sequence;

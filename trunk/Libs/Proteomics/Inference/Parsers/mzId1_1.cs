@@ -28,6 +28,7 @@ using System.IO;
 using System.Collections.Generic;
 using System.Xml;
 using EhuBio.Proteomics.Hupo.mzIdentML;
+using EhuBio.Proteomics.Hupo.mzIdentML1_1;
 
 namespace EhuBio.Proteomics.Inference {
 
@@ -39,12 +40,78 @@ public class mzId1_1 : Mapper {
 	/// Constructor
 	/// </summary>
 	public mzId1_1(Mapper.Software sw) : base(sw) {
-		//m_SWCustomizations = "No customizations";
 	}
 	
-	protected override void Load (string path) {
-		throw new NotImplementedException ();
+	protected override void Load( string mzid ) {
+		m_mzid = new mzidFile1_1();
+		m_mzid.Load( mzid );
+		
+		// Proteins
+		SortedList<string,string> SortedAccession = new SortedList<string, string>();
+		foreach( DBSequenceType prot in m_mzid.ListProteins ) {
+			if( SortedAccession.ContainsKey(prot.id) )	// Avoids duplicated entries in the same file
+				continue;
+			SortedAccession.Add( prot.id, prot.accession );
+			if( m_SortedProteins.ContainsKey(prot.accession) ) // Avoids duplicated entries between different files
+				continue;
+			CVParamType cv = mzidFile1_1.Find("MS:1001352", prot.cvParam);
+			string entry = cv == null ? "" : cv.value;
+			cv = mzidFile1_1.Find("MS:1001088", prot.cvParam);
+			string desc = cv == null ? "" : cv.value;
+			Protein p = new Protein( m_pid++, entry, prot.accession, desc, prot.Seq );
+			p.DBRef = prot.id;
+			Proteins.Add( p );
+			m_SortedProteins.Add( p.Accession, p );
+		}
+		
+		// Peptides
+		SortedList<string,Peptide> SortedPeptides = new SortedList<string, Peptide>();
+		int id = 1;
+		foreach( PeptideType pep in m_mzid.ListPeptides ) {
+			Peptide p = new Peptide( id++, pep.PeptideSequence );
+			p.Confidence = Peptide.ConfidenceType.PassThreshold; // It will be filtered later if neccessary
+			SortedPeptides.Add( pep.id, p );
+			p.Runs.Add( m_Run );
+			if( pep.Modification != null )
+				foreach( ModificationType mod in pep.Modification ) {
+					PTM ptm = new PTM();
+					ptm.Pos = mod.locationSpecified ? mod.location : -1;
+					// TODO: Include multiple residues support
+					ptm.Residue = ptm.Pos == -1 ? '?' : pep.PeptideSequence[ptm.Pos];
+					foreach( CVParamType param in mod.cvParam )
+						if( param.cvRef.Equals("UNIMOD") )
+							ptm.Name = param.name;
+					p.AddPTM( ptm );
+				}
+			p.DBRef = pep.id;
+			Peptides.Add( p );
+		}
+		
+		// Relations
+		if( m_mzid.Data.DataCollection.AnalysisData.SpectrumIdentificationList.Length != 1 )
+			throw new ApplicationException( "Multiple spectrum identification lists not supported" );
+		SortedList<string,PeptideEvidenceType> SortedEvidences = new SortedList<string, PeptideEvidenceType>();
+		foreach( PeptideEvidenceType evidence in m_mzid.Data.SequenceCollection.PeptideEvidence )
+			SortedEvidences.Add( evidence.id, evidence );
+		foreach( SpectrumIdentificationResultType idres in
+			m_mzid.Data.DataCollection.AnalysisData.SpectrumIdentificationList[0].SpectrumIdentificationResult )
+			foreach( SpectrumIdentificationItemType item in idres.SpectrumIdentificationItem ) {
+				if( !item.passThreshold )
+					continue;
+				foreach( PeptideEvidenceRefType evref in item.PeptideEvidenceRef ) {
+					PeptideEvidenceType evidence = SortedEvidences[evref.peptideEvidence_ref];
+					Peptide pep = SortedPeptides[evidence.peptide_ref];
+					Protein prot = m_SortedProteins[SortedAccession[evidence.dBSequence_ref]];
+					if( pep.Proteins.Contains(prot) )
+						continue;
+					prot.Peptides.Add( pep );
+					pep.Proteins.Add( prot );
+				}
+			}
 	}
+	
+	private int m_pid = 0;
+	private mzidFile1_1 m_mzid;
 }
 
 } // namespace EhuBio.Proteomics.Inference
