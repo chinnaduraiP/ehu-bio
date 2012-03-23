@@ -39,6 +39,7 @@
     <Compile Include="mzIdentML1_0\mzIdentML1_0.cs" />
     <Compile Include="mzIdentML1_0\wrapper.cs" />
     <Compile Include="mzIdentML1_1\wrapper.cs" />
+    <Compile Include="mzIdentML1_1\mzIdentML1_1.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

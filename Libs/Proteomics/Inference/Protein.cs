@@ -108,7 +108,7 @@ public class Protein {
 	public string Desc;
 	
 	/// <summary>
-	/// DBSequence ID used by mzIdentML1.0.0
+	/// DBSequence ID used by mzIdentML
 	/// </summary>
 	public string DBRef;
 	

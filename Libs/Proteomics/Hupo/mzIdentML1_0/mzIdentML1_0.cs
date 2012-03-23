@@ -36,8 +36,7 @@ using EhuBio.Proteomics.Hupo.mzIdentML1_0;
 namespace EhuBio.Proteomics.Hupo.mzIdentML {
 
 /// <summary>
-/// Class mzidFile:
-/// - Validates mzIdentML 1.0.0 files using internal XSD
+/// Class mzidFile1_0:
 /// - Reads/writes C# objects to a mzIdentML file using deserialization/serialization
 /// </summary>
 public class mzidFile1_0 {
@@ -45,6 +44,10 @@ public class mzidFile1_0 {
 	/// Default constructor
 	/// </summary>
 	public mzidFile1_0() {
+		Default();
+	}
+	
+	private void Default() {
 		Data = new PSIPIMainmzIdentMLType();
 		ListOntology = new List<FuGECommonOntologycvType>();
 		ListSW = new List<PSIPIanalysissearchAnalysisSoftwareType>();
@@ -58,7 +61,7 @@ public class mzidFile1_0 {
 	/// TODO: Validates the mzIdentML file using the embedded schemas
 	/// </summary>
 	public static void Validate( string xml ) {
-		throw new NotImplementedException( "mzIdentML1.0.0 validation is not fully implemented" );
+		throw new NotImplementedException( "mzIdentML1.0.0 validation is not implemented" );
 		// Load embedded schemas
 		XmlSchemaSet sc_set = new XmlSchemaSet();
 		/*foreach( string s in Assembly.GetExecutingAssembly().GetManifestResourceNames() )
@@ -129,6 +132,8 @@ public class mzidFile1_0 {
 	/// A <see cref="System.String"/> with the input file name
 	/// </param>
 	public void Load( string xml ) {
+		Default();
+		
 		// Deserialization
 		XmlSerializer serializer =  new XmlSerializer(typeof(PSIPIMainmzIdentMLType));
 		TextReader reader = new StreamReader(xml);
@@ -136,15 +141,21 @@ public class mzidFile1_0 {
 		reader.Close();
 		
 		// Parse data
-		try {
+		if( Data.cvList != null )
 			ListOntology = new List<FuGECommonOntologycvType>( Data.cvList );
+		if( Data.AnalysisSoftwareList != null )
 			ListSW = new List<PSIPIanalysissearchAnalysisSoftwareType>( Data.AnalysisSoftwareList );
+		if( Data.Provider != null )
 			Provider = Data.Provider;
+		if( Data.AuditCollection != null && Data.AuditCollection.Person != null )
 			ListPeople = new List<FuGECommonAuditPersonType>( Data.AuditCollection.Person );
+		if( Data.AuditCollection != null && Data.AuditCollection.Organization != null )
 			ListOrganizations = new List<FuGECommonAuditOrganizationType>( Data.AuditCollection.Organization );
-			ListProteins = new List<PSIPIanalysissearchDBSequenceType>( Data.SequenceCollection.DBSequence );
-			ListPeptides = new List<PSIPIpolypeptidePeptideType>( Data.SequenceCollection.Peptide );
-		} catch( ArgumentNullException ) {}
+		if( Data.SequenceCollection == null || Data.SequenceCollection.DBSequence == null
+			|| Data.SequenceCollection.Peptide == null )
+			throw new ApplicationException( "mzIdentML file without identification sequences" );
+		ListProteins = new List<PSIPIanalysissearchDBSequenceType>( Data.SequenceCollection.DBSequence );
+		ListPeptides = new List<PSIPIpolypeptidePeptideType>( Data.SequenceCollection.Peptide );
 		
 		System.GC.Collect();
 	}
