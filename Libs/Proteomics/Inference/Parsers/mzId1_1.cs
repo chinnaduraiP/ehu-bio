@@ -76,8 +76,9 @@ public class mzId1_1 : Mapper {
 				foreach( ModificationType mod in pep.Modification ) {
 					PTM ptm = new PTM();
 					ptm.Pos = mod.locationSpecified ? mod.location : -1;
-					// TODO: Include multiple residues support
-					ptm.Residue = ptm.Pos == -1 ? '?' : pep.PeptideSequence[ptm.Pos];
+					if( mod.residues != null )
+						foreach( string residue in mod.residues )
+							ptm.Residues += residue;
 					foreach( CVParamType param in mod.cvParam )
 						if( param.cvRef.Equals("UNIMOD") )
 							ptm.Name = param.name;

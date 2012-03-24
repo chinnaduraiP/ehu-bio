@@ -83,8 +83,9 @@ public class mzId1_0 : Mapper {
 				foreach( PSIPIpolypeptideModificationType mod in element.Modification ) {
 					PTM ptm = new PTM();
 					ptm.Pos = mod.locationSpecified ? mod.location : -1;
-					// TODO: Include multiple residues support
-					ptm.Residue = ptm.Pos == -1 ? '?' : seq[ptm.Pos];
+					if( mod.residues != null )
+						foreach( string residue in mod.residues )
+							ptm.Residues += residue;
 					foreach( FuGECommonOntologycvParamType param in mod.cvParam )
 						if( param.cvRef.Equals("UNIMOD") )
 							ptm.Name = param.name;
