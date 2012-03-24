@@ -82,7 +82,7 @@ public class mzidFile1_1 {
 		Default();
 		
 		// Deserialization
-		XmlSerializer serializer =  new XmlSerializer(typeof(MzIdentMLType));
+		XmlSerializer serializer = new XmlSerializer(typeof(MzIdentMLType));
 		TextReader reader = new StreamReader(xml);
 		Data = (MzIdentMLType)serializer.Deserialize(reader);
 		reader.Close();
@@ -183,12 +183,29 @@ public class mzidFile1_1 {
 	/// <param name='cvparams'>
 	/// Search array of CV terms.
 	/// </param>
-	public static CVParamType Find( string acc, CVParamType[] cvparams ) {
+	public static CVParamType FindCV( string acc, AbstractParamType[] cvparams ) {
 		if( cvparams == null )
 			return null;
-		foreach( CVParamType cv in cvparams )
+		foreach( AbstractParamType p in cvparams )
+			if( p is CVParamType ) {
+				CVParamType cv = p as CVParamType;
+				if( cv.accession == acc )
+					return cv;
+			}
+		return null;
+	}
+	
+	/// <summary>
+	/// Finds the specified CV in cvparams.
+	/// </summary>
+	public static CVParamType FindCV( string acc, AbstractParamType p ) {
+		if( p == null )
+			return null;
+		if( p is CVParamType ) {
+			CVParamType cv = p as CVParamType;
 			if( cv.accession == acc )
 				return cv;
+		}
 		return null;
 	}
 	
