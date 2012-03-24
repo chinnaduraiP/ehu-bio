@@ -40,6 +40,18 @@ public class Plgs : Mapper {
 	/// </summary>
 	public Plgs( Mapper.Software sw ) : base(sw) {
 	}
+	
+	/// <summary>
+	/// Gets the name of the parser.
+	/// </summary>
+	/// <value>
+	/// The name of the parser.
+	/// </value>
+	public override string ParserName {
+		get {
+			return "Waters PLGS";
+		}
+	}
 
 	/// <summary>
 	/// Loader of Waters XML and TXT files
