@@ -35,7 +35,7 @@ public class PTM {
 	/// <summary>
 	/// The residue.
 	/// </summary>
-	public char Residue;
+	public string Residues;
 	
 	/// <summary>
 	/// The name.
@@ -51,7 +51,7 @@ public class PTM {
 	/// Initializes a new instance of the <see cref="EhuBio.Proteomics.Inference.PTM"/> class.
 	/// </summary>
 	public PTM() {
-		Residue = '?';
+		Residues = "";
 		Pos = -1;
 		Name = "";
 	}
@@ -68,9 +68,9 @@ public class PTM {
 	/// <param name='name'>
 	/// Name.
 	/// </param>
-	public PTM( int pos, char res, string name ) {
+	public PTM( int pos, string res, string name ) {
 		Pos = pos;
-		Residue = res;
+		Residues = res;
 		Name = name;
 	}
 	
@@ -87,7 +87,7 @@ public class PTM {
 	/// <c>true</c> if <c>a</c> and <c>b</c> are equal; otherwise, <c>false</c>.
 	/// </returns>
 	public static bool operator == ( PTM a, PTM b ) {
-		return a.Residue == b.Residue && a.Name == b.Name && a.Pos == b.Pos;
+		return a.Residues == b.Residues && a.Name == b.Name && a.Pos == b.Pos;
 	}
 	
 	/// <summary>
@@ -138,8 +138,8 @@ public class PTM {
 	/// </returns>
 	public override string ToString () {
 		string str = Name;
-		if( Residue != '?' )
-			str = str + "+" + Residue;
+		if( Residues != null && Residues.Length > 0 )
+			str = str + "+" + Residues;
 		if( Pos >= 0 )
 			str = str + "@" + Pos;
 		return str;

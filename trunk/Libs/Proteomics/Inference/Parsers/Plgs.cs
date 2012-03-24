@@ -101,7 +101,8 @@ public class Plgs : Mapper {
 				ptm.Name = strs[0];
 				string str = mod.GetAttribute("POS");
 				ptm.Pos = str.Length == 0 ? -1 : int.Parse(str);
-				ptm.Residue = strs.Length > 1 ? strs[1][0] : (ptm.Pos == -1 ? '?' : seq[ptm.Pos]);
+				if( strs.Length > 1 )
+					ptm.Residues = strs[1];
 				f.AddPTM( ptm );
 			}
 			Protein p = null;
