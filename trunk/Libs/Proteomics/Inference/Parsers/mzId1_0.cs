@@ -41,6 +41,18 @@ public class mzId1_0 : Mapper {
 	/// </summary>
 	public mzId1_0(Mapper.Software sw) : base(sw) {
 	}
+	
+	/// <summary>
+	/// Gets the name of the parser.
+	/// </summary>
+	/// <value>
+	/// The name of the parser.
+	/// </value>
+	public override string ParserName {
+		get {
+			return "PSI-PI mzIdentML (v1.0.0)";
+		}
+	}
 			
 	/// <summary>
 	/// Loads a mzIdentML file

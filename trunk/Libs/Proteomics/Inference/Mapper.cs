@@ -27,6 +27,7 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Xml;
+using EhuBio.UI.Html;
 
 namespace EhuBio.Proteomics.Inference {
 
@@ -58,6 +59,9 @@ public abstract class Mapper {
 		public string Copyright;
 		public string Contact;
 		public string Customizations;
+		public override string ToString() {
+			return Name + " (v" + Version + ")";
+		}
 	}
 	
 	/// <summary>
@@ -122,7 +126,16 @@ public abstract class Mapper {
 		m_Format.NumberDecimalSeparator = ".";
 		m_Run = 0;
 		UsingThresholds = false;
+		m_InputFiles = new List<string>();
 	}
+	
+	/// <summary>
+	/// Parser type.
+	/// </summary>
+	/// <returns>
+	/// The name.
+	/// </returns>
+	public abstract string ParserName { get; }
 	
 	/// <summary>
 	/// Loads data from a peptide identification file
@@ -132,6 +145,7 @@ public abstract class Mapper {
 	/// </param>
 	public void Load( string path, bool merge ) {
 		if( !merge || m_Run == 0 ) {
+			m_InputFiles.Clear();
 			Proteins.Clear();
 			Peptides.Clear();
 			m_gid = 1;
@@ -140,6 +154,7 @@ public abstract class Mapper {
 		} else
 			m_Run++;
 		Load( path );
+		m_InputFiles.Add( Path.GetFileName(path) );
 	}
 	
 	/// <summary>
@@ -153,10 +168,11 @@ public abstract class Mapper {
 	/// </summary>
 	public virtual void Save( string fpath ) {
 		SaveCSV( Path.ChangeExtension(fpath,".csv"), ":" );
+		SaveHtml( Path.ChangeExtension(fpath,".html"), Path.GetFileNameWithoutExtension(fpath) );
 	}
 	
 	/// <summary>
-	/// Save results to a CSV file
+	/// Saves results to a CSV file.
 	/// </summary>
 	public void SaveCSV( string fpath, string sep ) {
 		TextWriter w = new StreamWriter( fpath );
@@ -177,6 +193,66 @@ public abstract class Mapper {
 			w.Write(f.ToString() + ' ');
 		w.WriteLine( sep + p.Sequence );
 	}
+	
+	#region HTML
+	
+	/// <summary>
+	/// Saves results to a HTML file.
+	/// </summary>
+	public void SaveHtml( string fpath, string name ) {
+		TextWriter w = new StreamWriter(fpath);
+		BeginHtml( w, name );
+		EndHtml( w );
+		w.Close();
+	}
+	
+	private void BeginHtml( TextWriter w, string name ) {
+		string title = "PAnalyzer: Protein identification report for " + name;
+		Tag tr = new Tag( "tr", true );
+		
+		w.WriteLine( "<html>\n<head>" );
+		w.WriteLine( "<title>" + title + "</title>"  );
+		EmbedCss( w );
+		w.WriteLine( "<body>" );
+		w.WriteLine( "<a name=\"top\"/><h2>" + title + "</h2><hr/>" );
+		w.WriteLine( "<table>\n<caption><a name=\"config\"/>Analysis Configuration</caption>" );
+		w.WriteLine( tr.Render("<th>Software</th><td>" + m_Software + "</td>") );
+		w.WriteLine( tr + "\n<th>Analysis type</th>" );
+		if( m_InputFiles.Count == 1 ) {
+			w.Write( "<td>Single run analysis</td>" + tr );
+			w.WriteLine( tr.Render("<th>Input file</th>\n<td>" + m_InputFiles[0] + "</td>") );
+		}
+		else {
+			w.WriteLine( "<td>Multirun analysis</td>" + tr );
+			w.WriteLine( tr.Render("<th>Number of runs</th><td>"+m_InputFiles.Count+"</td>") );
+			w.WriteLine( tr.Render("<th>Runs threshold</th><td>"+m_RunsTh+"</td>") );
+			w.WriteLine( tr + "<th>Input files</th>\n<td>" );
+			foreach( string f in m_InputFiles )
+				w.WriteLine( f+"<br/>" );
+			w.WriteLine( "</td>" + tr );
+		}
+		w.WriteLine( tr.Render( "<th>Input file type</th><td>"+ParserName+"</td>") );
+		w.WriteLine( tr.Render("<th>Peptide threshold</th><td>" + m_Th + "</td>") );
+		w.WriteLine( "</table>" );
+	}
+	
+	private void EmbedCss( TextWriter w ) {
+		w.WriteLine( "<style>" );
+		w.WriteLine( "body { padding: 0px; margin: 20px; }" );
+		w.WriteLine( "caption { font-size: 140%; color: darkgreen; text-align: left; }" );
+		w.WriteLine( "th, td { padding-left: 2px; padding-right: 2px; }" );
+		w.WriteLine( "th { text-align: left; }" );
+		w.WriteLine( "tr.odd { background-color: #dddddd; }" );
+		w.WriteLine( "tr.even { background-color: #eeeeee; }" );
+		w.WriteLine( "table { border: 2px black solid; border-collapse: collapse; }" );
+		w.WriteLine( "</style>" );
+	}
+	
+	private void EndHtml( TextWriter w ) {
+		w.WriteLine( "</body>\n</html>" );
+	}
+	
+	#endregion
 	
 	/// <summary>
 	/// Parses the confidence enum to a string.
@@ -205,9 +281,10 @@ public abstract class Mapper {
 	/// A <see cref="int"/> indicating in how runs a peptide must be found for beeing considered as valid
 	/// </param>
 	public void Do( Peptide.ConfidenceType th, int runs ) {
+		m_Th = th;
 		m_RunsTh = runs;
 		m_Run = 0;
-		FilterPeptides( th );
+		FilterPeptides();
 		ClasifyPeptides();
 		ClasifyProteins();
 		DoStats();
@@ -216,7 +293,7 @@ public abstract class Mapper {
 	/// <summary>
 	/// Removes peptides with low score, duplicated (same sequence) or not voted (multirun)
 	/// </summary>
-	private void FilterPeptides( Peptide.ConfidenceType th ) {
+	private void FilterPeptides() {
 		List<Peptide> peptides = new List<Peptide>();
 		int id = 1;
 		
@@ -228,7 +305,7 @@ public abstract class Mapper {
 		SortedList<string,Peptide> SortedPeptides = new SortedList<string, Peptide>();
 		foreach( Peptide f in Peptides ) {
 			// Low score peptide
-			if( (int)f.Confidence < (int)th || f.Proteins.Count == 0 )
+			if( (int)f.Confidence < (int)m_Th || f.Proteins.Count == 0 )
 				continue;
 			// Duplicated peptide, new protein?
 			if( SortedPeptides.ContainsKey(f.Sequence) ) {
@@ -495,6 +572,8 @@ public abstract class Mapper {
 	protected System.Globalization.NumberFormatInfo m_Format;
 	protected SortedList<string,Protein> m_SortedProteins;
 	protected int m_RunsTh, m_Run;
+	protected List<string> m_InputFiles;
+	protected Peptide.ConfidenceType m_Th;
 	protected Software m_Software;
 }
 
