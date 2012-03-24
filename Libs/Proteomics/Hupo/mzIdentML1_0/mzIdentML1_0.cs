@@ -62,29 +62,6 @@ public class mzidFile1_0 {
 	/// </summary>
 	public static void Validate( string xml ) {
 		throw new NotImplementedException( "mzIdentML1.0.0 validation is not implemented" );
-		// Load embedded schemas
-		XmlSchemaSet sc_set = new XmlSchemaSet();
-		/*foreach( string s in Assembly.GetExecutingAssembly().GetManifestResourceNames() )
-			Console.WriteLine( s );*/
-		Stream str = Assembly.GetExecutingAssembly().GetManifestResourceStream("Hupo.FuGElightv1.0.0.xsd");
-		//StreamReader str = new StreamReader( "FuGElightv1.0.0.xsd" );
-		XmlSchema sc = XmlSchema.Read(str,XmlValidationHandler);
-		str.Close();
-		sc_set.Add( sc );
-		str = Assembly.GetExecutingAssembly().GetManifestResourceStream("Hupo.mzIdentML1.0.0.xsd");
-		//str = new StreamReader( "mzIdentML1.0.0.xsd");
-		sc = XmlSchema.Read(str,XmlValidationHandler);
-		str.Close();
-		sc_set.Add( sc );
-		
-		// Validation with XmlReader
-		XmlReaderSettings settings = new XmlReaderSettings();
-		settings.ValidationType = ValidationType.Schema;
-		settings.Schemas = sc_set;
-		settings.ValidationEventHandler += XmlValidationHandler;
-		XmlReader reader = XmlReader.Create( xml, settings );
-		while( reader.Read() );
-		reader.Close();
 	}
 	
 	/// <summary>
@@ -135,7 +112,7 @@ public class mzidFile1_0 {
 		Default();
 		
 		// Deserialization
-		XmlSerializer serializer =  new XmlSerializer(typeof(PSIPIMainmzIdentMLType));
+		XmlSerializer serializer = new XmlSerializer(typeof(PSIPIMainmzIdentMLType));
 		TextReader reader = new StreamReader(xml);
 		Data = (PSIPIMainmzIdentMLType)serializer.Deserialize(reader);
 		reader.Close();

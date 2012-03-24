@@ -245,6 +245,7 @@ public partial class MainWindow : Gtk.Window {
 			}
 		} catch( Exception ex ) {
 			WriteLog( "Error loading XML: " + ex.Message );
+			//WriteLog( "Stack trace:\n" + ex.StackTrace );
 			State = States.EMPTY;
 			return;
 		}

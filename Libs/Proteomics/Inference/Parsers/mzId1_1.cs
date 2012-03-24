@@ -54,9 +54,9 @@ public class mzId1_1 : Mapper {
 			SortedAccession.Add( prot.id, prot.accession );
 			if( m_SortedProteins.ContainsKey(prot.accession) ) // Avoids duplicated entries between different files
 				continue;
-			CVParamType cv = mzidFile1_1.Find("MS:1001352", prot.cvParam);
+			CVParamType cv = mzidFile1_1.FindCV("MS:1001352", prot.Item);
 			string entry = cv == null ? "" : cv.value;
-			cv = mzidFile1_1.Find("MS:1001088", prot.cvParam);
+			cv = mzidFile1_1.FindCV("MS:1001088", prot.Item);
 			string desc = cv == null ? "" : cv.value;
 			Protein p = new Protein( m_pid++, entry, prot.accession, desc, prot.Seq );
 			p.DBRef = prot.id;
