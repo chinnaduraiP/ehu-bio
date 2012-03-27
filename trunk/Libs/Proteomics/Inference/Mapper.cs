@@ -194,27 +194,31 @@ public abstract class Mapper {
 		w.WriteLine( sep + p.Sequence );
 	}
 	
-	#region HTML
-	
 	/// <summary>
 	/// Saves results to a HTML file.
 	/// </summary>
 	public void SaveHtml( string fpath, string name ) {
 		TextWriter w = new StreamWriter(fpath);
-		BeginHtml( w, name );
-		EndHtml( w );
-		w.Close();
-	}
-	
-	private void BeginHtml( TextWriter w, string name ) {
 		string title = "PAnalyzer: Protein identification report for " + name;
 		Tag tr = new Tag( "tr", true );
 		
+		#region Head
 		w.WriteLine( "<html>\n<head>" );
 		w.WriteLine( "<title>" + title + "</title>"  );
-		EmbedCss( w );
+		w.WriteLine( "<style>" );
+		w.WriteLine( "body { padding: 0px; margin: 20px; }" );
+		w.WriteLine( "caption { font-size: 120%; color: darkgreen; text-align: left; }" );
+		w.WriteLine( "th, td { padding-left: 2px; padding-right: 2px; }" );
+		w.WriteLine( "th { text-align: left; }" );
+		w.WriteLine( "tr.odd { background-color: #dddddd; }" );
+		w.WriteLine( "tr.even { background-color: #eeeeee; }" );
+		w.WriteLine( "table { border: 2px black solid; border-collapse: collapse; }" );
+		w.WriteLine( "</style>" );
 		w.WriteLine( "<body>" );
 		w.WriteLine( "<a name=\"top\"/><h2>" + title + "</h2><hr/>" );
+		#endregion
+		
+		#region Configuration
 		w.WriteLine( "<table>\n<caption><a name=\"config\"/>Analysis Configuration</caption>" );
 		w.WriteLine( tr.Render("<th>Software</th><td>" + m_Software + "</td>") );
 		w.WriteLine( tr + "\n<th>Analysis type</th>" );
@@ -231,28 +235,40 @@ public abstract class Mapper {
 				w.WriteLine( f+"<br/>" );
 			w.WriteLine( "</td>" + tr );
 		}
-		w.WriteLine( tr.Render( "<th>Input file type</th><td>"+ParserName+"</td>") );
-		w.WriteLine( tr.Render("<th>Peptide threshold</th><td>" + m_Th + "</td>") );
+		w.WriteLine( tr.Render("<th>Input file type</th><td>"+ParserName+"</td>") );
+		w.WriteLine( tr.Render("<th>Peptide threshold</th><td>"+m_Th+"</td>") );
 		w.WriteLine( "</table>" );
-	}
-	
-	private void EmbedCss( TextWriter w ) {
-		w.WriteLine( "<style>" );
-		w.WriteLine( "body { padding: 0px; margin: 20px; }" );
-		w.WriteLine( "caption { font-size: 140%; color: darkgreen; text-align: left; }" );
-		w.WriteLine( "th, td { padding-left: 2px; padding-right: 2px; }" );
-		w.WriteLine( "th { text-align: left; }" );
-		w.WriteLine( "tr.odd { background-color: #dddddd; }" );
-		w.WriteLine( "tr.even { background-color: #eeeeee; }" );
-		w.WriteLine( "table { border: 2px black solid; border-collapse: collapse; }" );
-		w.WriteLine( "</style>" );
-	}
-	
-	private void EndHtml( TextWriter w ) {
+		#endregion
+		
+		// Proteins
+		tr.Reset();
+		w.WriteLine( "<table>\n<caption><a name=\"proteins\"/>Protein List</caption>" );
+		w.WriteLine( tr.Render("<th>Accession</th><th>Evidence</th><th>Entry</th><th>Description</th>") );
+		WriteProteinList( w, tr, Protein.EvidenceType.Conclusive );
+		WriteProteinList( w, tr, Protein.EvidenceType.NonConclusive );
+		WriteProteinList( w, tr, Protein.EvidenceType.Indistinguishable );
+		WriteProteinList( w, tr, Protein.EvidenceType.Group );
+		WriteProteinList( w, tr, Protein.EvidenceType.Filtered );
+		w.WriteLine( "</table>" );
+		
 		w.WriteLine( "</body>\n</html>" );
+		w.Close();
 	}
 	
-	#endregion
+	private void WriteProteinList( TextWriter w, Tag tr, Protein.EvidenceType evidence ) {
+		foreach( Protein p in Proteins ) {
+			if( p.Evidence != evidence )
+				continue;
+			if( p.Subset.Count == 0 ) {
+				w.WriteLine(tr.Render("<td>"+p.Accession+"</td><td>"+p.Evidence+"</td><td>"+p.Entry+"</td><td>"+p.Desc+"</td>"));
+				continue;
+			}
+			w.Write(tr.Render("<td rowspan=\""+p.Subset.Count+"\">"+p.Entry+"</td><td rowspan=\""+p.Subset.Count+"\">"
+				+p.Evidence+"</td><td>"+p.Subset[0].Entry+"</td><td>"+p.Subset[0].Desc+"</td>"));
+			for( int i = 1; i < p.Subset.Count; i++ )
+				w.WriteLine(tr.Render("<td/><td/><td>"+p.Subset[i].Entry+"</td><td>"+p.Subset[i].Desc+"</td>"));
+		}
+	}
 	
 	/// <summary>
 	/// Parses the confidence enum to a string.
@@ -443,7 +459,7 @@ public abstract class Mapper {
 		Protein g;
 		
 		if( p.Group == null ) {
-			g = new Protein( id++, "Group " + (m_gid++), "", p.Name, "" );
+			g = new Protein( id++, String.Format("GROUP{0:000}",m_gid++), "", p.Name, "" );
 			g.Evidence = Protein.EvidenceType.Group;
 			p.Group = g;
 			p.ID = id++;
