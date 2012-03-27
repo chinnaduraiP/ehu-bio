@@ -25,6 +25,7 @@
 
 using System;
 using System.IO;
+using System.Collections.Generic;
 using Gtk;
 using EhuBio.Proteomics.Inference;
 
@@ -216,8 +217,13 @@ public partial class MainWindow : Gtk.Window {
         foreach( int run in f.Runs )
         	textviewFrag.Buffer.Text += run + " ";
         textviewFrag.Buffer.Text += "\nPTMs: ";
-        foreach( PTM ptm in f.PTMs )
-        	textviewFrag.Buffer.Text += ptm + " ";
+        if( f.Variants.Count == 1 )
+        	textviewFrag.Buffer.Text += Peptide.Variant2Str( f.LastVariant );
+        else {
+        	i = 1;
+        	foreach( List<PTM> v in f.Variants )
+        		textviewFrag.Buffer.Text += "\n\tVariant #" + (i++) + ": " + Peptide.Variant2Str(v);
+        }
 	}
 	
 	protected virtual void OnOpenActionActivated( object sender, System.EventArgs e ) {

@@ -87,7 +87,10 @@ public class PTM {
 	/// <c>true</c> if <c>a</c> and <c>b</c> are equal; otherwise, <c>false</c>.
 	/// </returns>
 	public static bool operator == ( PTM a, PTM b ) {
-		return a.Residues == b.Residues && a.Name == b.Name && a.Pos == b.Pos;
+		for( int i = 0; i < a.Residues.Length; i++ )
+			if( b.Residues.IndexOf(a.Residues[i]) == -1 )
+				return false;
+		return a.Name == b.Name && a.Pos == b.Pos;
 	}
 	
 	/// <summary>
@@ -177,7 +180,8 @@ public class Peptide {
 		Proteins = new List<Protein>();
 		Runs = new List<int>();
 		Names = new SortedList<string, string>();
-		PTMs = new List<PTM>();
+		Variants = new List<List<PTM>>();
+		NewVariant();
 	}
 	
 	/// <summary>
@@ -246,9 +250,9 @@ public class Peptide {
 	public List<Protein> Proteins;
 	
 	/// <summary>
-	/// List of modifications
+	/// List of modifications in each peptide variant
 	/// </summary>
-	public List<PTM> PTMs;
+	public List<List<PTM>> Variants;
 	
 	/// <summary>
 	/// Peptide identification names used in mzIdentML v1.0
@@ -265,9 +269,76 @@ public class Peptide {
 	/// </summary>
 	public static double GreenTh = 0.0;
 	
+	/// <summary>
+	/// Adds a PTM to the current peptide variant
+	/// </summary>
 	public void AddPTM( PTM ptm ) {
+		List<PTM> PTMs = LastVariant;
 		if( !PTMs.Contains(ptm) )
 			PTMs.Add( ptm );
+	}
+	
+	/// <summary>
+	/// Includes a new peptide variant.
+	/// </summary>
+	public void NewVariant() {
+		Variants.Add( new List<PTM>() );
+	}
+	
+	/// <summary>
+	/// Adds the specified variant.
+	/// </summary>
+	public void AddVariant( List<PTM> v ) {
+		if( !HasVariant(v) )
+			Variants.Add( v );
+	}
+	
+	/// <summary>
+	/// Determines whether this instance has then variant specified by PTMs.
+	/// </summary>
+	/// <returns>
+	/// <c>true</c> if this instance has a variant with the specified PTMs; otherwise, <c>false</c>.
+	/// </returns>
+	public bool HasVariant( List<PTM> PTMs ) {
+		bool possible = false;
+		bool match;
+		foreach( List<PTM> v in Variants ) {
+			if( v.Count != PTMs.Count ) {
+				possible = true;
+				continue;
+			}
+			match = true;
+			foreach( PTM mod in PTMs )
+				if( !v.Contains(mod) ) {
+					match = false;
+					break;
+				}
+			if( match )
+				return true;
+		}
+		return !possible;
+	}
+	
+	/// <summary>
+	/// Gets the last variant.
+	/// </summary>
+	/// <value>
+	/// The last variant.
+	/// </value>
+	public List<PTM> LastVariant {
+		get { return Variants[Variants.Count-1]; }
+	}
+	
+	/// <summary>
+	/// Generates a string representation of the PTMs contained in the specified peptide variant.
+	/// </summary>
+	public static string Variant2Str( List<PTM> v ) {
+		string str = "";
+		if( v == null || v.Count == 0 )
+			return "none";
+		foreach( PTM mod in v )
+			str = str + mod + " ";
+		return str;
 	}
 }
 
