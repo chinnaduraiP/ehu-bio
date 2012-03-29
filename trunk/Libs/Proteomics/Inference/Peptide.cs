@@ -144,7 +144,7 @@ public class PTM {
 		if( Residues != null && Residues.Length > 0 )
 			str = str + "+" + Residues;
 		if( Pos >= 0 )
-			str = str + "@" + Pos;
+			str = str + "(" + Pos + ")";
 		return str;
 	}
 }
@@ -222,7 +222,6 @@ public class Peptide {
 	/// DBSequence ID used by mzIdentML
 	/// </summary>
 	public string DBRef;
-
 	
 	/// <summary>
 	/// Peptide sequence
@@ -338,6 +337,21 @@ public class Peptide {
 			return "none";
 		foreach( PTM mod in v )
 			str = str + mod + " ";
+		return str;
+	}
+	
+	/// <summary>
+	/// Gets the positions of the peptide in the specified protein.
+	/// </summary>
+	public string GetPositions( Protein p ) {
+		if( p.Sequence == null || p.Sequence.Length == 0 )
+			return "";
+		string str = "";
+		int pos = -1;
+		while( (pos=p.Sequence.IndexOf(Sequence,pos+1)) != -1 )
+			str += (pos+1) + ", ";
+		if( (pos=str.LastIndexOf(',')) != -1 )
+			return str.Remove( pos );
 		return str;
 	}
 }

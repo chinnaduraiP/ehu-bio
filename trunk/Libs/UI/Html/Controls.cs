@@ -38,9 +38,24 @@ public class Tag {
 	/// </param>
 	public Tag( string name ) {
 		mName = name;
+		mAttr = null;
 		mOdd = true;
 		mOpen = false;
 		OddEvenEnabled = false;
+		mHold = false;
+	}
+	
+	/// <summary>
+	/// Initializes a new instance of the <see cref="EhuBio.UI.Html.Tag"/> class.
+	/// </summary>
+	/// <param name='name'>
+	/// Name.
+	/// </param>
+	/// <param name='attr'>
+	/// Attribute.
+	/// </param>
+	public Tag( string name, string attr ) : this(name) {
+		mAttr = attr;
 	}
 	
 	/// <summary>
@@ -63,20 +78,27 @@ public class Tag {
 	/// A <see cref="System.String"/> that represents the current state of <see cref="EhuBio.UI.Html.Tag"/>.
 	/// </returns>
 	public override string ToString() {
+		return RenderTag( null );
+	}
+	
+	private string RenderTag( string attr ) {
 		string res;
 		if( !mOpen ) {
 			if( !OddEvenEnabled )
-				res = "<" + mName + ">";
+				res = "<" + mName;
 			else if( mOdd )
-				res = "<" + mName + " class=\"odd\">";
+				res = "<" + mName + " class=\"odd\"";
 			else
-				res = "<" + mName + " class=\"even\">";
+				res = "<" + mName + " class=\"even\"";
 		} else {
-			res = "<" + mName + "/>";
-			mOdd = !mOdd;
+			res = "</" + mName;
+			if( !mHold )
+				mOdd = !mOdd;
 		}
 		mOpen = !mOpen;
-		return res;
+		if( mOpen && attr != null )
+			res += " " + mAttr + "=\"" + attr + "\"";
+		return res + ">";
 	}
 	
 	/// <summary>
@@ -86,7 +108,20 @@ public class Tag {
 	/// Value.
 	/// </param>
 	public string Render( string val ) {
-		return ToString() + val + ToString();
+		return Render( null, val );
+	}
+	
+	/// <summary>
+	/// Renders the specified value between open and close tags and using the specified attribute.
+	/// </summary>
+	/// <param name='attr'>
+	/// Attribute.
+	/// </param>
+	/// <param name='val'>
+	/// Value.
+	/// </param>
+	public string Render( string attr, string val ) {
+		return RenderTag(attr) + val + RenderTag(null);
 	}
 	
 	/// <summary>
@@ -97,13 +132,40 @@ public class Tag {
 	}
 	
 	/// <summary>
+	/// Reset the odd/even state to the one of the specified tag.
+	/// </summary>
+	/// <param name='tag'>
+	/// Tag.
+	/// </param>
+	public void Reset( Tag tag ) {
+		mOdd = !tag.mOdd;
+	}
+	
+	/// <summary>
+	/// Holds/Unholds odd/event count.
+	/// </summary>
+	public bool Hold {
+		set {
+			if( value == mHold )
+				return;
+			mHold = value;
+			mOdd = !mOdd;
+		}
+		get {
+			return mHold;
+		}
+	}
+	
+	/// <summary>
 	/// Enables the odd and even classes.
 	/// </summary>
 	public bool OddEvenEnabled;
 	
 	protected string mName;
+	protected string mAttr;
 	private bool mOdd;
 	private bool mOpen;
+	private bool mHold;
 }
 
 }

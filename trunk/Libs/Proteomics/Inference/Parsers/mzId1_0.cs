@@ -194,6 +194,8 @@ public class mzId1_0 : Mapper {
         
         // Save
         m_mzid.Save( mzid );
+        
+        Notify( "Saved to " + mzid );
 	}
 	
 	/// <summary>
