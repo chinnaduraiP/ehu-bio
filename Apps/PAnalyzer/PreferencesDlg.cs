@@ -44,6 +44,15 @@ public partial class PreferencesDlg : Gtk.Dialog {
 		set { ThCombo.Active = (int)value; }
 	}
 	
+	public int RunTh {
+		set {
+			MultirunCombo.Active = value-1;
+		}
+		get {
+			return MultirunCombo.Active+1;
+		}
+	}
+	
 	public int Runs {
 		set {
 			for( int i = 0; i < 10; i++ )
@@ -52,9 +61,6 @@ public partial class PreferencesDlg : Gtk.Dialog {
 			for( int i = 1; i <= value; i++ )
 				MultirunCombo.AppendText( i.ToString() );
 			MultirunCombo.Active = 0;
-		}
-		get {
-			return MultirunCombo.Active+1;
 		}
 	}
 }

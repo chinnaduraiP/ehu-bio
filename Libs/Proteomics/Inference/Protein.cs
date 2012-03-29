@@ -103,6 +103,17 @@ public class Protein {
 	public string Accession;
 	
 	/// <summary>
+	/// Gets the entry name or accession if entry name is not available.
+	/// </summary>
+	public string EntryEx {
+		get {
+			if( Entry == null || Entry.Length == 0 )
+				return Accession;
+			return Entry;
+		}
+	}
+	
+	/// <summary>
 	/// Protein description
 	/// </summary>
 	public string Desc;
@@ -116,6 +127,38 @@ public class Protein {
 	/// Protein sequence
 	/// </summary>
 	public string Sequence;
+	
+	/// <summary>
+	/// Returns the sequence parsed in columns.
+	/// </summary>
+	public string ParseSeq( int cols ) {
+		if( Sequence == null || Sequence.Length == 0 )
+			return "";
+		string str = "";
+		int col = 10;
+		int pos = 0;
+		int len = 0;
+		int c = cols;
+		bool bFirst = true;
+		int digits = ((int)Math.Log10(Sequence.Length))+1;
+		
+		while( pos < Sequence.Length ) {
+			if( c >= cols ) {
+				if( !bFirst )
+					str += "\n";
+				else
+					bFirst = false;
+				str += String.Format( "{0,"+digits+"}", pos+1 );
+				c=0;
+			}
+			len = (pos+col) < Sequence.Length ? col : (Sequence.Length-pos);
+			str += " " + Sequence.Substring( pos, len );
+			pos += len;
+			c++;
+		}
+		
+		return str;
+	}
 	
 	/// <summary>
 	/// List of identified peptides present in the protein

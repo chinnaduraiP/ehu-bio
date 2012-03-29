@@ -51,6 +51,7 @@ public partial class MainWindow : Gtk.Window {
 		m_Software.Copyright = "(c) 2010-2012 by UPV/EHU";
 		m_Software.Contact   = "gorka.prieto@ehu.es";
 		m_Software.Customizations = "No customizations";
+		m_Software.Url		 = "http://code.google.com/p/ehu-bio/downloads/list";
 		
 		m_dlgOpen = new Gtk.FileChooserDialog(
 			"Select data file ...", this, FileChooserAction.Open,
@@ -267,6 +268,7 @@ public partial class MainWindow : Gtk.Window {
 		m_dlgSave.Hide();
 		if( res != (int)ResponseType.Ok )
 			return;
+		WriteLog( "\nSaving ..." );
 		string fpath = m_dlgSave.Filename;
 		try {
 			m_Mapper.Save( fpath );
@@ -274,7 +276,7 @@ public partial class MainWindow : Gtk.Window {
 			WriteLog( "Error saving results: " + ex.Message );
 			return;
 		}
-		WriteLog( "\nSaved to " + System.IO.Path.ChangeExtension(fpath,"(csv+mzid)") );
+		WriteLog( "Done!" );
 	}
 	
 	protected virtual void OnExecuteActionActivated( object sender, System.EventArgs e ) {
@@ -284,6 +286,8 @@ public partial class MainWindow : Gtk.Window {
 		
 		// Asks for preferences only when needed
 		if( m_bThresholds || m_nFiles > 1 ) {
+			if( m_nFiles > 1 )
+				m_dlgPrefs.RunTh = 2;
 			int res = m_dlgPrefs.Run();
 			m_dlgPrefs.Hide();
 			if( res == (int)ResponseType.Cancel )
@@ -291,7 +295,7 @@ public partial class MainWindow : Gtk.Window {
 		}
 		State = MainWindow.States.EXECUTING;
 		
-		m_Mapper.Do( m_dlgPrefs.Threshold, m_dlgPrefs.Runs );
+		m_Mapper.Do( m_dlgPrefs.Threshold, m_dlgPrefs.RunTh );
 		DisplayData();
 		State = MainWindow.States.EXECUTED;
 		WriteLog( "\nStats:" );

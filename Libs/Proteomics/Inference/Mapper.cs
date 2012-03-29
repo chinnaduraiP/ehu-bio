@@ -59,6 +59,7 @@ public abstract class Mapper {
 		public string Copyright;
 		public string Contact;
 		public string Customizations;
+		public string Url;
 		public override string ToString() {
 			return Name + " (v" + Version + ")";
 		}
@@ -185,6 +186,7 @@ public abstract class Mapper {
 					SaveCSVEntry( w, p2, p.Entry, sep );
 		}
 		w.Close();
+		Notify( "Saved to " + fpath );
 	}
 	
 	private void SaveCSVEntry( TextWriter w, Protein p, string grp, string sep ) {
@@ -194,6 +196,8 @@ public abstract class Mapper {
 		w.WriteLine( sep + p.Sequence );
 	}
 	
+	#region HTML output
+	
 	/// <summary>
 	/// Saves results to a HTML file.
 	/// </summary>
@@ -201,74 +205,210 @@ public abstract class Mapper {
 		TextWriter w = new StreamWriter(fpath);
 		string title = "PAnalyzer: Protein identification report for " + name;
 		Tag tr = new Tag( "tr", true );
+		Tag td = new Tag( "td" );
+		Tag th = new Tag( "th" );
+		Tag a = new Tag( "a", "href" );
 		
 		#region Head
 		w.WriteLine( "<html>\n<head>" );
 		w.WriteLine( "<title>" + title + "</title>"  );
 		w.WriteLine( "<style>" );
 		w.WriteLine( "body { padding: 0px; margin: 20px; }" );
-		w.WriteLine( "caption { font-size: 120%; color: darkgreen; text-align: left; }" );
+		w.WriteLine( "caption, .caption { font-size: 120%; color: darkgreen; text-align: left; }" );
 		w.WriteLine( "th, td { padding-left: 2px; padding-right: 2px; }" );
 		w.WriteLine( "th { text-align: left; }" );
-		w.WriteLine( "tr.odd { background-color: #dddddd; }" );
-		w.WriteLine( "tr.even { background-color: #eeeeee; }" );
+		w.WriteLine( "tr.odd { background-color: #ededed; }" );
+		w.WriteLine( "tr.even { background-color: #fefefe; }" );
 		w.WriteLine( "table { border: 2px black solid; border-collapse: collapse; }" );
+		//w.WriteLine( "table { table-layout: fixed; }" );
 		w.WriteLine( "</style>" );
 		w.WriteLine( "<body>" );
 		w.WriteLine( "<a name=\"top\"/><h2>" + title + "</h2><hr/>" );
 		#endregion
 		
-		#region Configuration
-		w.WriteLine( "<table>\n<caption><a name=\"config\"/>Analysis Configuration</caption>" );
-		w.WriteLine( tr.Render("<th>Software</th><td>" + m_Software + "</td>") );
-		w.WriteLine( tr + "\n<th>Analysis type</th>" );
-		if( m_InputFiles.Count == 1 ) {
-			w.Write( "<td>Single run analysis</td>" + tr );
-			w.WriteLine( tr.Render("<th>Input file</th>\n<td>" + m_InputFiles[0] + "</td>") );
-		}
-		else {
-			w.WriteLine( "<td>Multirun analysis</td>" + tr );
-			w.WriteLine( tr.Render("<th>Number of runs</th><td>"+m_InputFiles.Count+"</td>") );
-			w.WriteLine( tr.Render("<th>Runs threshold</th><td>"+m_RunsTh+"</td>") );
-			w.WriteLine( tr + "<th>Input files</th>\n<td>" );
-			foreach( string f in m_InputFiles )
-				w.WriteLine( f+"<br/>" );
-			w.WriteLine( "</td>" + tr );
-		}
-		w.WriteLine( tr.Render("<th>Input file type</th><td>"+ParserName+"</td>") );
-		w.WriteLine( tr.Render("<th>Peptide threshold</th><td>"+m_Th+"</td>") );
-		w.WriteLine( "</table>" );
+		#region Index
+		w.WriteLine( "<div class=\"caption\"><a name=\"index\"/>Content:</div>" );
+		w.WriteLine( "<ol>" );
+		w.WriteLine( "<li><a class=\"caption\" href=\"#config\">Analysis Configuration</a>" );
+		w.WriteLine( "<li><a class=\"caption\" href=\"#summary\">Protein Summary</a>" );
+		w.WriteLine( "<li><a class=\"caption\" href=\"#proteins\">Protein List</a>" );
+		w.WriteLine( "<li><a class=\"caption\" href=\"#details\">Protein Details</a>" );
+		w.WriteLine( "</ol><br/>" );
 		#endregion
 		
-		// Proteins
+		#region Configuration
+		w.WriteLine( "<table>\n<caption><a name=\"config\"/>Analysis Configuration</caption>" );
+		//w.WriteLine( "<col width=\"150px\"/><col width=\"300px\"/>" );
+		w.WriteLine( tr.Render(th.Render("Software")+td.Render(a.Render(m_Software.Url,m_Software.ToString()))) );
+		w.WriteLine( tr+"\n"+th.Render("Analysis type") );
+		if( m_InputFiles.Count == 1 ) {
+			w.Write( td.Render("Single run analysis")+tr );
+			w.WriteLine( tr.Render(th.Render("Input file")+td.Render(m_InputFiles[0])) );
+		}
+		else {
+			w.WriteLine( td.Render("Multirun analysis")+tr );
+			w.WriteLine( tr.Render(th.Render("Number of runs")+td.Render(m_InputFiles.Count.ToString())) );
+			w.WriteLine( tr.Render(th.Render("Runs threshold")+td.Render(m_RunsTh.ToString())) );
+			w.WriteLine( tr+th.Render("Input files")+"\n<td>" );
+			foreach( string f in m_InputFiles )
+				w.WriteLine( f+"<br/>" );
+			w.WriteLine( "</td>"+tr );
+		}
+		w.WriteLine( tr.Render(th.Render("Input file type")+td.Render(ParserName)) );
+		w.WriteLine( tr.Render(th.Render("Peptide threshold")+td.Render(m_Th.ToString())) );
+		w.WriteLine( "</table><br/>" );
+		#endregion
+		
+		#region Summary
+		w.WriteLine( "<table>\n<caption><a name=\"summary\"/>Protein Summary</caption>" );
+		//w.WriteLine( "<col width=\"150px\"/><col width=\"300px\"/>" );
+		w.WriteLine( tr.Render(th.Render("Maximum")+td.Render(Stats.MaxProteins.ToString())) );
+		w.WriteLine( tr.Render(th.Render("Conclusive")+td.Render(Stats.Conclusive.ToString())) );
+		w.WriteLine( tr.Render(th.Render("Indistinguishable")+
+			td.Render(Stats.Indistinguisable==0?"0":Stats.Indistinguisable.ToString()+" in "+Stats.IGroups+
+				(Stats.IGroups==1?" group":" groups"))) );
+		w.WriteLine( tr.Render(th.Render("Ambiguous groups")+
+			td.Render(Stats.Grouped==0?"0":Stats.Grouped.ToString()+" in "+Stats.Groups+
+				(Stats.Groups==1?" group":" groups"))) );
+		w.WriteLine( tr.Render(th.Render("Non conclusive")+td.Render(Stats.NonConclusive.ToString())) );
+		w.WriteLine( tr.Render(th.Render("Filtered")+td.Render(Stats.Filtered.ToString())) );
+		w.WriteLine( "</table><br/>" );
+		#endregion
+		
+		#region Protein List
 		tr.Reset();
 		w.WriteLine( "<table>\n<caption><a name=\"proteins\"/>Protein List</caption>" );
-		w.WriteLine( tr.Render("<th>Accession</th><th>Evidence</th><th>Entry</th><th>Description</th>") );
+		//w.WriteLine( "<col width=\"10%\"/><col width=\"10%\"/><col width=\"10%\"/><col width=\"20%\"/><col width=\"50%\"/>" );
+		w.WriteLine( tr.Render("<th>Name</th><th>Evidence</th><th colspan=\"2\" width=\"40%\">Peptide list</th><th>Description</th>") );
 		WriteProteinList( w, tr, Protein.EvidenceType.Conclusive );
-		WriteProteinList( w, tr, Protein.EvidenceType.NonConclusive );
 		WriteProteinList( w, tr, Protein.EvidenceType.Indistinguishable );
 		WriteProteinList( w, tr, Protein.EvidenceType.Group );
+		WriteProteinList( w, tr, Protein.EvidenceType.NonConclusive );
 		WriteProteinList( w, tr, Protein.EvidenceType.Filtered );
-		w.WriteLine( "</table>" );
+		w.WriteLine( "</table><br/>" );
+		#endregion
+		
+		#region Details
+		w.WriteLine( "<hr/><a name=\"details\"/>" );
+		foreach( Protein p in Proteins )
+			if( p.Subset.Count != 0 )
+				foreach( Protein p2 in p.Subset )
+					WriteProteinDetails( w, p2 );
+			else
+				WriteProteinDetails( w, p );
+		#endregion
 		
 		w.WriteLine( "</body>\n</html>" );
 		w.Close();
+		
+		Notify( "Saved to " + fpath );
 	}
 	
 	private void WriteProteinList( TextWriter w, Tag tr, Protein.EvidenceType evidence ) {
+		Tag a = new Tag( "a", "href" );
+		Tag td = new Tag( "td" );
+		Tag tdr = new Tag( "td", "rowspan" );
+		Tag tdc = new Tag( "td", "colspan" );
+		
 		foreach( Protein p in Proteins ) {
 			if( p.Evidence != evidence )
 				continue;
 			if( p.Subset.Count == 0 ) {
-				w.WriteLine(tr.Render("<td>"+p.Accession+"</td><td>"+p.Evidence+"</td><td>"+p.Entry+"</td><td>"+p.Desc+"</td>"));
+				w.Write( tr.Render(
+					td.Render(a.Render("#"+p.Accession,p.EntryEx))+
+					td.Render(p.Evidence.ToString())+
+					tdc.Render("2",Peptides2Html(p))+
+					td.Render(p.Desc) ));
 				continue;
 			}
-			w.Write(tr.Render("<td rowspan=\""+p.Subset.Count+"\">"+p.Entry+"</td><td rowspan=\""+p.Subset.Count+"\">"
-				+p.Evidence+"</td><td>"+p.Subset[0].Entry+"</td><td>"+p.Subset[0].Desc+"</td>"));
+			w.WriteLine( tr.Render(
+				tdr.Render(p.Subset.Count.ToString(),p.Entry)+
+				tdr.Render(p.Subset.Count.ToString(),p.Evidence.ToString())+
+				td.Render(a.Render("#"+p.Subset[0].Accession,p.Subset[0].EntryEx)+": ")+
+				td.Render(Peptides2Html(p.Subset[0]))+
+				td.Render(p.Subset[0].Desc) ));
+			tr.Hold = true;
 			for( int i = 1; i < p.Subset.Count; i++ )
-				w.WriteLine(tr.Render("<td/><td/><td>"+p.Subset[i].Entry+"</td><td>"+p.Subset[i].Desc+"</td>"));
+				w.WriteLine( tr.Render(
+					td.Render(a.Render("#"+p.Subset[i].Accession,p.Subset[i].EntryEx)+": ")+
+					td.Render(Peptides2Html(p.Subset[i]))+
+					td.Render(p.Subset[i].Desc) ));
+			tr.Hold = false;
 		}
 	}
+	
+	private string Peptides2Html( Protein p ) {
+		if( p.Peptides.Count == 0 )
+			return "";
+		int i;
+		Tag a = new Tag( "a", "href" );
+		string str = "";
+		for( i = 0; i < p.Peptides.Count-1; i++ )
+			str += a.Render("#"+p.Accession+"__"+p.Peptides[i].ID,p.Peptides[i].ToString()) + ", ";
+		str += a.Render("#"+p.Accession+"__"+p.Peptides[i].ID,p.Peptides[i].ToString());
+		return str;
+	}
+	
+	private void WriteProteinDetails( TextWriter w, Protein p ) {
+		Tag tr = new Tag( "tr", true );
+		Tag td = new Tag( "td", "colspan" );
+		Tag th = new Tag( "th", "rowspan" );
+		Tag a = new Tag( "a", "href" );
+		int i;
+		
+		w.WriteLine( "<table>\n<caption><a name=\""+p.Accession+"\"/>Protein "+p.Accession+"</caption>" );
+		//w.WriteLine( "<col width=\"10%\"/><col width=\"5%\"/><col width=\"10%\"/><col width=\"75%\"/>" );
+		w.WriteLine( tr.Render(th.Render("Name")+td.Render("3",p.EntryEx)) );
+		w.WriteLine( tr.Render(th.Render("Description")+td.Render("3",p.Desc)) );
+		w.WriteLine( tr.Render(th.Render("Sequence")+td.Render("3","<pre>"+p.ParseSeq(10)+"</pre>")) );
+		w.WriteLine( tr.Render(th.Render("Evidence")+td.Render("3",p.Evidence.ToString())) );
+		w.Write( tr+th.Render("Peptide list")+"<td colspan=\"3\">" );
+		if( p.Peptides.Count > 0 ) {
+			for( i = 0; i < p.Peptides.Count-1; i++ )
+				w.Write( a.Render("#"+p.Accession+"__"+p.Peptides[i].ID,p.Peptides[i].ToString()) + ", " );
+			w.Write( a.Render("#"+p.Accession+"__"+p.Peptides[i].ID,p.Peptides[i].ToString()) );
+		}
+		w.WriteLine( "</td>"+tr );
+		if( p.Peptides.Count == 0 ) {
+			w.WriteLine( "</table><br/>" );
+			return;
+		}
+		w.Write( tr+th.Render((p.Peptides.Count*7).ToString(),"Peptides") );
+		bool first = true;
+		foreach( Peptide f in p.Peptides ) {
+			if( first )
+				first = false;
+			else
+				w.Write( tr.ToString() );
+			w.Write( th.Render("7",f.ToString()) );
+			w.WriteLine( th.Render("<a name=\""+p.Accession+"__"+f.ID+"\"/>Confidence")+td.Render(f.Confidence.ToString())+tr );
+			tr.Hold = true;
+			w.Write( tr+th.Render("Runs")+td );
+			for( i = 0; i < f.Runs.Count-1; i++ )
+				w.Write( f.Runs[i].ToString() + ", " );
+			w.WriteLine( f.Runs[i].ToString()+td+tr );
+			w.WriteLine( tr.Render(th.Render("Relation")+td.Render(f.Relation.ToString())) );
+			w.Write( tr+th.Render("Proteins")+td );
+			for( i = 0; i < f.Proteins.Count-1; i++ )
+				w.Write( a.Render("#"+f.Proteins[i].Accession,f.Proteins[i].EntryEx) + ", " );
+			w.WriteLine( a.Render("#"+f.Proteins[i].Accession,f.Proteins[i].EntryEx)+td.ToString()+tr );
+			w.WriteLine( tr.Render(th.Render("Sequence")+td.Render("<pre>"+f.Sequence+"</pre>")) );
+			w.WriteLine( tr.Render(th.Render("Position")+td.Render(f.GetPositions(p))) );
+			w.Write( tr+th.Render("PTMs")+td );
+			if( f.Variants.Count == 1 )
+				w.Write( Peptide.Variant2Str(f.LastVariant) );
+			else {
+        		i = 1;
+        		foreach( List<PTM> v in f.Variants )
+        			w.Write( "Variant #"+(i++)+": "+Peptide.Variant2Str(v)+"<br/>" );
+        	}
+			w.WriteLine( td.ToString()+tr );
+			tr.Hold = false;
+		}
+		w.WriteLine( "</table><br/>" );
+	}
+	
+	#endregion
 	
 	/// <summary>
 	/// Parses the confidence enum to a string.
