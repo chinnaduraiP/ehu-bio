@@ -279,7 +279,8 @@ public abstract class Mapper {
 		tr.Reset();
 		w.WriteLine( "<table>\n<caption><a name=\"proteins\"/>Protein List</caption>" );
 		//w.WriteLine( "<col width=\"10%\"/><col width=\"10%\"/><col width=\"10%\"/><col width=\"20%\"/><col width=\"50%\"/>" );
-		w.WriteLine( tr.Render("<th>Name</th><th>Evidence</th><th colspan=\"2\" width=\"40%\">Peptide list</th><th>Description</th>") );
+		w.WriteLine( tr.Render("<th>Name</th><th>Evidence</th><th colspan=\"2\" width=\"40%\">"+
+			"Peptide list (unique, meaningful*, meaningless**)</th><th>Description</th>") );
 		WriteProteinList( w, tr, Protein.EvidenceType.Conclusive );
 		WriteProteinList( w, tr, Protein.EvidenceType.Indistinguishable );
 		WriteProteinList( w, tr, Protein.EvidenceType.Group );
@@ -290,12 +291,11 @@ public abstract class Mapper {
 		
 		#region Details
 		w.WriteLine( "<hr/><a name=\"details\"/>" );
-		foreach( Protein p in Proteins )
-			if( p.Subset.Count != 0 )
-				foreach( Protein p2 in p.Subset )
-					WriteProteinDetails( w, p2 );
-			else
-				WriteProteinDetails( w, p );
+		WriteProteinDetails( w, Protein.EvidenceType.Conclusive );
+		WriteProteinDetails( w, Protein.EvidenceType.Indistinguishable );
+		WriteProteinDetails( w, Protein.EvidenceType.Group );
+		WriteProteinDetails( w, Protein.EvidenceType.NonConclusive );
+		WriteProteinDetails( w, Protein.EvidenceType.Filtered );
 		#endregion
 		
 		w.WriteLine( "</body>\n</html>" );
@@ -347,6 +347,19 @@ public abstract class Mapper {
 			str += a.Render("#"+p.Accession+"__"+p.Peptides[i].ID,p.Peptides[i].ToString()) + ", ";
 		str += a.Render("#"+p.Accession+"__"+p.Peptides[i].ID,p.Peptides[i].ToString());
 		return str;
+	}
+	
+	private void WriteProteinDetails( TextWriter w, Protein.EvidenceType evidence ) {
+		foreach( Protein p in Proteins ) {
+			if( p.Evidence != evidence )
+				continue;
+			if( p.Subset.Count == 0 ) {
+				WriteProteinDetails( w, p );
+				continue;
+			}
+			foreach( Protein p2 in p.Subset )
+				WriteProteinDetails( w, p2 );
+		}
 	}
 	
 	private void WriteProteinDetails( TextWriter w, Protein p ) {

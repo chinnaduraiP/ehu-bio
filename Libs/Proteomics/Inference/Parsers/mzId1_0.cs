@@ -128,6 +128,14 @@ public class mzId1_0 : Mapper {
 				}
 			}
 	}
+	
+	/// <summary>
+	/// Also saves as mzid.
+	/// </summary>
+	public override void Save( string fpath ) {
+		base.Save( fpath );
+		SaveMzid( Path.ChangeExtension(fpath,".mzid"), null, null, null, null );
+	}
 
 	/// <summary>
 	/// Save results to a mzIdentML file
@@ -137,10 +145,10 @@ public class mzId1_0 : Mapper {
 		string org_id, string org_name,
 		string owner_name, string owner_email ) {
 		// Previous file is required for including MS data
-		if( m_mzid == null )
+		if( m_mzid == null || m_InputFiles.Count > 1 )
 			return;
 
-		// Header
+		#region Header
 		//m_mzid.AddOntology( "PSI-MS", "Proteomics Standards Initiative Mass Spectrometry Vocabularies", "2.25.0",
         //	"http://psidev.cvs.sourceforge.net/viewvc/*checkout*/psidev/psi/psi-ms/mzML/controlledVocabulary/psi-ms.obo" );
         foreach( PSIPIanalysissearchAnalysisSoftwareType sw in m_mzid.ListSW )
@@ -149,7 +157,7 @@ public class mzId1_0 : Mapper {
         		break;
         	}
         m_mzid.AddAnalysisSoftware(
-            m_Software.Name, "UPV/EHU Protein Inference", m_Software.Version, "http://code.google.com/p/ehu-bio/", "UPV_EHU",
+            m_Software.Name, "UPV/EHU Protein Inference", m_Software.Version, m_Software.Url, "UPV_EHU",
             "MS:1001267", "software vendor", "PSI-MS", m_Software.Customizations );
         foreach( FuGECommonAuditOrganizationType org in m_mzid.ListOrganizations )
         	if( org.id == "UPV_EHU" ) {
@@ -163,6 +171,7 @@ public class mzId1_0 : Mapper {
         	m_mzid.AddPerson( "DOC_OWNER", owner_name, owner_email, org_id );
         	m_mzid.AddOrganization( org_id, org_name );
         }
+        #endregion
         
         // Analysis
         List<PSIPIanalysisprocessProteinAmbiguityGroupType> listGroup =

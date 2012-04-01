@@ -49,6 +49,8 @@ public class mzidFile1_1 {
 	
 	private void Default() {
 		ListSW = new List<AnalysisSoftwareType>();
+		ListOrganizations = new List<OrganizationType>();
+		ListPeople = new List<PersonType>();
 		ListProteins = new List<DBSequenceType>();
 		ListPeptides = new List<PeptideType>();
 	}
@@ -90,6 +92,15 @@ public class mzidFile1_1 {
 		// Parse data
 		if( Data.AnalysisSoftwareList != null )		
 			ListSW = new List<AnalysisSoftwareType>( Data.AnalysisSoftwareList );
+		if( Data.AuditCollection != null ) {
+			ListOrganizations.Clear();
+			ListPeople.Clear();
+			foreach( IdentifiableType contact in Data.AuditCollection )
+				if( contact is OrganizationType )
+					ListOrganizations.Add( contact as OrganizationType );
+				else if( contact is PersonType )
+					ListPeople.Add( contact as PersonType );
+		}
 		if( Data.SequenceCollection == null || Data.SequenceCollection.DBSequence == null
 			|| Data.SequenceCollection.Peptide == null || Data.SequenceCollection.PeptideEvidence == null )
 			throw new ApplicationException( "mzIdentML file without identification sequences" );
@@ -110,6 +121,12 @@ public class mzidFile1_1 {
 	
 		// AnalysisSoftwareList
         Data.AnalysisSoftwareList = ListSW.ToArray();
+        
+        // AuditCollection
+        List<IdentifiableType> audit = new List<IdentifiableType>();
+        audit.AddRange( ListOrganizations );
+        audit.AddRange( ListPeople );
+        Data.AuditCollection = audit.ToArray();
         
         // SequenceCollection
         SequenceCollectionType seq = new SequenceCollectionType();
@@ -217,6 +234,16 @@ public class mzidFile1_1 {
 	/// Serializable object with all the mzIdentML file data
 	/// </summary>
 	public MzIdentMLType Data;
+	
+	/// <summary>
+	/// The organization list.
+	/// </summary>
+	public List<OrganizationType> ListOrganizations;
+	
+	/// <summary>
+	/// The person list.
+	/// </summary>
+	public List<PersonType> ListPeople;
 	
 	/// <summary>
 	/// Analysis software list
