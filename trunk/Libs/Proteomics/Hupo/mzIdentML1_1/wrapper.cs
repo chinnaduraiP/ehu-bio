@@ -24,6 +24,8 @@ namespace EhuBio.Proteomics.Hupo.mzIdentML1_1 {
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://psidev.info/psi/pi/mzIdentML/1.1")]
     [System.Xml.Serialization.XmlRootAttribute("MzIdentML", Namespace="http://psidev.info/psi/pi/mzIdentML/1.1")]
     public partial class MzIdentMLType : IdentifiableType {
+    	[System.Xml.Serialization.XmlAttributeAttribute("schemaLocation", Namespace = System.Xml.Schema.XmlSchema.InstanceNamespace)]
+		public string xsiSchemaLocation = "http://psidev.info/psi/pi/mzIdentML/1.1 ../../schema/mzIdentML1.1.0.xsd";
         
         private System.DateTime creationDateField;
         
@@ -1049,6 +1051,22 @@ namespace EhuBio.Proteomics.Hupo.mzIdentML1_1 {
             }
         }
     }
+
+    [System.SerializableAttribute()]
+    [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://psidev.info/psi/pi/mzIdentML/1.1")]
+    public partial class SpecificityRulesType {
+            private CVParamType[] specificityRulesField;
+
+            [System.Xml.Serialization.XmlElementAttribute("cvParam", Type=typeof(CVParamType))]
+            public CVParamType[] SpecificityRules {
+                get {
+                    return this.specificityRulesField;
+                }
+                set {
+                    this.specificityRulesField = value;
+                }
+            }
+    }
     
     /// <remarks>
 ///Specification of a search modification as parameter for a spectra search. Contains the name of the modification, the mass, the specificity and whether it is a static modification. 
@@ -1066,7 +1084,7 @@ namespace EhuBio.Proteomics.Hupo.mzIdentML1_1 {
         
         private string residuesField;
         
-        private CVParamType[][] specificityRulesField;
+        private SpecificityRulesType specificityRulesField;
         
         private CVParamType[] cvParamField2;
         
@@ -1111,7 +1129,7 @@ namespace EhuBio.Proteomics.Hupo.mzIdentML1_1 {
         
         /// <remarks/>
         [System.Xml.Serialization.XmlElementAttribute("SpecificityRules")]
-        public CVParamType[][] SpecificityRules {
+        public SpecificityRulesType SpecificityRules {
             get {
                 return this.specificityRulesField;
             }

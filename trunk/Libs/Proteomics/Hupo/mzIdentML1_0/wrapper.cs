@@ -5315,6 +5315,9 @@ public partial class FuGECollectionProviderType : FuGECommonIdentifiableType {
 [System.Xml.Serialization.XmlTypeAttribute(TypeName="PSI-PI.Main.mzIdentMLType", Namespace="http://psidev.info/psi/pi/mzIdentML/1.0")]
 [System.Xml.Serialization.XmlRootAttribute("mzIdentML", Namespace="http://psidev.info/psi/pi/mzIdentML/1.0", IsNullable=false)]
 public partial class PSIPIMainmzIdentMLType : FuGECommonIdentifiableType {
+
+    [System.Xml.Serialization.XmlAttributeAttribute("schemaLocation", Namespace = System.Xml.Schema.XmlSchema.InstanceNamespace)]
+    public string xsiSchemaLocation = "http://psidev.info/psi/pi/mzIdentML/1.0 ../../schema/mzIdentML1.0.0.xsd";
     
     private FuGECommonOntologycvType[] cvListField;
     

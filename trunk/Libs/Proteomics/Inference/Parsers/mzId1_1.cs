@@ -219,6 +219,7 @@ public class mzId1_1 : Mapper {
 		#endregion
 		
 		#region Protein detection list
+		int gid = 1;
 		SortedList<string,ProteinDetectionHypothesisType> list = new SortedList<string, ProteinDetectionHypothesisType>();
 		List<ProteinAmbiguityGroupType> groups = new List<ProteinAmbiguityGroupType>();
 		foreach( ProteinAmbiguityGroupType grp in m_mzid.Data.DataCollection.AnalysisData.ProteinDetectionList.ProteinAmbiguityGroup )
@@ -242,6 +243,7 @@ public class mzId1_1 : Mapper {
 				default:
 					continue;
 			}
+			g.id = "PAG_" + gid; gid++;
 			g.Item = ev;
 			if( p.Subset.Count == 0 )
 				g.ProteinDetectionHypothesis = new ProteinDetectionHypothesisType[]{list[p.DBRef]};
