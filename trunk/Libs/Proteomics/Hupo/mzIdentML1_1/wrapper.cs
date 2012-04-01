@@ -1035,12 +1035,12 @@ namespace EhuBio.Proteomics.Hupo.mzIdentML1_1 {
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://psidev.info/psi/pi/mzIdentML/1.1")]
     public partial class ParamListType {
         
-        private AbstractParamType itemField2;
+        private AbstractParamType[] itemField2;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlElementAttribute("cvParam", Type=typeof(CVParamType))]
         [System.Xml.Serialization.XmlElementAttribute("userParam", Type=typeof(UserParamType))]
-        public AbstractParamType Item {
+        public AbstractParamType[] Items {
             get {
                 return this.itemField2;
             }

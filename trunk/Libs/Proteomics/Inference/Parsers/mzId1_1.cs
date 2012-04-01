@@ -123,6 +123,144 @@ public class mzId1_1 : Mapper {
 			}
 	}
 	
+	/// <summary>
+	/// Also saves as mzid.
+	/// </summary>
+	public override void Save( string fpath ) {
+		base.Save( fpath );
+		SaveMzid( Path.ChangeExtension(fpath,".mzid") );
+	}
+	
+	/// <summary>
+	/// Save results to a mzIdentML file
+	/// </summary>
+	public void SaveMzid( string fpath ) {
+		if( m_mzid == null || m_InputFiles.Count > 1 )
+			return;
+		
+		#region Organization
+		OrganizationType org = new OrganizationType();
+		org.id = "UPV/EHU";
+		org.name = "University of the Basque Country";
+		foreach( OrganizationType o in m_mzid.ListOrganizations )
+			if( o.id == org.id ) {
+				m_mzid.ListOrganizations.Remove( o );
+				break;
+			}
+		m_mzid.ListOrganizations.Add( org );
+		#endregion
+		
+		#region Software author
+		PersonType person = new PersonType();
+		person.id = "PAnalyzer_Author";
+		person.firstName = "Gorka";
+		person.lastName = "Prieto";
+		CVParamType email = new CVParamType();
+		email.accession = "MS:1000589";
+		email.name = "contact email";
+		email.cvRef = "PSI-MS";
+		email.value = "gorka.prieto@ehu.es";
+		person.Item = email;
+		AffiliationType aff = new AffiliationType();
+		aff.organization_ref = org.id;
+		person.Affiliation = new AffiliationType[]{aff};
+		foreach( PersonType p in m_mzid.ListPeople )
+			if( p.id == person.id ) {
+				m_mzid.ListPeople.Remove( p );
+				break;
+			}
+		m_mzid.ListPeople.Add( person );
+		#endregion
+
+		#region Analysis software
+		AnalysisSoftwareType sw = new AnalysisSoftwareType();
+		sw.id = m_Software.Name;
+		sw.name = m_Software.ToString();
+		sw.uri = m_Software.Url;
+		sw.version = m_Software.Version;
+		UserParamType swname = new UserParamType();
+		swname.name = sw.name;
+		sw.SoftwareName = new ParamType();
+		sw.SoftwareName.Item = swname;
+		ContactRoleType contact = new ContactRoleType();
+		contact.contact_ref = person.id;
+		RoleType role = new RoleType();
+		CVParamType contacttype = new CVParamType();
+		contacttype.accession = "MS:1001271";
+		contacttype.cvRef = "PSI-MS";
+		contacttype.name = "researcher";
+		role.cvParam = contacttype;
+		sw.ContactRole = new ContactRoleType();
+		sw.ContactRole.contact_ref = person.id;
+		sw.ContactRole.Role = role;
+		sw.Customizations = m_Software.Customizations;
+		foreach( AnalysisSoftwareType s in m_mzid.ListSW )
+			if( s.id == m_Software.Name ) {
+				m_mzid.ListSW.Remove( sw );
+				break;
+			}
+		m_mzid.ListSW.Add( sw );
+		#endregion
+		
+		#region Protein detection protocol
+		//ProteinDetectionProtocolType pdp = new ProteinDetectionProtocolType();
+		m_mzid.Data.AnalysisProtocolCollection.ProteinDetectionProtocol.analysisSoftware_ref = sw.id;
+		m_mzid.Data.AnalysisProtocolCollection.ProteinDetectionProtocol.id = "PDP_PAnalyzer_1";
+		/*pdp.AnalysisParams = new ParamListType();
+		UserParamType up = new UserParamType();
+		up.name = "Peptide Threshold";
+		up.value = m_Th.ToString();
+		pdp.AnalysisParams.Item = up;
+		pdp.Threshold = new ParamListType();
+		up = new UserParamType();
+		up.name = "Conclusive evidence";
+		pdp.Threshold.Item = up;
+		m_mzid.Data.AnalysisProtocolCollection.ProteinDetectionProtocol = pdp;*/
+		#endregion
+		
+		#region Protein detection list
+		SortedList<string,ProteinDetectionHypothesisType> list = new SortedList<string, ProteinDetectionHypothesisType>();
+		List<ProteinAmbiguityGroupType> groups = new List<ProteinAmbiguityGroupType>();
+		foreach( ProteinAmbiguityGroupType grp in m_mzid.Data.DataCollection.AnalysisData.ProteinDetectionList.ProteinAmbiguityGroup )
+			foreach( ProteinDetectionHypothesisType pdh in grp.ProteinDetectionHypothesis )
+				list.Add( pdh.dBSequence_ref, pdh );
+		foreach( Protein p in Proteins ) {
+			ProteinAmbiguityGroupType g = new ProteinAmbiguityGroupType();
+			CVParamType ev = new CVParamType();
+			ev.accession = "MS:1001600";
+			ev.cvRef = "PSI-MS";
+			ev.name = "Protein Inference Confidence Category";
+			switch( p.Evidence ) {
+				case Protein.EvidenceType.Conclusive:
+					ev.value = "conclusive"; break;
+				case Protein.EvidenceType.Indistinguishable:
+					ev.value = "indistinguishable"; break;
+				case Protein.EvidenceType.Group:
+					ev.value = "ambiguous group"; break;
+				case Protein.EvidenceType.NonConclusive:
+					ev.value = "non conclusive"; break;
+				default:
+					continue;
+			}
+			g.Item = ev;
+			if( p.Subset.Count == 0 )
+				g.ProteinDetectionHypothesis = new ProteinDetectionHypothesisType[]{list[p.DBRef]};
+			else {
+				List<ProteinDetectionHypothesisType> listpdh = new List<ProteinDetectionHypothesisType>();
+				foreach( Protein p2 in p.Subset )
+					listpdh.Add( list[p2.DBRef] );
+				g.ProteinDetectionHypothesis = listpdh.ToArray();
+			}
+			groups.Add( g );
+		}
+		m_mzid.Data.DataCollection.AnalysisData.ProteinDetectionList.id = "PAnalyzer_PDL";
+		m_mzid.Data.DataCollection.AnalysisData.ProteinDetectionList.ProteinAmbiguityGroup = groups.ToArray();
+		#endregion
+		
+		m_mzid.Save( fpath );
+		Notify( "Saved to " + fpath );
+	}
+	
 	private int m_pid = 0;
 	private mzidFile1_1 m_mzid;
 }
