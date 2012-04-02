@@ -1,7 +1,9 @@
 #summary PAnalyzer: A protein inference tool for shotgun proteomics.
 #labels Featured
 
-== Introduction ==
+= Introduction =
+
+== Description ==
 
 PAnalyzer uses as input protein identification files in mzIdentML (v1.0.0 and v1.1.0) or Waters PLGS formats and re-arranges the proteins into evidence categories according to their shared peptides.
 
@@ -14,3 +16,31 @@ Multirun analysis is also supported and peptides are filtered if they are not pr
 == Output ==
 
 Results are saved to a CSV file (useful for processing using a spreadsheet) and an HTML report is also generated for allowing an easy browse. If a single mzIdentML file is used as input, an mzIdentML output is also generated.
+
+= Installation =
+
+== .NET ==
+
+PAnalyzer requires .NET version 4. If you are using Windows, you can download the Microsoft runtime from:
+
+http://www.microsoft.com/download/en/details.aspx?id=17851
+
+Or you can install the free mono implementation for Windows, Mac OS X and Linux:
+
+http://www.go-mono.com/mono-downloads/download.html
+
+== GTK# ==
+
+PAnalyzer uses GTK# for the graphical user interface. You can download it from:
+
+http://www.go-mono.com/mono-downloads/download.html
+
+== PAnalyzer ==
+
+Just download the latest version, unzip and execute!
+
+http://code.google.com/p/ehu-bio/downloads/list
+
+Probably you also want some initial protein samples:
+
+http://ehu-bio.googlecode.com/files/Protein-Samples.zip
