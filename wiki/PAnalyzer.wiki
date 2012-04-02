@@ -44,3 +44,11 @@ http://code.google.com/p/ehu-bio/downloads/list
 Probably you also want some initial protein samples:
 
 http://ehu-bio.googlecode.com/files/Protein-Samples.zip
+
+= User instructions =
+
+*Open* one or more protein identification files. Multiple files can be selected by holding the _Ctrl_ key while clicking them.
+
+Wait until PAnalyzer loads and validates the data and then click *Execute* to enter the analysis parameters dialog (only shown if applicable).
+
+Now you can browse the peptide and re-arranged protein list from the user interface, but probably you prefer using the HTML output report. To generate it just click *Save* and select the destination directory and file name.
