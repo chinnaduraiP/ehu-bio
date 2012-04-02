@@ -1,16 +1,16 @@
 #summary PAnalyzer: A protein inference tool for shotgun proteomics.
 #labels Featured
 
-= Introduction =
+== Introduction ==
 
 PAnalyzer uses as input protein identification files in mzIdentML (v1.0.0 and v1.1.0) or Waters PLGS formats and re-arranges the proteins into evidence categories according to their shared peptides.
 
 Protein evidence categories considered are: conclusive, non conclusive, ambiguous group and indistinguishable proteins.
 
-= Multiple replicate runs =
+== Multiple replicate runs ==
 
 Multirun analysis is also supported and peptides are filtered if they are not present in a minimum number of replicate runs specified by the user. If all the peptides of a protein are filtered, the protein is also filtered.
 
-= Output =
+== Output ==
 
 Results are saved to a CSV file (useful for processing using a spreadsheet) and an HTML report is also generated for allowing an easy browse. If a single mzIdentML file is used as input, an mzIdentML output is also generated.
