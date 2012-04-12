@@ -39,7 +39,7 @@ http://www.go-mono.com/mono-downloads/download.html
 
 Just download the latest version, unzip and execute!
 
-http://code.google.com/p/ehu-bio/downloads/list
+http://ehu-bio.googlecode.com/files/PAnalyzer-v0.12.zip
 
 Probably you also want some initial protein samples:
 
