@@ -25,7 +25,7 @@ public partial class AboutDlg
 	private global::Gtk.Label label5;
 	private global::Gtk.Label GtkLabel4;
 	private global::Gtk.Button buttonCancel;
-    
+	
 	protected virtual void Build ()
 	{
 		global::Stetic.Gui.Initialize (this);

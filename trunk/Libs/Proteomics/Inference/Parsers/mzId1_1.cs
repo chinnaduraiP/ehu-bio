@@ -66,9 +66,9 @@ public class mzId1_1 : Mapper {
 			SortedAccession.Add( prot.id, prot.accession );
 			if( m_SortedProteins.ContainsKey(prot.accession) ) // Avoids duplicated entries between different files
 				continue;
-			CVParamType cv = mzidFile1_1.FindCV("MS:1001352", prot.Item);
+			CVParamType cv = mzidFile1_1.FindCV("MS:1001352", prot.Items);
 			string entry = cv == null ? "" : cv.value;
-			cv = mzidFile1_1.FindCV("MS:1001088", prot.Item);
+			cv = mzidFile1_1.FindCV("MS:1001088", prot.Items);
 			string desc = cv == null ? "" : cv.value;
 			Protein p = new Protein( m_pid++, entry, prot.accession, desc, prot.Seq );
 			p.DBRef = prot.id;
@@ -160,9 +160,11 @@ public class mzId1_1 : Mapper {
 		email.name = "contact email";
 		email.cvRef = "PSI-MS";
 		email.value = "gorka.prieto@ehu.es";
+		//person.Items.Add(email);
 		person.Item = email;
 		AffiliationType aff = new AffiliationType();
-		aff.organization_ref = org.id;
+		aff.organization_ref = org.id;		
+		//person.Affiliation.Add(aff);
 		person.Affiliation = new AffiliationType[]{aff};
 		foreach( PersonType p in m_mzid.ListPeople )
 			if( p.id == person.id ) {
@@ -178,8 +180,14 @@ public class mzId1_1 : Mapper {
 		sw.name = m_Software.ToString();
 		sw.uri = m_Software.Url;
 		sw.version = m_Software.Version;
-		UserParamType swname = new UserParamType();
-		swname.name = sw.name;
+		/*UserParamType swname = new UserParamType();
+		swname.name = sw.name;*/
+		CVParamType swname = new CVParamType();
+		/* Change when new entry available */
+		swname.name = "Mascot Parser";
+		swname.cvRef = "PSI-MS";
+		swname.accession = "MS:1001478";		
+		/* ----- */
 		sw.SoftwareName = new ParamType();
 		sw.SoftwareName.Item = swname;
 		ContactRoleType contact = new ContactRoleType();
@@ -203,9 +211,10 @@ public class mzId1_1 : Mapper {
 		#endregion
 		
 		#region Protein detection protocol
-		//ProteinDetectionProtocolType pdp = new ProteinDetectionProtocolType();
+		m_mzid.Data.AnalysisCollection.ProteinDetection.proteinDetectionList_ref = "PDL_PAnalyzer";
+		m_mzid.Data.AnalysisCollection.ProteinDetection.proteinDetectionProtocol_ref = "PDP_PAnalyzer";
 		m_mzid.Data.AnalysisProtocolCollection.ProteinDetectionProtocol.analysisSoftware_ref = sw.id;
-		m_mzid.Data.AnalysisProtocolCollection.ProteinDetectionProtocol.id = "PDP_PAnalyzer_1";
+		m_mzid.Data.AnalysisProtocolCollection.ProteinDetectionProtocol.id = "PDP_PAnalyzer";
 		/*pdp.AnalysisParams = new ParamListType();
 		UserParamType up = new UserParamType();
 		up.name = "Peptide Threshold";
@@ -244,18 +253,22 @@ public class mzId1_1 : Mapper {
 					continue;
 			}
 			g.id = "PAG_" + gid; gid++;
-			g.Item = ev;
-			if( p.Subset.Count == 0 )
+			if( p.Subset.Count == 0 ) {
+				//g.ProteinDetectionHypothesis.Add(list[p.DBRef]);
 				g.ProteinDetectionHypothesis = new ProteinDetectionHypothesisType[]{list[p.DBRef]};
-			else {
+				g.Items = new CVParamType[]{ev};
+			} else {
 				List<ProteinDetectionHypothesisType> listpdh = new List<ProteinDetectionHypothesisType>();
-				foreach( Protein p2 in p.Subset )
-					listpdh.Add( list[p2.DBRef] );
+				foreach( Protein p2 in p.Subset ) {
+					ProteinDetectionHypothesisType pdh = list[p2.DBRef];
+					pdh.Items = new CVParamType[]{ev};
+					listpdh.Add( pdh );
+				}
 				g.ProteinDetectionHypothesis = listpdh.ToArray();
 			}
 			groups.Add( g );
 		}
-		m_mzid.Data.DataCollection.AnalysisData.ProteinDetectionList.id = "PAnalyzer_PDL";
+		m_mzid.Data.DataCollection.AnalysisData.ProteinDetectionList.id = "PDL_PAnalyzer";
 		m_mzid.Data.DataCollection.AnalysisData.ProteinDetectionList.ProteinAmbiguityGroup = groups.ToArray();
 		#endregion
 		
