@@ -10,7 +10,7 @@ public partial class PreferencesDlg
 	private global::Gtk.ComboBox ThCombo;
 	private global::Gtk.Button buttonCancel;
 	private global::Gtk.Button button5;
-    
+	
 	protected virtual void Build ()
 	{
 		global::Stetic.Gui.Initialize (this);

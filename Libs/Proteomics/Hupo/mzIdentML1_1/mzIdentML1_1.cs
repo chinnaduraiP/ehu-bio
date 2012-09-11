@@ -88,6 +88,7 @@ public class mzidFile1_1 {
 		TextReader reader = new StreamReader(xml);
 		Data = (MzIdentMLType)serializer.Deserialize(reader);
 		reader.Close();
+		//Data = MzIdentMLType.LoadFromFile( xml );
 		
 		// Parse data
 		if( Data.AnalysisSoftwareList != null )		
@@ -106,6 +107,7 @@ public class mzidFile1_1 {
 			throw new ApplicationException( "mzIdentML file without identification sequences" );
 		ListProteins = new List<DBSequenceType>( Data.SequenceCollection.DBSequence );
 		ListPeptides = new List<PeptideType>( Data.SequenceCollection.Peptide );
+		ListEvidences = new List<PeptideEvidenceType>( Data.SequenceCollection.PeptideEvidence );
 
 		System.GC.Collect();
 	}
@@ -123,7 +125,7 @@ public class mzidFile1_1 {
         Data.AnalysisSoftwareList = ListSW.ToArray();
         
         // AuditCollection
-        List<IdentifiableType> audit = new List<IdentifiableType>();
+        List<AbstractContactType> audit = new List<AbstractContactType>();
         audit.AddRange( ListOrganizations );
         audit.AddRange( ListPeople );
         Data.AuditCollection = audit.ToArray();
@@ -132,6 +134,7 @@ public class mzidFile1_1 {
         SequenceCollectionType seq = new SequenceCollectionType();
         seq.DBSequence = ListProteins.ToArray();
         seq.Peptide = ListPeptides.ToArray();
+        seq.PeptideEvidence = ListEvidences.ToArray();       
         Data.SequenceCollection = seq;
         
         // Serialization
@@ -139,6 +142,7 @@ public class mzidFile1_1 {
         TextWriter writer = new StreamWriter(xml);
         serializer.Serialize(writer, Data);
         writer.Close();
+        //Data.SaveToFile( xml );
         
         System.GC.Collect();
 	}
@@ -174,12 +178,7 @@ public class mzidFile1_1 {
 		sw.name = name;
 		sw.version = version;
 		sw.uri = uri;
-		sw.SoftwareName = new ParamType();
-		if( cv == null || accession == null ) {
-			UserParamType p = new UserParamType();
-			p.name = name;
-			sw.SoftwareName.Item = p;
-		} else {
+		if( cv != null && accession != null ) {
 			CVParamType p = new CVParamType();
 			p.cvRef = cv;
 			p.accession = accession;
@@ -211,11 +210,11 @@ public class mzidFile1_1 {
 			}
 		return null;
 	}
-	
+
 	/// <summary>
 	/// Finds the specified CV in cvparams.
 	/// </summary>
-	public static CVParamType FindCV( string acc, AbstractParamType p ) {
+	/*public static CVParamType FindCV( string acc, AbstractParamType p ) {
 		if( p == null )
 			return null;
 		if( p is CVParamType ) {
@@ -224,7 +223,7 @@ public class mzidFile1_1 {
 				return cv;
 		}
 		return null;
-	}
+	}*/
 	
 	private static void XsdValidationHandler( object sender, ValidationEventArgs e ) {
 		throw new ApplicationException( "XSD not valid: " + e.Message );
@@ -259,6 +258,11 @@ public class mzidFile1_1 {
 	/// Peptide list
 	/// </summary>
 	public List<PeptideType> ListPeptides;
+	
+	/// <summary>
+	/// Peptide evidence list	
+	/// </summary>
+	public List<PeptideEvidenceType> ListEvidences;
 }
 
 }	// namespace EhuBio.Proteomics.Hupo.mzIdentML

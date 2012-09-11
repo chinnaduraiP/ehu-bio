@@ -29,7 +29,7 @@ public partial class MainWindow
 	private global::Gtk.ScrolledWindow GtkScrolledWindow4;
 	private global::Gtk.TextView textviewProt;
 	private global::Gtk.Label Proteins;
-    
+	
 	protected virtual void Build ()
 	{
 		global::Stetic.Gui.Initialize (this);

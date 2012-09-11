@@ -46,7 +46,7 @@ public partial class MainWindow : Gtk.Window {
 		Build();
 		
 		m_Software.Name      = "PAnalyzer";
-		m_Software.Version   = "0.12";
+		m_Software.Version   = "0.13";
 		m_Software.License   = "Released under the GNU General Public License";
 		m_Software.Copyright = "(c) 2010-2012 by UPV/EHU";
 		m_Software.Contact   = "gorka.prieto@ehu.es";
@@ -252,7 +252,7 @@ public partial class MainWindow : Gtk.Window {
 			}
 		} catch( Exception ex ) {
 			WriteLog( "Error loading XML: " + ex.Message );
-			//WriteLog( "Stack trace:\n" + ex.StackTrace );
+			WriteLog( "Stack trace:\n" + ex.StackTrace );
 			State = States.EMPTY;
 			return;
 		}

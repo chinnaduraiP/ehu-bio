@@ -1373,7 +1373,7 @@ namespace EhuBio.Proteomics.Hupo.mzIdentML1_1 {
         
         private AmbiguousResidueType[] ambiguousResidueField;
         
-        private AbstractParamType itemField4;
+        private AbstractParamType[] itemField4;
         
         /// <remarks>
 ///The MS spectrum that the MassTable refers to e.g. "1" for MS1 "2" for MS2 or "1 2" for MS1 or MS2.
@@ -1415,7 +1415,7 @@ namespace EhuBio.Proteomics.Hupo.mzIdentML1_1 {
         /// <remarks/>
         [System.Xml.Serialization.XmlElementAttribute("cvParam", Type=typeof(CVParamType))]
         [System.Xml.Serialization.XmlElementAttribute("userParam", Type=typeof(UserParamType))]
-        public AbstractParamType Item {
+        public AbstractParamType[] Items {
             get {
                 return this.itemField4;
             }
@@ -1476,7 +1476,7 @@ namespace EhuBio.Proteomics.Hupo.mzIdentML1_1 {
         
         private string codeField1;
         
-        private AbstractParamType itemField3;
+        private AbstractParamType[] itemField3;
         
         /// <remarks>
 ///The single letter code of the ambiguous residue e.g. X.
@@ -1494,7 +1494,7 @@ namespace EhuBio.Proteomics.Hupo.mzIdentML1_1 {
         /// <remarks/>
         [System.Xml.Serialization.XmlElementAttribute("cvParam", Type=typeof(CVParamType))]
         [System.Xml.Serialization.XmlElementAttribute("userParam", Type=typeof(UserParamType))]
-        public AbstractParamType Item {
+        public AbstractParamType[] Items {
             get {
                 return this.itemField3;
             }
@@ -1670,7 +1670,7 @@ namespace EhuBio.Proteomics.Hupo.mzIdentML1_1 {
         
         private SpectrumIdentificationResultType[] spectrumIdentificationResultField;
         
-        private AbstractParamType itemField7;
+        private AbstractParamType[] itemField7;
         
         /// <remarks>
 ///The number of database sequences searched against. This value should be provided unless a de novo search has been performed.
@@ -1721,7 +1721,7 @@ namespace EhuBio.Proteomics.Hupo.mzIdentML1_1 {
         /// <remarks/>
         [System.Xml.Serialization.XmlElementAttribute("cvParam", Type=typeof(CVParamType))]
         [System.Xml.Serialization.XmlElementAttribute("userParam", Type=typeof(UserParamType))]
-        public AbstractParamType Item {
+        public AbstractParamType[] Items {
             get {
                 return this.itemField7;
             }
@@ -1747,7 +1747,7 @@ namespace EhuBio.Proteomics.Hupo.mzIdentML1_1 {
         
         private SpectrumIdentificationItemType[] spectrumIdentificationItemField;
         
-        private AbstractParamType itemField6;
+        private AbstractParamType[] itemField6;
         
         /// <remarks>
 ///The locally unique id for the spectrum in the spectra data set specified by SpectraData_ref. External guidelines are provided on the use of consistent identifiers for spectra in different external formats. 
@@ -1789,7 +1789,7 @@ namespace EhuBio.Proteomics.Hupo.mzIdentML1_1 {
         /// <remarks/>
         [System.Xml.Serialization.XmlElementAttribute("cvParam", Type=typeof(CVParamType))]
         [System.Xml.Serialization.XmlElementAttribute("userParam", Type=typeof(UserParamType))]
-        public AbstractParamType Item {
+        public AbstractParamType[] Items {
             get {
                 return this.itemField6;
             }
@@ -1836,7 +1836,7 @@ namespace EhuBio.Proteomics.Hupo.mzIdentML1_1 {
         
         private IonTypeType[] fragmentationField;
         
-        private AbstractParamType itemField5;
+        private AbstractParamType[] itemField5;
         
         /// <remarks>
 ///The charge state of the identified peptide.
@@ -2002,7 +2002,7 @@ namespace EhuBio.Proteomics.Hupo.mzIdentML1_1 {
         /// <remarks/>
         [System.Xml.Serialization.XmlElementAttribute("cvParam", Type=typeof(CVParamType))]
         [System.Xml.Serialization.XmlElementAttribute("userParam", Type=typeof(UserParamType))]
-        public AbstractParamType Item {
+        public AbstractParamType[] Items {
             get {
                 return this.itemField5;
             }
@@ -2213,7 +2213,7 @@ namespace EhuBio.Proteomics.Hupo.mzIdentML1_1 {
         
         private ProteinAmbiguityGroupType[] proteinAmbiguityGroupField;
         
-        private AbstractParamType itemField10;
+        private AbstractParamType[] itemField10;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlElementAttribute("ProteinAmbiguityGroup")]
@@ -2229,7 +2229,7 @@ namespace EhuBio.Proteomics.Hupo.mzIdentML1_1 {
         /// <remarks/>
         [System.Xml.Serialization.XmlElementAttribute("cvParam", Type=typeof(CVParamType))]
         [System.Xml.Serialization.XmlElementAttribute("userParam", Type=typeof(UserParamType))]
-        public AbstractParamType Item {
+        public AbstractParamType[] Items {
             get {
                 return this.itemField10;
             }
@@ -2252,7 +2252,7 @@ namespace EhuBio.Proteomics.Hupo.mzIdentML1_1 {
         
         private ProteinDetectionHypothesisType[] proteinDetectionHypothesisField;
         
-        private AbstractParamType itemField9;
+        private AbstractParamType[] itemField9;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlElementAttribute("ProteinDetectionHypothesis")]
@@ -2268,7 +2268,7 @@ namespace EhuBio.Proteomics.Hupo.mzIdentML1_1 {
         /// <remarks/>
         [System.Xml.Serialization.XmlElementAttribute("cvParam", Type=typeof(CVParamType))]
         [System.Xml.Serialization.XmlElementAttribute("userParam", Type=typeof(UserParamType))]
-        public AbstractParamType Item {
+        public AbstractParamType[] Items {
             get {
                 return this.itemField9;
             }
@@ -2294,7 +2294,7 @@ namespace EhuBio.Proteomics.Hupo.mzIdentML1_1 {
         
         private PeptideHypothesisType[] peptideHypothesisField;
         
-        private AbstractParamType itemField8;
+        private AbstractParamType[] itemField8;
         
         /// <remarks>
 ///A reference to the corresponding DBSequence entry. This optional and redundant, because the PeptideEvidence elements referenced from here also map to the DBSequence. 
@@ -2336,7 +2336,7 @@ namespace EhuBio.Proteomics.Hupo.mzIdentML1_1 {
         /// <remarks/>
         [System.Xml.Serialization.XmlElementAttribute("cvParam", Type=typeof(CVParamType))]
         [System.Xml.Serialization.XmlElementAttribute("userParam", Type=typeof(UserParamType))]
-        public AbstractParamType Item {
+        public AbstractParamType[] Items {
             get {
                 return this.itemField8;
             }
@@ -2427,7 +2427,7 @@ namespace EhuBio.Proteomics.Hupo.mzIdentML1_1 {
         
         private SubstitutionModificationType[] substitutionModificationField;
         
-        private AbstractParamType itemField11;
+        private AbstractParamType[] itemField11;
         
         /// <remarks>
 ///The amino acid sequence of the (poly)peptide. If a substitution modification has been found, the original sequence
@@ -2467,7 +2467,7 @@ namespace EhuBio.Proteomics.Hupo.mzIdentML1_1 {
         /// <remarks/>
         [System.Xml.Serialization.XmlElementAttribute("cvParam", Type=typeof(CVParamType))]
         [System.Xml.Serialization.XmlElementAttribute("userParam", Type=typeof(UserParamType))]
-        public AbstractParamType Item {
+        public AbstractParamType[] Items {
             get {
                 return this.itemField11;
             }
@@ -2764,7 +2764,7 @@ namespace EhuBio.Proteomics.Hupo.mzIdentML1_1 {
         
         private bool isDecoyField;
         
-        private AbstractParamType itemField12;
+        private AbstractParamType[] itemField12;
         
         /// <remarks>
 ///A reference to the protein sequence in which the specified peptide has been linked. 
@@ -2920,7 +2920,7 @@ namespace EhuBio.Proteomics.Hupo.mzIdentML1_1 {
         /// <remarks/>
         [System.Xml.Serialization.XmlElementAttribute("cvParam", Type=typeof(CVParamType))]
         [System.Xml.Serialization.XmlElementAttribute("userParam", Type=typeof(UserParamType))]
-        public AbstractParamType Item {
+        public AbstractParamType[] Items {
             get {
                 return this.itemField12;
             }
@@ -2951,7 +2951,7 @@ namespace EhuBio.Proteomics.Hupo.mzIdentML1_1 {
         
         private string seqField;
         
-        private AbstractParamType itemField13;
+        private AbstractParamType[] itemField13;
         
         /// <remarks>
 ///The length of the sequence as a number of bases or residues. 
@@ -3018,7 +3018,7 @@ namespace EhuBio.Proteomics.Hupo.mzIdentML1_1 {
         /// <remarks/>
         [System.Xml.Serialization.XmlElementAttribute("cvParam", Type=typeof(CVParamType))]
         [System.Xml.Serialization.XmlElementAttribute("userParam", Type=typeof(UserParamType))]
-        public AbstractParamType Item {
+        public AbstractParamType[] Items {
             get {
                 return this.itemField13;
             }
@@ -3042,7 +3042,7 @@ namespace EhuBio.Proteomics.Hupo.mzIdentML1_1 {
         
         private SubSampleType[] subSampleField;
         
-        private AbstractParamType itemField14;
+        private AbstractParamType[] itemField14;
         
         /// <remarks>
 ///Contact details for the Material. The association to ContactRole could specify, for example, the creator or provider of the Material. 
@@ -3071,7 +3071,7 @@ namespace EhuBio.Proteomics.Hupo.mzIdentML1_1 {
         /// <remarks/>
         [System.Xml.Serialization.XmlElementAttribute("cvParam", Type=typeof(CVParamType))]
         [System.Xml.Serialization.XmlElementAttribute("userParam", Type=typeof(UserParamType))]
-        public AbstractParamType Item {
+        public AbstractParamType[] Items {
             get {
                 return this.itemField14;
             }
@@ -3335,12 +3335,12 @@ namespace EhuBio.Proteomics.Hupo.mzIdentML1_1 {
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://psidev.info/psi/pi/mzIdentML/1.1")]
     public partial class SourceFileType : ExternalDataType {
         
-        private AbstractParamType itemField15;
+        private AbstractParamType[] itemField15;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlElementAttribute("cvParam", Type=typeof(CVParamType))]
         [System.Xml.Serialization.XmlElementAttribute("userParam", Type=typeof(UserParamType))]
-        public AbstractParamType Item {
+        public AbstractParamType[] Items {
             get {
                 return this.itemField15;
             }
