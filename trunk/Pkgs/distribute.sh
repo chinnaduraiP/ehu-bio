@@ -14,17 +14,19 @@ if [ ! -f "$ZIP" ]; then
 fi
 
 DIR="PAnalyzer-v$VER"
-if [ -d "$DIR" ]; then
-    echo "$DIR already exists"
+SKEL="../Skel"
+if [ -d "$DIR" -o -f "$DIR.zip" ]; then
+    echo "Packages already exist"
     exit
 fi
 mkdir -p "$DIR"
 
 create-macosx() {
-    local SKEL="Skel/MacOSX"
-    local DST="$DIR/PAnalyzer-v$VER-MacOSX"
+    local BASE="$SKEL/MacOSX"
+    local DST="PAnalyzer-v$VER-MacOSX"
 
-    svn export "$SKEL" "$DST" &&
+    echo -e "\n\n ----- MacOS X -----\n"
+    svn export "$BASE" "$DST" &&
     cp -f "$UNZIP"/*.dll "$UNZIP"/*.exe "$DST"/PAnalyzer.app/Contents/MacOS &&
     zip -r "$DST.zip" "$DST" &&
     rm -rf "$DST"
@@ -38,11 +40,12 @@ create-macosx() {
 }
 
 create-windows() {
-    local SKEL="Skel/Windows"
-    local DST="$DIR/PAnalyzer-v$VER-Windows"
+    local BASE="$SKEL/Windows"
+    local DST="PAnalyzer-v$VER-Windows"
 
-    svn export "$SKEL" "$DST" &&
-    cp -f "$UNZIP"/*.dll "$UNZIP"/*.exe "$DST" &&
+    echo -e "\n\n ----- Windows -----\n"
+    svn export "$BASE" "$DST" &&
+    cp -f "$UNZIP"/* "$DST" &&
     zip -r "$DST.zip" "$DST" &&
     rm -rf "$DST"
 
@@ -55,12 +58,13 @@ create-windows() {
 }
 
 create-linux() {
-    local SKEL="Skel/Linux"
-    local DST="$DIR/PAnalyzer-v$VER-Linux"
+    local BASE="$SKEL/Linux"
+    local DST="PAnalyzer-v$VER-Linux"
 
-    svn export "$SKEL" "$DST" &&
-    cp -f "$UNZIP"/*.dll "$UNZIP"/*.exe "$DST" &&
-    tar -czf "$DST.tar.gz" "$DST" &&
+    echo -e "\n\n ----- Linux -----\n"
+    svn export "$BASE" "$DST" &&
+    cp -f "$UNZIP"/* "$DST" &&
+    tar -czvf "$DST.tar.gz" "$DST" &&
     rm -rf "$DST"
 
     if [ $? -ne 0 ]; then
@@ -71,14 +75,17 @@ create-linux() {
     fi
 }
 
-unzip "$ZIP" &&
+cd "$DIR" &&
+unzip "../$ZIP" &&
 create-macosx &&
 create-windows &&
 create-linux &&
-rm -rf "$UNZIP"
+rm -rf "$UNZIP" &&
+cd .. &&
+mv "$ZIP" "$DIR.zip"
 
 if [ $? -ne 0 ]; then
-    echo "Error creating packages"
+    echo -e "\n\nError creating packages"
 else
-   echo "Packages created successfully!!"
+   echo -e "\n\nPackages created successfully!!"
 fi
