@@ -180,24 +180,18 @@ public class mzId1_1 : Mapper {
 		sw.name = m_Software.ToString();
 		sw.uri = m_Software.Url;
 		sw.version = m_Software.Version;
-		/*UserParamType swname = new UserParamType();
-		swname.name = sw.name;*/
 		CVParamType swname = new CVParamType();
-		/* Change when new entry available */
-		swname.name = "Mascot Parser";
+		swname.name = "PAnalyzer";
 		swname.cvRef = "PSI-MS";
-		swname.accession = "MS:1001478";		
-		/* ----- */
+		swname.accession = "MS:1002076";		
 		sw.SoftwareName = new ParamType();
 		sw.SoftwareName.Item = swname;
-		ContactRoleType contact = new ContactRoleType();
-		contact.contact_ref = person.id;
 		RoleType role = new RoleType();
 		CVParamType contacttype = new CVParamType();
 		contacttype.accession = "MS:1001271";
 		contacttype.cvRef = "PSI-MS";
 		contacttype.name = "researcher";
-		role.cvParam = contacttype;
+		role.cvParam = contacttype;		
 		sw.ContactRole = new ContactRoleType();
 		sw.ContactRole.contact_ref = person.id;
 		sw.ContactRole.Role = role;
@@ -215,16 +209,6 @@ public class mzId1_1 : Mapper {
 		m_mzid.Data.AnalysisCollection.ProteinDetection.proteinDetectionProtocol_ref = "PDP_PAnalyzer";
 		m_mzid.Data.AnalysisProtocolCollection.ProteinDetectionProtocol.analysisSoftware_ref = sw.id;
 		m_mzid.Data.AnalysisProtocolCollection.ProteinDetectionProtocol.id = "PDP_PAnalyzer";
-		/*pdp.AnalysisParams = new ParamListType();
-		UserParamType up = new UserParamType();
-		up.name = "Peptide Threshold";
-		up.value = m_Th.ToString();
-		pdp.AnalysisParams.Item = up;
-		pdp.Threshold = new ParamListType();
-		up = new UserParamType();
-		up.name = "Conclusive evidence";
-		pdp.Threshold.Item = up;
-		m_mzid.Data.AnalysisProtocolCollection.ProteinDetectionProtocol = pdp;*/
 		#endregion
 		
 		#region Protein detection list

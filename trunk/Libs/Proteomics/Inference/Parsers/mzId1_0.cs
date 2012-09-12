@@ -147,70 +147,109 @@ public class mzId1_0 : Mapper {
 		// Previous file is required for including MS data
 		if( m_mzid == null || m_InputFiles.Count > 1 )
 			return;
-
-		#region Header
-		//m_mzid.AddOntology( "PSI-MS", "Proteomics Standards Initiative Mass Spectrometry Vocabularies", "2.25.0",
-        //	"http://psidev.cvs.sourceforge.net/viewvc/*checkout*/psidev/psi/psi-ms/mzML/controlledVocabulary/psi-ms.obo" );
-        foreach( PSIPIanalysissearchAnalysisSoftwareType sw in m_mzid.ListSW )
-        	if( sw.id == "PAnalyzer" ) {
-        		m_mzid.ListSW.Remove(sw);
-        		break;
-        	}
-        m_mzid.AddAnalysisSoftware(
-            m_Software.Name, "UPV/EHU Protein Inference", m_Software.Version, m_Software.Url, "UPV_EHU",
-            "MS:1001267", "software vendor", "PSI-MS", m_Software.Customizations );
-        foreach( FuGECommonAuditOrganizationType org in m_mzid.ListOrganizations )
-        	if( org.id == "UPV_EHU" ) {
-        		m_mzid.ListOrganizations.Remove( org );
-        		break;
-        	}
-        m_mzid.AddOrganization( "UPV_EHU", "University of the Basque Country",
-            "Barrio Sarriena s/n, 48940 Leioa, Spain", "+34 94 601 200", "secretariageneral@ehu.es" );
-        if( org_id != null ) {
-        	m_mzid.SetProvider( org_id, "DOC_OWNER", "MS:1001271", "researcher", "PSI-MS" );
-        	m_mzid.AddPerson( "DOC_OWNER", owner_name, owner_email, org_id );
-        	m_mzid.AddOrganization( org_id, org_name );
-        }
-        #endregion
         
-        // Analysis
+        #region Organization
+		FuGECommonAuditOrganizationType org = new FuGECommonAuditOrganizationType();
+		org.id = "UPV/EHU";
+		org.name = "University of the Basque Country";
+		foreach( FuGECommonAuditOrganizationType o in m_mzid.ListOrganizations )
+			if( o.id == org.id ) {
+				m_mzid.ListOrganizations.Remove( o );
+				break;
+			}
+		m_mzid.ListOrganizations.Add( org );
+		#endregion
+		
+		#region Software author
+		FuGECommonAuditPersonType person = new FuGECommonAuditPersonType();
+		person.id = "PAnalyzer_Author";
+		person.firstName = "Gorka";
+		person.lastName = "Prieto";
+		person.email = "gorka.prieto@ehu.es";
+		FuGECommonAuditPersonTypeAffiliations aff = new FuGECommonAuditPersonTypeAffiliations();
+		aff.Organization_ref = org.id;		
+		person.affiliations = new FuGECommonAuditPersonTypeAffiliations[]{aff};
+		foreach( FuGECommonAuditPersonType p in m_mzid.ListPeople )
+			if( p.id == person.id ) {
+				m_mzid.ListPeople.Remove( p );
+				break;
+			}
+		m_mzid.ListPeople.Add( person );
+		#endregion
+
+		#region Analysis software
+		PSIPIanalysissearchAnalysisSoftwareType sw = new PSIPIanalysissearchAnalysisSoftwareType();
+		sw.id = m_Software.Name;
+		sw.name = m_Software.ToString();
+		sw.URI = m_Software.Url;
+		sw.version = m_Software.Version;
+		ParamType swname = new ParamType();
+		FuGECommonOntologycvParamType item = new FuGECommonOntologycvParamType();
+		item.name = "PAnalyzer";
+		item.cvRef = "PSI-MS";
+		item.accession = "MS:1002076";		
+		swname.Item = item;
+		sw.SoftwareName = swname;
+		FuGECommonAuditContactRoleType contact = new FuGECommonAuditContactRoleType();
+		contact.Contact_ref = person.id;
+		FuGECommonAuditContactRoleTypeRole role = new FuGECommonAuditContactRoleTypeRole();
+		FuGECommonOntologycvParamType contacttype = new FuGECommonOntologycvParamType();
+		contacttype.accession = "MS:1001271";
+		contacttype.cvRef = "PSI-MS";
+		contacttype.name = "researcher";
+		role.cvParam = contacttype;
+		contact.role = role;
+		sw.ContactRole = contact;
+		sw.Customizations = m_Software.Customizations;
+		foreach( PSIPIanalysissearchAnalysisSoftwareType s in m_mzid.ListSW )
+			if( s.id == m_Software.Name ) {
+				m_mzid.ListSW.Remove( sw );
+				break;
+			}
+		m_mzid.ListSW.Add( sw );
+		#endregion
+		
+		#region Protein detection protocol
+		m_mzid.Data.AnalysisCollection.ProteinDetection.ProteinDetectionList_ref = "PDL_PAnalyzer";
+		m_mzid.Data.AnalysisCollection.ProteinDetection.ProteinDetectionProtocol_ref = "PDP_PAnalyzer";
+		m_mzid.Data.AnalysisProtocolCollection.ProteinDetectionProtocol.AnalysisSoftware_ref = sw.id;
+		m_mzid.Data.AnalysisProtocolCollection.ProteinDetectionProtocol.id = "PDP_PAnalyzer";
+		#endregion
+        
+        #region Protein detection list
         List<PSIPIanalysisprocessProteinAmbiguityGroupType> listGroup =
         	new List<PSIPIanalysisprocessProteinAmbiguityGroupType>();
         int hit = 1;
         foreach( Protein p in Proteins ) {
+        	if( p.Evidence == Protein.EvidenceType.Filtered )
+        		continue;
         	PSIPIanalysisprocessProteinAmbiguityGroupType grp = new PSIPIanalysisprocessProteinAmbiguityGroupType();
         	grp.id = "PAG_hit_" + (hit++);
         	int num = (p.Subset.Count == 0 ? 1 : p.Subset.Count);
         	grp.ProteinDetectionHypothesis = new PSIPIanalysisprocessProteinDetectionHypothesisType[num];
         	if( p.Subset.Count == 0 )
-        		grp.ProteinDetectionHypothesis[0] = BuildHypothesis( p );
+        		grp.ProteinDetectionHypothesis[0] = BuildHypothesis( p, p.Evidence );
         	else {
         		int i = 0;
         		foreach( Protein p2 in p.Subset )
-        			grp.ProteinDetectionHypothesis[i++] = BuildHypothesis( p2 );
-        	}
-        	grp.cvParam = new FuGECommonOntologycvParamType[1];
-        	grp.cvParam[0] = new FuGECommonOntologycvParamType(
-        		"ProteomeDiscoverer:ProteinConfidenceCategory",
-        		"MS:1001673", "PSI-MS" );
-        	grp.cvParam[0].value = ParseConfidence( p.Evidence );
+        			grp.ProteinDetectionHypothesis[i++] = BuildHypothesis( p2, p.Evidence );
+        	}        	
         	listGroup.Add( grp );
         }
         PSIPIanalysisprocessProteinDetectionListType analysis = new PSIPIanalysisprocessProteinDetectionListType();
-        analysis.id = "PAnalyzer_PDL";
+        analysis.id = "PDL_PAnalyzer";
        	analysis.ProteinAmbiguityGroup = listGroup.ToArray();
         m_mzid.Data.DataCollection.AnalysisData.ProteinDetectionList = analysis;
+        #endregion
         
-        // Save
-        m_mzid.Save( mzid );
-        
+        m_mzid.Save( mzid );        
         Notify( "Saved to " + mzid );
 	}
 	
 	/// <summary>
 	/// Builds a PDH for the current protein
 	/// </summary>
-	private PSIPIanalysisprocessProteinDetectionHypothesisType BuildHypothesis( Protein p ) {
+	private PSIPIanalysisprocessProteinDetectionHypothesisType BuildHypothesis( Protein p, Protein.EvidenceType ev ) {
 		PSIPIanalysisprocessProteinDetectionHypothesisType h = new PSIPIanalysisprocessProteinDetectionHypothesisType();
 		h.id = "PDH_" + p.Accession;
 		h.DBSequence_ref = p.DBRef;
@@ -226,6 +265,11 @@ public class mzId1_0 : Mapper {
 		}
 		if( listPeptides.Count > 0 )
 			h.PeptideHypothesis = listPeptides.ToArray();
+		h.cvParam = new FuGECommonOntologycvParamType[1];
+        h.cvParam[0] = new FuGECommonOntologycvParamType(
+        		"Protein Inference Confidence Category",
+        		"MS:1001600", "PSI-MS" );
+        h.cvParam[0].value = ParseConfidence( ev );
 		return h;
 	}
 		

@@ -156,7 +156,7 @@ public class Peptide {
 	/// <summary>
 	/// Peptide-protein relations
 	/// </summary>
-	public enum RelationType { Unique, Meaningful, Meaningless };
+	public enum RelationType { Unique, Discriminating, NonDiscriminating };
 	
 	/// <summary>
 	/// Peptide confidence according to its score and a given threshold
@@ -176,7 +176,7 @@ public class Peptide {
 		this.ID = ID;
 		this.Sequence = Seq;
 		Confidence = Peptide.ConfidenceType.Green;
-		Relation = Peptide.RelationType.Meaningless;
+		Relation = Peptide.RelationType.NonDiscriminating;
 		Proteins = new List<Protein>();
 		Runs = new List<int>();
 		Names = new SortedList<string, string>();
@@ -191,9 +191,9 @@ public class Peptide {
 		switch( Relation ) {
 			case RelationType.Unique:
 				return ID.ToString();
-			case RelationType.Meaningful:
+			case RelationType.Discriminating:
 				return ID.ToString()+'*';
-			case RelationType.Meaningless:
+			case RelationType.NonDiscriminating:
 				return ID.ToString()+"**";
 		}
 		return "?";
