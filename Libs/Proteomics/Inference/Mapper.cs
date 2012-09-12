@@ -526,21 +526,21 @@ public abstract class Mapper {
 				f.Proteins[0].Evidence = Protein.EvidenceType.Conclusive;
 			}
 			else
-				f.Relation = Peptide.RelationType.Meaningful;
+				f.Relation = Peptide.RelationType.Discriminating;
 		
 		// 2. Locate non-meaningful peptides (first round)
 		foreach( Protein p in Proteins )
 			if( p.Evidence == Protein.EvidenceType.Conclusive )
 				foreach( Peptide f in p.Peptides )
 					if( f.Relation != Peptide.RelationType.Unique )
-						f.Relation = Peptide.RelationType.Meaningless;
+						f.Relation = Peptide.RelationType.NonDiscriminating;
 		
 		// 3. Locate non-meaningful peptides (second round)
 		foreach( Peptide f in Peptides ) {
-			if( f.Relation != Peptide.RelationType.Meaningful )
+			if( f.Relation != Peptide.RelationType.Discriminating )
 				continue;
 			foreach( Peptide f2 in f.Proteins[0].Peptides ) {
-				if( f2.Relation == Peptide.RelationType.Meaningless )
+				if( f2.Relation == Peptide.RelationType.NonDiscriminating )
 					continue;
 				if( f2.Proteins.Count <= f.Proteins.Count )
 					continue;
@@ -551,7 +551,7 @@ public abstract class Mapper {
 						break;
 					}
 				if( !is_shared )
-					f2.Relation = Peptide.RelationType.Meaningless;
+					f2.Relation = Peptide.RelationType.NonDiscriminating;
 			}
 		}
 	}
@@ -571,7 +571,7 @@ public abstract class Mapper {
 			} else {
 				bool is_group = false;
 				foreach( Peptide f in p.Peptides )
-					if( f.Relation == Peptide.RelationType.Meaningful ) {
+					if( f.Relation == Peptide.RelationType.Discriminating ) {
 						is_group = true;
 						break;
 					}
@@ -622,7 +622,7 @@ public abstract class Mapper {
 			g = p.Group;
 		
 		foreach( Peptide f in p.Peptides ) {
-			if( f.Relation != Peptide.RelationType.Meaningful )
+			if( f.Relation != Peptide.RelationType.Discriminating )
 				continue;
 			foreach( Protein t in f.Proteins )
 				if( t.Evidence == Protein.EvidenceType.Group && t.Group == null ) {
@@ -636,7 +636,7 @@ public abstract class Mapper {
 	
 	private bool IsIndistinguisable( Protein g ) {
 		foreach( Peptide f in g.Subset[0].Peptides ) {
-			if( f.Relation != Peptide.RelationType.Meaningful )
+			if( f.Relation != Peptide.RelationType.Discriminating )
 				continue;
 			foreach( Protein p in g.Subset )
 				if( !p.HasPeptide(f) )
