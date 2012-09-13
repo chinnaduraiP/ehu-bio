@@ -19,31 +19,29 @@ Results are saved to a CSV file (useful for processing using a spreadsheet) and 
 
 = Installation =
 
-== .NET ==
+1. Download the latest zip available for your operating system
 
-PAnalyzer requires .NET version 4. If you are using Windows, you can download the Microsoft runtime from:
+2. Copy all the files in the zip to any location
 
-http://www.microsoft.com/download/en/details.aspx?id=17851
+3. Install the free software Mono .NET framework with GTK# support. You can download the framework for GNU/Linux, Mac OS X or Windows from here: 
 
-Or you can install the free mono implementation for Windows, Mac OS X and Linux:
+ http://www.go-mono.com/mono-downloads/download.html
 
-http://www.go-mono.com/mono-downloads/download.html
-
-== GTK# ==
-
-PAnalyzer uses GTK# for the graphical user interface. You can download it from:
-
-http://www.go-mono.com/mono-downloads/download.html
-
-== PAnalyzer ==
-
-Just download the latest version, unzip and execute!
-
-http://ehu-bio.googlecode.com/files/PAnalyzer-v0.12.zip
+ If you use Ubuntu you can simply install the package "mono-runtime" instead.
 
 Probably you also want some initial protein samples:
 
-http://ehu-bio.googlecode.com/files/Protein-Samples.zip
+ http://ehu-bio.googlecode.com/files/Protein-Samples.zip
+
+= Execution =
+
+Specific launchers are provided for the different platforms:
+
+ * GNU/Linux: just click on _PAnalyzer.exe_ or execute _PAnalyzer.sh_ from a console, which will automatically install the mono runtime if not detected
+
+ * Mac OS X: just click on the _PAnalyzer_ application
+
+ * Windows: just click on _PAnalyzer.bat_
 
 = User instructions =
 
