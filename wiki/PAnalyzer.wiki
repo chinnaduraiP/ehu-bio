@@ -20,8 +20,11 @@ Results are saved to a CSV file (useful for processing using a spreadsheet) and 
 = Installation =
 
 1. Download the latest zip available for your operating system
+ * GNU/Linux: http://ehu-bio.googlecode.com/files/PAnalyzer-v0.13-Linux.zip
+ * Mac OS X http://ehu-bio.googlecode.com/files/PAnalyzer-v0.13-MacOSX.zip
+ * Windows: http://ehu-bio.googlecode.com/files/PAnalyzer-v0.13-Windows.zip
 
-2. Copy all the files in the zip to any location
+2. Extract all the files in the zip to any location
 
 3. Install the free software Mono .NET framework with GTK# support. You can download the framework for GNU/Linux, Mac OS X or Windows from here: 
 
