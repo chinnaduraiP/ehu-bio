@@ -9,7 +9,6 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>wregex</RootNamespace>
     <AssemblyName>wregex</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -20,6 +19,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Externalconsole>true</Externalconsole>
+    <Commandlineparameters>-r phi1-4.regex -d /media/data/Sequences/UniProt/uniprot_sprot.xml.gz</Commandlineparameters>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>none</DebugType>
@@ -42,6 +42,10 @@
     <ProjectReference Include="..\..\Libs\Database\Ehu\Ehu.csproj">
       <Project>{D1BB15E0-E29F-4D80-BC57-AC95CACB7D91}</Project>
       <Name>Ehu</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libs\Database\Ebi\Ebi.csproj">
+      <Project>{24FE7A85-8B58-4B38-B50B-C111DE9A7ADA}</Project>
+      <Name>Ebi</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
