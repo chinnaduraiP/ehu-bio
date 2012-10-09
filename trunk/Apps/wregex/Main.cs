@@ -24,47 +24,69 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using System;
 using System.IO;
+using System.IO.Compression;
 using System.Collections.Generic;
 using System.Threading;
 using EhuBio.Database.Ehu;
+using EhuBio.Database.Ebi;
 
 namespace wregex {
 
 class WregexConsole {
 	public static int Main( string[] args ) {
-		if( args.Length < 2 || args.Length > 3 ) {
-			DisplayUsage();
+		if( args.Length % 2 != 0 ) {
+			DisplayUsage( "odd number of arguments" );
 			return 1;
-		} 
+		}
 		
-		string RegexFile = args[0];
-		string PssmFile;
-		string FastaFile;
-		if( args.Length == 3 ) {
-			PssmFile = args[1];
-			FastaFile = args[2];
-		} else {
-			PssmFile = "";
-			FastaFile = args[1];
+		string RegexFile="";
+		string PssmFile="";
+		string DatabaseFile="";
+		string VariantsFile="";
+		for( int i = 0; i < args.Length; i += 2 ) {
+			if( args[i][0] != '-' || args[i].Length != 2 ) {
+				DisplayUsage( "incorrect argument specifier" );
+				return 1;
+			}
+			switch( args[i][1] ) {
+				case 'd': DatabaseFile = args[i+1]; break;
+				case 'r': RegexFile = args[i+1]; break;
+				case 'p': PssmFile = args[i+1]; break;
+				case 'v': VariantsFile = args[i+1]; break;
+				default: DisplayUsage( "specifier '" + args[i] + "'not known" ); return 1;
+			}
+		}		
+		if( DatabaseFile.Length == 0 || RegexFile.Length == 0 ) {
+			DisplayUsage( "missing mandatory parameters" );
+			return 1;
+		}
+		if( !DatabaseFile.Contains(".fasta") && !DatabaseFile.Contains(".xml.gz") ) {
+			DisplayUsage( "database file format not recognized" );
+			return 1;
+		}
+		if( !DatabaseFile.Contains(".xml.gz") && VariantsFile.Length != 0 ) {
+			DisplayUsage( "variants are only supported with UniProt XML input file" );
+			return 1;
 		}
 		
 		// Use '.' as decimal separator
         Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo( "en-US", false );
 		
 		WregexConsole app = new WregexConsole();
-		app.LoadData( RegexFile, PssmFile, FastaFile );
+		app.LoadData( RegexFile, PssmFile, DatabaseFile, VariantsFile );
 		//app.Dump();
 		app.Run();
 		
 		return 0;
 	}
 	
-	public static void DisplayUsage() {
-		Console.WriteLine( "Usage:" );
-		Console.WriteLine( "\twregex <regex_file> [<pssm_file>] <fasta_file>" );
+	public static void DisplayUsage( string err ) {
+		Console.WriteLine( "ERROR: " + err );
+		Console.WriteLine( "\nUsage:" );
+		Console.WriteLine( "\twregex -r <regex_file> [-p <pssm_file>] -d <file.fasta|file.xml.gz> [-v <variants.txt.gz>]" );
 	}
 	
-	private void LoadData( string RegexFile, string PssmFile, string FastaFile ) {
+	private void LoadData( string RegexFile, string PssmFile, string DatabaseFile, string VariantsFile ) {
 		string line;
 				
 		// regex
@@ -80,7 +102,54 @@ class WregexConsole {
 		
 		// Fasta
 		mSeqs = new List<Fasta>();
-		rd = new UnixCfg( FastaFile );
+		if( DatabaseFile.Contains(".fasta") )
+			LoadFasta( DatabaseFile );
+		else {
+			SortedList<string,List<Variant>> list = null;
+			if( VariantsFile.Length != 0 )
+				list = LoadVariants( VariantsFile );
+			LoadXml( DatabaseFile, list );
+		}
+		
+		mDataId = Path.GetFileNameWithoutExtension( DatabaseFile );
+	}
+	
+	private SortedList<string,List<Variant>> LoadVariants( string path ) {		
+		StreamReader rd = new StreamReader(new GZipStream(new FileStream(path,FileMode.Open), CompressionMode.Decompress));
+		SortedList<string,List<Variant>> list = new SortedList<string,List<Variant>>();
+		string line;
+		char[] sep1 = new char[]{','};
+		char[] sep2 = new char[]{'/'};
+		string[] fields, fields2;
+		Variant v;
+		while( (line=rd.ReadLine()) != null ) {
+			fields = line.Split(sep1);
+			if( !fields[2].Contains("/") || fields[5].Length == 0 || fields[3].Length == 0 || fields[3] != fields[4] )
+				continue;
+			v = new Variant();
+			v.id = fields[5];
+			v.pos = ulong.Parse(fields[3]);
+			fields2 = fields[2].Split(sep2);
+			v.orig = fields2[0][0];
+			v.mut = fields2[1][0];
+			if( v.mut == '*' )
+				continue;
+			if( list.ContainsKey(v.id) )
+				if( list[v.id].Contains(v) )
+					continue;
+				else
+					list[v.id].Add(v);
+			else {
+				list[v.id] = new List<Variant>();
+				list[v.id].Add( v );
+			}
+		}
+		return list;
+	}
+	
+	private void LoadFasta( string path ) {
+		string line;
+		UnixCfg rd = new UnixCfg( path );
 		string seq = "";
 		string header = rd.ReadUnixLine();
 		if( header == null || header[0] != '>' )
@@ -97,8 +166,35 @@ class WregexConsole {
 				seq += line;
 		} while( line != null );
 		rd.Close();
-		
-		mDataId = Path.GetFileNameWithoutExtension( FastaFile );
+	}
+	
+	private void LoadXml( string path, SortedList<string,List<Variant>> list ) {
+		UniprotXml xml = new UniprotXml( path );
+		EhuBio.Database.Ebi.Xml.entry e;
+		Fasta f = null;
+		bool skip = false;
+		while( (e=xml.ReadEntry()) != null ) {
+			if( e.sequence == null || e.sequence.Value == null || e.sequence.Value.Length == 0 )
+				continue;				
+			if( list != null ) {
+				skip = true;
+				foreach( EhuBio.Database.Ebi.Xml.featureType feature in e.feature )
+					if( feature.type == EhuBio.Database.Ebi.Xml.featureTypeType.sequencevariant && feature.id != null )
+						if( list.ContainsKey(feature.id) ) {
+							if( skip == true ) {
+								f = new Fasta( Fasta.Type.Protein, e.accession[0], e.sequence.Value );
+								skip = false;
+							}
+							f.mVariants.AddRange( list[feature.id] );
+						}
+			} else
+				f = new Fasta( Fasta.Type.Protein, e.accession[0], e.sequence.Value );
+			if( skip )
+				continue;
+			f.Dump( true );			
+			mSeqs.Add( f );
+		}
+		xml.Close();
 	}
 	
 	private void Dump() {

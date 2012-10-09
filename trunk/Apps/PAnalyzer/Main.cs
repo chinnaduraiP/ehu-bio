@@ -30,7 +30,12 @@ class PAnalyzerGtk {
 	public static void Main( string[] args ) {
 		Application.Init();
 		MainWindow win = new MainWindow();
+		win.DeleteEvent += OnDelete;
 		win.Show();
 		Application.Run();
+	}
+	
+    static void OnDelete( object obj, DeleteEventArgs args ) {
+		Application.Quit();
 	}
 }
