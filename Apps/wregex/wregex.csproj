@@ -19,7 +19,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Externalconsole>true</Externalconsole>
-    <Commandlineparameters>-r phi1-4.regex -d /media/data/Sequences/UniProt/uniprot_sprot.xml.gz</Commandlineparameters>
+    <Commandlineparameters>-r phi1-4.regex -p phi1-4.pssm -d variants.fasta</Commandlineparameters>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>none</DebugType>

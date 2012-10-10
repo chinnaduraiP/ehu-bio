@@ -33,15 +33,38 @@ public class Variant {
 	public char orig;
 	public char mut;
 	
+	public Variant() {
+	}
+	
+	public Variant( string str ) {
+		char[] sep = new char[]{':'};
+		string[] fields = str.Split(sep);
+		id = fields[0];
+		orig = fields[1][1];
+		mut = fields[1][3];
+		pos = ulong.Parse(fields[1].Substring(6,fields[1].Length-7));
+	}
+	
 	public override bool Equals( object obj ) {
 		Variant v = (Variant)obj;
 		//return v.id == id && v.pos == pos && v.orig == orig && v.mut == mut;
 		return v.pos == pos && v.orig == orig && v.mut == mut;
 	}
+	
+	public override int GetHashCode() {
+		return (int)pos;
+	}
+	
+	public void Dump() {
+		Console.WriteLine( id + ": " + orig + "/" + mut + " (" + pos + ")" );
+	}
 }
 
 public class Fasta {
 	public enum Type { Protein, Nucleotide };
+	
+	//public Fasta() : this(Type.Protein, "", "") {		
+	//}
 	
 	public Fasta( Type type, string header, string sequence ) {
 		mType = type;
@@ -65,10 +88,10 @@ public class Fasta {
 		Console.WriteLine( mSequence.Substring(i*80) );
 		if( variants )
 			if( mVariants.Count == 0 )
-				Console.WriteLine( "No variants" );
+				Console.WriteLine( "Variants not considered" );
 			else
 				foreach( Variant v in mVariants )
-					Console.WriteLine( v.id + ": " + v.orig + "/" + v.mut + " (" + v.pos + ")" );
+					v.Dump();
 	}
 	
 	public void Validate() {
