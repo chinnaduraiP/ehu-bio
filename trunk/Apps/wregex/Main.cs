@@ -55,7 +55,7 @@ class WregexConsole {
 				case 'v': VariantsFile = args[i+1]; break;
 				default: DisplayUsage( "specifier '" + args[i] + "'not known" ); return 1;
 			}
-		}		
+		}
 		if( DatabaseFile.Length == 0 || RegexFile.Length == 0 ) {
 			DisplayUsage( "missing mandatory parameters" );
 			return 1;
@@ -150,20 +150,22 @@ class WregexConsole {
 	private void LoadFasta( string path ) {
 		string line;
 		UnixCfg rd = new UnixCfg( path );
-		string seq = "";
-		string header = rd.ReadUnixLine();
-		if( header == null || header[0] != '>' )
-			throw new ApplicationException( "FASTA header not found" );
+		line = rd.ReadUnixLine();
+		if( line == null || line[0] != '>' )
+			throw new ApplicationException( "FASTA header not found" );		
+		Fasta f = new Fasta(Fasta.Type.Protein, line.Substring(1), "");
 		do {
 			line = rd.ReadUnixLine();
-			if( line == null || line[0] == '>' ) {
-				if( seq.Length == 0 )
+			if( line == null || line[0] == '>' ) {	// EOF or next element
+				if( f.mSequence.Length == 0 )
 					throw new ApplicationException( "FASTA sequence not found" );
-				mSeqs.Add( new Fasta( Fasta.Type.Protein, header.Substring(1), seq) );
-				header = line;
-				seq = "";
-			} else
-				seq += line;
+				mSeqs.Add(f);
+				if( line != null )
+					f = new Fasta(Fasta.Type.Protein, line.Substring(1), "");
+			} else if( line.StartsWith("VAR_") ) // Variant
+				f.mVariants.Add( new Variant(line) );
+			else // Sequence
+				f.mSequence += line;
 		} while( line != null );
 		rd.Close();
 	}
@@ -195,7 +197,7 @@ class WregexConsole {
 			mSeqs.Add( f );
 		}
 		xml.Close();
-	}
+	}	
 	
 	private void Dump() {
 		Console.WriteLine( "regex: " + (mRegex == null ? "<empty>" : mRegex.ToString()) );
@@ -224,7 +226,7 @@ class WregexConsole {
 			tmp_results = mRegex.Search( seq.mSequence, seq.mHeader.Split(sep)[0] );
 			if( tmp_results == null )
 				continue;
-			seq.Dump();
+			seq.Dump(true);
 			foreach( WregexResult result in tmp_results ) {
 				results.Add( result );
 				Console.WriteLine( "* Match!! -> " + result.Match +
