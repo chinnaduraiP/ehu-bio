@@ -42,7 +42,7 @@ public class Variant {
 		id = fields[0];
 		orig = fields[1][1];
 		mut = fields[1][3];
-		pos = ulong.Parse(fields[1].Substring(6,fields[1].Length-7));
+		pos = ulong.Parse(fields[1].Substring(6,fields[1].Length-7))-1;
 	}
 	
 	public override bool Equals( object obj ) {
@@ -56,7 +56,7 @@ public class Variant {
 	}
 	
 	public void Dump() {
-		Console.WriteLine( id + ": " + orig + "/" + mut + " (" + pos + ")" );
+		Console.WriteLine( id + ": " + orig + "/" + mut + " (" + (pos+1) + ")" );
 	}
 }
 
@@ -99,6 +99,12 @@ public class Fasta {
 		/*if( mType == Fasta.Type.Protein ) {
 		} else {
 		}*/
+	}
+	
+	public string ID {
+		get {
+			return mHeader.Split(new char[]{' '})[0];
+		}
 	}
 	
 	public string mHeader;

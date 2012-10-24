@@ -128,7 +128,7 @@ class WregexConsole {
 				continue;
 			v = new Variant();
 			v.id = fields[5];
-			v.pos = ulong.Parse(fields[3]);
+			v.pos = ulong.Parse(fields[3])-1;
 			fields2 = fields[2].Split(sep2);
 			v.orig = fields2[0][0];
 			v.mut = fields2[1][0];
@@ -149,6 +149,7 @@ class WregexConsole {
 	
 	private void LoadFasta( string path ) {
 		string line;
+		Variant v;
 		UnixCfg rd = new UnixCfg( path );
 		line = rd.ReadUnixLine();
 		if( line == null || line[0] != '>' )
@@ -162,8 +163,11 @@ class WregexConsole {
 				mSeqs.Add(f);
 				if( line != null )
 					f = new Fasta(Fasta.Type.Protein, line.Substring(1), "");
-			} else if( line.StartsWith("VAR_") ) // Variant
-				f.mVariants.Add( new Variant(line) );
+			} else if( line.StartsWith("VAR_") ) { // Variant
+				v = new Variant(line);
+				if( !f.mVariants.Contains(v) )
+					f.mVariants.Add(v);
+			}
 			else // Sequence
 				f.mSequence += line;
 		} while( line != null );
@@ -214,23 +218,26 @@ class WregexConsole {
 		WriteAln( results );
 		WriteCsv( results );
 		ShowResults( results );
+		ShowCandidates( results );
 	}
 	
 	private List<WregexResult> GetResults() {
 		List<WregexResult> results = new List<WregexResult>();
 		List<WregexResult> tmp_results;
-		char[] sep = new char[]{ ' ' };
 		
 		Console.WriteLine( "Searching with '" + mRegex + "' ...\n" );
 		foreach( Fasta seq in mSeqs ) {
-			tmp_results = mRegex.Search( seq.mSequence, seq.mHeader.Split(sep)[0] );
+			if( seq.mVariants.Count == 0 )
+				tmp_results = mRegex.Search( seq.mSequence, seq.ID );
+			else
+				tmp_results = GetVariantsResults(seq);
 			if( tmp_results == null )
 				continue;
 			seq.Dump(true);
 			foreach( WregexResult result in tmp_results ) {
 				results.Add( result );
 				Console.WriteLine( "* Match!! -> " + result.Match +
-					" (" + result.Index + ".." + (result.Index+result.Length-1) + ") -> " +
+					" (" + (result.Index+1) + ".." + (result.Index+result.Length) + ") -> " +
 					result.ToString() );
 			}
 			Console.WriteLine();
@@ -245,6 +252,84 @@ class WregexConsole {
 		});
 		
 		return results;
+	}
+	
+	private List<WregexResult> GetRecursiveVariantsResults( Fasta seq, string str, int offset, int i ) {
+		List<WregexResult> ret = new List<WregexResult>();		
+		if( i < seq.mVariants.Count && i < 10 ) { // TODO: i >= 10
+			if( (int)seq.mVariants[i].pos >= str.Length + offset || (int)seq.mVariants[i].pos < offset )
+				ret.AddRange(GetRecursiveVariantsResults(seq,str,offset,i+1));
+			else {
+				ret.AddRange(GetRecursiveVariantsResults(seq,str,offset,i+1));
+				char[] array = str.ToCharArray();
+				array[(int)seq.mVariants[i].pos-offset] = seq.mVariants[i].mut;
+				ret.AddRange(GetRecursiveVariantsResults(seq,new String(array),offset,i+1));
+			}
+		} else {
+			WregexResult[] tmp = mRegex.Search(str,seq.ID+"-",ResultType.Mutated).ToArray();
+			for( int j = 0; j < tmp.Length; j++ ) {
+				tmp[j].Index += offset;
+				/*if( str.Equals(seq.mSequence.Substring(offset,str.Length)) )
+					continue;*/
+				ret.Add( tmp[j] );
+			}
+		}
+		
+		return ret;
+	}
+	
+	private List<WregexResult> GetVariantsResults( Fasta seq ) {
+		List<WregexResult> ret = new List<WregexResult>();
+		WregexResult[] orig, mut, tmp;
+		bool found;
+		int i, j;
+		
+		// Original (without mutations)
+		orig = mRegex.Search(seq.mSequence, seq.ID+"-orig").ToArray();
+		
+		// Lost
+		for( i = 0; i < orig.Length; i++ ) {
+			tmp = GetRecursiveVariantsResults(seq,orig[i].Match,orig[i].Index,0).ToArray();
+			if( tmp.Length == 0 || (orig[i].Index == tmp[0].Index && !orig[i].Match.Equals(tmp[0].Match)) )
+				orig[i].Type = ResultType.Lost;
+			ret.Add( orig[i] );
+		}
+		
+		// Mutations
+		mut = GetRecursiveVariantsResults(seq,seq.mSequence,0,0).ToArray();		
+		for( i = 0; i < mut.Length; i++ ) {
+			// Filter duplicates
+			found = false;
+			foreach( WregexResult r in ret )
+				if( r.Index == mut[i].Index && r.Match.Equals(mut[i].Match) ) {
+					found = true;
+					break;
+				}
+			if( found )
+				continue;
+			// Assign names
+			found = false;
+			foreach( Variant v in seq.mVariants )
+				if( (int)v.pos >= mut[i].Index && (int)v.pos < (mut[i].Index+mut[i].Length) ) {					
+					found = true;
+					if( mut[i].Match[(int)v.pos-mut[i].Index] == v.mut )
+						mut[i].Entry += v.mut + (v.pos+1).ToString();
+				}
+			if( !found )
+				continue;
+			// Gained
+			found = false;
+			for( j = 0; j < orig.Length; j++ )
+				if( mut[i].Index == orig[j].Index ) {
+					found = true;
+					break;
+				}
+			if( !found )
+				mut[i].Type = ResultType.Gained;
+			ret.Add( mut[i] );
+		}
+		
+		return ret.Count == 0 ? null : ret;
 	}
 	
 	private void WriteAln( List<WregexResult> results ) {
@@ -287,13 +372,51 @@ class WregexConsole {
 		TextWriter wr = new StreamWriter( mDataId + ".csv", false );
 		wr.WriteLine( "ID,Entry,Pos,Combinations,Sequence,Alignment,Score" );
 		foreach( WregexResult result in results )
-			wr.WriteLine( result.Id + "," + result.Entry + "," + result.Position + "," + result.Combinations
+			wr.WriteLine( result.Id + "," + result.Entry + "," + (result.Index+1) + "," + result.Combinations
 				+ "," + result.Match + "," + result.Alignment + "," + result.Score );
 		wr.Close();
 	}
 	
 	private void ShowResults( List<WregexResult> results ) {
 		foreach( WregexResult res in results ) {
+			Console.WriteLine( res.ToString() );
+		}
+	}
+	
+	private void ShowCandidates( List<WregexResult> results ) {
+		string id;
+		
+		Console.WriteLine( "\nLooking for candidates with score difference > 15 ..." );
+		foreach( WregexResult res in results ) {
+			if( res.Type != ResultType.Original )
+				continue;
+			id = res.Entry.Substring(0,res.Entry.IndexOf('-')+1);
+			foreach( WregexResult res2 in results ) {
+				if( res2.Type == ResultType.Original || !res2.Entry.Contains(id) )
+					continue;
+				if( res.Index == res2.Index
+					//&& (res.Score > 50.0 || res2.Score > 50.0)
+					&& Math.Abs(res.Score-res2.Score) > 15.0 ) {
+					Console.WriteLine( "* New Candidate!!" );
+					Console.WriteLine( res.ToString() );
+					Console.WriteLine( res2.ToString() );
+				}
+			}
+		}
+		
+		Console.WriteLine( "\nLooking for candidates with match lost ..." );
+		foreach( WregexResult res in results ) {			
+			if( res.Type != ResultType.Lost )
+				continue;
+			Console.WriteLine( "* New Candidate!!" );
+			Console.WriteLine( res.ToString() );
+		}
+		
+		Console.WriteLine( "\nLooking for candidates with match gained ..." );		
+		foreach( WregexResult res in results ) {
+			if( res.Type != ResultType.Gained )
+				continue;
+			Console.WriteLine( "* New Candidate!!" );
 			Console.WriteLine( res.ToString() );
 		}
 	}
