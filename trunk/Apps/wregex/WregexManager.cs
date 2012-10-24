@@ -30,16 +30,17 @@ using EhuBio.Database.Ehu;
 
 namespace wregex {
 
-public struct WregexResult {
-	public string Id;
+public enum ResultType { Original, Mutated, Lost, Gained };
+
+public struct WregexResult {	
 	public string Entry;
-	public int Position;
-	public int Combinations;
-	public string Match;
 	public int Index;
+	public int Combinations;	// Number of overlapped results (only the best one is stored)
+	public string Match;
 	public int Length;
 	public List<string> Groups;
 	public double Score;
+	public ResultType Type;	
 	public string Alignment {
 		get {
 			string str = Groups[0];
@@ -51,6 +52,12 @@ public struct WregexResult {
 	public override string ToString(){
 		return Id + " (x" + Combinations + ") " + Alignment + " score=" + Score;
 	}
+	public string Id {
+		get { return mId == null ? (Entry + "@" + (Index+1)) : mId; }
+		set { mId = value; }
+	}
+	
+	private String mId;
 }
 
 public class WregexManager {
@@ -68,25 +75,30 @@ public class WregexManager {
 	}
 	
 	public List<WregexResult> Search( string seq, string id ) {
+		return Search( seq, id, ResultType.Original );
+	}
+	
+	public List<WregexResult> Search( string seq, string id, ResultType type ) {
+		List<WregexResult> results = new List<WregexResult>();		
+		
 		Match m = mRegex.Match(seq);
 		if( !m.Success )
-			return null;
+			return results;		
 		
-		List<WregexResult> results = new List<WregexResult>();
 		WregexResult result;
 		do {
 			result = new WregexResult();
-			result.Id = id + "@" + m.Index;
+			//result.Id = id + "@" + m.Index;
 			result.Entry = id;
-			result.Position = m.Index;
+			result.Index = m.Index;
 			result.Combinations = 1;
 			result.Groups = new List<string>();
-			result.Match = m.Value;
-			result.Index = m.Index;
+			result.Match = m.Value;			
 			result.Length = m.Length;
 			for( int i = 1; i < m.Groups.Count; i++ )
 				result.Groups.Add( m.Groups[i].Value );
 			result.Score = mPssm != null ? mPssm.GetScore(result) : 0.0;
+			result.Type = type;
 			results.Add( result );
 			m = mRegex.Match( seq, result.Index + 1 );
 		} while( m.Success );
@@ -102,7 +114,7 @@ public class WregexManager {
 		
 		for( i = 0; i < data.Count; i++ ) {
 			for( j = 0; j < results.Count; j++ )
-				if( results[j].Entry == data[i].Entry && Math.Abs(results[j].Position-data[i].Position) < results[j].Length )
+				if( results[j].Entry == data[i].Entry && Math.Abs(results[j].Index-data[i].Index) < results[j].Length )
 					break;
 			if( j < results.Count ) {	// Overlap detected
 				if( data[i].Score > results[j].Score ) {
