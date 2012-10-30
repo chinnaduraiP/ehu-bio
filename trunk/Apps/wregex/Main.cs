@@ -29,17 +29,12 @@ using System.Collections.Generic;
 using System.Threading;
 using EhuBio.Database.Ehu;
 using EhuBio.Database.Ebi;
-using EhuBio.Database.Ncbi;
+using EhuBio.Database.Ncbi.eFetch.Snp;
 
 namespace wregex {
 
 class WregexConsole {
 	public static int Main( string[] args ) {
-		eFetchSnpService snp = new eFetchSnpService();
-		MessageEFetchRequest req = new MessageEFetchRequest();
-		req.id = "743616";
-		MessageEFetchResult res = snp.run_eFetch( req );
-		
 		if( args.Length % 2 != 0 ) {
 			DisplayUsage( "odd number of arguments" );
 			return 1;
@@ -155,12 +150,13 @@ class WregexConsole {
 	
 	private void LoadFasta( string path ) {
 		string line;
+		char[] sep = new char[]{'|'};
 		Variant v;
 		UnixCfg rd = new UnixCfg( path );
 		line = rd.ReadUnixLine();
 		if( line == null || line[0] != '>' )
 			throw new ApplicationException( "FASTA header not found" );		
-		Fasta f = new Fasta(Fasta.Type.Protein, line.Substring(1), "");
+		Fasta f = new Fasta(Fasta.Type.Protein, line.Split(sep)[0].Substring(1), "");
 		do {
 			line = rd.ReadUnixLine();
 			if( line == null || line[0] == '>' ) {	// EOF or next element
@@ -168,8 +164,8 @@ class WregexConsole {
 					throw new ApplicationException( "FASTA sequence not found" );
 				mSeqs.Add(f);
 				if( line != null )
-					f = new Fasta(Fasta.Type.Protein, line.Substring(1), "");
-			} else if( line.StartsWith("VAR_") ) { // Variant
+					f = new Fasta(Fasta.Type.Protein, line.Split(sep)[0].Substring(1), "");
+			} else if( line.StartsWith("NP_") ) { // Variant
 				v = new Variant(line);
 				if( !f.mVariants.Contains(v) )
 					f.mVariants.Add(v);
@@ -272,7 +268,7 @@ class WregexConsole {
 				ret.AddRange(GetRecursiveVariantsResults(seq,new String(array),offset,i+1));
 			}
 		} else {
-			WregexResult[] tmp = mRegex.Search(str,seq.ID+"-",ResultType.Mutated).ToArray();
+			WregexResult[] tmp = mRegex.Search(str,seq.ID,ResultType.Mutated).ToArray();
 			for( int j = 0; j < tmp.Length; j++ ) {
 				tmp[j].Index += offset;
 				/*if( str.Equals(seq.mSequence.Substring(offset,str.Length)) )
@@ -319,7 +315,7 @@ class WregexConsole {
 				if( (int)v.pos >= mut[i].Index && (int)v.pos < (mut[i].Index+mut[i].Length) ) {					
 					found = true;
 					if( mut[i].Match[(int)v.pos-mut[i].Index] == v.mut )
-						mut[i].Entry += v.mut + (v.pos+1).ToString();
+						mut[i].Entry += "-" + v.orig + (v.pos+1).ToString() + v.mut;
 				}
 			if( !found )
 				continue;

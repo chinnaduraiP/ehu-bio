@@ -80,6 +80,12 @@ public class AminoAcid {
 		return mLUT[char.ToUpper(ch) - 'A'];
 	}
 	
+	public static AminoAcid Get( string abbrev ) {
+		if( mLUT == null )
+			Initialize();
+		return mMap[abbrev];
+	}
+	
 	public static void Initialize() {
 		if( mLUT != null )
 			return;
@@ -109,8 +115,10 @@ public class AminoAcid {
 		
 		int n = 'z'-'a';
 		mLUT = new AminoAcid[n];
-		foreach( AminoAcid aa in Standard )
+		foreach( AminoAcid aa in Standard ) {
 			mLUT[aa.Letter - 'A'] = aa;
+			mMap.Add( aa.Abbrev, aa );
+		}
 	}
 	
 	public override string ToString() {
@@ -141,8 +149,9 @@ public class AminoAcid {
 	public static readonly AminoAcid Tyrosine = new AminoAcid("Tyrosine",'Y',"Tyr",181.19124,5.64,2.20,9.21,10.46,false,true,0,false,false,true,false);
 	
 	public static readonly List<AminoAcid> Standard = new List<AminoAcid>();
-	
+		
 	private static AminoAcid[] mLUT;
+	private static SortedList<string,AminoAcid> mMap = new SortedList<string, AminoAcid>();
 }
 
 }	// namespace EhuBio.Database.Ehu
