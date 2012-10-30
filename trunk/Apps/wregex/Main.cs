@@ -29,11 +29,17 @@ using System.Collections.Generic;
 using System.Threading;
 using EhuBio.Database.Ehu;
 using EhuBio.Database.Ebi;
+using EhuBio.Database.Ncbi;
 
 namespace wregex {
 
 class WregexConsole {
 	public static int Main( string[] args ) {
+		eFetchSnpService snp = new eFetchSnpService();
+		MessageEFetchRequest req = new MessageEFetchRequest();
+		req.id = "743616";
+		MessageEFetchResult res = snp.run_eFetch( req );
+		
 		if( args.Length % 2 != 0 ) {
 			DisplayUsage( "odd number of arguments" );
 			return 1;
