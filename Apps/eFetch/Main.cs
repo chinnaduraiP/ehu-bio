@@ -24,7 +24,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 using System;
-using EhuBio.Database.Ncbi;
+using EhuBio.Database.Ncbi.eFetch.Sequences;
 
 class MainClass {
 	public static int Main( string[] args ) {

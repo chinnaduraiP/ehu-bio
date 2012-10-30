@@ -35,12 +35,33 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
-    <Compile Include="eFetchSequenceService.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="efetch_db_seq.xsd" />
-    <None Include="efetch_seq.wsdl" />
-    <None Include="efetch_seq.xsd" />
+    <Compile Include="eFetch\Gene\eFetchGeneService.cs" />
+    <Compile Include="eFetch\Sequences\eFetchSequenceService.cs" />
+    <Compile Include="eFetch\Snp\eFetchSnpService.cs" />
+    <Compile Include="eUtils\eUtilsService.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <ItemGroup>
+    <WCFMetadata Include="Service References" />
+  </ItemGroup>
+  <ItemGroup>
+    <WCFMetadataStorage Include="Service References\www.ncbi.nlm.nih.gov" />
+    <WCFMetadataStorage Include="Service References\www.ncbi.nlm.nih.gov_2" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="eFetch\" />
+    <Folder Include="eUtils\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="eFetch\Gene\efetch_db_gene.xsd" />
+    <None Include="eFetch\Gene\efetch_gene.wsdl" />
+    <None Include="eFetch\Gene\efetch_gene.xsd" />
+    <None Include="eFetch\Sequences\efetch_db_seq.xsd" />
+    <None Include="eFetch\Sequences\efetch_seq.wsdl" />
+    <None Include="eFetch\Sequences\efetch_seq.xsd" />
+    <None Include="eFetch\Snp\efetch_db_snp.xsd" />
+    <None Include="eFetch\Snp\efetch_snp.wsdl" />
+    <None Include="eFetch\Snp\efetch_snp.xsd" />
+    <None Include="eUtils\eutils.wsdl" />
+  </ItemGroup>
 </Project>

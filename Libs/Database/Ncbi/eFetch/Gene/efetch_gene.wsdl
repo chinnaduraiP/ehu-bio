@@ -6,13 +6,13 @@
     xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" 
     xmlns="http://schemas.xmlsoap.org/wsdl/" 
     targetNamespace="http://www.ncbi.nlm.nih.gov/soap/eutils/"
-    xmlns:nsef="http://www.ncbi.nlm.nih.gov/soap/eutils/efetch_seq" 
+    xmlns:nsef="http://www.ncbi.nlm.nih.gov/soap/eutils/efetch_gene" 
 >
 <!--    version="2.0" -->
 
     <types>
-        <xs:schema targetNamespace="http://www.ncbi.nlm.nih.gov/soap/eutils/">
-            <xs:import namespace="http://www.ncbi.nlm.nih.gov/soap/eutils/efetch_seq" schemaLocation="efetch_db_seq.xsd"/>
+        <xs:schema>
+            <xs:import namespace="http://www.ncbi.nlm.nih.gov/soap/eutils/efetch_gene" schemaLocation="efetch_db_gene.xsd"/>
         </xs:schema>
     </types>
 
@@ -44,9 +44,9 @@
         </operation>
     </binding>
 
-    <service name="eFetchSequenceService">
+    <service name="eFetchGeneService">
         <port name="eUtilsServiceSoap" binding="s0:eUtilsServiceSoap">
-            <soap:address location="http://eutils.ncbi.nlm.nih.gov/soap/v2.0/soap_adapter_2_0.cgi"/>
+            <soap:address location="http://eutils.ncbi.nlm.nih.gov/soap/v2.0/soap_adapter_2_0.cgi?db=gene"/>
         </port>
     </service>
     

@@ -37,7 +37,7 @@ public class Variant {
 	}
 	
 	public Variant( string str ) {
-		char[] sep = new char[]{':'};
+		char[] sep = new char[]{'>'};
 		string[] fields = str.Split(sep);
 		id = fields[0];
 		orig = fields[1][1];
@@ -56,7 +56,7 @@ public class Variant {
 	}
 	
 	public void Dump() {
-		Console.WriteLine( id + ": " + orig + "/" + mut + " (" + (pos+1) + ")" );
+		Console.WriteLine( id + "> " + orig + "/" + mut + " (" + (pos+1) + ")" );
 	}
 }
 
