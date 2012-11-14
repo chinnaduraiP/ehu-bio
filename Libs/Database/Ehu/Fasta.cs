@@ -27,7 +27,7 @@ using System.Collections.Generic;
 
 namespace EhuBio.Database.Ehu {
 
-public class Variant {
+public class Variant : IComparable<Variant> {
 	public string id;
 	public ulong pos;
 	public char orig;
@@ -57,6 +57,10 @@ public class Variant {
 	
 	public void Dump() {
 		Console.WriteLine( id + "> " + orig + "/" + mut + " (" + (pos+1) + ")" );
+	}
+	
+	public int CompareTo( Variant other ) {
+		return pos.CompareTo(other.pos);
 	}
 }
 

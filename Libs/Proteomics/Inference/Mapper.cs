@@ -636,8 +636,8 @@ public abstract class Mapper {
 	
 	private bool IsIndistinguisable( Protein g ) {
 		foreach( Peptide f in g.Subset[0].Peptides ) {
-			if( f.Relation != Peptide.RelationType.Discriminating )
-				continue;
+			/*if( f.Relation != Peptide.RelationType.Discriminating )
+				continue;*/
 			foreach( Protein p in g.Subset )
 				if( !p.HasPeptide(f) )
 					return false;

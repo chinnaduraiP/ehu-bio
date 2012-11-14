@@ -19,7 +19,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Externalconsole>true</Externalconsole>
-    <Commandlineparameters>-r phi1-4.regex -p phi1-4.pssm -d variants.fasta</Commandlineparameters>
+    <Commandlineparameters>-r phi1-4.regex -p phi1-4.pssm -d variants2.fasta</Commandlineparameters>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>none</DebugType>

@@ -64,6 +64,7 @@ public class WregexManager {
 	public WregexManager( string RegexStr ) {
 		mRegex = new Regex( RegexStr, RegexOptions.IgnoreCase | RegexOptions.ECMAScript | RegexOptions.Multiline | RegexOptions.Compiled );
 		mPssm = null;
+		mMaxLength = mMinLength = 0;
 	}
 	
 	public WregexManager( string RegexStr, PSSM pssm ) : this( RegexStr ) {
@@ -95,6 +96,10 @@ public class WregexManager {
 			result.Groups = new List<string>();
 			result.Match = m.Value;			
 			result.Length = m.Length;
+			if( mMaxLength == 0 || m.Length > mMaxLength )
+				mMaxLength = m.Length;
+			if( mMinLength == 0 || m.Length < mMinLength )
+				mMinLength = m.Length;
 			for( int i = 1; i < m.Groups.Count; i++ )
 				result.Groups.Add( m.Groups[i].Value );
 			result.Score = mPssm != null ? mPssm.GetScore(result) : 0.0;
@@ -105,6 +110,14 @@ public class WregexManager {
 		
 		return results;
 		//return Filter(results);
+	}
+	
+	public int MinLength {
+		get { return mMinLength; }
+	}
+	
+	public int MaxLength {
+		get { return mMaxLength; }
 	}
 	
 	private List<WregexResult> Filter( List<WregexResult> data ) {
@@ -133,6 +146,8 @@ public class WregexManager {
 	
 	protected Regex mRegex;
 	protected PSSM mPssm;
+	protected int mMaxLength;
+	protected int mMinLength;
 }
 
 }	// namespace wregex
