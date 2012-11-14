@@ -112,6 +112,10 @@ class WregexConsole {
 			LoadXml( DatabaseFile, list );
 		}
 		
+		// Sort Variants
+		foreach( Fasta seq in mSeqs )
+			seq.mVariants.Sort();
+		
 		mDataId = Path.GetFileNameWithoutExtension( DatabaseFile );
 	}
 	
@@ -256,23 +260,48 @@ class WregexConsole {
 		return results;
 	}
 	
-	private List<WregexResult> GetRecursiveVariantsResults( Fasta seq, string str, int offset, int i ) {
-		List<WregexResult> ret = new List<WregexResult>();		
-		if( i < seq.mVariants.Count && i < 10 ) { // TODO: i >= 10
-			if( (int)seq.mVariants[i].pos >= str.Length + offset || (int)seq.mVariants[i].pos < offset )
-				ret.AddRange(GetRecursiveVariantsResults(seq,str,offset,i+1));
-			else {
-				ret.AddRange(GetRecursiveVariantsResults(seq,str,offset,i+1));
+	private List<WregexResult> GetRecursiveVariantsResults( Fasta seq, string str ) {
+		return GetRecursiveVariantsResults( seq, str, 0 );
+	}
+	
+	private List<WregexResult> GetRecursiveVariantsResults( Fasta seq, string str, int offset ) {
+		return GetRecursiveVariantsResults( seq, str, offset, 0 );
+	}
+	
+	private List<WregexResult> GetRecursiveVariantsResults( Fasta seq, string str, int offset, int max ) {		
+		if( max <= 0 || seq.mVariants.Count == 1 )
+			return GetRecursiveVariantsResults( seq, str, offset, 0, seq.mVariants.Count-1 );
+		
+		List<WregexResult> ret = new List<WregexResult>();	
+		int i1 = 0, i2 = 0;
+		
+		while( i1 < seq.mVariants.Count ) {
+			do {
+				i2++;
+			} while( i2 < seq.mVariants.Count && (seq.mVariants[i2].pos-seq.mVariants[i2-1].pos) <= (ulong)max );
+			ret.AddRange(GetRecursiveVariantsResults(seq,str,offset,i1,i2-1));
+			i1 = i2;
+		}
+		
+		return ret;
+	}
+	
+	private List<WregexResult> GetRecursiveVariantsResults( Fasta seq, string str, int offset, int i, int i2 ) {
+		List<WregexResult> ret = new List<WregexResult>();
+		
+		if( i <= i2 ) {
+			ret.AddRange(GetRecursiveVariantsResults(seq,str,offset,i+1,i2));
+			if( (int)seq.mVariants[i].pos < (str.Length + offset) && (int)seq.mVariants[i].pos >= offset ) {
 				char[] array = str.ToCharArray();
 				array[(int)seq.mVariants[i].pos-offset] = seq.mVariants[i].mut;
-				ret.AddRange(GetRecursiveVariantsResults(seq,new String(array),offset,i+1));
+				ret.AddRange(GetRecursiveVariantsResults(seq,new String(array),offset,i+1,i2));
 			}
 		} else {
-			WregexResult[] tmp = mRegex.Search(str,seq.ID,ResultType.Mutated).ToArray();
+			/*Console.WriteLine( seq.ID + "@" + i );
+			Console.WriteLine( str + "\n" );*/
+			WregexResult[] tmp = mRegex.Search(str,seq.ID,ResultType.Mutated).ToArray();			
 			for( int j = 0; j < tmp.Length; j++ ) {
 				tmp[j].Index += offset;
-				/*if( str.Equals(seq.mSequence.Substring(offset,str.Length)) )
-					continue;*/
 				ret.Add( tmp[j] );
 			}
 		}
@@ -290,15 +319,19 @@ class WregexConsole {
 		orig = mRegex.Search(seq.mSequence, seq.ID+"-orig").ToArray();
 		
 		// Lost
-		for( i = 0; i < orig.Length; i++ ) {
-			tmp = GetRecursiveVariantsResults(seq,orig[i].Match,orig[i].Index,0).ToArray();
-			if( tmp.Length == 0 || (orig[i].Index == tmp[0].Index && !orig[i].Match.Equals(tmp[0].Match)) )
-				orig[i].Type = ResultType.Lost;
+		/*for( i = 0; i < orig.Length; i++ ) {
+			for( j = 0; j < seq.mVariants.Count; j++ ) {
+				tmp = GetRecursiveVariantsResults(seq,orig[i].Match,orig[i].Index,j,j).ToArray();
+				if( tmp.Length == 0 ) {
+					orig[i].Type = ResultType.Lost;
+					break;
+				}
+			}
 			ret.Add( orig[i] );
-		}
+		}*/
 		
 		// Mutations
-		mut = GetRecursiveVariantsResults(seq,seq.mSequence,0,0).ToArray();		
+		mut = GetRecursiveVariantsResults(seq,seq.mSequence,0,mRegex.MaxLength).ToArray();		
 		for( i = 0; i < mut.Length; i++ ) {
 			// Filter duplicates
 			found = false;
