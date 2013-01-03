@@ -236,7 +236,7 @@ class WregexConsole {
 			if( seq.mVariants.Count == 0 )
 				tmp_results = mRegex.Search( seq.mSequence, seq.ID );
 			else
-				tmp_results = GetVariantsResults(seq);
+				tmp_results = GetTotalVariantsResults(seq);
 			if( tmp_results == null )
 				continue;
 			seq.Dump(true);
@@ -259,79 +259,150 @@ class WregexConsole {
 		
 		return results;
 	}
-	
-	private List<WregexResult> GetRecursiveVariantsResults( Fasta seq, string str ) {
-		return GetRecursiveVariantsResults( seq, str, 0 );
-	}
-	
-	private List<WregexResult> GetRecursiveVariantsResults( Fasta seq, string str, int offset ) {
-		return GetRecursiveVariantsResults( seq, str, offset, 0 );
-	}
-	
-	private List<WregexResult> GetRecursiveVariantsResults( Fasta seq, string str, int offset, int max ) {		
-		if( max <= 0 || seq.mVariants.Count == 1 )
-			return GetRecursiveVariantsResults( seq, str, offset, 0, seq.mVariants.Count-1 );
 		
-		List<WregexResult> ret = new List<WregexResult>();	
+	
+	private List<List<Variant>> GetMutations( Fasta seq ) {
+		return GetMutations( seq, 20000 );
+	}
+	
+	private List<List<Variant>> GetMutations( Fasta seq, int max ) {
+		List<List<Variant>> result = new List<List<Variant>>();
 		int i1 = 0, i2 = 0;
 		
 		while( i1 < seq.mVariants.Count ) {
 			do {
 				i2++;
 			} while( i2 < seq.mVariants.Count && (seq.mVariants[i2].pos-seq.mVariants[i2-1].pos) <= (ulong)max );
-			ret.AddRange(GetRecursiveVariantsResults(seq,str,offset,i1,i2-1));
+			result.AddRange(GetMutations(seq,i1,i2-1));
 			i1 = i2;
 		}
 		
-		return ret;
+		return result;
 	}
 	
-	private List<WregexResult> GetRecursiveVariantsResults( Fasta seq, string str, int offset, int i, int i2 ) {
-		List<WregexResult> ret = new List<WregexResult>();
+	private List<List<Variant>> GetMutations( Fasta seq, int i1, int i2 ) {
+		List<List<Variant>> result = new List<List<Variant>>();
+		int len = i2 - i1 + 1;
+		if( len <= 0 )
+			return result;
 		
-		if( i <= i2 ) {
-			ret.AddRange(GetRecursiveVariantsResults(seq,str,offset,i+1,i2));
-			if( (int)seq.mVariants[i].pos < (str.Length + offset) && (int)seq.mVariants[i].pos >= offset ) {
-				char[] array = str.ToCharArray();
-				array[(int)seq.mVariants[i].pos-offset] = seq.mVariants[i].mut;
-				ret.AddRange(GetRecursiveVariantsResults(seq,new String(array),offset,i+1,i2));
+		List<Variant> comb;
+		char[] array;				
+		int combinations = 1 << len;
+		bool dup;
+		for( int i = 1; i < combinations; i++ ) {
+			array = Convert.ToString(i,2).ToCharArray();
+			comb = new List<Variant>();
+			for( int j = 0; j < array.Length; j++ )
+				if( array[array.Length-j-1] == '1' ) {
+					dup = false;
+					foreach( Variant v in comb )
+						if( v.pos == seq.mVariants[i1+j].pos ) {
+							dup = true;
+							break;
+						}
+					if( !dup )
+						comb.Add( seq.mVariants[i1+j] );
+				}
+			dup = false;
+			foreach( List<Variant> list in result ) {
+				if( list.Count != comb.Count )
+					continue;
+				dup = true;
+				foreach( Variant v in comb )
+					if( !list.Contains(v) ) {
+						dup = false;
+						break;
+					}
+				if( dup )
+					break;
 			}
-		} else {
-			/*Console.WriteLine( seq.ID + "@" + i );
-			Console.WriteLine( str + "\n" );*/
-			WregexResult[] tmp = mRegex.Search(str,seq.ID,ResultType.Mutated).ToArray();			
-			for( int j = 0; j < tmp.Length; j++ ) {
-				tmp[j].Index += offset;
-				ret.Add( tmp[j] );
-			}
+			if( !dup )
+				result.Add( comb );
 		}
 		
-		return ret;
+		return result;
 	}
 	
-	private List<WregexResult> GetVariantsResults( Fasta seq ) {
+	private List<List<Variant>> GetMutations( Fasta seq, WregexResult r ) {
+		int i1 = 0, i2;
+		
+		while( i1 < seq.mVariants.Count && (int)seq.mVariants[i1].pos < r.Index )
+			i1++;
+		i2 = i1;
+		while( i2 < seq.mVariants.Count && (int)seq.mVariants[i2].pos < (r.Index+r.Length) )
+			i2++;
+		
+		return GetMutations( seq, i1, i2-1 );
+	}
+	
+	private List<WregexResult> GetVariantsResults( string id, string str, List<Variant> variants ) {
+		return GetVariantsResults( id, str, 0, variants );
+	}
+	
+	private List<WregexResult> GetVariantsResults( string id, string str, int offset, List<Variant> variants ) {
+		char[] array = str.ToCharArray();
+		foreach( Variant v in variants )
+			if( (int)v.pos < (str.Length + offset) && (int)v.pos >= offset )
+				array[(int)v.pos-offset] = v.mut;
+		List<WregexResult> res = new List<WregexResult>();
+		res.AddRange( mRegex.Search(new String(array),id,ResultType.Mutated) );
+		return res;
+	}
+	
+	private List<WregexResult> GetVariantsResults( string id, string str, List<List<Variant>> variants ) {
+		return GetVariantsResults( id, str, 0, variants );
+	}
+	
+	private List<WregexResult> GetVariantsResults( string id, string str, int offset, List<List<Variant>> variants ) {
+		List<WregexResult> res = new List<WregexResult>();
+		foreach( List<Variant> v in variants )
+			res.AddRange( GetVariantsResults(id,str,offset,v) );
+		return res;
+	}
+	
+	private string GetID( List<Variant> m, WregexResult r ) {
+		return GetID( m, r, false );
+	}
+	
+	private string GetID( List<Variant> m, WregexResult r, bool original ) {
+		string id = "";
+		foreach( Variant v in m )
+			if( (int)v.pos >= r.Index && (int)v.pos < (r.Index+r.Length) )
+				if( original || r.Match[(int)v.pos-r.Index] == v.mut )
+					id += "-" + v.orig + (v.pos+1).ToString() + v.mut;
+		return id;
+	}
+	
+	private List<WregexResult> GetTotalVariantsResults( Fasta seq ) {
 		List<WregexResult> ret = new List<WregexResult>();
-		WregexResult[] orig, mut, tmp;
+		WregexResult[] orig, mut;
 		bool found;
 		int i, j;
+		List<List<Variant>> mutations;
+		string id;
 		
 		// Original (without mutations)
 		orig = mRegex.Search(seq.mSequence, seq.ID+"-orig").ToArray();
+		ret.AddRange( orig );
 		
-		// Lost
-		/*for( i = 0; i < orig.Length; i++ ) {
-			for( j = 0; j < seq.mVariants.Count; j++ ) {
-				tmp = GetRecursiveVariantsResults(seq,orig[i].Match,orig[i].Index,j,j).ToArray();
-				if( tmp.Length == 0 ) {
-					orig[i].Type = ResultType.Lost;
-					break;
+		// Lost		
+		foreach( WregexResult r in orig ) {
+			/*if( r.Entry.Contains("NP_002968.1") )
+				Console.WriteLine( "KK" );*/
+			mutations = GetMutations( seq, r );
+			foreach( List<Variant> m in mutations )
+				if( GetVariantsResults(seq.ID, r.Match, r.Index, m).Count == 0 ) {
+					WregexResult r2 = r;
+					r2.Type = ResultType.Lost;
+					r2.Entry = r2.Entry.Replace("-orig","-lost") + GetID(m, r, true);
+					ret.Add( r2 );
 				}
-			}
-			ret.Add( orig[i] );
-		}*/
+		}
 		
 		// Mutations
-		mut = GetRecursiveVariantsResults(seq,seq.mSequence,0,mRegex.MaxLength).ToArray();		
+		mutations = GetMutations( seq, mRegex.MaxLength );
+		mut = GetVariantsResults( seq.ID, seq.mSequence, mutations ).ToArray();
 		for( i = 0; i < mut.Length; i++ ) {
 			// Filter duplicates
 			found = false;
@@ -343,15 +414,10 @@ class WregexConsole {
 			if( found )
 				continue;
 			// Assign names
-			found = false;
-			foreach( Variant v in seq.mVariants )
-				if( (int)v.pos >= mut[i].Index && (int)v.pos < (mut[i].Index+mut[i].Length) ) {					
-					found = true;
-					if( mut[i].Match[(int)v.pos-mut[i].Index] == v.mut )
-						mut[i].Entry += "-" + v.orig + (v.pos+1).ToString() + v.mut;
-				}
-			if( !found )
+			id = GetID ( seq.mVariants, mut[i] );
+			if( id.Length == 0 )
 				continue;
+			mut[i].Entry += id;
 			// Gained
 			found = false;
 			for( j = 0; j < orig.Length; j++ )
