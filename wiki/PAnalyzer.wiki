@@ -3,6 +3,14 @@
 
 = Introduction =
 
+== Original article ==
+
+Prieto G, Aloria K, Osinalde N, Fullaondo A, Arizmendi JM, Matthiesen R: *PAnalyzer: A software tool for protein inference in shotgun proteomics.* _BMC bioinformatics_ 2012, *13*:288.
+
+DOI: 10.1186/1471-2105-13-288
+
+URL: http://www.biomedcentral.com/1471-2105/13/288
+
 == Description ==
 
 PAnalyzer uses as input protein identification files in mzIdentML (v1.0.0 and v1.1.0) or Waters PLGS formats and re-arranges the proteins into evidence categories according to their shared peptides.
