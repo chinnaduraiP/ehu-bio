@@ -1,4 +1,4 @@
-#summary PAnalyzer: A protein inference tool for shotgun proteomics.
+#summary PAnalyzer: A software tool for protein inference in shotgun proteomics.
 #labels Featured
 
 = Introduction =
