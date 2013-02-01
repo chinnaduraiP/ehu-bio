@@ -34,7 +34,7 @@ Results are saved to a CSV file (useful for processing using a spreadsheet) and 
 
 2. Extract all the files in the zip to any location
 
-3. Install the free software Mono .NET framework with GTK# support. You can download the framework for GNU/Linux, Mac OS X, Windows, etc. from here: 
+3. Install the free software Mono .NET framework with GTK# support (required for all platforms). You can download the framework for GNU/Linux, Mac OS X, Windows, etc. from here: 
 
  http://www.go-mono.com/mono-downloads/download.html
 
@@ -52,7 +52,7 @@ Specific launchers are provided for the different platforms:
 
  * Mac OS X: just click on the _PAnalyzer_ application
 
- * Windows: just click on _PAnalyzer.bat_
+ * Windows: just click on _PAnalyzer.bat_ (Mono .NET runtime) or _PAnalyzer.exe_ (Microsoft .NET runtime)
 
 = User instructions =
 
