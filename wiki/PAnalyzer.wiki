@@ -28,9 +28,9 @@ Results are saved to a CSV file (useful for processing using a spreadsheet) and 
 = Installation =
 
 1. Download the latest zip available for your operating system
- * GNU/Linux: http://ehu-bio.googlecode.com/files/PAnalyzer-v0.13-Linux.tar.gz
- * Mac OS X http://ehu-bio.googlecode.com/files/PAnalyzer-v0.13-MacOSX.zip
- * Windows: http://ehu-bio.googlecode.com/files/PAnalyzer-v0.13-Windows.zip
+ * GNU/Linux: http://ehu-bio.googlecode.com/files/PAnalyzer-v1.0-Linux.tar.gz
+ * Mac OS X http://ehu-bio.googlecode.com/files/PAnalyzer-v1.0-MacOSX.zip
+ * Windows: http://ehu-bio.googlecode.com/files/PAnalyzer-v1.0-Windows.zip
 
 2. Extract all the files in the zip to any location
 
