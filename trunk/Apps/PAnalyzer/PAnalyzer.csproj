@@ -82,15 +82,15 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\Docs\PAnalyzer\SEPROT2011-EHU.vfinal.pdf">
-      <Gettext-ScanForTranslations>false</Gettext-ScanForTranslations>
-      <Link>SEPROT2011-EHU.vfinal.pdf</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Include="..\..\Docs\PAnalyzer\README.pdf">
       <Gettext-ScanForTranslations>false</Gettext-ScanForTranslations>
       <Link>README.pdf</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\..\Docs\PAnalyzer\PAnalyzer-BMC-Bioinformatics-2012.pdf">
+      <Link>PAnalyzer-BMC-Bioinformatics-2012.pdf</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Gettext-ScanForTranslations>false</Gettext-ScanForTranslations>
     </None>
   </ItemGroup>
 </Project>
