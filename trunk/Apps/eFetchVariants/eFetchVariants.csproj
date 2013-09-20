@@ -45,5 +45,9 @@
       <Project>{D1BB15E0-E29F-4D80-BC57-AC95CACB7D91}</Project>
       <Name>Ehu</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\Libs\Database\Ebi\Ebi.csproj">
+      <Project>{24FE7A85-8B58-4B38-B50B-C111DE9A7ADA}</Project>
+      <Name>Ebi</Name>
+    </ProjectReference>
   </ItemGroup>
 </Project>

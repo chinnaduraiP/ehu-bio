@@ -44,16 +44,20 @@ class WregexConsole {
 		string PssmFile="";
 		string DatabaseFile="";
 		string VariantsFile="";
+		string OutputDir=".";
+		bool grouping = false;
 		for( int i = 0; i < args.Length; i += 2 ) {
 			if( args[i][0] != '-' || args[i].Length != 2 ) {
 				DisplayUsage( "incorrect argument specifier" );
 				return 1;
 			}
 			switch( args[i][1] ) {
+				case 'o': OutputDir = args[i+1]; break;
 				case 'd': DatabaseFile = args[i+1]; break;
 				case 'r': RegexFile = args[i+1]; break;
 				case 'p': PssmFile = args[i+1]; break;
 				case 'v': VariantsFile = args[i+1]; break;
+				case 'g': grouping = args[i+1][0] != '0'; break;
 				default: DisplayUsage( "specifier '" + args[i] + "'not known" ); return 1;
 			}
 		}
@@ -74,7 +78,7 @@ class WregexConsole {
         Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo( "en-US", false );
 		
 		WregexConsole app = new WregexConsole();
-		app.LoadData( RegexFile, PssmFile, DatabaseFile, VariantsFile );
+		app.Create( RegexFile, PssmFile, DatabaseFile, VariantsFile, OutputDir, grouping );
 		//app.Dump();
 		app.Run();
 		
@@ -84,10 +88,10 @@ class WregexConsole {
 	public static void DisplayUsage( string err ) {
 		Console.WriteLine( "ERROR: " + err );
 		Console.WriteLine( "\nUsage:" );
-		Console.WriteLine( "\twregex -r <regex_file> [-p <pssm_file>] -d <file.fasta|file.xml.gz> [-v <variants.txt.gz>]" );
+		Console.WriteLine( "\twregex -r <regex_file> [-p <pssm_file>] -d <file.fasta|file.xml.gz> [-v <variants.txt.gz>] [-g 0|1] [-o <output_dir>]" );
 	}
 	
-	private void LoadData( string RegexFile, string PssmFile, string DatabaseFile, string VariantsFile ) {
+	private void Create( string RegexFile, string PssmFile, string DatabaseFile, string VariantsFile, string OutputDir, bool grouping ) {
 		string line;
 				
 		// regex
@@ -97,9 +101,9 @@ class WregexConsole {
 			throw new ApplicationException( "Empty regex" );
 		rd.Close();
 		if( PssmFile.Length > 0 )
-			mRegex = new WregexManager( line, new PSSM(PssmFile) );
+			mRegex = new WregexManager( line, new PSSM(PssmFile), grouping );
 		else
-			mRegex = new WregexManager( line );
+			mRegex = new WregexManager( line, grouping );
 		
 		// Fasta
 		mSeqs = new List<Fasta>();
@@ -117,6 +121,8 @@ class WregexConsole {
 			seq.mVariants.Sort();
 		
 		mDataId = Path.GetFileNameWithoutExtension( DatabaseFile );
+		mOutputDir = OutputDir;
+		Directory.CreateDirectory( OutputDir );
 	}
 	
 	private SortedList<string,List<Variant>> LoadVariants( string path ) {		
@@ -154,6 +160,7 @@ class WregexConsole {
 	
 	private void LoadFasta( string path ) {
 		string line;
+		//char[] sep = new char[]{'|',' ','\t'};
 		char[] sep = new char[]{'|'};
 		Variant v;
 		UnixCfg rd = new UnixCfg( path );
@@ -452,7 +459,7 @@ class WregexConsole {
 			}
 		}
 		
-		TextWriter wr = new StreamWriter( mDataId + ".aln", false );
+		TextWriter wr = new StreamWriter( Path.Combine(mOutputDir,mDataId) + ".aln", false );
 		wr.WriteLine( "CLUSTAL 2.1 multiple sequence alignment (by WREGEX)\n\n" );
 		foreach( WregexResult result in results ) {
 			wr.Write( result.Id );
@@ -470,7 +477,7 @@ class WregexConsole {
 	}
 	
 	private void WriteCsv( List<WregexResult> results ) {
-		TextWriter wr = new StreamWriter( mDataId + ".csv", false );
+		TextWriter wr = new StreamWriter( Path.Combine(mOutputDir,mDataId) + ".csv", false );
 		wr.WriteLine( "ID,Entry,Pos,Combinations,Sequence,Alignment,Score" );
 		foreach( WregexResult result in results )
 			wr.WriteLine( result.Id + "," + result.Entry + "," + (result.Index+1) + "," + result.Combinations
@@ -525,6 +532,7 @@ class WregexConsole {
 	private WregexManager mRegex;
 	private List<Fasta> mSeqs;
 	private string mDataId;
+	private string mOutputDir;
 }
 
 }	// namespace wregex

@@ -107,7 +107,7 @@ public class Fasta {
 	
 	public string ID {
 		get {
-			return mHeader.Split(new char[]{' '})[0];
+			return mHeader.Split(new char[]{' ','\t'})[0];
 		}
 	}
 	
