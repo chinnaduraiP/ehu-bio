@@ -61,13 +61,14 @@ public struct WregexResult {
 }
 
 public class WregexManager {
-	public WregexManager( string RegexStr ) {
+	public WregexManager( string RegexStr, bool grouping ) {
 		mRegex = new Regex( RegexStr, RegexOptions.IgnoreCase | RegexOptions.ECMAScript | RegexOptions.Multiline | RegexOptions.Compiled );
 		mPssm = null;
 		mMaxLength = mMinLength = 0;
+		mGrouping = grouping;
 	}
 	
-	public WregexManager( string RegexStr, PSSM pssm ) : this( RegexStr ) {
+	public WregexManager( string RegexStr, PSSM pssm, bool grouping ) : this( RegexStr, grouping ) {
 		mPssm = pssm;
 	}
 	
@@ -108,8 +109,9 @@ public class WregexManager {
 			m = mRegex.Match( seq, result.Index + 1 );
 		} while( m.Success );
 		
-		return results;
-		//return Filter(results);
+		if( mGrouping )
+			return Filter(results);
+		return results;		
 	}
 	
 	public int MinLength {
@@ -148,6 +150,7 @@ public class WregexManager {
 	protected PSSM mPssm;
 	protected int mMaxLength;
 	protected int mMinLength;
+	protected bool mGrouping;
 }
 
 }	// namespace wregex

@@ -19,7 +19,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Externalconsole>true</Externalconsole>
-    <Commandlineparameters>-r phi1-4.regex -p phi1-4.pssm -d variants2.fasta</Commandlineparameters>
+    <Commandlineparameters>-r /home/gorka/Bio/Proyectos/NES/Tools/Wregex/Regex/phi1-4.elm.regex -p /home/gorka/Bio/Proyectos/NES/Tools/Wregex/PSSM/phi1-4.ScoreNES2.pssm -d /home/gorka/kk.fasta</Commandlineparameters>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>none</DebugType>
