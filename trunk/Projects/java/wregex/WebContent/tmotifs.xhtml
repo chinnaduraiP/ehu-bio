@@ -18,11 +18,11 @@
 						actionListener="#{trainingBean.upload}" />
 					<h:commandButton value="Download motifs" type="submit" />
 				</h:panelGrid>
-				<h:dataTable value="#{trainingBean.list}" var="item"
-					rendered="#{not empty trainingBean.list}">
+				<h:dataTable value="#{trainingBean.inputList}" var="item"
+					rendered="#{not empty trainingBean.inputList}">
 					<h:column>
 						<f:facet name="header">Entry</f:facet>
-						<h:outputText value="#{item.header}" />
+						<h:outputText value="#{item.accession}" />
 					</h:column>
 					<h:column>
 						<f:facet name="header">Begin</f:facet>

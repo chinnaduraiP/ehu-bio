@@ -27,14 +27,17 @@ public final class Fasta {
 		public InvalidSequenceException( String desc ) {
 			super(desc);
 		}
+		public InvalidSequenceException( char ch ) {
+			super("Illegal character '" + ch + "' found in fasta sequence");
+		}
 	}
 	
 	public Fasta( String header, String sequence, SequenceType type ) throws InvalidSequenceException {
 		assert header != null && sequence != null;
 		mHeader = header;
-		mSequence = sequence;		
+		mSequence = sequence.trim().replaceAll("[ \t]", "");		
 		mType = type;
-		if( !checkSequence(sequence, type) )
+		if( !checkSequence(mSequence, type) )
 			throw new InvalidSequenceException();
 		mGuessedAccession = header.split("[ \t]")[0];
 	}

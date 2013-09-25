@@ -22,7 +22,7 @@ public final class TrainingEntry {
 		mId = fasta.guessAccession();
 		loadMotifs();
 		if (mMotifs.isEmpty())
-			mMotifs.add(new TrainingMotif(mFasta, 0, mFasta.sequence().length()-1, 100.0));
+			mMotifs.add(new InputMotif(mFasta, 1, mFasta.sequence().length(), 100.0));
 	}
 
 	private void loadMotifs() {
@@ -41,11 +41,11 @@ public final class TrainingEntry {
 			fields = range.split("-");
 			if (fields.length != 2)
 				return;
-			start = Integer.parseInt(fields[0])-1;
+			start = Integer.parseInt(fields[0]);
 			tmp = fields[1].split("@");
-			end = Integer.parseInt(tmp[0])-1;
+			end = Integer.parseInt(tmp[0]);
 			w = tmp.length != 2 ? 100.0 : Double.parseDouble(tmp[1]);
-			mMotifs.add(new TrainingMotif(mFasta, start, end, w));
+			mMotifs.add(new InputMotif(mFasta, start, end, w));
 		}
 	}
 
@@ -57,7 +57,7 @@ public final class TrainingEntry {
 		return mFasta.header();
 	}
 
-	public List<TrainingMotif> getMotifs() {
+	public List<InputMotif> getMotifs() {
 		return mMotifs;
 	}
 
@@ -80,12 +80,12 @@ public final class TrainingEntry {
 		for (TrainingEntry entry : list) {
 			pw.print(">" + entry.getId() + " ");
 			first = true;
-			for (TrainingMotif motif : entry.getMotifs()) {
+			for (InputMotif motif : entry.getMotifs()) {
 				if (first)
 					first = false;
 				else
 					pw.print(';');
-				pw.print((motif.start+1) + "-" + (motif.end+1));
+				pw.print((motif.getStart()+1) + "-" + (motif.getEnd()+1));
 			}
 			pw.println();
 			pw.println(entry.getSequence());
@@ -94,5 +94,5 @@ public final class TrainingEntry {
 
 	private final Fasta mFasta;
 	private final String mId;
-	private final List<TrainingMotif> mMotifs = new ArrayList<TrainingMotif>();
+	private final List<InputMotif> mMotifs = new ArrayList<InputMotif>();
 }
