@@ -1,0 +1,19 @@
+@CHARSET "UTF-8";
+
+/* Training */
+.trn_name {}
+.trn_pos {
+	width: 40px;
+	text-align: right;
+}
+.trn_seq {
+	width: 300px;
+	white-space: nowrap;
+  	overflow: hidden;
+  	text-overflow: ellipsis;
+  	display: inline-block;
+}
+.trn_weight {
+	width: 50px;
+	text-align: right;
+}
