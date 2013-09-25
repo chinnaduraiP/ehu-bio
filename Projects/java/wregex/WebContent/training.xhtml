@@ -11,37 +11,66 @@
 		<ui:define name="content">
 			<h:form>
 			<h:panelGrid columns="2">
-				<h:commandButton value="Training motifs" action="tmotifs" />
-				<h:outputText value="#{trainingBean.summary}" rendered="#{trainingBean.summary != null}"/>
-				<h:outputText value="You must upload a fasta file with training motifs" rendered="#{trainingBean.summary == null}" style="color:red"/>
+				<h:commandButton value="Input motifs" action="tmotifs" />
+				<h:outputText value="#{trainingBean.inputSummary}" rendered="#{trainingBean.inputSummary != null}"/>
+				<h:outputText value="You must upload a fasta file with training motifs" rendered="#{trainingBean.inputSummary == null}" style="color:red"/>
 				
-				<h:commandButton value="Regular expression" action="regex" />
-				<h:outputText value="#{wregexBean.regex}" rendered="#{wregexBean.regex != null}"/>
-				<h:outputText value="You must select or define a regular expression" rendered="#{wregexBean.regex == null}" style="color:red"/>
+				<h:commandButton value="Regular expression" actionListener="#{trainingBean.refresh}"/>
+				<h:inputText value="#{trainingBean.regex}" styleClass="trn_regex"/>
+				
+				<h:commandButton value="Refresh" actionListener="#{trainingBean.refresh}"/>
+				<h:outputText value="#{trainingBean.trainingSummary}" rendered="#{trainingBean.trainingSummary != null}"/>
+				<h:outputText value="Define a regex matching any training motif" rendered="#{trainingBean.trainingSummary == null}" style="color:red"/>
 				
 				<h:commandButton value="Download PSSM" />
 				</h:panelGrid>
 				<p />
-				<h:dataTable value="#{trainingBean.list}" var="item" rendered="#{not empty trainingBean.list}">
+				<h:dataTable value="#{trainingBean.trainingList}" var="item" rendered="#{not empty trainingBean.trainingList}">
+					<h:column>
+						<f:facet name="header">Valid</f:facet>
+						<h:panelGroup layout="block" rendered="#{item.valid}" styleClass="ok"/>
+						<h:panelGroup layout="block" rendered="#{!item.valid}" styleClass="ko"/>
+					</h:column>
 					<h:column>
 						<f:facet name="header">Entry</f:facet>
-						<h:outputText value="#{item.header}" />
+						<h:outputText value="#{item.name}" />
 					</h:column>
 					<h:column>
 						<f:facet name="header">Begin</f:facet>
-						<h:inputText value="#{item.start}" styleClass="trn_pos" />
+						<h:outputText value="#{item.start}" styleClass="trn_pos" />
 					</h:column>
 					<h:column>
 						<f:facet name="header">End</f:facet>
-						<h:inputText value="#{item.end}" styleClass="trn_pos" />
+						<h:outputText value="#{item.end}" styleClass="trn_pos" />
 					</h:column>
 					<h:column>
 						<f:facet name="header">Motif</f:facet>
-						<h:outputText value="#{item.motif}" styleClass="trn_seq" />
+						<h:outputText value="#{item.alignment}" styleClass="trn_seq" />
 					</h:column>
 					<h:column>
 						<f:facet name="header">Weight</f:facet>
-						<h:inputText value="#{item.weight}" styleClass="trn_weight" />
+						<h:outputText value="#{item.weight}" styleClass="trn_weight" />
+					</h:column>
+					<h:column>
+						<f:facet name="header">Overlaps</f:facet>
+						<h:outputText value="#{item.combinations}" styleClass="trn_pos" />
+					</h:column>
+					<h:column>
+						<f:facet name="header">Divided Weight</f:facet>
+						<h:outputText value="#{item.dividedWeight}" styleClass="trn_weight" />
+					</h:column>
+					<h:column>
+						<f:facet name="header">Action</f:facet>
+						<h:panelGroup layout="block" rendered="#{item.valid}">
+							<h:commandLink actionListener="#{item.remove}">
+							<h:panelGroup layout="block" styleClass="trash" />
+							</h:commandLink>
+						</h:panelGroup>
+						<h:panelGroup layout="block" rendered="#{!item.valid}">
+							<h:commandLink actionListener="#{item.recycle}">
+							<h:panelGroup layout="block" styleClass="recycle" />
+							</h:commandLink>
+						</h:panelGroup>						
 					</h:column>
 				</h:dataTable>
 			</h:form>

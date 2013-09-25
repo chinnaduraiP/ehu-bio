@@ -26,14 +26,16 @@ public final class Wregex {
 		List<Result> results = new ArrayList<Result>();
 		Matcher matcher = mPattern.matcher(fasta.sequence());
 		List<String> groups = new ArrayList<String>();
-		while( matcher.find() ) {
+		int start = 0;
+		while( matcher.find(start) ) {
+			start = matcher.start()+1;
 			groups.clear();
 			if( matcher.groupCount() == 0 )
 				groups.add(matcher.group());
 			else
 				for( int i = 1; i <= matcher.groupCount(); i++ )
 					groups.add(matcher.group(i));
-			results.add(new Result(fasta, matcher.start(), 1, matcher.group(), groups));
+			results.add(new Result(fasta, start, 1, matcher.group(), groups));
 		}
 		return results;
 	}
@@ -48,8 +50,7 @@ public final class Wregex {
 		for( Result result : list ) {
 			overlap = group.isEmpty();
 			for( Result g : group ) {
-				if( (result.index >= g.index && result.index <= g.end) ||
-					(result.end >= g.index && result.end <= g.end) ) {
+				if( result.overlaps(g) ) {
 					overlap = true;
 					break;
 				}

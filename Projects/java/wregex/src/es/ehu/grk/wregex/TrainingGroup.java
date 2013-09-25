@@ -5,17 +5,14 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
-public class TrainingGroup implements Collection<TrainingMotif> {
-	public TrainingGroup( ResultGroup group, double weight ) {
-		list = new ArrayList<TrainingMotif>();
-		for( Result r : group )
-			list.add(new TrainingMotif(r.fasta, r.index, r.end, weight));
-		updateCombinations();
-	}
+public final class TrainingGroup implements Collection<TrainingMotif> {
+	private final double weight;
 	
-	private void updateCombinations() {
-		for( TrainingMotif m : list )
-			m.setCombinations(list.size());
+	public TrainingGroup( ResultGroup group, double weight ) {
+		this.weight = weight;
+		list = new ArrayList<>();
+		for( Result r : group )
+			list.add(new TrainingMotif(r, this));
 	}
 
 	@Override
@@ -50,18 +47,19 @@ public class TrainingGroup implements Collection<TrainingMotif> {
 
 	@Override
 	public boolean add(TrainingMotif e) {
-		if( !list.add(e) )
-			return false;
-		updateCombinations();
-		return true;
+		return list.add(e);
 	}
 
 	@Override
 	public boolean remove(Object o) {
-		if( !list.remove(o) )
+		if( o instanceof Result ) {
+			Result result = (Result)o;
+			for( TrainingMotif motif : this )
+				if( motif.linked(result) )
+					return remove(motif);
 			return false;
-		updateCombinations();
-		return true;
+		}
+		return list.remove(o);
 	}
 
 	@Override
@@ -71,31 +69,26 @@ public class TrainingGroup implements Collection<TrainingMotif> {
 
 	@Override
 	public boolean addAll(Collection<? extends TrainingMotif> c) {
-		if( !list.addAll(c) )
-			return false;
-		updateCombinations();
-		return true;
+		return list.addAll(c);
 	}
 
 	@Override
 	public boolean removeAll(Collection<?> c) {
-		if( !list.removeAll(c) )
-			return false;
-		updateCombinations();
-		return true;
+		return list.removeAll(c);
 	}
 
 	@Override
 	public boolean retainAll(Collection<?> c) {
-		if( !list.retainAll(c) )
-			return false;
-		updateCombinations();
-		return true;
+		return list.retainAll(c);
 	}
 
 	@Override
 	public void clear() {
 		list.clear();
+	}
+
+	public double getWeight() {
+		return weight;
 	}
 
 	private List<TrainingMotif> list;

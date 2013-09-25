@@ -1,41 +1,70 @@
 package es.ehu.grk.wregex;
 
-import es.ehu.grk.db.Fasta;
-
 public final class TrainingMotif {
-	public final int start;
-	public final int end;
-	public final double weight;
-	public final String motif;
-	private final Fasta fasta;
-	private int combinations;
-
-	public TrainingMotif(Fasta fasta, int start, int end, double weight) {
-		this.fasta = fasta;
-		this.start = start;
-		this.end = end;
-		this.weight = weight;
-		this.motif = fasta.sequence().substring(start, end+1);
-		this.combinations = 1;
+	private final Result result;
+	private final TrainingGroup group;
+	
+	public TrainingMotif( Result result, TrainingGroup group ) {
+		this.result = result;
+		this.group = group;
 	}
 	
-	public String getSequence() {
-		return fasta.sequence();
+	public String getName() {
+		return result.name;
 	}
 	
-	public String getAccession() {
-		return fasta.guessAccession();
+	public int getStart() {
+		return result.start;
 	}
-
+	
+	public int getEnd() {
+		return result.end;
+	}
+	
+	public String getMotif() {
+		return result.match;
+	}
+	
+	public String getAlignment() {
+		return result.alignment;
+	}
+	
+	public double getWeight() {
+		return group.getWeight();
+	}
+	
 	public int getCombinations() {
-		return combinations;
-	}
-
-	public void setCombinations(int combinations) {
-		this.combinations = combinations;
+		return group.size();
 	}
 	
 	public double getDividedWeight() {
-		return weight/combinations;
+		if( !isValid() )
+			return 0.0;
+		return getWeight()/getCombinations();
+	}
+	
+	public boolean overlaps(Result result) {
+		return this.result.overlaps(result);
+	}
+	
+	public boolean linked(Result result) {
+		return this.result.equals(result);
+	}
+
+	public TrainingGroup getGroup() {
+		return group;
+	}
+	
+	public void remove() {
+		group.remove(this);
+	}
+	
+	public void recycle() {
+		if( !group.contains(this) )
+			group.add(this);
+	}
+	
+	public boolean isValid() {
+		return group.contains(this);
 	}
 }

@@ -9,7 +9,7 @@ import es.ehu.grk.db.Fasta;
 /** Inmutable class for storing a Wregex result*/
 public final class Result {
 	public final String name;
-	public final int index;
+	public final int start;
 	public final int end;
 	public final int combinations;
 	public final String match;
@@ -18,13 +18,13 @@ public final class Result {
 	private final String printString;
 	public final Fasta fasta;	
 	
-	Result( Fasta fasta, int index, int combinations, String match, Collection<String> groups ) {
+	Result( Fasta fasta, int start, int combinations, String match, Collection<String> groups ) {
 		assert groups.size() > 0;
 		
 		this.fasta = fasta;
-		this.name = fasta.guessAccession()+"@"+(index+1);
-		this.index = index;
-		this.end = index+match.length()-1;
+		this.name = fasta.guessAccession()+"@"+start;
+		this.start = start;
+		this.end = start+match.length()-1;
 		this.combinations = combinations;
 		this.match = match;
 		this.groups = new ArrayList<String>(groups);
@@ -46,5 +46,17 @@ public final class Result {
 	@Override
 	public String toString() {
 		return printString;
+	}
+	
+	public boolean overlaps(Result result) {
+		if( result.start >= start && result.start <= end )
+			return true;
+		if( result.end >= start && result.end <= end )
+			return true;
+		if( start >= result.start && start <= result.end )
+			return true;
+		if( end >= result.start && end <= result.end )
+			return true;
+		return false;
 	}
 }
