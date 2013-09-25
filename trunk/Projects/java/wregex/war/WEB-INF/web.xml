@@ -30,6 +30,10 @@
 		<param-name>javax.faces.PROJECT_STAGE</param-name>
 		<param-value>Development</param-value>
 	</context-param>
+	<context-param>
+	    <param-name>facelets.SKIP_COMMENTS</param-name>
+	    <param-value>true</param-value>
+	</context-param>
 	
 	<!-- ***** Specify session timeout of thirty (30) minutes. ***** -->
    <session-config>
@@ -38,7 +42,7 @@
 	
 	<!-- Welcome page -->
 	<welcome-file-list>
-		<welcome-file>faces/pssm.xhtml</welcome-file>
+		<welcome-file>faces/home.xhtml</welcome-file>
 	</welcome-file-list>
 	
 	<!-- JSF mapping -->
@@ -87,6 +91,6 @@
 	</servlet-mapping>
 	
 	<listener>
-  		<listener-class>es.ehu.grk.wregex.gae.ServletListenner</listener-class>
+  		<listener-class>es.ehu.grk.wregex.gae.ServletListener</listener-class>
 	</listener>
 </web-app>

@@ -1,0 +1,51 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:t="http://myfaces.apache.org/tomahawk">
+
+<h:body>
+	<ui:composition template="./template.xhtml">
+		<ui:define name="title">Training</ui:define>
+		<ui:define name="content">
+			<h:form>
+			<h:panelGrid columns="2">
+				<h:commandButton value="Training motifs" action="tmotifs" />
+				<h:outputText value="#{trainingBean.summary}" rendered="#{trainingBean.summary != null}"/>
+				<h:outputText value="You must upload a fasta file with training motifs" rendered="#{trainingBean.summary == null}" style="color:red"/>
+				
+				<h:commandButton value="Regular expression" action="regex" />
+				<h:outputText value="#{wregexBean.regex}" rendered="#{wregexBean.regex != null}"/>
+				<h:outputText value="You must select or define a regular expression" rendered="#{wregexBean.regex == null}" style="color:red"/>
+				
+				<h:commandButton value="Download PSSM" />
+				</h:panelGrid>
+				<p />
+				<h:dataTable value="#{trainingBean.list}" var="item" rendered="#{not empty trainingBean.list}">
+					<h:column>
+						<f:facet name="header">Entry</f:facet>
+						<h:outputText value="#{item.header}" />
+					</h:column>
+					<h:column>
+						<f:facet name="header">Begin</f:facet>
+						<h:inputText value="#{item.start}" styleClass="trn_pos" />
+					</h:column>
+					<h:column>
+						<f:facet name="header">End</f:facet>
+						<h:inputText value="#{item.end}" styleClass="trn_pos" />
+					</h:column>
+					<h:column>
+						<f:facet name="header">Motif</f:facet>
+						<h:outputText value="#{item.motif}" styleClass="trn_seq" />
+					</h:column>
+					<h:column>
+						<f:facet name="header">Weight</f:facet>
+						<h:inputText value="#{item.weight}" styleClass="trn_weight" />
+					</h:column>
+				</h:dataTable>
+			</h:form>
+		</ui:define>
+	</ui:composition>
+</h:body>
+</html>
