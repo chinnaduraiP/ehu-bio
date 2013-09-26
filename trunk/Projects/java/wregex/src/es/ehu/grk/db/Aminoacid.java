@@ -44,7 +44,7 @@ public enum Aminoacid {
 	public final boolean isAromatic;
 	public final boolean isAliphatic;
 	
-	Aminoacid( String name, char letter, String abbrev, double mass,
+	private Aminoacid( String name, char letter, String abbrev, double mass,
 		double pI, double pK1, double pK2, double pKa,
 		boolean isHydrophobic, boolean isPolar, short charge,
 		boolean isSmall, boolean isTiny, boolean isAromatic, boolean isAliphatic ) {
@@ -66,6 +66,30 @@ public enum Aminoacid {
 		this.isSmall = isSmall;
 		this.isTiny = isTiny;
 		this.isAromatic = isAromatic;
-		this.isAliphatic = isAliphatic;
+		this.isAliphatic = isAliphatic;		
 	}
+	
+	private static void createLut() {
+		char max = 'A';
+		for( Aminoacid aa : values() )
+			if( aa.letter > max )
+				max = aa.letter;
+		int size = max - 'A' + 1;
+		lut = new Aminoacid[size];
+		for( int i = 0; i < size; i++ )
+			lut[i] = null;
+		for( Aminoacid aa : values() )
+			lut[aa.letter-'A'] = aa;
+	}
+	
+	public static Aminoacid parseLetter( char ch ) {
+		if( lut == null )
+			createLut();
+		int i = Character.toUpperCase(ch) - 'A';
+		if( i >= lut.length )
+			return null;
+		return lut[i]; 
+	}
+	
+	private static Aminoacid[] lut = null;	// Look-up table
 }
