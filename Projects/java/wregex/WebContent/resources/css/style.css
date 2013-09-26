@@ -12,6 +12,7 @@
   	overflow: hidden;
   	text-overflow: ellipsis;
   	display: inline-block;
+  	text-align: left;
 }
 .trn_weight {
 	width: 50px;

@@ -2,6 +2,8 @@ package es.ehu.grk.wregex.gae;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -9,6 +11,8 @@ import java.util.List;
 
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
+import javax.faces.context.ExternalContext;
+import javax.faces.context.FacesContext;
 import javax.faces.model.DataModel;
 import javax.faces.model.ListDataModel;
 
@@ -16,6 +20,8 @@ import org.apache.myfaces.custom.fileupload.UploadedFile;
 
 import es.ehu.grk.db.Fasta.InvalidSequenceException;
 import es.ehu.grk.wregex.InputMotif;
+import es.ehu.grk.wregex.Pssm;
+import es.ehu.grk.wregex.Pssm.PssmException;
 import es.ehu.grk.wregex.Trainer;
 import es.ehu.grk.wregex.TrainingEntry;
 import es.ehu.grk.wregex.TrainingGroup;
@@ -30,6 +36,9 @@ public class TrainingBean implements Serializable {
 	private DataModel<TrainingMotif> trainingModel;	
 	private UploadedFile uploadedFile;
 	private String regex;
+	private String uploadError = null;
+	private Trainer trainer = null;
+	private String inputFileName = null;
 
 	public TrainingBean() {
 	}
@@ -39,8 +48,10 @@ public class TrainingBean implements Serializable {
 	}
 	
 	public void upload() {
-		if( uploadedFile == null )
+		if( uploadedFile == null ) {
+			refresh();
 			return;
+		}
 		
 		this.inputList.clear();
 		try {
@@ -48,14 +59,52 @@ public class TrainingBean implements Serializable {
 			List<TrainingEntry> list = TrainingEntry.readEntries(rd); 
 			rd.close();
 			for( TrainingEntry p : list )
-				this.inputList.addAll(p.getMotifs());		
+				this.inputList.addAll(p.getMotifs());
+			uploadError = null;
+			inputFileName = uploadedFile.getName();
 		} catch (IOException e) {
+			uploadError = e.getMessage();
 			e.printStackTrace();
 		} catch( InvalidSequenceException e ) {
+			uploadError = e.getMessage();
 			e.printStackTrace();
 		}
 		
 		refresh();
+	}
+	
+	public void download() {
+		if( trainer == null )
+			return;
+		
+		Pssm pssm;
+		try {
+			pssm = trainer.buildPssm(false);
+		} catch (PssmException e1) {
+			e1.printStackTrace();
+			return;
+		}
+		
+		FacesContext fc = FacesContext.getCurrentInstance();
+	    ExternalContext ec = fc.getExternalContext();
+
+	    ec.responseReset();
+	    ec.setResponseContentType("text/x-fasta"); // Check http://www.iana.org/assignments/media-types for all types. Use if necessary ExternalContext#getMimeType() for auto-detection based on filename.
+	    //ec.setResponseContentLength(length);
+	    ec.setResponseHeader("Content-Disposition", "attachment; filename=\"wregex.pssm\"");
+
+		try {
+			OutputStream output = ec.getResponseOutputStream();
+			pssm.save(new OutputStreamWriter(output),
+				"Generated from wregex.appspot.com",
+				"Trained with " + getTrainingSummary(),
+				"Regex: " + trainer.getRegex(),
+				"PSSM values are not normalized");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}	    
+	    
+	    fc.responseComplete();
 	}
 	
 	public void refresh() {
@@ -63,7 +112,7 @@ public class TrainingBean implements Serializable {
 		trainingModel = new ListDataModel<>(trainingList);
 		if( inputList.isEmpty() || regex == null || regex.isEmpty() )
 			return;
-		Trainer trainer = new Trainer(regex);
+		trainer = new Trainer(regex);
 		List<TrainingGroup> groups = trainer.train(inputList);
 		for( TrainingGroup group : groups )
 			trainingList.addAll(group);
@@ -88,17 +137,25 @@ public class TrainingBean implements Serializable {
 	public String getInputSummary() {
 		if( inputList.isEmpty() )
 			return null;		
-		return "Loaded " + inputList.size() + " input motifs";		
+		return "Loaded " + inputList.size() + " input motifs from " + inputFileName;		
 	}
 	
 	public String getTrainingSummary() {
 		if( trainingList.isEmpty() )			
 			return null;
-		return trainingList.size() + " matches for " + inputList.size() + " input motifs";
+		return getTrainingCount() + " valid matches for " + inputList.size() + " input motifs (" + inputFileName + ")";
 	}
 
 	public List<TrainingMotif> getTrainingList() {		
 		return trainingList;
+	}
+	
+	public int getTrainingCount(){
+		int count = 0;
+		for( TrainingMotif motif : trainingList )
+			if( motif.isValid() )
+				count++;
+		return count;
 	}
 	
 	public DataModel<TrainingMotif> getTrainingModel() {
@@ -115,5 +172,9 @@ public class TrainingBean implements Serializable {
 	
 	public void recycle(TrainingMotif motif) {		
 		motif.recycle();
+	}
+
+	public String getUploadError() {
+		return uploadError;
 	}
 }

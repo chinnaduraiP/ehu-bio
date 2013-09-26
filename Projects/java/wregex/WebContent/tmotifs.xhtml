@@ -14,8 +14,11 @@
 					<t:inputFileUpload value="#{trainingBean.uploadedFile}"
 						accept="text/x-fasta"
 						requiredMessage="A fasta file must be selected" />
+					<h:panelGroup>
 					<h:commandButton value="Refresh"
 						actionListener="#{trainingBean.upload}" />
+					<h:outputText value="#{trainingBean.uploadError}" rendered="#{trainingBean.uploadError != null}" style="color:red"/>
+					</h:panelGroup>
 					<h:commandButton value="Download motifs" type="submit" />
 				</h:panelGrid>
 				<h:dataTable value="#{trainingBean.inputList}" var="item"

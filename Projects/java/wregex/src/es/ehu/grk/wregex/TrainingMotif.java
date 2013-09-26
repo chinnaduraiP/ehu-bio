@@ -1,5 +1,7 @@
 package es.ehu.grk.wregex;
 
+import java.util.List;
+
 public final class TrainingMotif {
 	private final Result result;
 	private final TrainingGroup group;
@@ -53,6 +55,10 @@ public final class TrainingMotif {
 
 	public TrainingGroup getGroup() {
 		return group;
+	}
+	
+	public List<String> getRegexGroups() {
+		return result.getGroups();
 	}
 	
 	public void remove() {
