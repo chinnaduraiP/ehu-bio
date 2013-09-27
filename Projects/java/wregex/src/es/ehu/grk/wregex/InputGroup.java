@@ -11,13 +11,13 @@ import es.ehu.grk.db.Fasta;
 import es.ehu.grk.db.Fasta.InvalidSequenceException;
 import es.ehu.grk.db.Fasta.SequenceType;
 
-public final class TrainingEntry {	
+public final class InputGroup {	
 	/**
 	 * Motif positions are read if the last part of the header is in the form
 	 * x-y;z-... Is this pattern is not found, the whole sequence is interpreted
 	 * as the motif
 	 */
-	public TrainingEntry(Fasta fasta) {
+	public InputGroup(Fasta fasta) {
 		mFasta = fasta;
 		mId = fasta.guessAccession();
 		loadMotifs();
@@ -48,6 +48,10 @@ public final class TrainingEntry {
 			mMotifs.add(new InputMotif(mFasta, start, end, w));
 		}
 	}
+	
+	public Fasta getFasta() {
+		return mFasta;
+	}
 
 	public String getSequence() {
 		return mFasta.sequence();
@@ -66,18 +70,18 @@ public final class TrainingEntry {
 		return mId;
 	}
 
-	public static List<TrainingEntry> readEntries(Reader rd) throws IOException,
+	public static List<InputGroup> readEntries(Reader rd) throws IOException,
 			InvalidSequenceException {
-		List<TrainingEntry> list = new ArrayList<TrainingEntry>();
+		List<InputGroup> list = new ArrayList<InputGroup>();
 		for (Fasta f : Fasta.readEntries(rd, SequenceType.PROTEIN))
-			list.add(new TrainingEntry(f));
+			list.add(new InputGroup(f));
 		return list;
 	}
 
-	public static void writeEntries(Writer wr, Iterable<TrainingEntry> list) {
+	public static void writeEntries(Writer wr, Iterable<InputGroup> list) {
 		PrintWriter pw = new PrintWriter(wr);
 		boolean first;
-		for (TrainingEntry entry : list) {
+		for (InputGroup entry : list) {
 			pw.print(">" + entry.getId() + " ");
 			first = true;
 			for (InputMotif motif : entry.getMotifs()) {

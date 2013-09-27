@@ -11,6 +11,10 @@ public final class TrainingMotif {
 		this.group = group;
 	}
 	
+	public Result getResult() {
+		return result;
+	}
+	
 	public String getName() {
 		return result.name;
 	}

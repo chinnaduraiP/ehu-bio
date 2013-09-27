@@ -21,10 +21,10 @@ public final class Result {
 	Result( Fasta fasta, int start, int combinations, String match, Collection<String> groups ) {
 		assert groups.size() > 0;
 		
-		this.fasta = fasta;
-		this.name = fasta.guessAccession()+"@"+start;
+		this.fasta = fasta;		
 		this.start = start;
 		this.end = start+match.length()-1;
+		this.name = fasta.guessAccession()+"@"+start+"-"+end;
 		this.combinations = combinations;
 		this.match = match;
 		this.groups = new ArrayList<String>(groups);

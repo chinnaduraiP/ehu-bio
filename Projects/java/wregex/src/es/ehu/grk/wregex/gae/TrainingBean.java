@@ -19,11 +19,11 @@ import javax.faces.model.ListDataModel;
 import org.apache.myfaces.custom.fileupload.UploadedFile;
 
 import es.ehu.grk.db.Fasta.InvalidSequenceException;
+import es.ehu.grk.wregex.InputGroup;
 import es.ehu.grk.wregex.InputMotif;
 import es.ehu.grk.wregex.Pssm;
 import es.ehu.grk.wregex.Pssm.PssmException;
 import es.ehu.grk.wregex.Trainer;
-import es.ehu.grk.wregex.TrainingEntry;
 import es.ehu.grk.wregex.TrainingGroup;
 import es.ehu.grk.wregex.TrainingMotif;
 
@@ -32,6 +32,7 @@ import es.ehu.grk.wregex.TrainingMotif;
 public class TrainingBean implements Serializable {
 	private static final long serialVersionUID = 1L;
 	private List<InputMotif> inputList = new ArrayList<>();
+	private List<InputGroup> inputGroupList = null;
 	private List<TrainingMotif> trainingList = new ArrayList<>();
 	private DataModel<TrainingMotif> trainingModel;	
 	private UploadedFile uploadedFile;
@@ -56,9 +57,9 @@ public class TrainingBean implements Serializable {
 		this.inputList.clear();
 		try {
 			Reader rd = new InputStreamReader(uploadedFile.getInputStream());
-			List<TrainingEntry> list = TrainingEntry.readEntries(rd); 
+			inputGroupList = InputGroup.readEntries(rd); 
 			rd.close();
-			for( TrainingEntry p : list )
+			for( InputGroup p : inputGroupList )
 				this.inputList.addAll(p.getMotifs());
 			uploadError = null;
 			inputFileName = uploadedFile.getName();
@@ -113,7 +114,7 @@ public class TrainingBean implements Serializable {
 		if( inputList.isEmpty() || regex == null || regex.isEmpty() )
 			return;
 		trainer = new Trainer(regex);
-		List<TrainingGroup> groups = trainer.train(inputList);
+		List<TrainingGroup> groups = trainer.train(inputGroupList);
 		for( TrainingGroup group : groups )
 			trainingList.addAll(group);
 	}
@@ -135,6 +136,7 @@ public class TrainingBean implements Serializable {
 	}
 	
 	public String getInputSummary() {
+		//BufferedReader rd = new BufferedReader(new InputStreamReader(FacesContext.getCurrentInstance().getExternalContext().getResourceAsStream("/resources/css/style.css")));		
 		if( inputList.isEmpty() )
 			return null;		
 		return "Loaded " + inputList.size() + " input motifs from " + inputFileName;		

@@ -20,22 +20,30 @@ public final class Wregex {
 	@Override
 	public String toString() {
 		return mRegex;
-	}
+	}	
 	
 	public List<Result> search( Fasta fasta ) {
 		List<Result> results = new ArrayList<Result>();
 		Matcher matcher = mPattern.matcher(fasta.sequence());
+		Matcher sub; // match all combinations
+		String str;
 		List<String> groups = new ArrayList<String>();
 		int start = 0;
 		while( matcher.find(start) ) {
 			start = matcher.start()+1;
-			groups.clear();
-			if( matcher.groupCount() == 0 )
-				groups.add(matcher.group());
-			else
-				for( int i = 1; i <= matcher.groupCount(); i++ )
-					groups.add(matcher.group(i));
-			results.add(new Result(fasta, start, 1, matcher.group(), groups));
+			str = matcher.group();
+			for( int l = 1; l <= str.length(); l++ ) {
+				sub = mPattern.matcher(str.substring(0, l));
+				if( !sub.find() )
+					continue;
+				groups.clear();
+				if( sub.groupCount() == 0 )
+					groups.add(sub.group());
+				else
+					for( int g = 1; g <= sub.groupCount(); g++ )
+						groups.add(sub.group(g));
+				results.add(new Result(fasta, start+sub.start(), 1, sub.group(), groups));
+			}
 		}
 		return results;
 	}
