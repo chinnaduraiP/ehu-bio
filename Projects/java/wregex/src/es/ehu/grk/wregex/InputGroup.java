@@ -89,11 +89,12 @@ public final class InputGroup {
 					first = false;
 				else
 					pw.print(';');
-				pw.print(motif.getStart() + "-" + motif.getEnd());
+				pw.print(motif.getStart() + "-" + motif.getEnd() + "@" + motif.getWeight());
 			}
 			pw.println();
 			pw.println(entry.getSequence());
 		}
+		pw.flush();
 	}
 
 	private final Fasta mFasta;
