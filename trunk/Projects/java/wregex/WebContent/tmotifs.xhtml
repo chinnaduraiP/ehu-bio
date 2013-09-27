@@ -19,7 +19,7 @@
 						actionListener="#{trainingBean.upload}" />
 					<h:outputText value="#{trainingBean.uploadError}" rendered="#{trainingBean.uploadError != null}" style="color:red"/>
 					</h:panelGroup>
-					<h:commandButton value="Download motifs" type="submit" />
+					<h:commandButton value="Download motifs" actionListener="#{trainingBean.downloadInputMotifs}" />
 				</h:panelGrid>
 				<h:dataTable value="#{trainingBean.inputList}" var="item"
 					rendered="#{not empty trainingBean.inputList}">

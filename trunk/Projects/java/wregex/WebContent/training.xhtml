@@ -22,7 +22,7 @@
 				<h:outputText value="#{trainingBean.trainingSummary}" rendered="#{trainingBean.trainingSummary != null}"/>
 				<h:outputText value="Define a regex matching any training motif" rendered="#{trainingBean.trainingSummary == null}" style="color:red"/>
 				
-				<h:commandButton value="Download PSSM" actionListener="#{trainingBean.download}"/>
+				<h:commandButton value="Download PSSM" actionListener="#{trainingBean.downloadPssm}"/>
 				</h:panelGrid>
 				<p />
 				<h:dataTable value="#{trainingBean.trainingList}" var="item" rendered="#{not empty trainingBean.trainingList}">

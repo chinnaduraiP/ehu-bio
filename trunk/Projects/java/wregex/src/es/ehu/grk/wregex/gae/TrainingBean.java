@@ -18,6 +18,8 @@ import javax.faces.model.ListDataModel;
 
 import org.apache.myfaces.custom.fileupload.UploadedFile;
 
+import com.google.appengine.api.utils.SystemProperty;
+
 import es.ehu.grk.db.Fasta.InvalidSequenceException;
 import es.ehu.grk.wregex.InputGroup;
 import es.ehu.grk.wregex.InputMotif;
@@ -74,7 +76,7 @@ public class TrainingBean implements Serializable {
 		refresh();
 	}
 	
-	public void download() {
+	public void downloadPssm() {
 		if( trainer == null )
 			return;
 		
@@ -97,10 +99,32 @@ public class TrainingBean implements Serializable {
 		try {
 			OutputStream output = ec.getResponseOutputStream();
 			pssm.save(new OutputStreamWriter(output),
-				"Generated from wregex.appspot.com",
+				"Generated from wregex.appspot.com (v"+SystemProperty.applicationVersion.get()+")",
 				"Trained with " + getTrainingSummary(),
 				"Regex: " + trainer.getRegex(),
-				"PSSM values are not normalized");
+				"The following PSSM values are not normalized");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}	    
+	    
+	    fc.responseComplete();
+	}
+	
+	public void downloadInputMotifs() {
+		if( inputGroupList == null )
+			return;
+		
+		FacesContext fc = FacesContext.getCurrentInstance();
+	    ExternalContext ec = fc.getExternalContext();
+
+	    ec.responseReset();
+	    ec.setResponseContentType("text/x-fasta"); // Check http://www.iana.org/assignments/media-types for all types. Use if necessary ExternalContext#getMimeType() for auto-detection based on filename.
+	    //ec.setResponseContentLength(length);
+	    ec.setResponseHeader("Content-Disposition", "attachment; filename=\"motifs.fasta\"");
+
+		try {
+			OutputStream output = ec.getResponseOutputStream();
+			InputGroup.writeEntries(new OutputStreamWriter(output), inputGroupList);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}	    
