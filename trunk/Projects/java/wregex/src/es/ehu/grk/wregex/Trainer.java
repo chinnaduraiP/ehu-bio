@@ -15,22 +15,36 @@ public final class Trainer {
 		wregex = new Wregex(regex);
 	}
 	
-	public List<TrainingGroup> train( List<InputMotif> motifs ) {
+	public List<TrainingGroup> train( List<InputGroup> inputGroups ) {
 		List<ResultGroup> results;
 		TrainingGroup group;
 		trainingGroups = new ArrayList<>();
-		for( InputMotif motif : motifs ) {
-			results = wregex.searchGrouping(motif.fasta);
-			for( ResultGroup result : results ) {
-				group = new TrainingGroup(result, motif.getWeight());
-				for( Result r : result ) {
-					if( !motif.contains(r) )
-						group.remove(r);
+		for( InputGroup inputGroup : inputGroups ) {
+			results = wregex.searchGrouping(inputGroup.getFasta());
+			for( InputMotif motif : inputGroup.getMotifs() ) {				
+				for( ResultGroup result : results ) {
+					group = new TrainingGroup(result, motif.getWeight());
+					for( Result r : result ) {
+						if( !motif.contains(r) )
+							group.remove(r);
+					}
+					if( !group.isEmpty() )
+						trainingGroups.add(group);
 				}
-				if( !group.isEmpty() )
-					trainingGroups.add(group);
 			}
 		}
+		
+		// Filter duplicates (when same result overlaps with two input motifs)
+		List<TrainingMotif> motifs = new ArrayList<>();
+		for( TrainingGroup trainingGroup : trainingGroups )
+			motifs.addAll(trainingGroup);
+		for( int i = 0; i < motifs.size()-1; i++ )
+			for( int j = i + 1; j < motifs.size(); j++ )
+				if( motifs.get(i).getResult() == motifs.get(j).getResult() )
+					if( motifs.get(i).getWeight() >= motifs.get(j).getWeight() )
+						motifs.get(j).remove();
+					else
+						motifs.get(i).remove();
 		
 		return trainingGroups;
 	}

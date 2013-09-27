@@ -76,6 +76,11 @@
     	<url-pattern>/faces/myFacesExtensionResource/*</url-pattern>
 	</filter-mapping>
 	
+	<error-page>
+    	<exception-type>javax.faces.application.ViewExpiredException</exception-type>
+    	<location>/faces/home.xhtml</location>
+	</error-page>
+	
 	<!-- System -->
 	<servlet>
 		<servlet-name>SystemServiceServlet</servlet-name>
