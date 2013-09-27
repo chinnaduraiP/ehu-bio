@@ -89,7 +89,7 @@ public final class InputGroup {
 					first = false;
 				else
 					pw.print(';');
-				pw.print((motif.getStart()+1) + "-" + (motif.getEnd()+1));
+				pw.print(motif.getStart() + "-" + motif.getEnd());
 			}
 			pw.println();
 			pw.println(entry.getSequence());

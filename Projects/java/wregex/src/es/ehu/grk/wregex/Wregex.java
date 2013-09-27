@@ -29,13 +29,14 @@ public final class Wregex {
 		String str;
 		List<String> groups = new ArrayList<String>();
 		int start = 0;
+		int end;
 		while( matcher.find(start) ) {
 			start = matcher.start()+1;
 			str = matcher.group();
-			for( int l = 1; l <= str.length(); l++ ) {
-				sub = mPattern.matcher(str.substring(0, l));
-				if( !sub.find() )
-					continue;
+			end = str.length();
+			sub = mPattern.matcher(str.substring(0, end));
+			while( sub.find() && end > 0 ) {
+				end = sub.end()-1;
 				groups.clear();
 				if( sub.groupCount() == 0 )
 					groups.add(sub.group());
@@ -43,6 +44,7 @@ public final class Wregex {
 					for( int g = 1; g <= sub.groupCount(); g++ )
 						groups.add(sub.group(g));
 				results.add(new Result(fasta, start+sub.start(), 1, sub.group(), groups));
+				sub = mPattern.matcher(str.substring(0, end));
 			}
 		}
 		return results;
