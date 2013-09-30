@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!DOCTYPE project>
+<motifs>
+    <motif>
+        <name>NES/CRM1</name>
+        <summary>Leucine-rich nuclear export signal (NES) binding to the CRM1 exportin protein</summary>
+        <definition>
+            <name>Wregex A</name>
+            <description>Regular expression derived from ELM and PSSM computed with NESsential training set</description>
+            <regex>([DEQ].{0,1})([LIM])(.{2,3})([LIVMF])([^P]{2,3})([LMVF])([^P])([LMIV])(.{0,3}[DEQ])</regex>
+            <pssm>NESsential.pssm</pssm>
+        </definition>
+        <definition>
+            <name>Prueba</name>
+            <description>Regular expression derived from ELM and PSSM computed with NESsential training set</description>
+            <regex>([DEQ].{0,1})([LIM])</regex>
+            <pssm>prueba.pssm</pssm>
+        </definition>
+        <reference>
+            <name>Original ELM entry</name>
+            <link>http://elm.eu.org/elms/elmPages/TRG_NES_CRM1_1.html</link>            
+        </reference>
+    </motif>
+    <motif>
+        <name>Prueba</name>
+        <summary>Leucine-rich nuclear export signal (NES) binding to the CRM1 exportin protein</summary>
+        <definition>
+            <name>kk</name>
+            <description>Regular expression derived from ELM and PSSM computed with NESsential training set</description>
+            <regex>([DEQ].{0,1})([LIM])(.{2,3})([LIVMF])</regex>
+            <pssm>kk.pssm</pssm>
+        </definition>
+        <reference>
+            <name>Original ELM entry</name>
+            <link>http://elm.eu.org/elms/elmPages/TRG_NES_CRM1_1.html</link>            
+        </reference>
+    </motif>
+</motifs>
