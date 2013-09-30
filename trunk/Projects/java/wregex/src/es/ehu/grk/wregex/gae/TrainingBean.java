@@ -155,8 +155,7 @@ public class TrainingBean implements Serializable {
 		this.uploadedFile = uploadedFile;
 	}
 	
-	public String getInputSummary() {
-		//BufferedReader rd = new BufferedReader(new InputStreamReader(FacesContext.getCurrentInstance().getExternalContext().getResourceAsStream("/resources/css/style.css")));		
+	public String getInputSummary() {		
 		if( inputList.isEmpty() )
 			return null;		
 		return "Loaded " + inputList.size() + " input motifs from " + inputFileName;		

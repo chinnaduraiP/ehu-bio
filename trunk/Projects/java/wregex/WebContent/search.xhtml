@@ -8,7 +8,31 @@
 <h:body>
 	<ui:composition template="./template.xhtml">
 		<ui:define name="title">Search</ui:define>
-		<ui:define name="content">			
+		<ui:define name="content">
+			<h:form>
+				<h:panelGrid columns="2" headerClass="cfg_header">
+					<f:facet name="header">Search configuration</f:facet>
+					<h:outputLabel value="Motif"/>
+					<h:panelGroup>
+						<h:selectOneMenu value="#{searchBean.motif}" onchange="submit()"
+							valueChangeListener="#{searchBean.onChangeMotif}">
+							<f:selectItem itemLabel="Select motif" />
+							<f:selectItems value="#{searchBean.motifs}" />
+						</h:selectOneMenu>
+						<h:selectOneMenu value="#{searchBean.configuration}"
+							onchange="submit()"
+							valueChangeListener="#{searchBean.onChangeDefinition}"
+							rendered="#{searchBean.motif != null}">
+							<f:selectItem itemLabel="Select configuration" />
+							<f:selectItems value="#{searchBean.definitions}" />
+						</h:selectOneMenu>
+					</h:panelGroup>
+					<h:outputLabel value="Regular expression"/>
+					<h:outputText value="#{searchBean.regex}" />
+					<h:outputLabel value="PSSM"/>
+					<h:outputText value="#{searchBean.pssm}" />
+				</h:panelGrid>
+			</h:form>
 		</ui:define>
 	</ui:composition>
 </h:body>

@@ -22,6 +22,10 @@
 	width: 700px;
 }
 
+.cfg_header {
+	text-align: left;
+}
+
 div.ok {
 	content: url(/resources/images/ok.png);
 }
