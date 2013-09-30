@@ -5,17 +5,22 @@ import java.util.Arrays;
 import java.util.List;
 
 import es.ehu.grk.db.Aminoacid;
-import es.ehu.grk.wregex.Pssm.PssmException;
+import es.ehu.grk.wregex.PssmBuilder.PssmBuilderException;
+import es.ehu.grk.wregex.Wregex.WregexException;
 
 public final class Trainer {
 	Wregex wregex;
 	List<TrainingGroup> trainingGroups = null;
 	
 	public Trainer( String regex ) {
-		wregex = new Wregex(regex);
+		try {
+			wregex = new Wregex(regex,null);
+		} catch (WregexException e) {
+			throw new RuntimeException(e);
+		}
 	}
 	
-	public List<TrainingGroup> train( List<InputGroup> inputGroups ) {
+	private List<TrainingGroup> trainStep( List<InputGroup> inputGroups ) {
 		List<ResultGroup> results;
 		TrainingGroup group;
 		trainingGroups = new ArrayList<>();
@@ -49,9 +54,24 @@ public final class Trainer {
 		return trainingGroups;
 	}
 	
-	public Pssm buildPssm( boolean doNormalization ) throws PssmException {
+	public List<TrainingGroup> train( List<InputGroup> inputGroups, boolean calculateScores ) {
+		List<TrainingGroup> result = trainStep(inputGroups);
+		if( !calculateScores )
+			return result;
+		try {
+			Pssm pssm = buildPssm(true);
+			wregex = new Wregex(wregex.getRegex(), pssm);
+		} catch (PssmBuilderException e) {
+			throw new RuntimeException(e);
+		} catch (WregexException e) {
+			throw new RuntimeException(e);
+		}
+		return trainStep(inputGroups);
+	}
+	
+	public Pssm buildPssm( boolean doNormalization ) throws PssmBuilderException {
 		assert trainingGroups != null && !trainingGroups.isEmpty();
-		Pssm pssm = new Pssm();
+		PssmBuilder pssm = new PssmBuilder();
 		List<TrainingMotif> motifs = new ArrayList<>();		
 		for( TrainingGroup group : trainingGroups )
 			motifs.addAll(group);
@@ -76,7 +96,7 @@ public final class Trainer {
 		}
 		if( doNormalization )
 			pssm.normalize();
-		return pssm;
+		return pssm.build();
 	}
 	
 	public String getRegex() {

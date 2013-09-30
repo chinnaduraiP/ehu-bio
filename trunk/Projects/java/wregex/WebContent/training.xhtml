@@ -49,15 +49,15 @@
 					</h:column>
 					<h:column>
 						<f:facet name="header">Weight</f:facet>
-						<h:outputText value="#{item.weight}" styleClass="trn_weight" />
+						<h:outputText value="#{item.weightAsString}" styleClass="trn_weight" />
 					</h:column>
 					<h:column>
-						<f:facet name="header">Overlaps</f:facet>
+						<f:facet name="header">"!"</f:facet>
 						<h:outputText value="#{item.combinations}" styleClass="trn_pos" />
 					</h:column>
 					<h:column>
 						<f:facet name="header">Weight'</f:facet>
-						<h:outputText value="#{item.dividedWeight}" styleClass="trn_weight" />
+						<h:outputText value="#{item.dividedWeightAsString}" styleClass="trn_weight" />
 					</h:column>
 					<h:column>
 						<f:facet name="header">Action</f:facet>

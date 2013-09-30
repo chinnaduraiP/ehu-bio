@@ -51,13 +51,13 @@ public final class InputMotif implements Serializable {
 	}
 	
 	public boolean contains(Result result) {
-		if( result.start >= start && result.start <= end )
+		if( result.getStart() >= start && result.getStart() <= end )
 			return true;
-		if( result.end >= start && result.end <= end )
+		if( result.getEnd() >= start && result.getEnd() <= end )
 			return true;
-		if( start >= result.start && start <= result.end )
+		if( start >= result.getStart() && start <= result.getEnd() )
 			return true;
-		if( end >= result.start && end <= result.end )
+		if( end >= result.getStart() && end <= result.getEnd() )
 			return true;
 		return false;
 	}
