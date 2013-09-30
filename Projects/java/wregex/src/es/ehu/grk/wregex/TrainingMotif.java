@@ -16,27 +16,31 @@ public final class TrainingMotif {
 	}
 	
 	public String getName() {
-		return result.name;
+		return result.getName();
 	}
 	
 	public int getStart() {
-		return result.start;
+		return result.getStart();
 	}
 	
 	public int getEnd() {
-		return result.end;
+		return result.getEnd();
 	}
 	
 	public String getMotif() {
-		return result.match;
+		return result.getMatch();
 	}
 	
 	public String getAlignment() {
-		return result.alignment;
+		return result.getAlignment();
 	}
 	
 	public double getWeight() {
 		return group.getWeight();
+	}
+	
+	public String getWeightAsString() {
+		return String.format("%.1f", getWeight());
 	}
 	
 	public int getCombinations() {
@@ -47,6 +51,18 @@ public final class TrainingMotif {
 		if( !isValid() )
 			return 0.0;
 		return getWeight()/getCombinations();
+	}
+	
+	public String getDividedWeightAsString() {
+		return String.format("%.1f", getDividedWeight());
+	}
+	
+	public double getScore() {
+		return result.getScore();
+	}
+	
+	public String getScoreAsString() {
+		return String.format("%.1f", getScore());
 	}
 	
 	public boolean overlaps(Result result) {

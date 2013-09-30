@@ -8,34 +8,72 @@ import es.ehu.grk.db.Fasta;
 
 /** Inmutable class for storing a Wregex result*/
 public final class Result {
-	public final String name;
-	public final int start;
-	public final int end;
-	public final int combinations;
-	public final String match;
+	private final String name;
+	private final int start;
+	private final int end;
+	private final String match;
 	private final List<String> groups;
-	public final String alignment;
-	private final String printString;
-	public final Fasta fasta;	
+	private final String alignment;
+	private String printString = null;
+	private final Fasta fasta;
+	private double score = 0.0;
+	private ResultGroup group = null;
+	private int combinations = 0;
 	
-	Result( Fasta fasta, int start, int combinations, String match, Collection<String> groups ) {
+	Result( Fasta fasta, int start, String match, Collection<String> groups ) {
 		assert groups.size() > 0;
 		
 		this.fasta = fasta;		
 		this.start = start;
 		this.end = start+match.length()-1;
-		this.name = fasta.guessAccession()+"@"+start+"-"+end;
-		this.combinations = combinations;
+		this.name = fasta.guessAccession()+"@"+start+"-"+end;		 		
 		this.match = match;
-		this.groups = new ArrayList<String>(groups);
+		this.groups = new ArrayList<String>(groups);		
 		
 		StringBuilder builder = new StringBuilder();
 		for( String str : groups )
 			builder.append(str+"-");
 		builder.deleteCharAt(builder.length()-1);
-		this.alignment = builder.toString();
-		
-		this.printString = this.name + " (x" + combinations + ") " + this.alignment; 
+		this.alignment = builder.toString();				
+	}
+	
+	void complete( ResultGroup group, double score ) {
+		this.group = group;
+		this.combinations = group == null ? 1 : this.group.getSize();
+		this.score = score;
+		this.printString = this.name + " (x" + getCombinations() + ") " + this.alignment + " score=" + score;
+	}
+	
+	public String getName() {
+		return name;
+	}
+
+	public int getStart() {
+		return start;
+	}
+
+	public int getEnd() {
+		return end;
+	}
+
+	public int getCombinations() {
+		return combinations;
+	}
+
+	public String getMatch() {
+		return match;
+	}
+
+	public String getAlignment() {
+		return alignment;
+	}
+
+	public Fasta getFasta() {
+		return fasta;
+	}
+
+	public double getScore() {
+		return score;
 	}
 
 	/** returns a defensive copy of the groups */

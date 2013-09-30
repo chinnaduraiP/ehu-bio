@@ -13,8 +13,6 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
-import javax.faces.model.DataModel;
-import javax.faces.model.ListDataModel;
 
 import org.apache.myfaces.custom.fileupload.UploadedFile;
 
@@ -24,7 +22,7 @@ import es.ehu.grk.db.Fasta.InvalidSequenceException;
 import es.ehu.grk.wregex.InputGroup;
 import es.ehu.grk.wregex.InputMotif;
 import es.ehu.grk.wregex.Pssm;
-import es.ehu.grk.wregex.Pssm.PssmException;
+import es.ehu.grk.wregex.PssmBuilder.PssmBuilderException;
 import es.ehu.grk.wregex.Trainer;
 import es.ehu.grk.wregex.TrainingGroup;
 import es.ehu.grk.wregex.TrainingMotif;
@@ -35,8 +33,7 @@ public class TrainingBean implements Serializable {
 	private static final long serialVersionUID = 1L;
 	private List<InputMotif> inputList = new ArrayList<>();
 	private List<InputGroup> inputGroupList = null;
-	private List<TrainingMotif> trainingList = new ArrayList<>();
-	private DataModel<TrainingMotif> trainingModel;	
+	private List<TrainingMotif> trainingList = new ArrayList<>();	
 	private UploadedFile uploadedFile;
 	private String regex;
 	private String uploadError = null;
@@ -83,7 +80,7 @@ public class TrainingBean implements Serializable {
 		Pssm pssm;
 		try {
 			pssm = trainer.buildPssm(false);
-		} catch (PssmException e1) {
+		} catch (PssmBuilderException e1) {
 			e1.printStackTrace();
 			return;
 		}
@@ -134,11 +131,10 @@ public class TrainingBean implements Serializable {
 	
 	public void refresh() {
 		trainingList = new ArrayList<>();
-		trainingModel = new ListDataModel<>(trainingList);
 		if( inputList.isEmpty() || regex == null || regex.isEmpty() )
 			return;
 		trainer = new Trainer(regex);
-		List<TrainingGroup> groups = trainer.train(inputGroupList);
+		List<TrainingGroup> groups = trainer.train(inputGroupList,false);
 		for( TrainingGroup group : groups )
 			trainingList.addAll(group);
 	}
@@ -182,14 +178,6 @@ public class TrainingBean implements Serializable {
 			if( motif.isValid() )
 				count++;
 		return count;
-	}
-	
-	public DataModel<TrainingMotif> getTrainingModel() {
-		return trainingModel;
-	}
-
-	public void setTrainingModel(DataModel<TrainingMotif> trainingModel) {
-		this.trainingModel = trainingModel;
 	}
 	
 	public void remove(TrainingMotif motif) {
