@@ -1,13 +1,17 @@
 package es.ehu.grk.wregex;
 
+import java.io.PrintWriter;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.commons.lang.StringUtils;
+
 import es.ehu.grk.db.Fasta;
 
 /** Inmutable class for storing a Wregex result*/
-public final class Result {
+public final class Result implements Comparable<Result> {
 	private final String name;
 	private final int start;
 	private final int end;
@@ -47,6 +51,10 @@ public final class Result {
 	public String getName() {
 		return name;
 	}
+	
+	public String getEntry() {
+		return fasta.guessAccession();
+	}
 
 	public int getStart() {
 		return start;
@@ -75,6 +83,10 @@ public final class Result {
 	public double getScore() {
 		return score;
 	}
+	
+	public String getScoreAsString() {
+		return String.format("%.1f", getScore());
+	}
 
 	/** returns a defensive copy of the groups */
 	public List<String> getGroups() {
@@ -96,5 +108,55 @@ public final class Result {
 		if( end >= result.start && end <= result.end )
 			return true;
 		return false;
+	}
+
+	@Override
+	public int compareTo(Result o) {
+		if( score > o.score )
+			return -1;
+		if( score < o.score )
+			return 1;
+		if( combinations > o.combinations )
+			return -1;
+		if( combinations < o.combinations )
+			return 1;
+		return 0;
+	}
+	
+	public static void saveCsv(Writer wr, List<Result> results) {
+		PrintWriter pw = new PrintWriter(wr);
+		pw.println("ID,Entry,Pos,Combinations,Sequence,Alignment,Score");
+		for( Result result : results )
+			pw.println(result.getName()+","+result.getEntry()+","+result.getStart()+","+result.getCombinations()+","+result.getMatch()+","+result.getAlignment()+","+result.getScore());
+		pw.flush();
+	}
+	
+	public static void saveAln(Writer wr, List<Result> results) {
+		PrintWriter pw = new PrintWriter(wr);
+		int groups = results.get(0).getGroups().size();
+		int[] sizes = new int[groups];
+		int first = 0, i;
+		
+		// Calculate lengths for further alignment
+		for( i = 0; i < groups; i++ )
+			sizes[i] = 0;
+		for( Result result : results ) {
+			if( result.getName().length() > first )
+				first = result.getName().length();
+			for( i = 0; i < groups; i++ )
+				if( result.getGroups().get(i).length() > sizes[i] )
+					sizes[i] = result.getGroups().get(i).length(); 
+		}
+		
+		// Write ALN
+		pw.println("CLUSTAL 2.1 multiple sequence alignment (by WREGEX)\n\n");
+		for( Result result : results ) {
+			pw.print(StringUtils.rightPad(result.getName(), first+4));
+			for( i = 0; i < groups; i++ )
+				pw.print(StringUtils.rightPad(result.getGroups().get(i),sizes[i],'-'));
+			pw.println();
+		}
+		pw.println();
+		pw.flush();
 	}
 }

@@ -5,30 +5,40 @@
         <name>NES/CRM1</name>
         <summary>Leucine-rich nuclear export signal (NES) binding to the CRM1 exportin protein</summary>
         <definition>
+            <name>Recomended</name>
+            <description>Regular expression updated and PSSM computed with ValidNES, DUBs and Ligases without assay scores</description>
+            <regex>([DEQS].{0,1})([LIMA])(.{2,3})([LIVMF])([^P]{2,3})([LMVF])([^P])([LMIV])(.{0,3}[DEQ])</regex>
+            <pssm>NES-total.pssm</pssm>
+        </definition>
+        <definition>
+            <name>Relaxed</name>
+            <description>Use when more candidates needed. Regular expression relaxed and PSSM computed with ValidNES, DUBs and Ligases without assay scores</description>
+            <regex>([LIVMFAWY])(.{2,3})([LIVMFAWY])([^P]{2,3})([LIVMFAWY])([^P])([LIVMFAWY])</regex>
+            <pssm>NES-total-phi.pssm</pssm>
+        </definition>
+        <definition>
             <name>Wregex A</name>
             <description>Regular expression derived from ELM and PSSM computed with NESsential training set</description>
             <regex>([DEQ].{0,1})([LIM])(.{2,3})([LIVMF])([^P]{2,3})([LMVF])([^P])([LMIV])(.{0,3}[DEQ])</regex>
             <pssm>NESsential.pssm</pssm>
         </definition>
         <definition>
-            <name>Prueba</name>
-            <description>Regular expression derived from ELM and PSSM computed with NESsential training set</description>
-            <regex>([DEQ].{0,1})([LIM])</regex>
-            <pssm>prueba.pssm</pssm>
+            <name>Wregex B</name>
+            <description>Regular expression derived from ELM and PSSM computed with ValidNES and DUBs</description>
+            <regex>([DEQ].{0,1})([LIM])(.{2,3})([LIVMF])([^P]{2,3})([LMVF])([^P])([LMIV])(.{0,3}[DEQ])</regex>
+            <pssm>ValidNES-DUBs.pssm</pssm>
         </definition>
-        <reference>
-            <name>Original ELM entry</name>
-            <link>http://elm.eu.org/elms/elmPages/TRG_NES_CRM1_1.html</link>            
-        </reference>
-    </motif>
-    <motif>
-        <name>Prueba</name>
-        <summary>Leucine-rich nuclear export signal (NES) binding to the CRM1 exportin protein</summary>
         <definition>
-            <name>kk</name>
-            <description>Regular expression derived from ELM and PSSM computed with NESsential training set</description>
-            <regex>([DEQ].{0,1})([LIM])(.{2,3})([LIVMF])</regex>
-            <pssm>kk.pssm</pssm>
+            <name>Wregex C</name>
+            <description>Regular expression updated and PSSM computed with DUBs and Ligases without assay scores</description>
+            <regex>([DEQS].{0,1})([LIMA])(.{2,3})([LIVMF])([^P]{2,3})([LMVF])([^P])([LMIV])(.{0,3}[DEQ])</regex>
+            <pssm>NES-no-score.pssm</pssm>
+        </definition>
+        <definition>
+            <name>Wregex D</name>
+            <description>Regular expression updated and PSSM computed with DUBs and Ligases using assay scores</description>
+            <regex>([DEQS].{0,1})([LIMA])(.{2,3})([LIVMF])([^P]{2,3})([LMVF])([^P])([LMIV])(.{0,3}[DEQ])</regex>
+            <pssm>NES-score.pssm</pssm>
         </definition>
         <reference>
             <name>Original ELM entry</name>

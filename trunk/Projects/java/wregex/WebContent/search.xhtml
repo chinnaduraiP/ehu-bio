@@ -9,7 +9,7 @@
 	<ui:composition template="./template.xhtml">
 		<ui:define name="title">Search</ui:define>
 		<ui:define name="content">
-			<h:form>
+			<h:form enctype="multipart/form-data">
 				<h:panelGrid columns="2" headerClass="cfg_header">
 					<f:facet name="header">Search configuration</f:facet>
 					<h:outputLabel value="Motif"/>
@@ -17,21 +17,66 @@
 						<h:selectOneMenu value="#{searchBean.motif}" onchange="submit()"
 							valueChangeListener="#{searchBean.onChangeMotif}">
 							<f:selectItem itemLabel="Select motif" />
-							<f:selectItems value="#{searchBean.motifs}" />
+							<f:selectItem itemLabel="Custom" itemValue="Custom" />
+							<f:selectItems value="#{searchBean.motifs}" />							
 						</h:selectOneMenu>
 						<h:selectOneMenu value="#{searchBean.configuration}"
 							onchange="submit()"
 							valueChangeListener="#{searchBean.onChangeDefinition}"
-							rendered="#{searchBean.motif != null}">
+							rendered="#{searchBean.motif != null and !searchBean.custom }">
 							<f:selectItem itemLabel="Select configuration" />
 							<f:selectItems value="#{searchBean.definitions}" />
 						</h:selectOneMenu>
 					</h:panelGroup>
 					<h:outputLabel value="Regular expression"/>
-					<h:outputText value="#{searchBean.regex}" />
-					<h:outputLabel value="PSSM"/>
-					<h:outputText value="#{searchBean.pssm}" />
+					<h:outputText value="#{searchBean.regex}" rendered="#{!searchBean.custom}"/>
+					<h:inputText value="#{searchBean.customRegex}" rendered="#{searchBean.custom}" styleClass="trn_regex" onchange="submit()"/>
+					<h:outputLabel value="Description" rendered="#{!searchBean.custom}"/>
+					<h:outputText value="#{searchBean.description}" rendered="#{!searchBean.custom}"/>
+					<h:outputLabel value="PSSM file"/>
+					<h:outputText value="#{searchBean.pssm}" rendered="#{!searchBean.custom}"/>
+					<t:inputFileUpload id="pssm" accept="text" rendered="#{searchBean.custom}" value="#{searchBean.pssmFile}"/>
+					<h:outputLabel value="FASTA file"/>
+					<t:inputFileUpload id="fasta" accept="text/x-fasta" value="#{searchBean.fastaFile}"/>
+					<h:outputLabel value="Grouping"/>
+					<h:selectBooleanCheckbox value="#{searchBean.grouping}"/>
+					<h:outputLabel value="Configuration" rendered="#{searchBean.configError != null}"/>
+					<h:outputLabel value="#{searchBean.configError}" rendered="#{searchBean.configError != null}" style="color:red"/>
+					<h:commandButton value="Search!" actionListener="#{searchBean.search}" rendered="#{searchBean.configError == null}"/>
+					<h:outputLabel value="#{searchBean.searchError}" rendered="#{searchBean.searchError != null}" style="color:red"/>
+					<h:panelGroup rendered="#{searchBean.results != null}">
+						<h:outputLabel value="#{searchBean.numberOfResults}"/>
+						<h:commandButton value="Download as CSV" rendered="#{not empty searchBean.results}" actionListener="#{searchBean.downloadCsv}"/>
+						<h:commandButton value="Download as ALN" rendered="#{not empty searchBean.results}" actionListener="#{searchBean.downloadAln}"/>
+					</h:panelGroup>
 				</h:panelGrid>
+				<h:dataTable value="#{searchBean.results}" var="item" rendered="#{not empty searchBean.results}">
+					<h:column>
+						<f:facet name="header">Entry</f:facet>
+						<h:outputText value="#{item.entry}" styleClass="trn_name"/>
+					</h:column>
+					<h:column>
+						<f:facet name="header">Start</f:facet>
+						<h:outputText value="#{item.start}" styleClass="trn_pos" />
+					</h:column>
+					<h:column>
+						<f:facet name="header">End</f:facet>
+						<h:outputText value="#{item.end}" styleClass="trn_pos" />
+					</h:column>
+					<h:column>
+						<f:facet name="header">Motif</f:facet>
+						<h:outputText value="#{item.alignment}" styleClass="trn_seq" />
+					</h:column>
+					<h:column>
+						<f:facet name="header">"!"</f:facet>
+						<h:outputText value="#{item.combinations}" styleClass="trn_pos" />
+					</h:column>
+					<h:column>
+						<f:facet name="header">Score</f:facet>
+						<h:outputText value="#{item.scoreAsString}" styleClass="trn_weight" rendered="#{searchBean.usingPssm}" />
+						<h:outputLabel value="N/A" rendered="#{!searchBean.usingPssm}"/>
+					</h:column>					
+				</h:dataTable>
 			</h:form>
 		</ui:define>
 	</ui:composition>

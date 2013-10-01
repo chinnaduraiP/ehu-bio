@@ -10,7 +10,8 @@
 		<ui:define name="title">Training Motifs</ui:define>
 		<ui:define name="content">
 			<h:form enctype="multipart/form-data">
-				<h:panelGrid columns="1">
+				<h:panelGrid columns="1" headerClass="cfg_header">
+					<f:facet name="header">Input motifs</f:facet>
 					<t:inputFileUpload value="#{trainingBean.uploadedFile}"
 						accept="text/x-fasta"
 						requiredMessage="A fasta file must be selected" />

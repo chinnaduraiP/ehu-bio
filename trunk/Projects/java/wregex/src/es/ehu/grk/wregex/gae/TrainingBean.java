@@ -14,6 +14,7 @@ import javax.faces.bean.SessionScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.myfaces.custom.fileupload.UploadedFile;
 
 import com.google.appengine.api.utils.SystemProperty;
@@ -87,11 +88,10 @@ public class TrainingBean implements Serializable {
 		
 		FacesContext fc = FacesContext.getCurrentInstance();
 	    ExternalContext ec = fc.getExternalContext();
-
 	    ec.responseReset();
 	    ec.setResponseContentType("text/x-fasta"); // Check http://www.iana.org/assignments/media-types for all types. Use if necessary ExternalContext#getMimeType() for auto-detection based on filename.
 	    //ec.setResponseContentLength(length);
-	    ec.setResponseHeader("Content-Disposition", "attachment; filename=\"wregex.pssm\"");
+	    ec.setResponseHeader("Content-Disposition", "attachment; filename=\""+FilenameUtils.removeExtension(inputFileName)+".pssm\"");
 
 		try {
 			OutputStream output = ec.getResponseOutputStream();
