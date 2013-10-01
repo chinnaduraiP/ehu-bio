@@ -118,6 +118,20 @@ public final class Wregex {
 		return results;
 	}
 	
+	public List<ResultGroup> searchGrouping( List<Fasta> fastas ) {
+		List<ResultGroup> results = new ArrayList<>();
+		for( Fasta fasta : fastas )
+			results.addAll(searchGrouping(fasta));
+		return results;
+	}
+	
+	public List<Result> search( List<Fasta> fastas ) {
+		List<Result> results = new ArrayList<>();
+		for( Fasta fasta : fastas )
+			results.addAll(search(fasta));
+		return results;
+	}
+	
 	double getScore(Result result) {
 		double score = 0.0;
 		if( mPssm == null )

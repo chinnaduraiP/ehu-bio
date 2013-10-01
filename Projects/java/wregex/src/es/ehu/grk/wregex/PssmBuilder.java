@@ -37,7 +37,11 @@ public class PssmBuilder {
 			fields = str.split("[ \t]");
 			scores.clear();
 			for( i = 1; i < fields.length; i++ )
-				scores.add(Double.parseDouble(fields[i]));
+				try {
+					scores.add(Double.parseDouble(fields[i]));
+				} catch( NumberFormatException e ) {
+					throw new PssmBuilderException("A number was expected");
+				}
 			setScores(Aminoacid.parseLetter(fields[0].charAt(0)), scores);
 		}
 	}

@@ -10,7 +10,8 @@
 		<ui:define name="title">Training</ui:define>
 		<ui:define name="content">
 			<h:form>
-			<h:panelGrid columns="2">
+			<h:panelGrid columns="2" headerClass="cfg_header">
+				<f:facet name="header">Training parameters</f:facet>
 				<h:commandButton value="Input motifs" action="tmotifs" />
 				<h:outputText value="#{trainingBean.inputSummary}" rendered="#{trainingBean.inputSummary != null}"/>
 				<h:outputText value="You must upload a fasta file with training motifs" rendered="#{trainingBean.inputSummary == null}" style="color:red"/>
