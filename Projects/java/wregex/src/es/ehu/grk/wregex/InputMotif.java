@@ -10,6 +10,7 @@ public final class InputMotif implements Serializable {
 	private int end;
 	private double weight;
 	public final Fasta fasta;
+	private int matches = 0;
 
 	public InputMotif(Fasta fasta, int start, int end, double weight) {
 		this.fasta = fasta;
@@ -60,5 +61,17 @@ public final class InputMotif implements Serializable {
 		if( end >= result.getStart() && end <= result.getEnd() )
 			return true;
 		return false;
+	}
+
+	public int getMatches() {
+		return matches;
+	}
+
+	public void setMatches(int matches) {
+		this.matches = matches;
+	}
+	
+	public void addMatch() {
+		matches++;
 	}
 }
