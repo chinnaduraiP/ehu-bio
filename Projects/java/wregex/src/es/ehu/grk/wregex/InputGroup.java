@@ -37,6 +37,7 @@ public final class InputGroup {
 		int start, end;
 		double w;
 		String[] tmp;
+		scores = true;
 		for (String range : str.split(";")) {
 			fields = range.split("-");
 			if (fields.length != 2)
@@ -44,7 +45,11 @@ public final class InputGroup {
 			start = Integer.parseInt(fields[0]);
 			tmp = fields[1].split("@");
 			end = Integer.parseInt(tmp[0]);
-			w = tmp.length != 2 ? 100.0 : Double.parseDouble(tmp[1]);
+			if( tmp.length != 2 ) {
+				w = 100.0;
+				scores = false;
+			} else
+				w = Double.parseDouble(tmp[1]);
 			mMotifs.add(new InputMotif(mFasta, start, end, w));
 		}
 	}
@@ -97,7 +102,12 @@ public final class InputGroup {
 		pw.flush();
 	}
 
+	public boolean hasScores() {
+		return scores;
+	}
+
 	private final Fasta mFasta;
 	private final String mId;
 	private final List<InputMotif> mMotifs = new ArrayList<InputMotif>();
+	private boolean scores = false;
 }

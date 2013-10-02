@@ -78,6 +78,10 @@
 						<f:facet name="header">Score</f:facet>
 						<h:outputText value="#{item.scoreAsString}" styleClass="trn_weight" rendered="#{searchBean.usingPssm}" />
 						<h:outputLabel value="N/A" rendered="#{!searchBean.usingPssm}"/>
+					</h:column>
+					<h:column rendered="#{searchBean.assayScores}">
+						<f:facet name="header">Assay</f:facet>
+						<h:outputText value="#{item.assayAsString}"/>
 					</h:column>					
 				</h:dataTable>
 			</h:form>

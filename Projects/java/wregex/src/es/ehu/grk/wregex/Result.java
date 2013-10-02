@@ -21,6 +21,7 @@ public final class Result implements Comparable<Result> {
 	private String printString = null;
 	private final Fasta fasta;
 	private double score = 0.0;
+	private double assay = -1.0;
 	private ResultGroup group = null;
 	private int combinations = 0;
 	
@@ -46,7 +47,7 @@ public final class Result implements Comparable<Result> {
 		this.combinations = group == null ? 1 : this.group.getSize();
 		this.score = score;
 		this.printString = this.name + " (x" + getCombinations() + ") " + this.alignment + " score=" + score;
-	}
+	}		
 	
 	public String getName() {
 		return name;
@@ -86,6 +87,30 @@ public final class Result implements Comparable<Result> {
 	
 	public String getScoreAsString() {
 		return String.format("%.1f", getScore());
+	}
+	
+	void setAssay(double assay) {
+		this.assay = assay;
+	}
+	
+	public double getAssay() {
+		return assay;
+	}		
+	
+	public String getAssayAsString() {		
+		if( assay < 0 )
+			return "?";
+		if( assay < 0.5 )
+			return "negative";		
+		return ((int)(assay/10.0+0.5))+"+";
+	}
+	
+	public double getGroupAssay() {
+		return group.getAssay();
+	}
+	
+	public String getGroupAssayAsString() {
+		return group.getAssayAsString();
 	}
 
 	/** returns a defensive copy of the groups */
@@ -157,6 +182,20 @@ public final class Result implements Comparable<Result> {
 			pw.println();
 		}
 		pw.println();
+		pw.flush();
+	}
+	
+	public static void saveAssay(Writer wr, List<Result> results, boolean grouping) {
+		PrintWriter pw = new PrintWriter(wr);
+		pw.println("ID,Entry,Pos,Combinations,Sequence,Alignment,Score,Assay,Assay");
+		String assay;
+		for( Result result : results ) {
+			if( grouping )
+				assay = result.getGroupAssayAsString()+","+result.getGroupAssay();
+			else
+				assay = result.getAssayAsString()+","+result.getAssay();
+			pw.println(result.getName()+","+result.getEntry()+","+result.getStart()+","+result.getCombinations()+","+result.getMatch()+","+result.getAlignment()+","+result.getScore()+","+assay);
+		}
 		pw.flush();
 	}
 }
