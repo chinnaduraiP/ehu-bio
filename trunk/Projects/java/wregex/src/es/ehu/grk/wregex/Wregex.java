@@ -109,8 +109,29 @@ public final class Wregex {
 		return results;
 	}
 	
+	public List<ResultGroup> searchGroupingAssay( InputGroup inputGroup ) {
+		List<ResultGroup> results = searchGrouping(inputGroup.getFasta());
+		for( ResultGroup resultGroup : results ) {
+			for( Result result : resultGroup )
+				for( InputMotif motif : inputGroup.getMotifs() )
+					if( motif.contains(result) && motif.getWeight() > result.getAssay() )
+						result.setAssay(motif.getWeight());
+			resultGroup.updateAssay();
+		}		
+		return results;
+	}
+	
 	public List<Result> search( Fasta fasta ) {
 		List<ResultGroup> resultGroups = searchGrouping(fasta);
+		List<Result> results = new ArrayList<>();
+		for( ResultGroup group : resultGroups )
+			for( Result result : group )
+				results.add(result);
+		return results;
+	}
+	
+	public List<Result> searchAssay( InputGroup inputGroup ) {
+		List<ResultGroup> resultGroups = searchGroupingAssay(inputGroup);
 		List<Result> results = new ArrayList<>();
 		for( ResultGroup group : resultGroups )
 			for( Result result : group )
@@ -125,10 +146,24 @@ public final class Wregex {
 		return results;
 	}
 	
+	public List<ResultGroup> searchGroupingAssay( List<InputGroup> inputGroups ) {
+		List<ResultGroup> results = new ArrayList<>();
+		for( InputGroup inputGroup : inputGroups )
+			results.addAll(searchGroupingAssay(inputGroup));
+		return results;
+	}
+	
 	public List<Result> search( List<Fasta> fastas ) {
 		List<Result> results = new ArrayList<>();
 		for( Fasta fasta : fastas )
 			results.addAll(search(fasta));
+		return results;
+	}
+	
+	public List<Result> searchAssay( List<InputGroup> inputGroups ) {
+		List<Result> results = new ArrayList<>();
+		for( InputGroup inputGroup : inputGroups )
+			results.addAll(searchAssay(inputGroup));
 		return results;
 	}
 	

@@ -9,6 +9,17 @@ public final class ResultGroup implements Iterable<Result> {
 		for(@SuppressWarnings("unused") Result result : list )
 			size++;
 		this.size = size;
+		this.representative = searchRespresentative();
+		this.assay = -1.0;
+		this.assayString = "?";
+	}
+	
+	void updateAssay() {		
+		for( Result result : list )
+			if( result.getAssay() > assay ) {
+				assay = result.getAssay();
+				assayString = result.getAssayAsString();
+			}
 	}
 	
 	@Override
@@ -20,7 +31,7 @@ public final class ResultGroup implements Iterable<Result> {
 		return size;
 	}
 	
-	public Result getRespresentative() {
+	private Result searchRespresentative() {
 		Result result = null;
 		for( Result tmp : this ) {
 			if( result == null ) {
@@ -37,6 +48,25 @@ public final class ResultGroup implements Iterable<Result> {
 		return result;
 	}
 
+	public Result getRepresentative() {
+		return representative;
+	}
+	
+	public double getScore() {
+		return representative.getScore();
+	}
+
+	public double getAssay() {
+		return assay;
+	}
+
+	public String getAssayAsString() {
+		return assayString;
+	}
+
 	private final Iterable<Result> list;
 	private final int size;
+	private final Result representative;
+	private double assay;
+	private String assayString;
 }

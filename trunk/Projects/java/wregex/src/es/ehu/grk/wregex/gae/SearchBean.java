@@ -21,9 +21,8 @@ import javax.faces.event.ValueChangeEvent;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.myfaces.custom.fileupload.UploadedFile;
 
-import es.ehu.grk.db.Fasta;
 import es.ehu.grk.db.Fasta.InvalidSequenceException;
-import es.ehu.grk.db.Fasta.SequenceType;
+import es.ehu.grk.wregex.InputGroup;
 import es.ehu.grk.wregex.Pssm;
 import es.ehu.grk.wregex.PssmBuilder.PssmBuilderException;
 import es.ehu.grk.wregex.Result;
@@ -50,6 +49,7 @@ public class SearchBean implements Serializable {
 	private boolean usingPssm;
 	private boolean grouping = true;
 	private String baseFileName;
+	private boolean assayScores = false;
 	
 	public SearchBean() {
 		Reader rd = new InputStreamReader(FacesContext.getCurrentInstance().getExternalContext().getResourceAsStream("/resources/data/motifs.xml")); 		
@@ -203,15 +203,23 @@ public class SearchBean implements Serializable {
 		try {
 			Pssm pssm = uploadPssm();
 			usingPssm = pssm == null ? false : true;
-			List<Fasta> fastas = uploadFasta();
+			List<InputGroup> inputGroups = uploadFasta();
 			String regex = custom ? getCustomRegex() : getRegex();
 			Wregex wregex = new Wregex(regex, pssm);
-			if( !grouping )
-				results = wregex.search(fastas);
-			else {
-				results = new ArrayList<>();
-				for( ResultGroup group : wregex.searchGrouping(fastas) )
-					results.add(group.getRespresentative());
+			List<ResultGroup> resultGroups = new ArrayList<>();
+			for( InputGroup inputGroup : inputGroups ) {
+				if( assayScores )
+					resultGroups.addAll(wregex.searchGroupingAssay(inputGroup));
+				else
+					resultGroups.addAll(wregex.searchGrouping(inputGroup.getFasta()));
+			}
+			results = new ArrayList<>();
+			for( ResultGroup resultGroup : resultGroups ) {
+				if( grouping )
+					results.add(resultGroup.getRepresentative());
+				else
+					for( Result r : resultGroup )
+						results.add(r);
 			}
 			Collections.sort(results);
 		} catch( IOException e ) {
@@ -240,12 +248,18 @@ public class SearchBean implements Serializable {
 		return pssm;
 	}
 	
-	private List<Fasta> uploadFasta() throws IOException, InvalidSequenceException {
+	private List<InputGroup> uploadFasta() throws IOException, InvalidSequenceException {
 		Reader rd = new InputStreamReader(fastaFile.getInputStream());
-		List<Fasta> fastas = Fasta.readEntries(rd, SequenceType.PROTEIN);
+		List<InputGroup> inputGroups = InputGroup.readEntries(rd); 
 		rd.close();
+		assayScores = true;
+		for( InputGroup inputGroup : inputGroups )
+			if( !inputGroup.hasScores() ) {
+				assayScores = false;
+				break;
+			}
 		baseFileName = FilenameUtils.removeExtension(fastaFile.getName());
-		return fastas;
+		return inputGroups;
 	}
 
 	public String getSearchError() {
@@ -288,7 +302,10 @@ public class SearchBean implements Serializable {
 	    ec.setResponseHeader("Content-Disposition", "attachment; filename=\""+baseFileName+".csv\"");
 		try {
 			OutputStream output = ec.getResponseOutputStream();
-			Result.saveCsv(new OutputStreamWriter(output), results);
+			if( assayScores )
+				Result.saveAssay(new OutputStreamWriter(output), results, grouping);
+			else
+				Result.saveCsv(new OutputStreamWriter(output), results);
 		} catch( Exception e ) {
 			e.printStackTrace();
 		}
@@ -334,5 +351,9 @@ public class SearchBean implements Serializable {
 			e.printStackTrace();
 		}
 		fc.responseComplete();
+	}		
+
+	public boolean getAssayScores() {
+		return assayScores;
 	}
 }
