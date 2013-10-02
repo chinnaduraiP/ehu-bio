@@ -12,7 +12,7 @@
 			<h:form enctype="multipart/form-data">
 				<h:panelGrid columns="2" headerClass="cfg_header">
 					<f:facet name="header">Search configuration</f:facet>
-					<h:outputLabel value="Motif"/>
+					<h:outputLabel value="Motif:"/>
 					<h:panelGroup>
 						<h:selectOneMenu value="#{searchBean.motif}" onchange="submit()"
 							valueChangeListener="#{searchBean.onChangeMotif}">
@@ -28,20 +28,20 @@
 							<f:selectItems value="#{searchBean.definitions}" />
 						</h:selectOneMenu>
 					</h:panelGroup>
-					<h:outputLabel value="Regular expression"/>
+					<h:outputLabel value="Regex:"/>
 					<h:outputText value="#{searchBean.regex}" rendered="#{!searchBean.custom}"/>
 					<h:inputText value="#{searchBean.customRegex}" rendered="#{searchBean.custom}" styleClass="trn_regex" onchange="submit()"/>
-					<h:outputLabel value="Description" rendered="#{!searchBean.custom}"/>
+					<h:outputLabel value="Description:" rendered="#{!searchBean.custom}"/>
 					<h:outputText value="#{searchBean.description}" rendered="#{!searchBean.custom}"/>
-					<h:outputLabel value="PSSM file"/>
+					<h:outputLabel value="PSSM file:"/>
 					<h:panelGroup rendered="#{!searchBean.custom}">
 						<h:outputText value="#{searchBean.pssm}"/>
 						<h:commandButton value="Download" actionListener="#{searchBean.downloadPssm}" rendered="#{searchBean.pssm != null}"/>
 					</h:panelGroup>
 					<t:inputFileUpload id="pssm" accept="text" rendered="#{searchBean.custom}" value="#{searchBean.pssmFile}"/>
-					<h:outputLabel value="FASTA file"/>
+					<h:outputLabel value="Fasta file:"/>
 					<t:inputFileUpload id="fasta" accept="text/x-fasta" value="#{searchBean.fastaFile}"/>
-					<h:outputLabel value="Grouping"/>
+					<h:outputLabel value="Grouping:"/>
 					<h:selectBooleanCheckbox value="#{searchBean.grouping}"/>
 					<h:outputLabel value="Configuration" rendered="#{searchBean.configError != null}"/>
 					<h:outputLabel value="#{searchBean.configError}" rendered="#{searchBean.configError != null}" style="color:red"/>

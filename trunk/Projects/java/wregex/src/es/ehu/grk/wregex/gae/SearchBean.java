@@ -116,12 +116,18 @@ public class SearchBean implements Serializable {
 	}
 	
 	public void onChangeMotif( ValueChangeEvent event ) {
-		if( event.getNewValue().toString().equals("Custom") ) {
-			motifInformation = null;
-			custom = true;
-		} else {
-			motifInformation = (MotifInformation)stringToMotif(event.getNewValue().toString());
+		Object value = event.getNewValue();
+		if( value == null ) {
 			custom = false;
+			motifInformation = null;
+		} else {
+			if( value.toString().equals("Custom") ) {
+				motifInformation = null;
+				custom = true;
+			} else {
+				motifInformation = (MotifInformation)stringToMotif(event.getNewValue().toString());
+				custom = false;
+			}
 		}
 		motifDefinition = null;
 		searchError = null;
