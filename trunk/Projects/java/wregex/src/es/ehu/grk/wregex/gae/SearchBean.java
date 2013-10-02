@@ -1,9 +1,11 @@
 package es.ehu.grk.wregex.gae;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.io.Reader;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -297,6 +299,31 @@ public class SearchBean implements Serializable {
 		try {
 			OutputStream output = ec.getResponseOutputStream();
 			Result.saveAln(new OutputStreamWriter(output), results);
+		} catch( Exception e ) {
+			e.printStackTrace();
+		}
+		fc.responseComplete();
+	}
+	
+	public void downloadPssm() {
+		String pssmName = getPssm();
+		if( pssmName == null )
+			return;
+		
+		FacesContext fc = FacesContext.getCurrentInstance();
+	    ExternalContext ec = fc.getExternalContext();
+	    ec.responseReset();
+	    ec.setResponseContentType("text"); // Check http://www.iana.org/assignments/media-types for all types. Use if necessary ExternalContext#getMimeType() for auto-detection based on filename.
+	    //ec.setResponseContentLength(length);
+	    ec.setResponseHeader("Content-Disposition", "attachment; filename=\""+pssmName+"\"");
+		try {
+			BufferedReader rd = new BufferedReader(new InputStreamReader(ec.getResourceAsStream("/resources/data/"+pssmName)));
+			PrintWriter wr = new PrintWriter(ec.getResponseOutputStream());
+			String str;
+			while( (str = rd.readLine()) != null )
+				wr.println(str);
+			rd.close();
+			wr.flush();
 		} catch( Exception e ) {
 			e.printStackTrace();
 		}

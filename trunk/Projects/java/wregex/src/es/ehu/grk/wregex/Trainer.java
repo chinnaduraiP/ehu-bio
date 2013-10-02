@@ -26,12 +26,15 @@ public final class Trainer {
 		trainingGroups = new ArrayList<>();
 		for( InputGroup inputGroup : inputGroups ) {
 			results = wregex.searchGrouping(inputGroup.getFasta());
-			for( InputMotif motif : inputGroup.getMotifs() ) {				
+			for( InputMotif motif : inputGroup.getMotifs() ) {
+				motif.setMatches(0);
 				for( ResultGroup result : results ) {
 					group = new TrainingGroup(result, motif.getWeight());
 					for( Result r : result ) {
 						if( !motif.contains(r) )
 							group.remove(r);
+						else
+							motif.addMatch();
 					}
 					if( !group.isEmpty() )
 						trainingGroups.add(group);

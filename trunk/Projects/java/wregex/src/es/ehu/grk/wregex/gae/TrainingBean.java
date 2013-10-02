@@ -40,6 +40,7 @@ public class TrainingBean implements Serializable {
 	private String uploadError = null;
 	private Trainer trainer = null;
 	private String inputFileName = null;
+	private int motifsMatched;
 
 	public TrainingBean() {
 	}
@@ -130,6 +131,7 @@ public class TrainingBean implements Serializable {
 	}
 	
 	public void refresh() {
+		motifsMatched = 0;
 		trainingList = new ArrayList<>();
 		if( inputList.isEmpty() || regex == null || regex.isEmpty() )
 			return;
@@ -137,6 +139,9 @@ public class TrainingBean implements Serializable {
 		List<TrainingGroup> groups = trainer.train(inputGroupList,false);
 		for( TrainingGroup group : groups )
 			trainingList.addAll(group);
+		for( InputMotif motif : inputList )
+			if( motif.getMatches() != 0 )
+				motifsMatched++;
 	}
 	
 	public String getRegex() {
@@ -157,8 +162,10 @@ public class TrainingBean implements Serializable {
 	
 	public String getInputSummary() {		
 		if( inputList.isEmpty() )
-			return null;		
-		return "Loaded " + inputList.size() + " input motifs from " + inputFileName;		
+			return null;
+		if( regex == null )
+			return "Loaded " + inputList.size() + " input motifs from " + inputFileName;
+		return motifsMatched + " of " + inputList.size() + " input motifs matched";
 	}
 	
 	public String getTrainingSummary() {

@@ -34,7 +34,10 @@
 					<h:outputLabel value="Description" rendered="#{!searchBean.custom}"/>
 					<h:outputText value="#{searchBean.description}" rendered="#{!searchBean.custom}"/>
 					<h:outputLabel value="PSSM file"/>
-					<h:outputText value="#{searchBean.pssm}" rendered="#{!searchBean.custom}"/>
+					<h:panelGroup rendered="#{!searchBean.custom}">
+						<h:outputText value="#{searchBean.pssm}"/>
+						<h:commandButton value="Download" actionListener="#{searchBean.downloadPssm}" rendered="#{searchBean.pssm != null}"/>
+					</h:panelGroup>
 					<t:inputFileUpload id="pssm" accept="text" rendered="#{searchBean.custom}" value="#{searchBean.pssmFile}"/>
 					<h:outputLabel value="FASTA file"/>
 					<t:inputFileUpload id="fasta" accept="text/x-fasta" value="#{searchBean.fastaFile}"/>
