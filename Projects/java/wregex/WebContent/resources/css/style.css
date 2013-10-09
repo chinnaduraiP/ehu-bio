@@ -41,3 +41,11 @@ div.trash {
 div.recycle {
 	content: url(/resources/images/recycle.png);
 }
+
+.ui-button-text {
+	display:none;
+}
+
+.ui-widget, .ui-widget .ui-widget {
+	font-size: 12px !important;
+}

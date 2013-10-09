@@ -1,6 +1,7 @@
 package es.ehu.grk.wregex.gae;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -19,7 +20,8 @@ import javax.faces.context.FacesContext;
 import javax.faces.event.ValueChangeEvent;
 
 import org.apache.commons.io.FilenameUtils;
-import org.apache.myfaces.custom.fileupload.UploadedFile;
+import org.primefaces.event.FileUploadEvent;
+import org.primefaces.model.UploadedFile;
 
 import es.ehu.grk.db.Fasta.InvalidSequenceException;
 import es.ehu.grk.wregex.InputGroup;
@@ -42,8 +44,8 @@ public class SearchBean implements Serializable {
 	private boolean custom = false;
 	private String customRegex;
 	private String customPssm;
-	private UploadedFile pssmFile;
-	private UploadedFile fastaFile;
+	private UploadedFile pssmFile = null;
+	private UploadedFile fastaFile = null;
 	private String searchError;
 	private List<Result> results = null;
 	private boolean usingPssm;
@@ -240,7 +242,8 @@ public class SearchBean implements Serializable {
 			return null;
 		Reader rd;
 		if( custom ) 
-			rd = new InputStreamReader(pssmFile.getInputStream());
+			//rd = new InputStreamReader(pssmFile.getInputstream());
+			rd = new InputStreamReader(new ByteArrayInputStream(pssmFile.getContents()));
 		else
 			rd = new InputStreamReader(FacesContext.getCurrentInstance().getExternalContext().getResourceAsStream("/resources/data/"+getPssm()));
 		Pssm pssm = Pssm.load(rd, true);
@@ -249,7 +252,8 @@ public class SearchBean implements Serializable {
 	}
 	
 	private List<InputGroup> uploadFasta() throws IOException, InvalidSequenceException {
-		Reader rd = new InputStreamReader(fastaFile.getInputStream());
+		//Reader rd = new InputStreamReader(fastaFile.getInputstream());
+		Reader rd = new InputStreamReader(new ByteArrayInputStream(fastaFile.getContents()));
 		List<InputGroup> inputGroups = InputGroup.readEntries(rd); 
 		rd.close();
 		assayScores = true;
@@ -258,7 +262,7 @@ public class SearchBean implements Serializable {
 				assayScores = false;
 				break;
 			}
-		baseFileName = FilenameUtils.removeExtension(fastaFile.getName());
+		baseFileName = FilenameUtils.removeExtension(fastaFile.getFileName());
 		return inputGroups;
 	}
 
@@ -355,5 +359,13 @@ public class SearchBean implements Serializable {
 
 	public boolean getAssayScores() {
 		return assayScores;
+	}
+	
+	public void uploadedPssm(FileUploadEvent event) {
+		pssmFile = event.getFile();		
+	}
+	
+	public void uploadedFasta(FileUploadEvent event) {
+		fastaFile = event.getFile();
 	}
 }

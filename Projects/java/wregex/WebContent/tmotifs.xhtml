@@ -3,53 +3,60 @@
 	xmlns:h="http://java.sun.com/jsf/html"
 	xmlns:f="http://java.sun.com/jsf/core"
 	xmlns:ui="http://java.sun.com/jsf/facelets"
-	xmlns:t="http://myfaces.apache.org/tomahawk">
+	xmlns:p="http://primefaces.org/ui">
 
 <h:body>
 	<ui:composition template="./template.xhtml">
 		<ui:define name="title">Training Motifs</ui:define>
 		<ui:define name="content">
 			<h:form enctype="multipart/form-data">
-				<h:panelGrid columns="1" headerClass="cfg_header">
+				<p:panelGrid columns="1" headerClass="cfg_header">
 					<f:facet name="header">Input motifs</f:facet>
-					<t:inputFileUpload value="#{trainingBean.uploadedFile}"
-						accept="text/x-fasta"
-						requiredMessage="A fasta file must be selected" />
+					<p:fileUpload fileUploadListener="#{trainingBean.upload}"
+            			mode="advanced"     
+            			sizeLimit="1000000"
+            			multiple="false"
+            			fileLimit="1"
+            			auto="true"  
+            			label="Select fasta"
+            			update="@form"
+            			allowTypes="/(\.|\/)(te?xt|fasta)$/" />
 					<h:panelGroup>
 					<h:commandButton value="Refresh"
-						actionListener="#{trainingBean.upload}" />
+						actionListener="#{trainingBean.refresh}" />
 					<h:outputText value="#{trainingBean.uploadError}" rendered="#{trainingBean.uploadError != null}" style="color:red"/>
 					<h:outputText value="#{trainingBean.inputSummary}" rendered="#{trainingBean.inputSummary != null and trainingBean.uploadError == null}"/>
 					</h:panelGroup>
 					<h:commandButton value="Download motifs" actionListener="#{trainingBean.downloadInputMotifs}" />
-				</h:panelGrid>
-				<h:dataTable value="#{trainingBean.inputList}" var="item"
+				</p:panelGrid>
+				<p:dataTable value="#{trainingBean.inputList}" var="item"
 					rendered="#{not empty trainingBean.inputList}">
-					<h:column>
+					<f:facet name="header">Input motifs</f:facet>
+					<p:column>
 						<f:facet name="header">Entry</f:facet>
 						<h:outputText value="#{item.accession}" />
-					</h:column>
-					<h:column>
+					</p:column>
+					<p:column>
 						<f:facet name="header">Begin</f:facet>
 						<h:inputText value="#{item.start}" styleClass="trn_pos" />
-					</h:column>
-					<h:column>
+					</p:column>
+					<p:column>
 						<f:facet name="header">End</f:facet>
 						<h:inputText value="#{item.end}" styleClass="trn_pos" />
-					</h:column>
-					<h:column>
+					</p:column>
+					<p:column>
 						<f:facet name="header">Motif</f:facet>
 						<h:outputText value="#{item.motif}" styleClass="trn_seq" />
-					</h:column>
-					<h:column>
+					</p:column>
+					<p:column>
 						<f:facet name="header">Weight</f:facet>
 						<h:inputText value="#{item.weight}" styleClass="trn_weight" />
-					</h:column>
-					<h:column>
+					</p:column>
+					<p:column>
 						<f:facet name="header">Matched</f:facet>
 						<h:outputText value="#{item.matches}" styleClass="trn_pos" />
-					</h:column>
-				</h:dataTable>
+					</p:column>
+				</p:dataTable>
 			</h:form>
 		</ui:define>
 	</ui:composition>
