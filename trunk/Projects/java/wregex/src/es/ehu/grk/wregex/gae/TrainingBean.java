@@ -1,5 +1,6 @@
 package es.ehu.grk.wregex.gae;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -15,7 +16,8 @@ import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 
 import org.apache.commons.io.FilenameUtils;
-import org.apache.myfaces.custom.fileupload.UploadedFile;
+import org.primefaces.event.FileUploadEvent;
+import org.primefaces.model.UploadedFile;
 
 import com.google.appengine.api.utils.SystemProperty;
 
@@ -35,7 +37,6 @@ public class TrainingBean implements Serializable {
 	private List<InputMotif> inputList = new ArrayList<>();
 	private List<InputGroup> inputGroupList = null;
 	private List<TrainingMotif> trainingList = new ArrayList<>();	
-	private UploadedFile uploadedFile;
 	private String regex;
 	private String uploadError = null;
 	private Trainer trainer = null;
@@ -49,7 +50,8 @@ public class TrainingBean implements Serializable {
 		return inputList;
 	}
 	
-	public void upload() {
+	public void upload( FileUploadEvent event ) {
+		UploadedFile uploadedFile = event.getFile();
 		if( uploadedFile == null ) {
 			refresh();
 			return;
@@ -57,13 +59,13 @@ public class TrainingBean implements Serializable {
 		
 		this.inputList.clear();
 		try {
-			Reader rd = new InputStreamReader(uploadedFile.getInputStream());
+			Reader rd = new InputStreamReader(new ByteArrayInputStream(uploadedFile.getContents()));
 			inputGroupList = InputGroup.readEntries(rd); 
 			rd.close();
 			for( InputGroup p : inputGroupList )
 				this.inputList.addAll(p.getMotifs());
 			uploadError = null;
-			inputFileName = uploadedFile.getName();
+			inputFileName = uploadedFile.getFileName();
 		} catch (IOException e) {
 			uploadError = e.getMessage();
 			e.printStackTrace();
@@ -150,14 +152,6 @@ public class TrainingBean implements Serializable {
 
 	public void setRegex(String regex) {
 		this.regex = regex;
-	}
-
-	public UploadedFile getUploadedFile() {
-		return uploadedFile;
-	}
-
-	public void setUploadedFile(UploadedFile uploadedFile) {
-		this.uploadedFile = uploadedFile;
 	}
 	
 	public String getInputSummary() {		
