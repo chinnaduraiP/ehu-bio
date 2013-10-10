@@ -1,0 +1,51 @@
+@CHARSET "UTF-8";
+
+/* Training */
+.trn_name {}
+.trn_pos {
+	width: 40px;
+	text-align: right;
+}
+.trn_seq {
+	width: 300px;
+	white-space: nowrap;
+  	overflow: hidden;
+  	text-overflow: ellipsis;
+  	display: inline-block;
+  	text-align: left;
+}
+.trn_weight {
+	width: 50px;
+	text-align: right;
+}
+.trn_regex {
+	width: 700px;
+}
+
+.cfg_header {
+	text-align: left;
+}
+
+div.ok {
+	content: url(/resources/images/ok.png);
+}
+
+div.ko {
+	content: url(/resources/images/ko.png);
+}
+
+div.trash {
+	content: url(/resources/images/trash.png);
+}
+
+div.recycle {
+	content: url(/resources/images/recycle.png);
+}
+
+.ui-button-text {
+	display:none;
+}
+
+.ui-widget, .ui-widget .ui-widget {
+	font-size: 12px !important;
+}
