@@ -19,8 +19,6 @@ import org.apache.commons.io.FilenameUtils;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.UploadedFile;
 
-import com.google.appengine.api.utils.SystemProperty;
-
 import es.ehu.grk.db.Fasta.InvalidSequenceException;
 import es.ehu.grk.wregex.InputGroup;
 import es.ehu.grk.wregex.InputMotif;
@@ -99,7 +97,7 @@ public class TrainingBean implements Serializable {
 		try {
 			OutputStream output = ec.getResponseOutputStream();
 			pssm.save(new OutputStreamWriter(output),
-				"Generated from wregex.appspot.com (v"+SystemProperty.applicationVersion.get()+")",
+				"Generated from wregex (v1.0)",
 				"Trained with " + getTrainingSummary(),
 				"Regex: " + trainer.getRegex(),
 				"The following PSSM values are not normalized");
@@ -190,5 +188,11 @@ public class TrainingBean implements Serializable {
 
 	public String getUploadError() {
 		return uploadError;
+	}
+	
+	public String getFastaSummary() {
+		if( inputGroupList != null && inputFileName != null )
+			return inputFileName + ": " + inputGroupList.size() + " entries";
+		return null;
 	}
 }

@@ -12,22 +12,23 @@
 			<h:form enctype="multipart/form-data">
 				<p:panelGrid columns="1" headerClass="cfg_header">
 					<f:facet name="header">Input motifs</f:facet>
-					<p:fileUpload fileUploadListener="#{trainingBean.upload}"
-            			mode="advanced"     
-            			sizeLimit="1000000"
-            			multiple="false"
-            			fileLimit="1"
-            			auto="true"  
-            			label="Select fasta"
-            			update="@form"
-            			allowTypes="/(\.|\/)(te?xt|fasta)$/" />
 					<h:panelGroup>
-					<h:commandButton value="Refresh"
-						actionListener="#{trainingBean.refresh}" />
+						<p:fileUpload fileUploadListener="#{trainingBean.upload}"
+	            			mode="advanced"     
+	            			sizeLimit="1000000"
+	            			multiple="false"
+	            			auto="true"  
+	            			label="Select fasta"
+	            			update="@all"
+	            			allowTypes="/(\.|\/)(te?xt|fasta)$/" />
+	            		<h:outputText value="#{trainingBean.fastaSummary}"/>
+            		</h:panelGroup>
+					<h:panelGroup>
+					<p:commandButton value="Refresh" actionListener="#{trainingBean.refresh}" ajax="false"/>
 					<h:outputText value="#{trainingBean.uploadError}" rendered="#{trainingBean.uploadError != null}" style="color:red"/>
 					<h:outputText value="#{trainingBean.inputSummary}" rendered="#{trainingBean.inputSummary != null and trainingBean.uploadError == null}"/>
 					</h:panelGroup>
-					<h:commandButton value="Download motifs" actionListener="#{trainingBean.downloadInputMotifs}" />
+					<p:commandButton value="Download motifs" actionListener="#{trainingBean.downloadInputMotifs}" ajax="false"/>
 				</p:panelGrid>
 				<p:dataTable value="#{trainingBean.inputList}" var="item"
 					rendered="#{not empty trainingBean.inputList}">
@@ -38,11 +39,11 @@
 					</p:column>
 					<p:column>
 						<f:facet name="header">Begin</f:facet>
-						<h:inputText value="#{item.start}" styleClass="trn_pos" />
+						<p:inputText value="#{item.start}" styleClass="trn_pos" />
 					</p:column>
 					<p:column>
 						<f:facet name="header">End</f:facet>
-						<h:inputText value="#{item.end}" styleClass="trn_pos" />
+						<p:inputText value="#{item.end}" styleClass="trn_pos" />
 					</p:column>
 					<p:column>
 						<f:facet name="header">Motif</f:facet>
@@ -50,7 +51,7 @@
 					</p:column>
 					<p:column>
 						<f:facet name="header">Weight</f:facet>
-						<h:inputText value="#{item.weight}" styleClass="trn_weight" />
+						<p:inputText value="#{item.weight}" styleClass="trn_weight" />
 					</p:column>
 					<p:column>
 						<f:facet name="header">Matched</f:facet>

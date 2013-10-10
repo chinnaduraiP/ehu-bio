@@ -44,14 +44,14 @@ public class SearchBean implements Serializable {
 	private boolean custom = false;
 	private String customRegex;
 	private String customPssm;
-	private UploadedFile pssmFile = null;
-	private UploadedFile fastaFile = null;
 	private String searchError;
 	private List<Result> results = null;
 	private boolean usingPssm;
 	private boolean grouping = true;
-	private String baseFileName;
+	private String baseFileName, pssmFileName, fastaFileName;
 	private boolean assayScores = false;
+	List<InputGroup> inputGroups = null;
+	Pssm pssm = null;
 	
 	public SearchBean() {
 		Reader rd = new InputStreamReader(FacesContext.getCurrentInstance().getExternalContext().getResourceAsStream("/resources/data/motifs.xml")); 		
@@ -72,7 +72,7 @@ public class SearchBean implements Serializable {
 	}
 	
 	public String getRegex() {
-		return motifDefinition == null ? null : motifDefinition.getRegex();
+		return motifDefinition == null || motifInformation == null ? null : motifDefinition.getRegex();
 	}
 	
 	public String getPssm() {
@@ -80,7 +80,7 @@ public class SearchBean implements Serializable {
 	}
 	
 	public String getDescription() {
-		return motifDefinition == null ? null : motifDefinition.getDescription();
+		return motifDefinition == null || motifInformation == null ? null : motifDefinition.getDescription();
 	}
 
 	public String getMotif() {
@@ -99,18 +99,20 @@ public class SearchBean implements Serializable {
 		this.definition = configuration;
 	}
 	
-	private MotifInformation stringToMotif( String name ) {
-		if( name == null )
+	private MotifInformation stringToMotif( Object object ) {
+		if( object == null )
 			return null;
+		String name = object.toString();
 		for( MotifInformation motif : motifConfiguration.getMotifs() )
 			if( motif.getName().equals(name) )
 				return motif;
 		return null;
 	}
 	
-	private MotifDefinition stringToDefinition( String name ) {
-		if( name == null )
+	private MotifDefinition stringToDefinition( Object object ) {
+		if( object == null )
 			return null;
+		String name = object.toString();
 		for( MotifDefinition def : getDefinitions() )
 			if( def.getName().equals(name) )
 				return def;
@@ -127,19 +129,21 @@ public class SearchBean implements Serializable {
 				motifInformation = null;
 				custom = true;
 			} else {
-				motifInformation = (MotifInformation)stringToMotif(event.getNewValue().toString());
+				motifInformation = (MotifInformation)stringToMotif(event.getNewValue());
 				custom = false;
 			}
 		}
-		motifDefinition = null;
+		//motifDefinition = null;
 		searchError = null;
 		results = null;
+		pssm = null;
 	}
 	
 	public void onChangeDefinition( ValueChangeEvent event ) {
-		motifDefinition = (MotifDefinition)stringToDefinition(event.getNewValue().toString());
+		motifDefinition = (MotifDefinition)stringToDefinition(event.getNewValue());
 		searchError = null;
 		results = null;
+		pssm = null;
 	}
 
 	public boolean isCustom() {
@@ -178,34 +182,18 @@ public class SearchBean implements Serializable {
 		}
 		return null;
 	}
-
-	public UploadedFile getPssmFile() {
-		return pssmFile;
-	}
-
-	public void setPssmFile(UploadedFile pssmFile) {
-		this.pssmFile = pssmFile;
-	}
-
-	public UploadedFile getFastaFile() {
-		return fastaFile;
-	}
-
-	public void setFastaFile(UploadedFile fastaFile) {
-		this.fastaFile = fastaFile;
-	}
 	
 	public void search() {
-		if( fastaFile == null ) {
+		if( inputGroups == null ) {
 			searchError = "A fasta file with input sequences must be selected";
 			results = null;
 			return;
 		}
 		searchError = null;
 		try {
-			Pssm pssm = uploadPssm();
+			if( !custom )
+				loadPssm();
 			usingPssm = pssm == null ? false : true;
-			List<InputGroup> inputGroups = uploadFasta();
 			String regex = custom ? getCustomRegex() : getRegex();
 			Wregex wregex = new Wregex(regex, pssm);
 			List<ResultGroup> resultGroups = new ArrayList<>();
@@ -228,34 +216,55 @@ public class SearchBean implements Serializable {
 			searchError = "File error: " + e.getMessage();
 		} catch( PssmBuilderException e ) {
 			searchError = "PSSM not valid: " + e.getMessage();
-		} catch( InvalidSequenceException e ) {
-			searchError = "Fasta not valid: " + e.getMessage();
 		} catch( WregexException e ) {
 			searchError = "Invalid configuration: " + e.getMessage();
 		}
 	}	
 
-	private Pssm uploadPssm() throws IOException, PssmBuilderException {
-		if( custom && pssmFile == null )
-			return null;
-		if( !custom && getPssm() == null )
-			return null;
-		Reader rd;
-		if( custom ) 
-			//rd = new InputStreamReader(pssmFile.getInputstream());
-			rd = new InputStreamReader(new ByteArrayInputStream(pssmFile.getContents()));
-		else
-			rd = new InputStreamReader(FacesContext.getCurrentInstance().getExternalContext().getResourceAsStream("/resources/data/"+getPssm()));
-		Pssm pssm = Pssm.load(rd, true);
-		rd.close();
-		return pssm;
+	public void uploadPssm( FileUploadEvent event ) {
+		UploadedFile pssmFile = event.getFile();
+		if( !custom || pssmFile == null ) {
+			pssm = null;
+			return;
+		}
+		pssmFileName = pssmFile.getFileName();
+		//Reader rd = new InputStreamReader(pssmFile.getInputstream());
+		Reader rd = new InputStreamReader(new ByteArrayInputStream(pssmFile.getContents()));
+		try {
+			pssm = Pssm.load(rd, true);
+			rd.close();
+		} catch (IOException e) {
+			searchError = "File error: " + e.getMessage();
+		} catch (PssmBuilderException e) {
+			searchError = "PSSM not valid: " + e.getMessage();
+		}		
 	}
 	
-	private List<InputGroup> uploadFasta() throws IOException, InvalidSequenceException {
+	private void loadPssm() throws IOException, PssmBuilderException {
+		Reader rd = new InputStreamReader(FacesContext.getCurrentInstance().getExternalContext().getResourceAsStream("/resources/data/"+getPssm()));
+		pssm = Pssm.load(rd, true);
+		rd.close();
+	}
+	
+	public void uploadFasta(FileUploadEvent event) {
+		UploadedFile fastaFile = event.getFile();
+		if( fastaFile == null ) {
+			inputGroups = null;
+			return;
+		}
+		fastaFileName = fastaFile.getFileName();
 		//Reader rd = new InputStreamReader(fastaFile.getInputstream());
 		Reader rd = new InputStreamReader(new ByteArrayInputStream(fastaFile.getContents()));
-		List<InputGroup> inputGroups = InputGroup.readEntries(rd); 
-		rd.close();
+		try {
+			inputGroups = InputGroup.readEntries(rd);
+			rd.close();
+		} catch (IOException e) {
+			searchError = "File error: " + e.getMessage();
+			return;
+		} catch (InvalidSequenceException e) {
+			searchError = "Fasta not valid: " + e.getMessage();
+			return;
+		} 		
 		assayScores = true;
 		for( InputGroup inputGroup : inputGroups )
 			if( !inputGroup.hasScores() ) {
@@ -263,7 +272,6 @@ public class SearchBean implements Serializable {
 				break;
 			}
 		baseFileName = FilenameUtils.removeExtension(fastaFile.getFileName());
-		return inputGroups;
 	}
 
 	public String getSearchError() {
@@ -361,11 +369,15 @@ public class SearchBean implements Serializable {
 		return assayScores;
 	}
 	
-	public void uploadedPssm(FileUploadEvent event) {
-		pssmFile = event.getFile();		
+	public String getFastaSummary() {
+		if( inputGroups == null )
+			return null;
+		return fastaFileName + ": " + inputGroups.size() + " entries";
 	}
 	
-	public void uploadedFasta(FileUploadEvent event) {
-		fastaFile = event.getFile();
+	public String getPssmSummary() {
+		if( custom && pssmFileName != null )
+			return pssmFileName;
+		return null;
 	}
 }

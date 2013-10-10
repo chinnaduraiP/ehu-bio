@@ -12,27 +12,24 @@
 			<h:form>
 				<p:panelGrid columns="2" headerClass="cfg_header">
 					<f:facet name="header">Training parameters</f:facet>
-					<h:commandButton value="Input motifs" action="tmotifs" />
+					<p:commandButton value="Input motifs" action="tmotifs" ajax="false"/>
 					<h:outputText value="#{trainingBean.inputSummary}"
 						rendered="#{trainingBean.inputSummary != null}" />
 					<h:outputText
 						value="You must upload a fasta file with training motifs"
 						rendered="#{trainingBean.inputSummary == null}" style="color:red" />
 
-					<h:commandButton value="Regular expression"
-						actionListener="#{trainingBean.refresh}" />
-					<h:inputText value="#{trainingBean.regex}" styleClass="trn_regex" />
+					<p:commandButton value="Regular expression" actionListener="#{trainingBean.refresh}" ajax="false"/>
+					<p:inputText value="#{trainingBean.regex}" styleClass="trn_regex" />
 
-					<h:commandButton value="Refresh"
-						actionListener="#{trainingBean.refresh}" />
+					<p:commandButton value="Refresh" actionListener="#{trainingBean.refresh}" ajax="false"/>
 					<h:outputText value="#{trainingBean.trainingSummary}"
 						rendered="#{trainingBean.trainingSummary != null}" />
 					<h:outputText value="Define a regex matching any training motif"
 						rendered="#{trainingBean.trainingSummary == null}"
 						style="color:red" />
 
-					<h:commandButton value="Download PSSM"
-						actionListener="#{trainingBean.downloadPssm}" />
+					<p:commandButton value="Download PSSM" actionListener="#{trainingBean.downloadPssm}" ajax="false"/>
 				</p:panelGrid>
 				<p />
 				<p:dataTable value="#{trainingBean.trainingList}" var="item"
@@ -77,14 +74,14 @@
 					<p:column>
 						<f:facet name="header">Action</f:facet>
 						<h:panelGroup layout="block" rendered="#{item.valid}">
-							<h:commandLink actionListener="#{item.remove}">
+							<p:commandLink actionListener="#{item.remove}">
 								<h:panelGroup layout="block" styleClass="trash" />
-							</h:commandLink>
+							</p:commandLink>
 						</h:panelGroup>
 						<h:panelGroup layout="block" rendered="#{!item.valid}">
-							<h:commandLink actionListener="#{item.recycle}">
+							<p:commandLink actionListener="#{item.recycle}">
 								<h:panelGroup layout="block" styleClass="recycle" />
-							</h:commandLink>
+							</p:commandLink>
 						</h:panelGroup>
 					</p:column>
 				</p:dataTable>
