@@ -12,7 +12,7 @@
 			<h:form enctype="multipart/form-data">
 				<p:panelGrid columns="2" headerClass="cfg_header">
 					<f:facet name="header">Search configuration</f:facet>
-					<h:outputLabel value="Motif:"/>
+					<h:outputText value="Motif:"/>
 					<h:panelGroup>
 						<p:selectOneMenu value="#{searchBean.motif}"
 							valueChangeListener="#{searchBean.onChangeMotif}">
@@ -21,7 +21,7 @@
 							<f:selectItems value="#{searchBean.motifs}" />
 							<p:ajax update="@form" />	
 						</p:selectOneMenu>
-						<p:selectOneMenu id="kk" value="#{searchBean.configuration}"
+						<p:selectOneMenu value="#{searchBean.configuration}"
 							valueChangeListener="#{searchBean.onChangeDefinition}"
 							rendered="#{searchBean.motif != null and !searchBean.custom }">
 							<f:selectItem itemLabel="Select configuration" />
@@ -29,43 +29,49 @@
 							<p:ajax update="@form" />
 						</p:selectOneMenu>
 					</h:panelGroup>
-					<h:outputLabel value="Regex:"/>
+					<h:outputText value="Regex:"/>
 					<h:outputText value="#{searchBean.regex}" rendered="#{!searchBean.custom}"/>
-					<h:inputText value="#{searchBean.customRegex}" rendered="#{searchBean.custom}" styleClass="trn_regex" onchange="submit()"/>
-					<h:outputLabel value="Description:" rendered="#{!searchBean.custom}"/>
+					<p:inputText value="#{searchBean.customRegex}" rendered="#{searchBean.custom}" styleClass="trn_regex" onchange="submit()"/>
+					<h:outputText value="Description:" rendered="#{!searchBean.custom}"/>
 					<h:outputText value="#{searchBean.description}" rendered="#{!searchBean.custom}"/>
-					<h:outputLabel value="PSSM file:"/>
+					<h:outputText value="PSSM file:"/>
 					<h:panelGroup rendered="#{!searchBean.custom}">
 						<h:outputText value="#{searchBean.pssm}"/>
-						<h:commandButton value="Download" actionListener="#{searchBean.downloadPssm}" rendered="#{searchBean.pssm != null}"/>
+						<p:commandButton value="Download" actionListener="#{searchBean.downloadPssm}" rendered="#{searchBean.pssm != null}" ajax="false"/>
 					</h:panelGroup>
-					<p:fileUpload rendered="#{searchBean.custom}" fileUploadListener="#{searchBean.uploadedPssm}"  
-            			mode="advanced"     
-            			sizeLimit="10000"
-            			multiple="false"
-            			fileLimit="1"
-            			auto="true"  
-            			label="Select PSSM"
-            			allowTypes="/(\.|\/)(te?xt|pssm)$/" />
-					<h:outputLabel value="Fasta file:"/>
-					<p:fileUpload fileUploadListener="#{searchBean.uploadedFasta}"  
-            			mode="advanced"     
-            			sizeLimit="1000000"
-            			multiple="false"
-            			fileLimit="1"
-            			auto="true"  
-            			label="Select fasta"
-            			allowTypes="/(\.|\/)(te?xt|fasta)$/" />
-					<h:outputLabel value="Grouping:"/>
-					<h:selectBooleanCheckbox value="#{searchBean.grouping}"/>
-					<h:outputLabel value="Configuration" rendered="#{searchBean.configError != null}"/>
-					<h:outputLabel value="#{searchBean.configError}" rendered="#{searchBean.configError != null}" style="color:red"/>
-					<h:commandButton value="Search!" actionListener="#{searchBean.search}" rendered="#{searchBean.configError == null}"/>
-					<h:outputLabel value="#{searchBean.searchError}" rendered="#{searchBean.searchError != null}" style="color:red"/>
+					<h:panelGroup rendered="#{searchBean.custom}">
+						<p:fileUpload fileUploadListener="#{searchBean.uploadPssm}"  
+	            			mode="advanced"     
+	            			sizeLimit="10000"
+	            			multiple="false"
+	            			auto="true"  
+	            			label="Select PSSM"
+	            			update="pssm,search"
+	            			allowTypes="/(\.|\/)(te?xt|pssm)$/" />
+	            		<h:outputText id="pssm" value="#{searchBean.pssmSummary}"/>
+            		</h:panelGroup>
+					<h:outputText value="Fasta file:"/>
+					<h:panelGroup>
+						<p:fileUpload fileUploadListener="#{searchBean.uploadFasta}"  
+	            			mode="advanced"     
+	            			sizeLimit="1000000"
+	            			multiple="false"
+	            			auto="true"            			  
+	            			label="Select fasta"
+	            			update="fasta,search"
+	            			allowTypes="/(\.|\/)(te?xt|fasta)$/" />
+	            		<h:outputText id="fasta" value="#{searchBean.fastaSummary}"/>
+            		</h:panelGroup>
+					<h:outputLabel value="Grouping:" for="grouping"/>
+					<h:selectBooleanCheckbox id="grouping" value="#{searchBean.grouping}"/>
+					<h:outputText value="Configuration" rendered="#{searchBean.configError != null}"/>
+					<h:outputText value="#{searchBean.configError}" rendered="#{searchBean.configError != null}" style="color:red"/>
+					<p:commandButton value="Search!" actionListener="#{searchBean.search}" rendered="#{searchBean.configError == null}" ajax="false"/>
+					<h:outputText id="search" value="#{searchBean.searchError}" rendered="#{searchBean.searchError != null}" style="color:red"/>
 					<h:panelGroup rendered="#{searchBean.results != null}">
-						<h:outputLabel value="#{searchBean.numberOfResults}"/>
-						<h:commandButton value="Download as CSV" rendered="#{not empty searchBean.results}" actionListener="#{searchBean.downloadCsv}"/>
-						<h:commandButton value="Download as ALN" rendered="#{not empty searchBean.results}" actionListener="#{searchBean.downloadAln}"/>
+						<h:outputText value="#{searchBean.numberOfResults}"/>
+						<p:commandButton value="Download as CSV" rendered="#{not empty searchBean.results}" actionListener="#{searchBean.downloadCsv}" ajax="false"/>
+						<p:commandButton value="Download as ALN" rendered="#{not empty searchBean.results}" actionListener="#{searchBean.downloadAln}" ajax="false"/>
 					</h:panelGroup>
 				</p:panelGrid>
 				<p:dataTable value="#{searchBean.results}" var="item" rendered="#{not empty searchBean.results}">
@@ -93,7 +99,7 @@
 					<p:column>
 						<f:facet name="header">Score</f:facet>
 						<h:outputText value="#{item.scoreAsString}" styleClass="trn_weight" rendered="#{searchBean.usingPssm}" />
-						<h:outputLabel value="N/A" rendered="#{!searchBean.usingPssm}"/>
+						<h:outputText value="N/A" rendered="#{!searchBean.usingPssm}"/>
 					</p:column>
 					<p:column rendered="#{searchBean.assayScores}">
 						<f:facet name="header">Assay</f:facet>
