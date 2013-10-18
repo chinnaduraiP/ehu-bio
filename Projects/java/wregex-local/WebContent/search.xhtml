@@ -16,16 +16,18 @@
 					<h:panelGroup>
 						<p:selectOneMenu value="#{searchBean.motif}"
 							valueChangeListener="#{searchBean.onChangeMotif}">
-							<f:selectItem itemLabel="Select motif" />
+							<f:selectItem itemLabel="Select motif" itemValue="Default" />
 							<f:selectItem itemLabel="Custom" itemValue="Custom" />
 							<f:selectItems value="#{searchBean.motifs}" />
+							<f:selectItem itemLabel="--- ELM ---" itemValue="ELM"/>
+							<f:selectItems value="#{searchBean.elmMotifs}" />
 							<p:ajax update="@form" />	
 						</p:selectOneMenu>
 						<p:selectOneMenu value="#{searchBean.configuration}"
 							valueChangeListener="#{searchBean.onChangeDefinition}"
-							rendered="#{searchBean.motif != null and !searchBean.custom }">
-							<f:selectItem itemLabel="Select configuration" />
-							<f:selectItems value="#{searchBean.definitions}" />
+							rendered="#{searchBean.motifInformation != null and !searchBean.custom }">
+							<f:selectItem itemLabel="Select configuration" itemValue="Default"/>
+							<f:selectItems value="#{searchBean.definitions}" />							
 							<p:ajax update="@form" />
 						</p:selectOneMenu>
 					</h:panelGroup>
@@ -37,6 +39,7 @@
 					<h:outputText value="PSSM file:"/>
 					<h:panelGroup rendered="#{!searchBean.custom}">
 						<h:outputText value="#{searchBean.pssm}"/>
+						<h:outputText value="Not available (scores will not be available)" rendered="#{searchBean.pssm == null}"/>
 						<p:commandButton value="Download" actionListener="#{searchBean.downloadPssm}" rendered="#{searchBean.pssm != null}" ajax="false"/>
 					</h:panelGroup>
 					<h:panelGroup rendered="#{searchBean.custom}">
@@ -46,7 +49,7 @@
 	            			multiple="false"
 	            			auto="true"  
 	            			label="Select PSSM"
-	            			update="pssm,search"
+	            			update="@form"
 	            			allowTypes="/(\.|\/)(te?xt|pssm)$/" />
 	            		<h:outputText id="pssm" value="#{searchBean.pssmSummary}"/>
             		</h:panelGroup>
@@ -58,12 +61,12 @@
 	            			multiple="false"
 	            			auto="true"            			  
 	            			label="Select fasta"
-	            			update="@all"
+	            			update="@form"
 	            			allowTypes="/(\.|\/)(te?xt|fasta)$/" />
 	            		<h:outputText id="fasta" value="#{searchBean.fastaSummary}"/>
             		</h:panelGroup>
 					<h:outputLabel value="Grouping:" for="grouping"/>
-					<h:selectBooleanCheckbox id="grouping" value="#{searchBean.grouping}"/>
+					<p:selectBooleanCheckbox id="grouping" value="#{searchBean.grouping}" valueChangeListener="#{searchBean.onGrouping}" update="@form" immediate="true" onchange="submit"/>
 					<h:outputText value="Configuration" rendered="#{searchBean.configError != null}"/>
 					<h:outputText value="#{searchBean.configError}" rendered="#{searchBean.configError != null}" style="color:red"/>
 					<p:commandButton value="Search!" actionListener="#{searchBean.search}" rendered="#{searchBean.configError == null}" ajax="false"/>

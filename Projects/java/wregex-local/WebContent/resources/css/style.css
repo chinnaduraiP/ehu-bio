@@ -1,6 +1,6 @@
 @CHARSET "UTF-8";
 
-/* Header */
+/* Page template */
 #titlebar {
 	/*background: url('/resources/images/wregex.png') left center no-repeat, url('/resources/images/ehu.png') right center no-repeat, linear-gradient(to top right, #eee, #000);*/
 	background: rgb(238,238,238); /* Old browsers */
@@ -11,7 +11,7 @@
 	background: -ms-linear-gradient(45deg, rgba(238,238,238,1) 0%,rgba(0,0,0,1) 100%); /* IE10+ */
 	background: linear-gradient(45deg, rgba(238,238,238,1) 0%,rgba(0,0,0,1) 100%); /* W3C */
 	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#eeeeee', endColorstr='#000000',GradientType=1 ); /* IE6-9 fallback on horizontal gradient */
-	height: 80px;
+	height: 78px;
 	width: 100%;
 }
 
@@ -21,6 +21,10 @@
 	font-size: 14px;
 	color: white;
 	text-decoration:none;
+}
+
+#footer {
+	font-size: 8px;
 }
 
 /* PrimeFaces */
