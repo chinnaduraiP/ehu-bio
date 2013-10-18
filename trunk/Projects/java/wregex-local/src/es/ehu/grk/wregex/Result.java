@@ -150,9 +150,9 @@ public final class Result implements Comparable<Result> {
 	
 	public static void saveCsv(Writer wr, List<Result> results) {
 		PrintWriter pw = new PrintWriter(wr);
-		pw.println("ID,Entry,Pos,Combinations,Sequence,Alignment,Score");
+		pw.println("ID,Entry,Begin,End,Combinations,Sequence,Alignment,Score");
 		for( Result result : results )
-			pw.println(result.getName()+","+result.getEntry()+","+result.getStart()+","+result.getCombinations()+","+result.getMatch()+","+result.getAlignment()+","+result.getScore());
+			pw.println(result.getName()+","+result.getEntry()+","+result.getStart()+","+result.getEnd()+","+result.getCombinations()+","+result.getMatch()+","+result.getAlignment()+","+result.getScore());
 		pw.flush();
 	}
 	
@@ -187,14 +187,14 @@ public final class Result implements Comparable<Result> {
 	
 	public static void saveAssay(Writer wr, List<Result> results, boolean grouping) {
 		PrintWriter pw = new PrintWriter(wr);
-		pw.println("ID,Entry,Pos,Combinations,Sequence,Alignment,Score,Assay,Assay");
+		pw.println("ID,Entry,Begin,End,Combinations,Sequence,Alignment,Score,Assay,Assay");
 		String assay;
 		for( Result result : results ) {
 			if( grouping )
 				assay = result.getGroupAssayAsString()+","+result.getGroupAssay();
 			else
 				assay = result.getAssayAsString()+","+result.getAssay();
-			pw.println(result.getName()+","+result.getEntry()+","+result.getStart()+","+result.getCombinations()+","+result.getMatch()+","+result.getAlignment()+","+result.getScore()+","+assay);
+			pw.println(result.getName()+","+result.getEntry()+","+result.getStart()+","+result.getEnd()+","+result.getCombinations()+","+result.getMatch()+","+result.getAlignment()+","+result.getScore()+","+assay);
 		}
 		pw.flush();
 	}

@@ -83,7 +83,7 @@
 
 	<error-page>
 		<exception-type>javax.faces.application.ViewExpiredException</exception-type>
-		<location>/faces/home.xhtml</location>
+		<location>/faces/expired.xhtml</location>
 	</error-page>
 
 	<!--<listener> <listener-class>es.ehu.grk.wregex.gae.ServletListener</listener-class> 

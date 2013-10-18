@@ -24,6 +24,7 @@ import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.UploadedFile;
 
 import es.ehu.grk.db.Fasta.InvalidSequenceException;
+import es.ehu.grk.io.UnixCfgReader;
 import es.ehu.grk.wregex.InputGroup;
 import es.ehu.grk.wregex.Pssm;
 import es.ehu.grk.wregex.PssmBuilder.PssmBuilderException;
@@ -39,6 +40,7 @@ public class SearchBean implements Serializable {
 	private String motif;
 	private String definition;
 	private MotifConfiguration motifConfiguration;
+	private List<MotifInformation> elmMotifs;
 	private MotifInformation motifInformation;
 	private MotifDefinition motifDefinition;
 	private boolean custom = false;
@@ -53,10 +55,11 @@ public class SearchBean implements Serializable {
 	List<InputGroup> inputGroups = null;
 	Pssm pssm = null;
 	
-	public SearchBean() {
-		Reader rd = new InputStreamReader(FacesContext.getCurrentInstance().getExternalContext().getResourceAsStream("/resources/data/motifs.xml")); 		
-		motifConfiguration = MotifConfiguration.load(rd);
+	public SearchBean() {		
 		try {
+			Reader rd = new InputStreamReader(FacesContext.getCurrentInstance().getExternalContext().getResourceAsStream("/resources/data/motifs.xml")); 		
+			motifConfiguration = MotifConfiguration.load(rd);
+			loadElmMotifs();
 			rd.close();
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -86,6 +89,10 @@ public class SearchBean implements Serializable {
 	public String getMotif() {
 		return motif;
 	}
+	
+	public MotifInformation getMotifInformation() {
+		return motifInformation;
+	}
 
 	public void setMotif(String motif) {
 		this.motif = motif;
@@ -104,6 +111,9 @@ public class SearchBean implements Serializable {
 			return null;
 		String name = object.toString();
 		for( MotifInformation motif : motifConfiguration.getMotifs() )
+			if( motif.getName().equals(name) )
+				return motif;
+		for( MotifInformation motif : elmMotifs )
 			if( motif.getName().equals(name) )
 				return motif;
 		return null;
@@ -133,7 +143,13 @@ public class SearchBean implements Serializable {
 				custom = false;
 			}
 		}
-		//motifDefinition = null;
+		if( motifInformation == null ) {
+			motifDefinition = null;
+			setConfiguration("Default");
+		} else {
+			motifDefinition = motifInformation.getDefinitions().get(0);
+			setConfiguration(motifDefinition.toString());
+		}
 		searchError = null;
 		results = null;
 		pssm = null;
@@ -219,6 +235,8 @@ public class SearchBean implements Serializable {
 	}	
 
 	public void uploadPssm( FileUploadEvent event ) {
+		searchError = null;
+		results = null;
 		UploadedFile pssmFile = event.getFile();
 		if( !custom || pssmFile == null ) {
 			pssm = null;
@@ -238,12 +256,17 @@ public class SearchBean implements Serializable {
 	}
 	
 	private void loadPssm() throws IOException, PssmBuilderException {
-		Reader rd = new InputStreamReader(FacesContext.getCurrentInstance().getExternalContext().getResourceAsStream("/resources/data/"+getPssm()));
+		String file = getPssm();
+		if( file == null )
+			return;
+		Reader rd = new InputStreamReader(FacesContext.getCurrentInstance().getExternalContext().getResourceAsStream("/resources/data/"+file));
 		pssm = Pssm.load(rd, true);
 		rd.close();
 	}
 	
 	public void uploadFasta(FileUploadEvent event) {
+		searchError = null;
+		results = null;
 		UploadedFile fastaFile = event.getFile();
 		if( fastaFile == null ) {
 			inputGroups = null;
@@ -376,5 +399,52 @@ public class SearchBean implements Serializable {
 		if( custom && pssmFileName != null )
 			return pssmFileName;
 		return null;
+	}
+	
+	public List<MotifInformation> getElmMotifs() {
+		return elmMotifs;
+	}
+	
+	void loadElmMotifs() throws IOException {
+		elmMotifs = new ArrayList<>();
+		MotifInformation motif;
+		MotifDefinition definition;
+		List<MotifDefinition> definitions;
+		MotifReference reference;
+		List<MotifReference> references;
+		UnixCfgReader rd = new UnixCfgReader(new InputStreamReader(FacesContext.getCurrentInstance().getExternalContext().getResourceAsStream("/resources/data/elm_classes.tsv")));
+		String line;
+		String[] fields;
+		boolean first = true;
+		while( (line=rd.readLine()) != null ) {
+			if( first == true ) {
+				first = false;
+				continue;
+			}
+			fields = line.replaceAll("\"","").split("\t");
+			motif = new MotifInformation();
+			motif.setName(fields[1]);
+			//motif.setSummary(fields[2]);
+			definition = new MotifDefinition();
+			definition.setName(fields[0]);
+			definition.setDescription(fields[2]);
+			definition.setRegex(fields[3].replaceAll("\\(", "(?:"));
+			definitions = new ArrayList<>();
+			definitions.add(definition);
+			motif.setDefinitions(definitions);
+			reference = new MotifReference();
+			reference.setName("ELM");
+			reference.setLink("http://elm.eu.org/elms/elmPages/"+fields[1]+".html");
+			references = new ArrayList<>();
+			references.add(reference);
+			motif.setReferences(references);
+			elmMotifs.add(motif);
+		}
+		rd.close();
+	}
+	
+	public void onGrouping() {
+		searchError = null;
+		results = null;
 	}
 }

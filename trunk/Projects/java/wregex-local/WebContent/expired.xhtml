@@ -7,14 +7,9 @@
 
 <h:body>
 	<ui:composition template="./template.xhtml">
-		<ui:define name="title">Home</ui:define>
-		<ui:define name="content">
-		<h:form>
-			<p>Wellcome to the wregex home page.</p>
-			<p>Until this page is finished, go directly to the
-			<h:commandLink value="Search" action="search"/> or
-			<h:commandLink value="Training" action="training"/> pages.</p>
-		</h:form>			
+		<ui:define name="title">Expired session</ui:define>
+		<ui:define name="content">	
+		<h:outputText value="Sorry, the session has expired" style="color:red"/>		
 		</ui:define>
 	</ui:composition>
 </h:body>
