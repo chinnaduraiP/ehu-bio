@@ -74,12 +74,12 @@
 					<p:column>
 						<f:facet name="header">Action</f:facet>
 						<h:panelGroup layout="block" rendered="#{item.valid}">
-							<p:commandLink actionListener="#{item.remove}">
+							<p:commandLink actionListener="#{item.remove}" update="@form">
 								<h:panelGroup layout="block" styleClass="trash" />
 							</p:commandLink>
 						</h:panelGroup>
 						<h:panelGroup layout="block" rendered="#{!item.valid}">
-							<p:commandLink actionListener="#{item.recycle}">
+							<p:commandLink actionListener="#{item.recycle}" update="@form">
 								<h:panelGroup layout="block" styleClass="recycle" />
 							</p:commandLink>
 						</h:panelGroup>
