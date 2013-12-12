@@ -93,6 +93,8 @@ public abstract class Mapper {
 			switch( version ) {
 				case "1.1.0":
 					return new mzId1_1(sw);
+				case "1.2.0":
+					return new mzId1_2(sw);
 			}
 			throw new ApplicationException( "mzIdentML version '" + version + "' not supported" );
 		}

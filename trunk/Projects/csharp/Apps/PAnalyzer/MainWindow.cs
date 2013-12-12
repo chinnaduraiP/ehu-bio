@@ -46,7 +46,7 @@ public partial class MainWindow : Gtk.Window {
 		Build();
 		
 		m_Software.Name      = "PAnalyzer";
-		m_Software.Version   = "1.0";
+		m_Software.Version   = "1.1";
 		m_Software.License   = "Released under the GNU General Public License";
 		m_Software.Copyright = "(c) 2010-2013 by UPV/EHU";
 		m_Software.Contact   = "gorka.prieto@ehu.es";

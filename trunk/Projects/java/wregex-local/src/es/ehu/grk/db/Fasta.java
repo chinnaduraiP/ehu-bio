@@ -19,7 +19,7 @@ public final class Fasta {
 		PROTEIN, DNA, RNA
 	}
 	
-	public class InvalidSequenceException extends Exception {
+	public static class InvalidSequenceException extends Exception {
 		private static final long serialVersionUID = 1L;
 		public InvalidSequenceException() {
 			super("Illegal character found in fasta sequence");
@@ -37,14 +37,13 @@ public final class Fasta {
 		mHeader = header;
 		mSequence = sequence.trim().replaceAll("[ \t]", "");		
 		mType = type;
-		if( !checkSequence(mSequence, type) )
-			throw new InvalidSequenceException();
+		checkSequence(mSequence, type);
 		mGuessedAccession = header.split("[ \t]")[0];
 	}
 	
-	public static boolean checkSequence( String sequence, SequenceType type ) {
+	public static void checkSequence( String sequence, SequenceType type ) throws InvalidSequenceException {
 		if( sequence.isEmpty() )
-			return false;
+			throw new InvalidSequenceException("Empty sequence");
 		List<Character> chars = new ArrayList<Character>();
 		switch( type ) {
 			case DNA:
@@ -62,8 +61,7 @@ public final class Fasta {
 		}
 		for( char c : sequence.toUpperCase().toCharArray() )
 			if( !chars.contains(c) )
-				return false;
-		return true;
+				new InvalidSequenceException(c);
 	}
 	
 	public String sequence() {

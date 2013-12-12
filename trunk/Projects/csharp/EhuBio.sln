@@ -130,6 +130,6 @@ Global
 		{FA1712D2-D462-4C51-8E66-ED38D242B9B8} = {1188D573-AFFC-4B64-BFE8-32FB1742D634}
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
-		StartupItem = Apps\wregex\wregex.csproj
+		StartupItem = Apps\PAnalyzer\PAnalyzer.csproj
 	EndGlobalSection
 EndGlobal
