@@ -196,11 +196,14 @@ public class mzId1_1 : Mapper {
 		sw.ContactRole.contact_ref = person.id;
 		sw.ContactRole.Role = role;
 		sw.Customizations = m_Software.Customizations;
+		AnalysisSoftwareType old = null;
 		foreach( AnalysisSoftwareType s in m_mzid.ListSW )
 			if( s.id == m_Software.Name ) {
-				m_mzid.ListSW.Remove( sw );
+				old = s;
 				break;
 			}
+		if( old != null )
+			m_mzid.ListSW.Remove(old);
 		m_mzid.ListSW.Add( sw );
 		#endregion
 		
@@ -211,13 +214,46 @@ public class mzId1_1 : Mapper {
 		m_mzid.Data.AnalysisProtocolCollection.ProteinDetectionProtocol.id = "PDP_PAnalyzer";
 		#endregion
 		
-		#region Protein detection list
+		#region Protein detection list		
+		m_mzid.Data.DataCollection.AnalysisData.ProteinDetectionList.id = "PDL_PAnalyzer";
+		List<ProteinAmbiguityGroupType> groups = BuildProteinDetectionList();
+		m_mzid.Data.DataCollection.AnalysisData.ProteinDetectionList.ProteinAmbiguityGroup = groups.ToArray();
+		#endregion
+		
+		#region References		
+		BibliographicReferenceType pa = new BibliographicReferenceType();
+		pa.authors = "Gorka Prieto, Kerman Aloria, Nerea Osinalde, Asier Fullaondo, Jesus M. Arizmendi and Rune Matthiesen";
+		pa.id = pa.doi = "10.1186/1471-2105-13-288";
+		pa.issue = "288";
+		pa.name = pa.title = "PAnalyzer: A software tool for protein inference in shotgun proteomics";
+		pa.publication = "BMC Bioinformatics";
+		pa.publisher = "BioMed Central Ltd.";
+		pa.volume = "13";
+		pa.year = 2012;
+		List<BibliographicReferenceType> refs = new List<BibliographicReferenceType>();
+		refs.Add( pa );
+		if( m_mzid.Data.BibliographicReference != null )
+			foreach( BibliographicReferenceType r in m_mzid.Data.BibliographicReference ) {
+				if( r.doi != null && r.doi == pa.doi )
+					continue;
+				refs.Add( r );
+			}
+		m_mzid.Data.BibliographicReference = refs.ToArray();
+		#endregion
+		
+		m_mzid.Save( fpath );
+		Notify( "Saved to " + fpath );
+	}
+	
+	protected virtual List<ProteinAmbiguityGroupType> BuildProteinDetectionList() {
 		int gid = 1;
 		SortedList<string,ProteinDetectionHypothesisType> list = new SortedList<string, ProteinDetectionHypothesisType>();
 		List<ProteinAmbiguityGroupType> groups = new List<ProteinAmbiguityGroupType>();
+		
 		foreach( ProteinAmbiguityGroupType grp in m_mzid.Data.DataCollection.AnalysisData.ProteinDetectionList.ProteinAmbiguityGroup )
 			foreach( ProteinDetectionHypothesisType pdh in grp.ProteinDetectionHypothesis )
 				list.Add( pdh.dBSequence_ref, pdh );
+		
 		foreach( Protein p in Proteins ) {
 			ProteinAmbiguityGroupType g = new ProteinAmbiguityGroupType();
 			CVParamType ev = new CVParamType();
@@ -252,16 +288,12 @@ public class mzId1_1 : Mapper {
 			}
 			groups.Add( g );
 		}
-		m_mzid.Data.DataCollection.AnalysisData.ProteinDetectionList.id = "PDL_PAnalyzer";
-		m_mzid.Data.DataCollection.AnalysisData.ProteinDetectionList.ProteinAmbiguityGroup = groups.ToArray();
-		#endregion
 		
-		m_mzid.Save( fpath );
-		Notify( "Saved to " + fpath );
+		return groups;
 	}
 	
 	private int m_pid = 0;
-	private mzidFile1_1 m_mzid;
+	protected mzidFile1_1 m_mzid;
 }
 
 } // namespace EhuBio.Proteomics.Inference
