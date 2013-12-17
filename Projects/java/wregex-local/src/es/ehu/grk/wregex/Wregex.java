@@ -186,6 +186,50 @@ public final class Wregex {
 		return Math.pow(10.0,score/result.getMatch().length())*100.0;
 	}
 	
+	/*double getScore(Result result) {
+		double score = 0.0, tmp;
+		int i, g;
+		if( mPssm == null )
+			return score;
+		List<String> groups = result.getGroups();
+		String group;
+		for( g = 0; g < groups.size(); g++ ) {
+			group = groups.get(g);
+			tmp = 0.0;
+			for( i = 0; i < group.length(); i++ ) {
+				try {
+					tmp += mPssm.getScore(Aminoacid.parseLetter(group.charAt(i)),g);
+				} catch (PssmException e) {
+					throw new RuntimeException(e);
+				}
+			}
+			score += tmp/i;
+		}
+		return Math.pow(10.0,score/g)*100.0;
+	}*/
+	
+	/*double getScore(Result result) {
+		double score = 0.0, tmp;
+		int i, g;
+		if( mPssm == null )
+			return score;
+		List<String> groups = result.getGroups();
+		String group;
+		for( g = 0; g < groups.size(); g++ ) {
+			group = groups.get(g);
+			tmp = 0.0;
+			for( i = 0; i < group.length(); i++ ) {
+				try {
+					tmp += Math.pow(10.0,mPssm.getScore(Aminoacid.parseLetter(group.charAt(i)),g));
+				} catch (PssmException e) {
+					throw new RuntimeException(e);
+				}
+			}
+			score += Math.log10(tmp/i);
+		}
+		return Math.pow(10.0,score)*100.0;
+	}*/
+	
 	private final Pattern mPattern;
 	private final Pssm mPssm;
 }

@@ -166,7 +166,7 @@ public class mzId1_2 : mzId1_1 {
 		foreach( ProteinAmbiguityGroupType pag in groups ) {
 			cv = new CVParamType();
 			cv.cvRef = "PSI-MS";
-			cv.accession = "MS:XXXX";
+			cv.accession = "MS:1002415";
 			cv.name = "protein group passes threshold";
 			pass = false;
 			foreach( ProteinDetectionHypothesisType pdh in pag.ProteinDetectionHypothesis ) {

@@ -282,7 +282,7 @@ public abstract class Mapper {
 		w.WriteLine( "<table>\n<caption><a name=\"proteins\"/>Protein List</caption>" );
 		//w.WriteLine( "<col width=\"10%\"/><col width=\"10%\"/><col width=\"10%\"/><col width=\"20%\"/><col width=\"50%\"/>" );
 		w.WriteLine( tr.Render("<th>Name</th><th>Evidence</th><th colspan=\"2\" width=\"40%\">"+
-			"Peptide list (unique, meaningful*, meaningless**)</th><th>Description</th>") );
+			"Peptide list (unique, discriminating*, non-discriminating**)</th><th>Description</th>") );
 		WriteProteinList( w, tr, Protein.EvidenceType.Conclusive );
 		WriteProteinList( w, tr, Protein.EvidenceType.Indistinguishable );
 		WriteProteinList( w, tr, Protein.EvidenceType.Group );
@@ -530,14 +530,14 @@ public abstract class Mapper {
 			else
 				f.Relation = Peptide.RelationType.Discriminating;
 		
-		// 2. Locate non-meaningful peptides (first round)
+		// 2. Locate non-discriminating peptides (first round)
 		foreach( Protein p in Proteins )
 			if( p.Evidence == Protein.EvidenceType.Conclusive )
 				foreach( Peptide f in p.Peptides )
 					if( f.Relation != Peptide.RelationType.Unique )
 						f.Relation = Peptide.RelationType.NonDiscriminating;
 		
-		// 3. Locate non-meaningful peptides (second round)
+		// 3. Locate non-discriminating peptides (second round)
 		foreach( Peptide f in Peptides ) {
 			if( f.Relation != Peptide.RelationType.Discriminating )
 				continue;
