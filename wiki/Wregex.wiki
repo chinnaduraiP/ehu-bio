@@ -1,8 +1,16 @@
 #summary A novel approach for amino acid motif searching using a regular expression and a PSSM.
 #labels Featured
 
-= Introduction =
+== Introduction ==
 
 Wregex (weighted regular expression) offers a new approach for amino acid motif searching. Wregex combines a regular expression with an optional Position-Specific Scoring Matrix (PSSM). The regular expression is used to obtain a candidate list matching the desired conditions, and the PSSM is used for computing a score that can be used to select the most promising of those candidates.
 
-For direct use, please go to the official Wregex website http://wregex.ehubio.es.
+== Online use ==
+
+For online use and the user manual, please go to the official Wregex website http://wregex.ehubio.es.
+
+== Local installation ==
+
+You can download the compiled [http://wregex.ehubio.es/xtatic/wregex.war wregex.war] file and copy it to webapps/ROOT.war in your Apache Tomcat 7 home directory.
+
+Or you can checkout the source code from [https://code.google.com/p/ehu-bio/source/checkout the SVN repository] and compile your customized version. In this case you probable want to disable the input fasta file size limit in `WebContent/search.xhtml`.
