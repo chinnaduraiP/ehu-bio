@@ -1,15 +1,25 @@
 #summary A novel approach for amino acid motif searching using a regular expression and a PSSM.
 #labels Featured
 
-== Introduction ==
+= Introduction =
+
+== Original article ==
+
+Prieto G, Fullaondo A, Rodriguez J A: *Prediction of nuclear export signals using weighted regular expressions (Wregex).* _Bioinformatics_ 2012.
+
+DOI: 10.1093/bioinformatics/btu016
+
+URL: http://bioinformatics.oxfordjournals.org/content/early/2014/01/09/bioinformatics.btu016.abstract
+
+== Summary ==
 
 Wregex (weighted regular expression) offers a new approach for amino acid motif searching. Wregex combines a regular expression with an optional Position-Specific Scoring Matrix (PSSM). The regular expression is used to obtain a candidate list matching the desired conditions, and the PSSM is used for computing a score that can be used to select the most promising of those candidates.
 
-== Online use ==
+= Online use =
 
 For online use and the user manual, please go to the official Wregex website http://wregex.ehubio.es.
 
-== Local installation ==
+= Local installation =
 
 You can download the compiled [http://wregex.ehubio.es/xtatic/wregex.war wregex.war] file and copy it to webapps/ROOT.war in your Apache Tomcat 7 home directory.
 
