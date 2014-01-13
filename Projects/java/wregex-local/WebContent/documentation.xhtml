@@ -9,7 +9,62 @@
 	<ui:composition template="./template.xhtml">
 		<ui:define name="title">Documentation</ui:define>
 		<ui:define name="content">
-		<i>Web interface manual and link to the published paper will be available here.</i>
+		<p>For documentation on how to run your own local version of Wregex, please refer
+		to the Google Code <a href="https://code.google.com/p/ehu-bio/wiki/Wregex">Wregex page
+		<img src="/resources/images/link.png" height="15"/></a>.</p>
+		
+		<p>For a technical explanation on the Wregex approach, please refer to:<br/><br/>
+		<i>Prediction of nuclear export signals using weighted regular expressions (Wregex)</i><br/>
+		Gorka Prieto; Asier Fullaondo; Jose A. Rodriguez<br/>
+		Bioinformatics 2014; doi: 10.1093/bioinformatics/btu016</p>
+		<p:separator/>
+		
+		<h3>Table of Contents</h3>
+		<ul>
+		<li><a href="#overview">Overview</a></li>
+		<li><a href="#search">Basic Search</a></li>
+		<li><a href="#custom">Custom Search</a></li>
+		<li><a href="#training">Building a Custom PSSM</a></li>
+		</ul>
+		
+		<h3><a id="overview">Overview</a></h3>
+		<img src="/resources/tutorial/BasicSearch.png" align="right"/>
+		<p>Wregex (weighted regular expression) offers a new approach for amino acid motif searching. Wregex
+		combines a regular expression with an optional Position-Specific Scoring Matrix (PSSM). The regular
+		expression is used to obtain a candidate list matching the desired conditions, and the PSSM
+		is used for computing a score that can be used to select the most promising of those candidates.</p>
+		<p>Wregex supports all motifs in <a href="http://elm.eu.org/">ELM</a> as regular expressions, and
+		a PSSM has already been builded for some of them. In the case your motif is not included in the list
+		or a PSSM is not available, you can easily build your own as detailed later. Then you can also notify us
+		your motif definition by sending a mail to <a href="mailto:wregex@ehubio.es">wregex@ehubio.es</a> and we will be
+		happy to include it in the default motif list used in the basic search.</p>
+		
+		<h3><a id="search">Basic Search</a></h3>		
+		<p>The basic search consists on searching a fasta file with protein sequences (provided by the user)
+		for an amino acid motif selected in the dropdown lists (provided by Wregex). The first dropdown list
+		contains the motifs available, and the second dropdown list (the one to the right) allows the user
+		to select a specific motif configuration (different regular expressions and/or PSSMs).</p>
+		<p>The dropdown list containing the motifs is divided in two parts, the first one contains entries
+		specific of Wregex for which both a regular expression and a PSSM are available. The second part consists
+		on <a href="http://elm.eu.org/">ELM</a> entries without a PSSM.</p>
+		<p>Once a motif has been selected and an input fasta file uploaded, a search button will be shown. Clicking
+		this button starts a new search and a list of candidates will be shown when finished (if there is any match).</p>
+		<p>The grouping checkbox allows to configure whether overlapping candidates should be considered as
+		a single entry or separated into multiple entries. An overlap occurs when there are several combinations
+		that match the regular expression in the same region of the protein.</p>				
+		<img src="/resources/tutorial/Results.png" align="right"/>
+		<p>Results can be downloaded as a CSV file, useful for further analysis using any spreadsheet, or as
+		a Clustal ALN file, which can be used to display the alignments of the results using the groups indicated
+		between parenthesis () in the regular expression. These results are also displayed on a table with the following
+		columns: protein accession/entry from the fasta header, starting and ending positions of the candidate motif within
+		the protein sequence, candidate motif sequence with the regular expression groups indicated between dashes --,
+		number of combinations grouped in the same entry (overlapping positions) and Wregex score. Finally, if there
+		are motif annotations with scores in the input fasta sequences, their score is also displayed as the assay score.</p>		
+		
+		<h3><a id="custom">Custom Search</a></h3>
+		
+		<h3><a id="training">Building a Custom PSSM</a></h3>				
+		
 		</ui:define>
 	</ui:composition>
 </h:body>

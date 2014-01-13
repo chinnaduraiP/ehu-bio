@@ -100,9 +100,10 @@ public final class Result implements Comparable<Result> {
 	public String getAssayAsString() {		
 		if( assay < 0 )
 			return "?";
-		if( assay < 0.5 )
+		return String.format("%.1f", getAssay());
+		/*if( assay < 0.5 )
 			return "negative";		
-		return ((int)(assay/10.0+0.5))+"+";
+		return ((int)(assay/10.0+0.5))+"+";*/
 	}
 	
 	public double getGroupAssay() {
