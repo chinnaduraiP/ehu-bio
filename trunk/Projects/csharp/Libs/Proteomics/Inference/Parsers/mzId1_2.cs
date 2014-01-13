@@ -50,7 +50,7 @@ public class mzId1_2 : mzId1_1 {
 		cv.value = count.ToString();
 		m_mzid.Data.DataCollection.AnalysisData.ProteinDetectionList.Items = new AbstractParamType[]{cv};
 		return groups;
-	}
+	}		
 	
 	private List<ProteinAmbiguityGroupType> BuildPags() {
 		int gid = 1;
@@ -99,22 +99,40 @@ public class mzId1_2 : mzId1_1 {
 					include = true;
 					if( !listPag.ContainsKey(t.DBRef) )
 						continue;
-					ProteinAmbiguityGroupType g = listPag[t.DBRef];
+					ProteinAmbiguityGroupType g = listPag[t.DBRef];					
 					foreach( ProteinDetectionHypothesisType h in g.ProteinDetectionHypothesis )
-						if( h == pdh ) {
+						if( GetBaseId(h) == GetBaseId(pdh) ) {
 							include = false;
 							break;
 						}
 					if( include ) {
+						ProteinDetectionHypothesisType clon = ClonePDH(pdh);
+						clon.id = GetBaseId(clon)+"@"+g.id;
 						List<ProteinDetectionHypothesisType> tmp =
 							new List<ProteinDetectionHypothesisType>(g.ProteinDetectionHypothesis);
-						tmp.Add(pdh);
+						tmp.Add(clon);
 						g.ProteinDetectionHypothesis = tmp.ToArray();
 					}
 				}
 		}
 		
 		return groups;
+	}
+	
+	private String GetBaseId( ProteinDetectionHypothesisType pdh ) {
+		int i = pdh.id.IndexOf('@');
+		return i < 0 ? pdh.id : pdh.id.Substring(0,i);
+	}
+	
+	private ProteinDetectionHypothesisType ClonePDH( ProteinDetectionHypothesisType pdh ) {
+		ProteinDetectionHypothesisType clon = new ProteinDetectionHypothesisType();
+		clon.id = pdh.id;
+		clon.name = pdh.name;
+		clon.dBSequence_ref = pdh.dBSequence_ref;
+		clon.passThreshold = pdh.passThreshold;
+		clon.PeptideHypothesis = pdh.PeptideHypothesis;
+		clon.Items = pdh.Items;
+		return clon;
 	}
 	
 	private void UpdatePdhCvs( ProteinDetectionHypothesisType pdh, Protein.EvidenceType evidence ) {

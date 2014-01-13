@@ -82,8 +82,16 @@ public class SearchBean implements Serializable {
 		return motifDefinition == null ? null : motifDefinition.getPssm();
 	}
 	
+	public String getSummary() {
+		return motifDefinition == null || motifInformation == null ? null : motifInformation.getSummary();
+	}
+	
 	public String getDescription() {
 		return motifDefinition == null || motifInformation == null ? null : motifDefinition.getDescription();
+	}
+	
+	public MotifReference getReference() {
+		return motifDefinition == null || motifInformation == null ? null : motifInformation.getReferences().get(0);
 	}
 
 	public String getMotif() {
@@ -424,16 +432,16 @@ public class SearchBean implements Serializable {
 			fields = line.replaceAll("\"","").split("\t");
 			motif = new MotifInformation();
 			motif.setName(fields[1]);
-			//motif.setSummary(fields[2]);
+			motif.setSummary(fields[2]);
 			definition = new MotifDefinition();
 			definition.setName(fields[0]);
-			definition.setDescription(fields[2]);
+			definition.setDescription("ELM regular expression without using Wregex capturing groups and PSSM capabilities");
 			definition.setRegex(fields[3].replaceAll("\\(", "(?:"));
 			definitions = new ArrayList<>();
 			definitions.add(definition);
 			motif.setDefinitions(definitions);
 			reference = new MotifReference();
-			reference.setName("ELM");
+			reference.setName("Original ELM entry");
 			reference.setLink("http://elm.eu.org/elms/elmPages/"+fields[1]+".html");
 			references = new ArrayList<>();
 			references.add(reference);

@@ -8,6 +8,9 @@
 <h:body>
 	<ui:composition template="./template.xhtml">
 		<ui:define name="title">Search</ui:define>
+		<ui:define name="htmlhead">
+			<meta name="description" content="Wregex search page. A novel approach for amino acid motif searching combining a regular expression with a Position-Specific Scoring Matrix (PSSM)."/>
+		</ui:define>
 		<ui:define name="content">
 			<h:form enctype="multipart/form-data">
 				<p:panelGrid columns="2" headerClass="cfg_header">
@@ -16,7 +19,7 @@
 					<h:panelGroup>
 						<p:selectOneMenu value="#{searchBean.motif}"
 							valueChangeListener="#{searchBean.onChangeMotif}">
-							<f:selectItem itemLabel="Select motif" itemValue="Default" />
+							<f:selectItem itemLabel="--- Select motif ---" itemValue="Default" />
 							<f:selectItem itemLabel="Custom" itemValue="Custom" />
 							<f:selectItems value="#{searchBean.motifs}" />
 							<f:selectItem itemLabel="--- ELM ---" itemValue="ELM"/>
@@ -26,16 +29,23 @@
 						<p:selectOneMenu value="#{searchBean.configuration}"
 							valueChangeListener="#{searchBean.onChangeDefinition}"
 							rendered="#{searchBean.motifInformation != null and !searchBean.custom }">
-							<f:selectItem itemLabel="Select configuration" itemValue="Default"/>
+							<f:selectItem itemLabel="--- Select configuration ---" itemValue="Default"/>
 							<f:selectItems value="#{searchBean.definitions}" />							
 							<p:ajax update="@form" />
 						</p:selectOneMenu>
-					</h:panelGroup>
+					</h:panelGroup>					
+					<h:outputText value="Summary:" rendered="#{!searchBean.custom}"/>
+					<h:outputText value="#{searchBean.summary}" rendered="#{!searchBean.custom}"/>
+					<h:outputText value="Description:" rendered="#{!searchBean.custom}"/>
+					<h:outputText value="#{searchBean.description}" rendered="#{!searchBean.custom}"/>
+					<h:outputText value="Reference:" rendered="#{!searchBean.custom}"/>
+					<h:outputLink value="#{searchBean.reference.link}" target="_blank" rendered="#{searchBean.reference != null and !searchBean.custom}">
+						<h:outputText value="#{searchBean.reference.name}"/>&nbsp;<img src="/resources/images/link.png" height="15"/>
+					</h:outputLink>
+					<h:outputText value="" rendered="#{searchBean.reference == null and !searchBean.custom}"/>
 					<h:outputText value="Regex:"/>
 					<h:outputText value="#{searchBean.regex}" rendered="#{!searchBean.custom}"/>
 					<p:inputText value="#{searchBean.customRegex}" rendered="#{searchBean.custom}" styleClass="trn_regex" onchange="submit()"/>
-					<h:outputText value="Description:" rendered="#{!searchBean.custom}"/>
-					<h:outputText value="#{searchBean.description}" rendered="#{!searchBean.custom}"/>
 					<h:outputText value="PSSM file:"/>
 					<h:panelGroup rendered="#{!searchBean.custom}">
 						<h:outputText value="#{searchBean.pssm}"/>
@@ -57,7 +67,7 @@
 					<h:panelGroup>
 						<p:fileUpload fileUploadListener="#{searchBean.uploadFasta}"  
 	            			mode="advanced"     
-	            			sizeLimit="1000000"
+	            			sizeLimit="50000000"
 	            			multiple="false"
 	            			auto="true"            			  
 	            			label="Select fasta"
@@ -67,7 +77,7 @@
             		</h:panelGroup>
 					<h:outputLabel value="Grouping:" for="grouping"/>
 					<p:selectBooleanCheckbox id="grouping" value="#{searchBean.grouping}" valueChangeListener="#{searchBean.onGrouping}" update="@form" immediate="true" onchange="submit"/>
-					<h:outputText value="Configuration" rendered="#{searchBean.configError != null}"/>
+					<h:outputText value="Status:" rendered="#{searchBean.configError != null}"/>
 					<h:outputText value="#{searchBean.configError}" rendered="#{searchBean.configError != null}" style="color:red"/>
 					<p:commandButton value="Search!" actionListener="#{searchBean.search}" rendered="#{searchBean.configError == null}" ajax="false"/>
 					<h:outputText id="search" value="#{searchBean.searchError}" rendered="#{searchBean.searchError != null}" style="color:red"/>
