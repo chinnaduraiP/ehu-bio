@@ -6,13 +6,28 @@
 <h:head>
 	<link rel="stylesheet" type="text/css" href="/resources/css/style.css" />
 	<title>Wregex: <ui:insert name="title" /></title>
-	<ui:insert name="htmlhead" />	
+	<ui:insert name="htmlhead" />
+	<!-- Piwik -->
+	<script type="text/javascript">
+	  var _paq = _paq || [];
+	  _paq.push(['trackPageView']);
+	  _paq.push(['enableLinkTracking']);
+	  (function() {
+	    var u=(("https:" == document.location.protocol) ? "https" : "http") + "://www.ehubio.es/piwik/";
+	    _paq.push(['setTrackerUrl', u+'piwik.php']);
+	    _paq.push(['setSiteId', 2]);
+	    var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0]; g.type='text/javascript';
+	    g.defer=true; g.async=true; g.src=u+'piwik.js'; s.parentNode.insertBefore(g,s);
+	  })();
+	</script>
+	<noscript><p><img src="http://www.ehubio.es/piwik/piwik.php?idsite=2" style="border:0;" alt="" /></p></noscript>
+	<!-- End Piwik Code -->
 </h:head>
 <h:body>
 	<div id="container">
 	<div id="titlebar">
-		<img src="/resources/images/wregex.png" style="float:left;margin-left:10px;"/>
-		<img src="/resources/images/ehu.png" style="float:right;margin-right:10px;"/>
+		<a href="http://wregex.ehubio.es"><img src="/resources/images/wregex.png" style="float:left;margin-left:10px;"/></a>
+		<a href="http://www.ehu.es" target="blank"><img src="/resources/images/ehu.png" style="float:right;margin-right:10px;"/></a>
 	</div>
 	<div id="menubar">
 		<a href="/faces/home.xhtml" style="color:white">Home</a> &nbsp; | &nbsp;

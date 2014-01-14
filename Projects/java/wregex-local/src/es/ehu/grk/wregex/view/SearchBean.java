@@ -90,8 +90,8 @@ public class SearchBean implements Serializable {
 		return motifDefinition == null || motifInformation == null ? null : motifDefinition.getDescription();
 	}
 	
-	public MotifReference getReference() {
-		return motifDefinition == null || motifInformation == null ? null : motifInformation.getReferences().get(0);
+	public List<MotifReference> getReferences() {
+		return motifDefinition == null || motifInformation == null ? null : motifInformation.getReferences();
 	}
 
 	public String getMotif() {
