@@ -52,4 +52,8 @@ public class HomeBean implements Serializable {
 	public List<PageSummary> getPages() {
 		return pages;
 	}
-}
+	
+	public String getSignature() {
+		return "Wregex (v1.0)";
+	}
+	}

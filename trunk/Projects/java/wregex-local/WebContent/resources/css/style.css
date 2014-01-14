@@ -79,6 +79,11 @@ img {
 	font-size: 14px !important;
 }
 
+.ui-datalist-content {
+	border: none;
+	list-style-position: inside;
+}
+
 /* Icons */
 div.ok {
 	content: url(/resources/images/ok.png);

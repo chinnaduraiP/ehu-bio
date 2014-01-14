@@ -8,13 +8,13 @@
 <h:body>
 	<ui:composition template="./template.xhtml">
 		<ui:define name="title">Documentation</ui:define>
+		<ui:define name="htmlhead">
+			<meta name="description" content="Wregex documentation. A novel approach for amino acid motif searching combining a regular expression with a Position-Specific Scoring Matrix (PSSM)."/>
+		</ui:define>
 		<ui:define name="content">
-		<p>For documentation on how to run your own local version of Wregex, please refer
-		to the Google Code <a href="https://code.google.com/p/ehu-bio/wiki/Wregex">Wregex page
-		<img src="/resources/images/link.png" height="15"/></a>.</p>
-		
-		<p>For a technical explanation on the Wregex approach, please refer to:<br/><br/>
-		<i>Prediction of nuclear export signals using weighted regular expressions (Wregex)</i><br/>
+		<p>Following there is the Wregex user manual. For a technical explanation on the Wregex approach, please refer to:<br/><br/>
+		<i><a href="http://bioinformatics.oxfordjournals.org/content/early/2014/01/09/bioinformatics.btu016.abstract" target="blank">
+		Prediction of nuclear export signals using weighted regular expressions (Wregex)</a></i><br/>
 		Gorka Prieto; Asier Fullaondo; Jose A. Rodriguez<br/>
 		Bioinformatics 2014; doi: 10.1093/bioinformatics/btu016</p>
 		<p:separator/>
@@ -25,6 +25,7 @@
 		<li><a href="#search">Basic Search</a></li>
 		<li><a href="#custom">Custom Search</a></li>
 		<li><a href="#training">Building a Custom PSSM</a></li>
+		<li><a href="#local">Running Wregex on your Local PC</a></li>
 		</ul>
 		
 		<h3><a id="overview">Overview</a></h3>
@@ -58,12 +59,69 @@
 		between parenthesis () in the regular expression. These results are also displayed on a table with the following
 		columns: protein accession/entry from the fasta header, starting and ending positions of the candidate motif within
 		the protein sequence, candidate motif sequence with the regular expression groups indicated between dashes --,
-		number of combinations grouped in the same entry (overlapping positions) and Wregex score. Finally, if there
-		are motif annotations with scores in the input fasta sequences, their score is also displayed as the assay score.</p>		
+		number of combinations grouped in the same entry (overlapping positions) and Wregex score (ranging from 0 to 100).
+		Finally, if there are motif annotations with scores in the input fasta sequences, their score is also displayed
+		as the assay score.</p>
+		<p>A threshold (arbitrarily selected by the user) can be applied to Wregex scores, thus introducing a second
+		filter for candidate motif selection. Based on our experience, a threshold value of 50 offers a good tradeoff
+		between true positives and false positives.</p>		
 		
 		<h3><a id="custom">Custom Search</a></h3>
+		<img src="/resources/tutorial/Custom.png" align="right"/>
+		<p>In the motif dropdown list "Custom" can be selected to let the user enter a custom motif, consisting on
+		a custom regular expression and an optional custom PSSM.</p>
+		<p>The syntax for the regular expression is the one used by the <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html" target="blank">
+		Pattern Java class</a>. For instance <tt>[LIMA].{2,3}[LIVMF]</tt> means any of leucine (L), isoleucine (I), methionine (M)
+		or alanine (A) followed by 2 or 3 ({2,3}) occurrences of any (.) amino acid and then followed by any of
+		leucine (L), isoleucine (I), valine (V), methionine (M) or phenylalanine (F).</p>
+		<p>This regular expression can be complemented with a Position-Specific Scoring Matrix (PSSM) so that any
+		match of the regular expression in the input fasta file will be assigned a score. In order to use a PSSM, the
+		different positions must be indicated within the regular expression by using <a href="http://docs.oracle.com/javase/tutorial/essential/regex/groups.html" target="blank">
+		capturing groups</a>. Using the previous example, the following regular expression <tt>([LIMA])(.{2,3})([LIVMF])</tt>
+		will match the same sequences than before but it will also define 3 positions: the first one consisting on
+		the first hydrophobic amino acid, the second one on the 2-3 amino acid separation, and the third one on the
+		final hydrophobic amino acid. Then, a custom PSSM indicating a weight for every amino acid in each of the
+		three positions can be provided for computing a match score.</p>
 		
-		<h3><a id="training">Building a Custom PSSM</a></h3>				
+		<h3><a id="training">Building a Custom PSSM</a></h3>		
+		<p>A training web page is provided for allowing the user to build a custom PSSM. Basically this just requires
+		two steps: 1) define a custom regular expression with capturing groups to indicate the PSSM positions, and 2)
+		provide an input fasta file with the training sequences.</p>
+		<img src="/resources/tutorial/InputMotifs2.png" align="right"/><img src="/resources/tutorial/InputMotifs1.png" align="right"/>
+		<p>The regular expression must be indicated in the corresponding input text box of the training page. Then
+		clicking in the input motifs button will open a new input motifs page. In this input motifs page an input fasta file with
+		the training sequences must be selected. Then a table will be displayed when the user can assign a weight to
+		each of the matches, and even re-define the position of the match if it is a part of a larger motif.
+		The "Matched" column displays the number of matches of the custom regex within the motif position range defined.
+		This number will be used to divide the motif weight between the different matches when building the PSSM.</p>
+		<p>The resulting training motif list can be downloaded as a fasta file. This file will have annotations of
+		the motif positions and weights that will be recovered if the same file is used later for further training.</p>
+		<img src="/resources/tutorial/Training.png" align="right"/>
+		<p>Once the input motif list has been completed, clicking again in the training page will show the list of
+		training matches. Each of these matches will display the weight of the matched input motif, and the score resulting
+		from dividing this weight between the number of matches for that motif ("!"). If any of the matches is known to be
+		not valid, it can be disabled just by clicking the recycle bin icon in the "Action" column. This will display
+		a not-valid icon in the corresponding row, and decrease the number of matches for the corresponding motif.
+		This will also update the divided weight since the original input motif weight will be distributed between the
+		remaining matches for that motif. Any disabled match can be re-enabled at any time just by clicking the recycle
+		icon in the "Action" column.</p>
+		<p>Once the user finishes validating the list of training matches, the resulting PSSM can be downloaded to
+		a local file. This file can then be selected together with the custom regex for being used in the custom
+		search option described above.</p>
+		<p>If you define a custom regex and custom PSSM that you think they could be of interest for others,
+		please send then by mail to <a href="mailto:wregex@ehubio.es">wregex@ehubio.es</a> indicating also references
+		to any paper from you or others supporting that evidence. We will be happy to include that custom motif
+		in the dropdown list to share it through the basic search.</p>
+		
+		<h3><a id="local">Running Wregex on your Local PC</a></h3>
+		<p>In case you need intensive Wregex execution, you could opt to run it locally on your PC. This can be
+		done by running it on a local servlet 2.5 container like Apache Tomcat, or creating a custom Java front-end
+		using the provided Wregex Java class. Both the *.war binary file and the Java code can be accessed from the
+		Downloads page.</p>
+		<p>Wregex execution at wregex.ehubio.es has some constraints, i.e. input fasta file size and execution time
+		in order to avoid denial of service to other users. This constrains can be avoided when running Wregex
+		locally. For more information, please go to the <a href="https://code.google.com/p/ehu-bio/wiki/Wregex" target="blank">
+		Wregex Google Code page</a></p>.				
 		
 		</ui:define>
 	</ui:composition>

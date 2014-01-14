@@ -38,11 +38,12 @@
 					<h:outputText value="#{searchBean.summary}" rendered="#{!searchBean.custom}"/>
 					<h:outputText value="Description:" rendered="#{!searchBean.custom}"/>
 					<h:outputText value="#{searchBean.description}" rendered="#{!searchBean.custom}"/>
-					<h:outputText value="Reference:" rendered="#{!searchBean.custom}"/>
-					<h:outputLink value="#{searchBean.reference.link}" target="_blank" rendered="#{searchBean.reference != null and !searchBean.custom}">
-						<h:outputText value="#{searchBean.reference.name}"/>&nbsp;<img src="/resources/images/link.png" height="15"/>
-					</h:outputLink>
-					<h:outputText value="" rendered="#{searchBean.reference == null and !searchBean.custom}"/>
+					<h:outputText value="References:" rendered="#{!searchBean.custom}"/>					
+					<p:dataList value="#{searchBean.references}" var="ref" type="ordered" rendered="#{!searchBean.custom}" emptyMessage="">
+						<h:outputLink value="#{ref.link}" target="_blank">
+							<h:outputText value="#{ref.html}" escape="false"/>&nbsp;<img src="/resources/images/link.png" height="15"/>
+						</h:outputLink>
+					</p:dataList>
 					<h:outputText value="Regex:"/>
 					<h:outputText value="#{searchBean.regex}" rendered="#{!searchBean.custom}"/>
 					<p:inputText value="#{searchBean.customRegex}" rendered="#{searchBean.custom}" styleClass="trn_regex" onchange="submit()"/>
