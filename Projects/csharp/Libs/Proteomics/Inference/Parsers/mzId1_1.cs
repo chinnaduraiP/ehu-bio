@@ -147,6 +147,12 @@ public class mzId1_1 : Mapper {
 				m_mzid.ListOrganizations.Remove( o );
 				break;
 			}
+		CVParamType url = new CVParamType();
+		url.accession = "MS:1000588";
+		url.name = "contact URL";
+		url.cvRef = "PSI-MS";
+		url.value = "http://www.ehu.es";
+		org.Item = url;
 		m_mzid.ListOrganizations.Add( org );
 		#endregion
 		
