@@ -80,7 +80,7 @@ public abstract class Mapper {
 		if( str.Contains("GeneratedBy") )
 			return new Plgs(sw);
 		
-		// mzIdentML 1.1
+		// mzIdentML 1.1 and 1.2
 		int i = str.IndexOf( "MzIdentML" );
 		string version;
 		if( i != -1 ) {
@@ -124,6 +124,7 @@ public abstract class Mapper {
 		m_Software = sw;
 		Proteins = new List<Protein>();
 		Peptides = new List<Peptide>();
+		Spectra = new List<Spectrum>();
 		m_Stats = new StatsStruct();
 		m_Format = new System.Globalization.NumberFormatInfo();
 		m_Format.NumberDecimalSeparator = ".";
@@ -151,6 +152,7 @@ public abstract class Mapper {
 			m_InputFiles.Clear();
 			Proteins.Clear();
 			Peptides.Clear();
+			Spectra.Clear();
 			m_gid = 1;
 			m_SortedProteins = new SortedList<string, Protein>();
 			m_Run = 1;
@@ -219,7 +221,7 @@ public abstract class Mapper {
 		w.WriteLine( "caption, .caption { font-size: 120%; color: darkgreen; text-align: left; }" );
 		w.WriteLine( "th, td { padding-left: 2px; padding-right: 2px; }" );
 		w.WriteLine( "th { text-align: left; }" );
-		w.WriteLine( "tr.odd { background-color: #ededed; }" );
+		w.WriteLine( "tr.odd { background-color: #e0e0e0; }" );
 		w.WriteLine( "tr.even { background-color: #fefefe; }" );
 		w.WriteLine( "table { border: 2px black solid; border-collapse: collapse; }" );
 		//w.WriteLine( "table { table-layout: fixed; }" );
@@ -235,6 +237,8 @@ public abstract class Mapper {
 		w.WriteLine( "<li><a class=\"caption\" href=\"#summary\">Protein Summary</a>" );
 		w.WriteLine( "<li><a class=\"caption\" href=\"#proteins\">Protein List</a>" );
 		w.WriteLine( "<li><a class=\"caption\" href=\"#details\">Protein Details</a>" );
+		if( Spectra != null )
+			w.WriteLine( "<li><a class=\"caption\" href=\"#spectra\">Spectra Details</a>" );
 		w.WriteLine( "</ol><br/>" );
 		#endregion
 		
@@ -298,6 +302,13 @@ public abstract class Mapper {
 		WriteProteinDetails( w, Protein.EvidenceType.Group );
 		WriteProteinDetails( w, Protein.EvidenceType.NonConclusive );
 		WriteProteinDetails( w, Protein.EvidenceType.Filtered );
+		#endregion
+		
+		#region Details
+		if( Spectra != null ) {
+			w.WriteLine( "<hr/><a name=\"spectra\"/>" );
+			WriteSpectraDetails( w );
+		}
 		#endregion
 		
 		w.WriteLine( "</body>\n</html>" );
@@ -388,14 +399,14 @@ public abstract class Mapper {
 			w.WriteLine( "</table><br/>" );
 			return;
 		}
-		w.Write( tr+th.Render((p.Peptides.Count*7).ToString(),"Peptides") );
+		w.Write( tr+th.Render((p.Peptides.Count*8).ToString(),"Peptides") );
 		bool first = true;
 		foreach( Peptide f in p.Peptides ) {
 			if( first )
 				first = false;
 			else
 				w.Write( tr.ToString() );
-			w.Write( th.Render("7",f.ToString()) );
+			w.Write( th.Render("8",f.ToString()) );
 			w.WriteLine( th.Render("<a name=\""+p.Accession+"__"+f.ID+"\"/>Confidence")+td.Render(f.Confidence.ToString())+tr );
 			tr.Hold = true;
 			w.Write( tr+th.Render("Runs")+td );
@@ -418,9 +429,73 @@ public abstract class Mapper {
         			w.Write( "Variant #"+(i++)+": "+Peptide.Variant2Str(v)+"<br/>" );
         	}
 			w.WriteLine( td.ToString()+tr );
+			w.Write( tr+th.Render("PSM list")+td );
+			if( f.Psm != null ) {
+				for( i = 0; i < f.Psm.Count-1; i++ )
+					w.Write( a.Render("#PSM"+f.Psm[i].ID,f.Psm[i].ID.ToString()) + ", " );
+				w.WriteLine( a.Render("#PSM"+f.Psm[i].ID,f.Psm[i].ID.ToString()) );
+			}
+			w.WriteLine( td.ToString()+tr );
 			tr.Hold = false;
 		}
 		w.WriteLine( "</table><br/>" );
+	}
+	
+	private void WriteSpectraDetails( TextWriter w ) {
+		foreach( Spectrum s in Spectra )
+			WriteSpectraDetails( w, s );
+	}
+	
+	private void WriteSpectraDetails( TextWriter w, Spectrum s ) {
+		Tag tr = new Tag( "tr", true );
+		Tag td = new Tag( "td", "colspan" );
+		Tag th = new Tag( "th", "rowspan" );
+		Tag a = new Tag( "a", "href" );
+		int i;
+		
+		w.WriteLine( "<table>\n<caption><a name=\"Spectrum"+s.ID+"\"/>Spectrum "+s.SpectrumID+"</caption>" );
+		w.WriteLine( tr.Render(th.Render("Location")+td.Render("3",s.File)) );
+		w.Write( tr+th.Render("PSM list")+"<td colspan=\"3\">" );
+		if( s.Psm.Count > 0 ) {
+			for( i = 0; i < s.Psm.Count-1; i++ )
+				w.Write( a.Render("#PSM"+s.Psm[i].ID,s.Psm[i].ID.ToString()) + ", " );
+			w.Write( a.Render("#PSM"+s.Psm[i].ID,s.Psm[i].ID.ToString()) );
+		}
+		w.WriteLine( "</td>"+tr );
+		if( s.Psm.Count == 0 ) {
+			w.WriteLine( "</table><br/>" );
+			return;
+		}
+		w.Write( tr+th.Render((s.Psm.Count*6).ToString(),"PSMs") );
+		bool first = true;
+		foreach( PSM psm in s.Psm ) {
+			if( first )
+				first = false;
+			else
+				w.Write( tr.ToString() );
+			w.Write( th.Render("6",psm.ID.ToString()) );			
+			w.WriteLine( th.Render("<a name=\"PSM"+psm.ID+"\"/>Charge")+td.Render(psm.Charge.ToString())+tr );
+			tr.Hold = true;
+			w.WriteLine( tr+th.Render("M/Z")+td.Render(psm.Mz.ToString())+tr );
+			w.WriteLine( tr+th.Render("Score")+td.Render(psm.Score.ToString())+tr );
+			w.WriteLine( tr+th.Render("Score type")+td.Render(psm.ScoreType)+tr );
+			w.WriteLine( tr+th.Render("Confidence")+td.Render(psm.Confidence.ToString())+tr );
+			w.Write( tr+th.Render("Peptide")+td );
+			if( psm.Peptide != null ) {
+				w.Write( psm.Peptide.ID.ToString() );
+				if( psm.Peptide.Proteins.Count > 0 ) {
+					w.Write( " (" );
+					for( i = 0; i < psm.Peptide.Proteins.Count - 1; i++ )
+						w.Write( a.Render("#"+psm.Peptide.Proteins[i].Accession+"__"+psm.Peptide.ID,psm.Peptide.Proteins[i].EntryEx) + ", " );
+					w.Write( a.Render("#"+psm.Peptide.Proteins[i].Accession+"__"+psm.Peptide.ID,psm.Peptide.Proteins[i].EntryEx) + ")" );
+				}
+			} else
+				w.Write( "None (ProCon duplicate?)" );
+			w.WriteLine( td.ToString()+tr);
+			tr.Hold = false;
+		}
+		w.WriteLine( "</table><br/>" );
+		w.Flush();
 	}
 	
 	#endregion
@@ -731,6 +806,11 @@ public abstract class Mapper {
 	/// Peptide list
 	/// </summary>
 	public List<Peptide> Peptides;
+	
+	/// <summary>
+	/// The spectra.
+	/// </summary>
+	public List<Spectrum> Spectra;
 	
 	/// <summary>
 	/// Indicates wether peptide scores and thresholds are used.

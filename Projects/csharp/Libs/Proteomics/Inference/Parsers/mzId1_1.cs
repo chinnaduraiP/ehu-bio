@@ -56,9 +56,76 @@ public class mzId1_1 : Mapper {
 	
 	protected override void Load( string mzid ) {
 		m_mzid = new mzidFile1_1();
-		m_mzid.Load( mzid );
-		
-		// Proteins
+		m_mzid.Load( mzid );		
+		double[] GreenTh;
+		double[] YellowTh;
+		LoadScores( out GreenTh, out YellowTh );
+		SortedList<string,string> SortedAccession = LoadProteins();
+		SortedList<string,Peptide> SortedPeptides = LoadPeptides();
+		LoadRelations(GreenTh, YellowTh, SortedAccession, SortedPeptides);
+	}
+	
+	private void LoadScores( out double[] GreenTh, out double[] YellowTh ) {
+		GreenTh = new double[4];
+		YellowTh = new double[4];
+		ParamListType ParamList = m_mzid.Data.AnalysisProtocolCollection.SpectrumIdentificationProtocol[0].AdditionalSearchParams;
+		if( ParamList == null )
+			return;
+		int ProteomeDiscovererSequestXcorr = 0;		
+		foreach( AbstractParamType param in ParamList.Items ) {
+			if( !(param is CVParamType) )
+				continue;
+			CVParamType cv = param as CVParamType;
+			switch( cv.accession ) {
+				case "MS:1001712":	// ProteomeDiscoverer:SEQUEST:FT High Confidence XCorr Charge1
+					GreenTh[0] = double.Parse(cv.value, m_Format);
+					ProteomeDiscovererSequestXcorr++;
+					break;
+				case "MS:1001713":	// ProteomeDiscoverer:SEQUEST:FT High Confidence XCorr Charge2
+					GreenTh[1] = double.Parse(cv.value, m_Format);
+					ProteomeDiscovererSequestXcorr++;
+					break;
+				case "MS:1001714":	// ProteomeDiscoverer:SEQUEST:FT High Confidence XCorr Charge3
+					GreenTh[2] = double.Parse(cv.value, m_Format);
+					ProteomeDiscovererSequestXcorr++;
+					break;
+				case "MS:1001715":	// ProteomeDiscoverer:SEQUEST:FT High Confidence XCorr Charge4
+					GreenTh[3] = double.Parse(cv.value, m_Format);
+					ProteomeDiscovererSequestXcorr++;
+					break;
+				case "MS:1001716":	// ProteomeDiscoverer:SEQUEST:FT Medium Confidence XCorr Charge1
+					YellowTh[0] = double.Parse(cv.value, m_Format);
+					ProteomeDiscovererSequestXcorr++;
+					break;
+				case "MS:1001717":	// ProteomeDiscoverer:SEQUEST:FT Medium Confidence XCorr Charge2
+					YellowTh[1] = double.Parse(cv.value, m_Format);
+					ProteomeDiscovererSequestXcorr++;
+					break;
+				case "MS:1001718":	// ProteomeDiscoverer:SEQUEST:FT Medium Confidence XCorr Charge3
+					YellowTh[2] = double.Parse(cv.value, m_Format);
+					ProteomeDiscovererSequestXcorr++;
+					break;
+				case "MS:1001719":	// ProteomeDiscoverer:SEQUEST:FT Medium Confidence XCorr Charge4				
+					YellowTh[3] = double.Parse(cv.value, m_Format);
+					ProteomeDiscovererSequestXcorr++;
+					break;
+			}
+		}
+		if( ProteomeDiscovererSequestXcorr >= 8 ) {
+			string yellow = "\t* Red-Yellow thresholds:";
+			string green = "\t* Yellow-Green thresholds:";
+			for( int i = 0; i < 4; i++ ) {
+				green += " " + GreenTh[i] + "(" + (i+1) + ")";
+				yellow += " " + YellowTh[i] + "(" + (i+1) + ")";
+			}
+			Notify( "Using ProteomeDiscoverer/SEQUEST XCorr values:");
+			Notify( yellow );
+			Notify( green );
+			UsingThresholds = true;
+		}
+	}
+	
+	private SortedList<string,string> LoadProteins() {
 		SortedList<string,string> SortedAccession = new SortedList<string, string>();
 		foreach( DBSequenceType prot in m_mzid.ListProteins ) {
 			if( SortedAccession.ContainsKey(prot.id) )	// Avoids duplicated entries in the same file
@@ -75,13 +142,19 @@ public class mzId1_1 : Mapper {
 			Proteins.Add( p );
 			m_SortedProteins.Add( p.Accession, p );
 		}
-		
-		// Peptides
+		return SortedAccession;
+	}
+	
+	private SortedList<string,Peptide> LoadPeptides() {
 		SortedList<string,Peptide> SortedPeptides = new SortedList<string, Peptide>();
 		int id = 1;
-		foreach( PeptideType pep in m_mzid.ListPeptides ) {
+		foreach( PeptideType pep in m_mzid.ListPeptides ) {			
 			Peptide p = new Peptide( id++, pep.PeptideSequence );
-			p.Confidence = Peptide.ConfidenceType.PassThreshold; // It will be filtered later if neccessary
+			// It will be filtered later if neccessary
+			if( UsingThresholds )
+				p.Confidence = Peptide.ConfidenceType.Red;
+			else
+				p.Confidence = Peptide.ConfidenceType.PassThreshold;
 			SortedPeptides.Add( pep.id, p );
 			p.Runs.Add( m_Run );
 			if( pep.Modification != null )
@@ -99,21 +172,76 @@ public class mzId1_1 : Mapper {
 			p.DBRef = pep.id;
 			Peptides.Add( p );
 		}
+		return SortedPeptides;
+	}
+	
+	private void LoadRelations(
+		double[] GreenTh, double[] YellowTh,
+		SortedList<string,string> SortedAccession, SortedList<string,Peptide> SortedPeptides) {
 		
-		// Relations
 		if( m_mzid.Data.DataCollection.AnalysisData.SpectrumIdentificationList.Length != 1 )
 			throw new ApplicationException( "Multiple spectrum identification lists not supported" );
+
 		SortedList<string,PeptideEvidenceType> SortedEvidences = new SortedList<string, PeptideEvidenceType>();
 		foreach( PeptideEvidenceType evidence in m_mzid.Data.SequenceCollection.PeptideEvidence )
 			SortedEvidences.Add( evidence.id, evidence );
+
+		int SpectrumID = 1;
+		int PsmID = 1;
 		foreach( SpectrumIdentificationResultType idres in
-			m_mzid.Data.DataCollection.AnalysisData.SpectrumIdentificationList[0].SpectrumIdentificationResult )
+			m_mzid.Data.DataCollection.AnalysisData.SpectrumIdentificationList[0].SpectrumIdentificationResult ) {
+			Spectrum spectrum = new Spectrum();
+			spectrum.ID = SpectrumID++;
+			spectrum.File = idres.spectraData_ref;
+			spectrum.SpectrumID = idres.spectrumID;
+			spectrum.Psm = new List<PSM>();
 			foreach( SpectrumIdentificationItemType item in idres.SpectrumIdentificationItem ) {
 				if( !item.passThreshold )
 					continue;
+				double score = 0.0;
+				Peptide.ConfidenceType confidence = Peptide.ConfidenceType.PassThreshold;
+				if( UsingThresholds ) {
+					confidence = Peptide.ConfidenceType.Red;
+					if( item.Items != null ) // ProCon 0.9.348 bug
+						foreach( AbstractParamType param in item.Items ) {
+							if( !(param is CVParamType) )
+								continue;
+							CVParamType cv = param as CVParamType;
+							if( cv.accession != "MS:1001155" )
+								continue;
+							score = double.Parse(cv.value, m_Format);
+							if( score >= GreenTh[item.chargeState-1] )
+								confidence = Peptide.ConfidenceType.Green;
+							else if( score >= YellowTh[item.chargeState-1] )
+								confidence = Peptide.ConfidenceType.Yellow;
+							break;
+						}
+					/*else
+						Notify( "Skipped PSM without score: " + item.id );*/
+				}				
+				PSM psm = new PSM();
+				psm.ID = PsmID++;
+				psm.Charge = item.chargeState;
+				psm.Mz = item.experimentalMassToCharge;
+				psm.Score = score;
+				psm.ScoreType = "ProteomeDiscoverer/SEQUEST Confidence XCorr";
+				psm.Confidence = confidence;
+				psm.Spectrum = spectrum;
+				spectrum.Psm.Add(psm);
+				Spectra.Add(spectrum);
 				foreach( PeptideEvidenceRefType evref in item.PeptideEvidenceRef ) {
 					PeptideEvidenceType evidence = SortedEvidences[evref.peptideEvidence_ref];
 					Peptide pep = SortedPeptides[evidence.peptide_ref];
+					if( pep.Sequence == null || pep.Sequence.Length == 0 ) { // ProCon 0.9.348 bug
+						//Notify( "Skiped peptide with empty sequence: " + pep.DBRef );
+						continue;
+					}
+					if( pep.Psm == null )
+						pep.Psm = new List<PSM>();
+					pep.Psm.Add(psm);
+					psm.Peptide = pep;
+					if( UsingThresholds && pep.Confidence < confidence )
+						pep.Confidence = confidence;
 					Protein prot = m_SortedProteins[SortedAccession[evidence.dBSequence_ref]];
 					if( pep.Proteins.Contains(prot) )
 						continue;
@@ -121,6 +249,7 @@ public class mzId1_1 : Mapper {
 					pep.Proteins.Add( prot );
 				}
 			}
+		}
 	}
 	
 	/// <summary>

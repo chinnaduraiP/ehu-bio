@@ -144,7 +144,7 @@ public class PTM {
 		if( Residues != null && Residues.Length > 0 )
 			str = str + "+" + Residues;
 		if( Pos >= 0 )
-			str = str + "(" + Pos + ")";
+			str = str + "(" + (Pos+1) + ")";
 		return str;
 	}
 }
@@ -254,6 +254,11 @@ public class Peptide {
 	public List<List<PTM>> Variants;
 	
 	/// <summary>
+	/// List of PSMs.
+	/// </summary>
+	public List<PSM> Psm;
+	
+	/// <summary>
 	/// Peptide identification names used in mzIdentML v1.0
 	/// </summary>
 	public SortedList<string,string> Names;
@@ -267,7 +272,7 @@ public class Peptide {
 	/// Yellow-Green threshold
 	/// </summary>
 	public static double GreenTh = 0.0;
-	
+		
 	/// <summary>
 	/// Adds a PTM to the current peptide variant
 	/// </summary>
@@ -344,7 +349,7 @@ public class Peptide {
 	/// Gets the positions of the peptide in the specified protein.
 	/// </summary>
 	public string GetPositions( Protein p ) {
-		if( p.Sequence == null || p.Sequence.Length == 0 )
+		if( Sequence == null || Sequence.Length == 0 || p.Sequence == null || p.Sequence.Length == 0 )
 			return "";
 		string str = "";
 		int pos = -1;
