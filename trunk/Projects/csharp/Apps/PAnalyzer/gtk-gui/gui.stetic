@@ -244,7 +244,7 @@
             <child>
               <widget class="Gtk.Label" id="label1">
                 <property name="MemberName" />
-                <property name="LabelProp" translatable="yes">Peptide score threshold (PLGS):</property>
+                <property name="LabelProp" translatable="yes">Peptide score threshold (PLGS/PD):</property>
               </widget>
               <packing>
                 <property name="AutoSize">True</property>
