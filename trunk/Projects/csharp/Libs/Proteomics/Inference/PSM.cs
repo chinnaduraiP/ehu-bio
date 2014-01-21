@@ -45,7 +45,7 @@ public class PSM {
 	/// <summary>
 	/// The score.
 	/// </summary>
-	public double Score = 0.0;
+	public double Score = -1.0;
 	
 	/// <summary>
 	/// The type of the score.

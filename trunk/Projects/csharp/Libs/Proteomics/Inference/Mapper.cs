@@ -429,7 +429,7 @@ public abstract class Mapper {
         			w.Write( "Variant #"+(i++)+": "+Peptide.Variant2Str(v)+"<br/>" );
         	}
 			w.WriteLine( td.ToString()+tr );
-			w.Write( tr+th.Render("PSM list")+td );
+			w.Write( tr+th.Render("PSMs")+td );
 			if( f.Psm != null ) {
 				for( i = 0; i < f.Psm.Count-1; i++ )
 					w.Write( a.Render("#PSM"+f.Psm[i].ID,f.Psm[i].ID.ToString()) + ", " );
@@ -454,6 +454,7 @@ public abstract class Mapper {
 		int i;
 		
 		w.WriteLine( "<table>\n<caption><a name=\"Spectrum"+s.ID+"\"/>Spectrum "+s.SpectrumID+"</caption>" );
+		w.WriteLine( tr.Render(th.Render("ID")+td.Render("3",s.SpectrumID)) );
 		w.WriteLine( tr.Render(th.Render("Location")+td.Render("3",s.File)) );
 		w.Write( tr+th.Render("PSM list")+"<td colspan=\"3\">" );
 		if( s.Psm.Count > 0 ) {
@@ -477,12 +478,12 @@ public abstract class Mapper {
 			w.WriteLine( th.Render("<a name=\"PSM"+psm.ID+"\"/>Charge")+td.Render(psm.Charge.ToString())+tr );
 			tr.Hold = true;
 			w.WriteLine( tr+th.Render("M/Z")+td.Render(psm.Mz.ToString())+tr );
-			w.WriteLine( tr+th.Render("Score")+td.Render(psm.Score.ToString())+tr );
+			w.WriteLine( tr+th.Render("Score")+td.Render(psm.Score<0.0?"n/a":psm.Score.ToString())+tr );
 			w.WriteLine( tr+th.Render("Score type")+td.Render(psm.ScoreType)+tr );
 			w.WriteLine( tr+th.Render("Confidence")+td.Render(psm.Confidence.ToString())+tr );
 			w.Write( tr+th.Render("Peptide")+td );
 			if( psm.Peptide != null ) {
-				w.Write( psm.Peptide.ID.ToString() );
+				w.Write( psm.Peptide.ToString() );
 				if( psm.Peptide.Proteins.Count > 0 ) {
 					w.Write( " (" );
 					for( i = 0; i < psm.Peptide.Proteins.Count - 1; i++ )
@@ -527,7 +528,7 @@ public abstract class Mapper {
 	/// A <see cref="int"/> indicating in how runs a peptide must be found for beeing considered as valid
 	/// </param>
 	public void Do( Peptide.ConfidenceType th, int runs ) {
-		m_Th = th;
+		m_Th = UsingThresholds ? th : Peptide.ConfidenceType.PassThreshold;
 		m_RunsTh = runs;
 		m_Run = 0;
 		FilterPeptides();
