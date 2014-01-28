@@ -144,7 +144,7 @@ public class PTM {
 		if( Residues != null && Residues.Length > 0 )
 			str = str + "+" + Residues;
 		if( Pos >= 0 )
-			str = str + "(" + (Pos+1) + ")";
+			str = str + "(" + Pos + ")";
 		return str;
 	}
 }
@@ -161,7 +161,7 @@ public class Peptide {
 	/// <summary>
 	/// Peptide confidence according to its score and a given threshold
 	/// </summary>
-	public enum ConfidenceType { Red, Yellow, Green, PassThreshold };
+	public enum ConfidenceType { NoThreshold, Red, Yellow, Green, PassThreshold };
 	
 	/// <summary>
 	/// Constructor

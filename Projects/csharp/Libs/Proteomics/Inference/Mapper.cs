@@ -36,6 +36,11 @@ namespace EhuBio.Proteomics.Inference {
 /// </summary>
 public abstract class Mapper {
 	/// <summary>
+	/// Supported input file types.
+	/// </summary>
+	public enum SourceType { Unknown, Plgs, mzIdentML10, mzIdentML11, mzIdentML12 };
+
+	/// <summary>
 	/// Counts
 	/// </summary>
 	public struct StatsStruct {
@@ -129,7 +134,12 @@ public abstract class Mapper {
 		m_Format = new System.Globalization.NumberFormatInfo();
 		m_Format.NumberDecimalSeparator = ".";
 		m_Run = 0;
-		UsingThresholds = false;
+		m_Type = SourceType.Unknown;
+		PlgsThreshold = Peptide.ConfidenceType.NoThreshold;
+		SeqThreshold = Peptide.ConfidenceType.NoThreshold;
+		RequirePassTh = true;
+		RankThreshold = 0;
+		RunsThreshold = 1;
 		m_InputFiles = new List<string>();
 	}
 	
@@ -254,14 +264,21 @@ public abstract class Mapper {
 		else {
 			w.WriteLine( td.Render("Multirun analysis")+tr );
 			w.WriteLine( tr.Render(th.Render("Number of runs")+td.Render(m_InputFiles.Count.ToString())) );
-			w.WriteLine( tr.Render(th.Render("Runs threshold")+td.Render(m_RunsTh.ToString())) );
+			w.WriteLine( tr.Render(th.Render("Runs threshold")+td.Render(RunsThreshold.ToString())) );
 			w.WriteLine( tr+th.Render("Input files")+"\n<td>" );
 			foreach( string f in m_InputFiles )
 				w.WriteLine( f+"<br/>" );
 			w.WriteLine( "</td>"+tr );
 		}
-		w.WriteLine( tr.Render(th.Render("Input file type")+td.Render(ParserName)) );
-		w.WriteLine( tr.Render(th.Render("Peptide threshold")+td.Render(m_Th.ToString())) );
+		w.WriteLine( tr.Render(th.Render("Input file type")+td.Render(ParserName)) );		
+		if( Type == SourceType.Plgs )
+			w.WriteLine( tr.Render(th.Render("PLGS peptide threshold")+td.Render(PlgsThreshold.ToString())) );
+		else if( Type >= SourceType.mzIdentML11 && Type <= SourceType.mzIdentML12 ) {
+			w.WriteLine( tr.Render(th.Render("SpectrumIdentificationItem passThreshold")+td.Render(RequirePassTh.ToString())) );
+			w.WriteLine( tr.Render(th.Render("SpectrumIdentificationItem rank threshold")+td.Render(RankThreshold.ToString())) );
+			if( SeqThreshold != Peptide.ConfidenceType.NoThreshold )
+				w.WriteLine( tr.Render(th.Render("ProteomeDiscoverer/SEQUEST xcorr PSM threshold")+td.Render(SeqThreshold.ToString())) );
+		}
 		w.WriteLine( "</table><br/>" );
 		#endregion
 		
@@ -301,7 +318,7 @@ public abstract class Mapper {
 		WriteProteinDetails( w, Protein.EvidenceType.Indistinguishable );
 		WriteProteinDetails( w, Protein.EvidenceType.Group );
 		WriteProteinDetails( w, Protein.EvidenceType.NonConclusive );
-		WriteProteinDetails( w, Protein.EvidenceType.Filtered );
+		//WriteProteinDetails( w, Protein.EvidenceType.Filtered );
 		#endregion
 		
 		#region Details
@@ -318,7 +335,7 @@ public abstract class Mapper {
 	}
 	
 	private void WriteProteinList( TextWriter w, Tag tr, Protein.EvidenceType evidence ) {
-		Tag a = new Tag( "a", "href" );
+		Tag a = new Tag( evidence == Protein.EvidenceType.Filtered ? null : "a", "href" );
 		Tag td = new Tag( "td" );
 		Tag tdr = new Tag( "td", "rowspan" );
 		Tag tdc = new Tag( "td", "colspan" );
@@ -443,7 +460,8 @@ public abstract class Mapper {
 	
 	private void WriteSpectraDetails( TextWriter w ) {
 		foreach( Spectrum s in Spectra )
-			WriteSpectraDetails( w, s );
+			if( s.Psm != null && s.Psm.Count > 0 )
+				WriteSpectraDetails( w, s );
 	}
 	
 	private void WriteSpectraDetails( TextWriter w, Spectrum s ) {
@@ -467,18 +485,19 @@ public abstract class Mapper {
 			w.WriteLine( "</table><br/>" );
 			return;
 		}
-		w.Write( tr+th.Render((s.Psm.Count*6).ToString(),"PSMs") );
+		w.Write( tr+th.Render((s.Psm.Count*7).ToString(),"PSMs") );
 		bool first = true;
 		foreach( PSM psm in s.Psm ) {
 			if( first )
 				first = false;
 			else
 				w.Write( tr.ToString() );
-			w.Write( th.Render("6",psm.ID.ToString()) );			
+			w.Write( th.Render("7",psm.ID.ToString()) );			
 			w.WriteLine( th.Render("<a name=\"PSM"+psm.ID+"\"/>Charge")+td.Render(psm.Charge.ToString())+tr );
 			tr.Hold = true;
 			w.WriteLine( tr+th.Render("M/Z")+td.Render(psm.Mz.ToString())+tr );
-			w.WriteLine( tr+th.Render("Score")+td.Render(psm.Score<0.0?"n/a":psm.Score.ToString())+tr );
+			w.WriteLine( tr+th.Render("Rank")+td.Render(psm.Rank.ToString())+tr );
+			w.WriteLine( tr+th.Render("Score")+td.Render(psm.Score<0.0?"N/A":psm.Score.ToString())+tr );
 			w.WriteLine( tr+th.Render("Score type")+td.Render(psm.ScoreType)+tr );
 			w.WriteLine( tr+th.Render("Confidence")+td.Render(psm.Confidence.ToString())+tr );
 			w.Write( tr+th.Render("Peptide")+td );
@@ -491,7 +510,7 @@ public abstract class Mapper {
 					w.Write( a.Render("#"+psm.Peptide.Proteins[i].Accession+"__"+psm.Peptide.ID,psm.Peptide.Proteins[i].EntryEx) + ")" );
 				}
 			} else
-				w.Write( "None (ProCon duplicate?)" );
+				w.Write( "N/A (ProCon duplicate?)" );
 			w.WriteLine( td.ToString()+tr);
 			tr.Hold = false;
 		}
@@ -521,15 +540,7 @@ public abstract class Mapper {
 	/// <summary>
 	/// Process the loaded data
 	/// </summary>
-	/// <param name="th">
-	/// A <see cref="Peptide.ConfidenceType"/> indicating a threshold for peptide filtering
-	/// </param>
-	/// <param name="mode">
-	/// A <see cref="int"/> indicating in how runs a peptide must be found for beeing considered as valid
-	/// </param>
-	public void Do( Peptide.ConfidenceType th, int runs ) {
-		m_Th = UsingThresholds ? th : Peptide.ConfidenceType.PassThreshold;
-		m_RunsTh = runs;
+	public void Do() {
 		m_Run = 0;
 		FilterPeptides();
 		ClasifyPeptides();
@@ -552,8 +563,12 @@ public abstract class Mapper {
 		SortedList<string,Peptide> SortedPeptides = new SortedList<string, Peptide>();
 		foreach( Peptide f in Peptides ) {
 			// Low score peptide
-			if( (int)f.Confidence < (int)m_Th || f.Proteins.Count == 0 )
+			if( !CheckConfidence(f) ) {
+				if( f.Psm != null )
+					foreach( PSM psm in f.Psm )
+						psm.Spectrum.Psm.Remove(psm);
 				continue;
+			}
 			// Duplicated peptide, new protein?
 			if( SortedPeptides.ContainsKey(f.Sequence) ) {
 				Peptide fo = SortedPeptides[f.Sequence];
@@ -570,6 +585,13 @@ public abstract class Mapper {
 					}
 				if( !dp )
 					fo.Proteins.Add( f.Proteins[0] );
+				if( fo.Psm == null )
+					fo.Psm = f.Psm;
+				else if( f.Psm != null )
+					fo.Psm.AddRange(f.Psm);
+				if( fo.Psm != null )
+					foreach( PSM psm in fo.Psm )
+						psm.Peptide = fo;
 			// New peptide
 			} else {
 				f.ID = id++;
@@ -579,10 +601,10 @@ public abstract class Mapper {
 		}
 		
 		// Vote peptides
-		if( m_RunsTh > 1 ) {
+		if( RunsThreshold > 1 ) {
 			Peptides = new List<Peptide>();
 			foreach( Peptide f in peptides )
-				if( f.Runs.Count >= m_RunsTh )
+				if( f.Runs.Count >= RunsThreshold )
 					Peptides.Add(f);
 		} else
 			Peptides = peptides;
@@ -591,6 +613,16 @@ public abstract class Mapper {
 		foreach( Peptide f in Peptides )
 			foreach( Protein p in f.Proteins )
 				p.Peptides.Add(f);
+	}
+	
+	private bool CheckConfidence( Peptide f ) {
+		if( f.Proteins.Count == 0 )
+			return false;
+		if( Type == SourceType.Plgs && (int)f.Confidence < (int)PlgsThreshold )
+			return false;
+		if( Type >= SourceType.mzIdentML11 && Type <= SourceType.mzIdentML12 && (int)f.Confidence < (int)SeqThreshold )
+			return false;
+		return true;
 	}
 	
 	/// <summary>
@@ -814,17 +846,44 @@ public abstract class Mapper {
 	public List<Spectrum> Spectra;
 	
 	/// <summary>
-	/// Indicates wether peptide scores and thresholds are used.
+	/// Threshold used in PLGS.
 	/// </summary>
-	public bool UsingThresholds;
+	public Peptide.ConfidenceType PlgsThreshold;
+	
+	/// <summary>
+	/// Threshold used in PD/SEQUEST.
+	/// </summary>
+	public Peptide.ConfidenceType SeqThreshold;
+	
+	/// <summary>
+	/// Returns the input file type.
+	/// </summary>
+	public SourceType Type {
+		get { return m_Type; }
+	}
+	
+	/// <summary>
+	/// mzIdentML Spectrum Identification Item passThreshold.
+	/// </summary>
+	public bool RequirePassTh;
+	
+	/// <summary>
+	/// The mzIdentML rank threshold.
+	/// </summary>
+	public int RankThreshold;
+	
+	/// <summary>
+	/// The minimum number of runs required.
+	/// </summary>
+	public int RunsThreshold;
 		
 	private int m_gid;
 	private StatsStruct m_Stats;
+	protected SourceType m_Type;
 	protected System.Globalization.NumberFormatInfo m_Format;
 	protected SortedList<string,Protein> m_SortedProteins;
-	protected int m_RunsTh, m_Run;
+	protected int m_Run;
 	protected List<string> m_InputFiles;
-	protected Peptide.ConfidenceType m_Th;
 	protected Software m_Software;
 }
 

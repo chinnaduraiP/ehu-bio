@@ -40,17 +40,22 @@ public class PSM {
 	/// <summary>
 	/// The experimental mass to charge ratio.
 	/// </summary>
-	public double Mz = 0.0;
+	public double Mz = -1.0;
+	
+	/// <summary>
+	/// The PSM rank.
+	/// </summary>
+	public int Rank = 0;
 	
 	/// <summary>
 	/// The score.
 	/// </summary>
 	public double Score = -1.0;
-	
+		
 	/// <summary>
 	/// The type of the score.
 	/// </summary>
-	public string ScoreType;
+	public string ScoreType = "N/A";
 	
 	/// <summary>
 	/// The peptide matched.
@@ -68,7 +73,7 @@ public class PSM {
 	public EhuBio.Proteomics.Inference.Peptide.ConfidenceType Confidence = Peptide.ConfidenceType.PassThreshold;
 	
 	public override string ToString() {
-		return Mz.ToString()+"("+Charge+") " + Score + "(" + ScoreType + ")->" + Confidence + " " + Spectrum;
+		return Mz+"("+Charge+") " + Score + "(" + ScoreType + ")->" + Confidence + " " + Spectrum;
 	}
 }
 

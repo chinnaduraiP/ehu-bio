@@ -38,7 +38,6 @@ public partial class MainWindow : Gtk.Window {
 	private string m_LastDir;
 	private Mapper.Software m_Software;
 	private int m_nFiles;
-	private bool m_bThresholds;
 	
 	public enum States { EMPTY, LOADING, LOADED, EXECUTING, EXECUTED };
 
@@ -46,12 +45,12 @@ public partial class MainWindow : Gtk.Window {
 		Build();
 		
 		m_Software.Name      = "PAnalyzer";
-		m_Software.Version   = "1.1-beta3";
+		m_Software.Version   = "1.1b7";
 		m_Software.License   = "Released under the GNU General Public License";
 		m_Software.Copyright = "(c) 2010-2014 by UPV/EHU";
 		m_Software.Contact   = "gorka.prieto@ehu.es";
 		m_Software.Customizations = "No customizations";
-		m_Software.Url		 = "http://code.google.com/p/ehu-bio/downloads/list";
+		m_Software.Url		 = "https://code.google.com/p/ehu-bio/wiki/PAnalyzer";
 		
 		m_dlgOpen = new Gtk.FileChooserDialog(
 			"Select data file ...", this, FileChooserAction.Open,
@@ -83,7 +82,10 @@ public partial class MainWindow : Gtk.Window {
 		PeptidesView.CursorChanged += OnPeptideSelected;
 		
 		m_dlgPrefs = new PreferencesDlg();
-		m_dlgPrefs.Threshold = Peptide.ConfidenceType.Yellow;
+		m_dlgPrefs.PlgsThreshold = Peptide.ConfidenceType.Yellow;
+		m_dlgPrefs.SeqThreshold = Peptide.ConfidenceType.Yellow;
+		m_dlgPrefs.PassTh = true;
+		m_dlgPrefs.RankTh = 0;
 		m_dlgPrefs.Runs = 1;
 		m_dlgPrefs.Hide();
 		
@@ -105,7 +107,6 @@ public partial class MainWindow : Gtk.Window {
 		
 		m_Mapper = null;		
 		m_nFiles = 0;
-		m_bThresholds = false;
 	}
 	
 	public TextBuffer Log {
@@ -239,17 +240,18 @@ public partial class MainWindow : Gtk.Window {
 		string title = " New Analysis ";
 		int tlen = title.Length;
 		Log.Text = title.PadLeft(40+tlen/2,'*').PadRight(80,'*');
-		State = States.LOADING;
-		m_bThresholds = true;
+		State = States.LOADING;		
 		try {
+			bool bThresholds = true;
 			m_Mapper = Mapper.Create( m_dlgOpen.Filename, m_Software );
 			m_Mapper.OnNotify += WriteLog;
 			foreach( string xmlpath in m_dlgOpen.Filenames ) {
 				m_Mapper.Load( xmlpath, true );
-				if( !m_Mapper.UsingThresholds )
-					m_bThresholds = false;
+				if( m_Mapper.PlgsThreshold == Peptide.ConfidenceType.NoThreshold )
+					bThresholds = false;
 				m_nFiles++;
 			}
+			m_Mapper.PlgsThreshold = bThresholds ? Peptide.ConfidenceType.Yellow : Peptide.ConfidenceType.NoThreshold;
 		} catch( Exception ex ) {
 			WriteLog( "Error loading XML: " + ex.Message );
 			WriteLog( "Stack trace:\n" + ex.StackTrace );
@@ -280,12 +282,21 @@ public partial class MainWindow : Gtk.Window {
 	}
 	
 	protected virtual void OnExecuteActionActivated( object sender, System.EventArgs e ) {
-		m_dlgPrefs.ThSensitive = m_bThresholds;
+		m_dlgPrefs.PlgsThreshold = m_Mapper.PlgsThreshold;
+		m_dlgPrefs.PlgsThSensitive = m_Mapper.Type == Mapper.SourceType.Plgs && m_Mapper.PlgsThreshold != Peptide.ConfidenceType.NoThreshold;
+		m_dlgPrefs.SeqThreshold = m_Mapper.SeqThreshold;
+		m_dlgPrefs.SeqThSensitive = m_Mapper.Type >= Mapper.SourceType.mzIdentML11 && m_Mapper.Type <= Mapper.SourceType.mzIdentML12 && m_Mapper.SeqThreshold != Peptide.ConfidenceType.NoThreshold;
+		m_dlgPrefs.PassTh = m_Mapper.RequirePassTh;
+		m_dlgPrefs.PassThSensitive = false;//m_Mapper.Type == Mapper.SourceType.mzIdentML;
+		m_dlgPrefs.RankTh = m_Mapper.RankThreshold;
+		m_dlgPrefs.RankThSensitive = false;//m_Mapper.Type == Mapper.SourceType.mzIdentML;
 		m_dlgPrefs.MultiRunSensitive = m_nFiles > 1;
 		m_dlgPrefs.Runs = m_nFiles;
 		
 		// Asks for preferences only when needed
-		if( m_bThresholds || m_nFiles > 1 ) {
+		if( m_Mapper.PlgsThreshold != Peptide.ConfidenceType.NoThreshold
+			|| (m_Mapper.Type >= Mapper.SourceType.mzIdentML11 && m_Mapper.Type <= Mapper.SourceType.mzIdentML12)
+			|| m_nFiles > 1 ) {
 			if( m_nFiles > 1 )
 				m_dlgPrefs.RunTh = 2;
 			int res = m_dlgPrefs.Run();
@@ -295,16 +306,23 @@ public partial class MainWindow : Gtk.Window {
 		}
 		State = MainWindow.States.EXECUTING;
 		
-		m_Mapper.Do( m_dlgPrefs.Threshold, m_dlgPrefs.RunTh );
+		m_Mapper.PlgsThreshold = m_dlgPrefs.PlgsThreshold;
+		m_Mapper.SeqThreshold = m_dlgPrefs.SeqThreshold;
+		m_Mapper.RequirePassTh = m_dlgPrefs.PassTh;
+		m_Mapper.RankThreshold = m_dlgPrefs.RankTh;
+		m_Mapper.RunsThreshold = m_dlgPrefs.RunTh;
+		m_Mapper.Do();
 		DisplayData();
 		State = MainWindow.States.EXECUTED;
 		WriteLog( "\nStats:" );
 		WriteLog( "------" );
 		WriteLog( "Peptides:" );
 		WriteLog( "\tTotal: "+ m_Mapper.Stats.Peptides );
-		WriteLog( "\tRed: "+ m_Mapper.Stats.Red );
-		WriteLog( "\tYellow: "+ m_Mapper.Stats.Yellow );
-		WriteLog( "\tGreen: "+ m_Mapper.Stats.Green );
+		if( m_Mapper.PlgsThreshold != Peptide.ConfidenceType.NoThreshold || m_Mapper.SeqThreshold != Peptide.ConfidenceType.NoThreshold ) {
+			WriteLog( "\tRed: "+ m_Mapper.Stats.Red );
+			WriteLog( "\tYellow: "+ m_Mapper.Stats.Yellow );
+			WriteLog( "\tGreen: "+ m_Mapper.Stats.Green );
+		}
 		WriteLog( "Proteins: " );
 		WriteLog( "\tMaximum: " + m_Mapper.Stats.MaxProteins );
 		WriteLog( "\tConclusive: " + m_Mapper.Stats.Conclusive );
