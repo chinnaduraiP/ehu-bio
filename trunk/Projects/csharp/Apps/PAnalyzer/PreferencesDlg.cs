@@ -31,17 +31,44 @@ public partial class PreferencesDlg : Gtk.Dialog {
 		this.Build();
 	}
 	
-	public bool ThSensitive {
-		set { ThCombo.Sensitive = value; }
+	public bool PlgsThSensitive {
+		set { PlgsThCombo.Sensitive = value; }
+	}
+	
+	public bool SeqThSensitive {
+		set { SeqThCombo.Sensitive = value; }
+	}
+	
+	public bool PassThSensitive {
+		set { PassThCheck.Sensitive = value; }
+	}
+	
+	public bool RankThSensitive {
+		set { RankThCombo.Sensitive = value; }
 	}
 	
 	public bool MultiRunSensitive {
 		set { MultirunCombo.Sensitive = value; }
 	}
 	
-	public Peptide.ConfidenceType Threshold {
-		get { return (Peptide.ConfidenceType)ThCombo.Active; }
-		set { ThCombo.Active = (int)value; }
+	public Peptide.ConfidenceType PlgsThreshold {
+		get { return (Peptide.ConfidenceType)PlgsThCombo.Active; }
+		set { PlgsThCombo.Active = (int)value; }
+	}
+	
+	public Peptide.ConfidenceType SeqThreshold {
+		get { return (Peptide.ConfidenceType)SeqThCombo.Active; }
+		set { SeqThCombo.Active = (int)value; }
+	}
+	
+	public bool PassTh {
+		get { return PassThCheck.Active; }
+		set { PassThCheck.Active = value; }
+	}
+	
+	public int RankTh {
+		get { return RankThCombo.Active; }
+		set { RankThCombo.Active = value; }
 	}
 	
 	public int RunTh {

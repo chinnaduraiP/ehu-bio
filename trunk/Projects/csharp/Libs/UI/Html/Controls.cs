@@ -82,6 +82,8 @@ public class Tag {
 	}
 	
 	private string RenderTag( string attr ) {
+		if( mName == null || mName.Length == 0 )
+			return "";		
 		string res;
 		if( !mOpen ) {
 			if( !OddEvenEnabled )

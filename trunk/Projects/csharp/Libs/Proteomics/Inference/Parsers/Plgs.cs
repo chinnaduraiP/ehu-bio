@@ -39,6 +39,7 @@ public class Plgs : Mapper {
 	/// Initializes a new instance of the <see cref="EhuBio.Proteomics.Inference.Plgs"/> class.
 	/// </summary>
 	public Plgs( Mapper.Software sw ) : base(sw) {
+		m_Type = Mapper.SourceType.Plgs;
 	}
 	
 	/// <summary>
@@ -60,8 +61,8 @@ public class Plgs : Mapper {
 		string logpath = xmlpath.Contains("workflow.xml") ? xmlpath.Replace( "workflow.xml", "Log.txt" ) : null;
 		if( logpath != null && !File.Exists(logpath) )
 			logpath = null;
-		UsingThresholds = (logpath == null ? false : true);
-		if( UsingThresholds ) {
+		PlgsThreshold = logpath == null ? Peptide.ConfidenceType.NoThreshold : Peptide.ConfidenceType.Yellow;
+		if( PlgsThreshold != Peptide.ConfidenceType.NoThreshold ) {
 			LoadThresholds( logpath );
 			Notify( "Loaded peptide score thresholds from '" + System.IO.Path.GetFileName(logpath) + "'" );
 			Notify( "\t* Red-Yellow threshold: " + Peptide.YellowTh );
@@ -101,7 +102,7 @@ public class Plgs : Mapper {
 			int id = int.Parse(element.GetAttribute("ID"));
 			int pid = int.Parse(element.GetAttribute("PROT_ID"));
 			int mid = 0;
-			if( UsingThresholds )
+			if( PlgsThreshold != Peptide.ConfidenceType.NoThreshold )
 				mid = int.Parse(element.GetAttribute("QUERY_MASS_ID"));
 			string seq = element.GetAttribute("SEQUENCE").ToUpper();
 			Peptide f = new Peptide(id, seq);
@@ -130,10 +131,10 @@ public class Plgs : Mapper {
 					throw new ApplicationException( "Inconsistent sequence data" );
 			}
 			Peptides.Add( f );
-			if( UsingThresholds )
+			if( PlgsThreshold != Peptide.ConfidenceType.NoThreshold )
 				SortedPeptides.Add(mid,f);
 		}
-		if( !UsingThresholds )
+		if( PlgsThreshold == Peptide.ConfidenceType.NoThreshold )
 			return;
 		
 		// Scores
