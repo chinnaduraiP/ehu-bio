@@ -41,7 +41,7 @@
 					<h:outputText value="References:" rendered="#{!searchBean.custom}"/>					
 					<p:dataList value="#{searchBean.references}" var="ref" type="ordered" rendered="#{!searchBean.custom}" emptyMessage="">
 						<h:outputLink value="#{ref.link}" target="_blank">
-							<h:outputText value="#{ref.html}" escape="false"/>&nbsp;<img src="/resources/images/link.png" height="15"/>
+							<h:outputText value="#{ref.html}" escape="false"/>&nbsp;<h:graphicImage name="images/link.png" height="15"/>
 						</h:outputLink>
 					</p:dataList>
 					<h:outputText value="Regex:"/>
@@ -56,7 +56,7 @@
 					<h:panelGroup rendered="#{searchBean.custom}">
 						<p:fileUpload fileUploadListener="#{searchBean.uploadPssm}"  
 	            			mode="advanced"     
-	            			sizeLimit="10000"
+	            			sizeLimit="#{initParam['wregex.pssm']}"
 	            			multiple="false"
 	            			auto="true"  
 	            			label="Select PSSM"
@@ -68,7 +68,7 @@
 					<h:panelGroup>
 						<p:fileUpload fileUploadListener="#{searchBean.uploadFasta}"  
 	            			mode="advanced"     
-	            			sizeLimit="50000000"
+	            			sizeLimit="#{initParam['wregex.fasta']}"
 	            			multiple="false"
 	            			auto="true"            			  
 	            			label="Select fasta"

@@ -7,6 +7,8 @@ import java.util.List;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.RequestScoped;
 
+import es.ehu.grk.wregex.Wregex;
+
 @ManagedBean
 @RequestScoped
 public class HomeBean implements Serializable {
@@ -46,7 +48,7 @@ public class HomeBean implements Serializable {
 			"Wregex is free software and licensed under the GPL. In this page you can find a link to the source code " +
 			"and the binary redistributable." );
 		page.setAction("downloads");
-		pages.add(page);
+		pages.add(page);		
 	}
 	
 	public List<PageSummary> getPages() {
@@ -54,6 +56,6 @@ public class HomeBean implements Serializable {
 	}
 	
 	public String getSignature() {
-		return "Wregex (v1.0)";
+		return "Wregex (v"+Wregex.getVersion()+")";
 	}
-	}
+}

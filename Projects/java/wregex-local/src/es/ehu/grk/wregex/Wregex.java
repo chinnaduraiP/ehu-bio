@@ -230,6 +230,12 @@ public final class Wregex {
 		return Math.pow(10.0,score)*100.0;
 	}*/
 	
+	public static String getVersion() {
+		return version;
+	}
+
+	private static final String version = "1.0";
+	
 	private final Pattern mPattern;
 	private final Pssm mPssm;
 }

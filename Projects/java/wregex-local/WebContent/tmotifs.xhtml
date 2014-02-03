@@ -15,7 +15,7 @@
 					<h:panelGroup>
 						<p:fileUpload fileUploadListener="#{trainingBean.upload}"
 	            			mode="advanced"     
-	            			sizeLimit="1000000"
+	            			sizeLimit="#{initParam['wregex.training']}"
 	            			multiple="false"
 	            			auto="true"  
 	            			label="Select fasta"
