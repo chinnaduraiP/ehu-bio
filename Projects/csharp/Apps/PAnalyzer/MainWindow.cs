@@ -45,7 +45,7 @@ public partial class MainWindow : Gtk.Window {
 		Build();
 		
 		m_Software.Name      = "PAnalyzer";
-		m_Software.Version   = "1.1b7";
+		m_Software.Version   = "1.1b8";
 		m_Software.License   = "Released under the GNU General Public License";
 		m_Software.Copyright = "(c) 2010-2014 by UPV/EHU";
 		m_Software.Contact   = "gorka.prieto@ehu.es";
@@ -259,8 +259,12 @@ public partial class MainWindow : Gtk.Window {
 			return;
 		}
 		WriteLog( "Completed!" );
-		WriteLog( "\tLoaded " + m_Mapper.Peptides.Count + " peptide relations" );			
-		WriteLog( "\tLoaded " + m_Mapper.Proteins.Count + " possible proteins" );			
+		if( m_Mapper.Spectra.Count != 0 ) {
+			WriteLog( "\tLoaded " + m_Mapper.Spectra.Count + " spectra" );
+			WriteLog( "\tLoaded " + m_Mapper.PsmCount + " PSMs" );
+		}
+		WriteLog( "\tLoaded " + m_Mapper.Peptides.Count + " possible peptides" );
+		WriteLog( "\tLoaded " + m_Mapper.Proteins.Count + " possible proteins" );
 		DisplayData();
 		State = States.LOADED;
 	}
@@ -282,21 +286,20 @@ public partial class MainWindow : Gtk.Window {
 	}
 	
 	protected virtual void OnExecuteActionActivated( object sender, System.EventArgs e ) {
+		bool MzidPsm = m_Mapper.Type >= Mapper.SourceType.mzIdentML110 && m_Mapper.Type <= Mapper.SourceType.mzIdentML111;
 		m_dlgPrefs.PlgsThreshold = m_Mapper.PlgsThreshold;
 		m_dlgPrefs.PlgsThSensitive = m_Mapper.Type == Mapper.SourceType.Plgs && m_Mapper.PlgsThreshold != Peptide.ConfidenceType.NoThreshold;
 		m_dlgPrefs.SeqThreshold = m_Mapper.SeqThreshold;
-		m_dlgPrefs.SeqThSensitive = m_Mapper.Type >= Mapper.SourceType.mzIdentML11 && m_Mapper.Type <= Mapper.SourceType.mzIdentML12 && m_Mapper.SeqThreshold != Peptide.ConfidenceType.NoThreshold;
+		m_dlgPrefs.SeqThSensitive = MzidPsm && m_Mapper.SeqThreshold != Peptide.ConfidenceType.NoThreshold;
 		m_dlgPrefs.PassTh = m_Mapper.RequirePassTh;
-		m_dlgPrefs.PassThSensitive = false;//m_Mapper.Type == Mapper.SourceType.mzIdentML;
+		m_dlgPrefs.PassThSensitive = MzidPsm;
 		m_dlgPrefs.RankTh = m_Mapper.RankThreshold;
-		m_dlgPrefs.RankThSensitive = false;//m_Mapper.Type == Mapper.SourceType.mzIdentML;
+		m_dlgPrefs.RankThSensitive = MzidPsm;
 		m_dlgPrefs.MultiRunSensitive = m_nFiles > 1;
 		m_dlgPrefs.Runs = m_nFiles;
 		
 		// Asks for preferences only when needed
-		if( m_Mapper.PlgsThreshold != Peptide.ConfidenceType.NoThreshold
-			|| (m_Mapper.Type >= Mapper.SourceType.mzIdentML11 && m_Mapper.Type <= Mapper.SourceType.mzIdentML12)
-			|| m_nFiles > 1 ) {
+		if( m_Mapper.PlgsThreshold != Peptide.ConfidenceType.NoThreshold || MzidPsm || m_nFiles > 1 ) {
 			if( m_nFiles > 1 )
 				m_dlgPrefs.RunTh = 2;
 			int res = m_dlgPrefs.Run();
