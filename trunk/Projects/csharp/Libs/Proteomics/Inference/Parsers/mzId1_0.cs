@@ -40,7 +40,7 @@ public class mzId1_0 : Mapper {
 	/// Constructor
 	/// </summary>
 	public mzId1_0(Mapper.Software sw) : base(sw) {
-		m_Type = Mapper.SourceType.mzIdentML10;
+		m_Type = Mapper.SourceType.mzIdentML100;
 	}
 	
 	/// <summary>

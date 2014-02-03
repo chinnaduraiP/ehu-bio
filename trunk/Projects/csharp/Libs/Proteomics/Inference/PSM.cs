@@ -72,6 +72,11 @@ public class PSM {
 	/// </summary>
 	public EhuBio.Proteomics.Inference.Peptide.ConfidenceType Confidence = Peptide.ConfidenceType.PassThreshold;
 	
+	/// <summary>
+	/// True if this PSM is considered valid.
+	/// </summary>
+	public bool passThreshold = true;
+	
 	public override string ToString() {
 		return Mz+"("+Charge+") " + Score + "(" + ScoreType + ")->" + Confidence + " " + Spectrum;
 	}

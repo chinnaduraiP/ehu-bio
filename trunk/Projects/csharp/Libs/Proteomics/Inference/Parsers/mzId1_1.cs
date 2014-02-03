@@ -40,7 +40,7 @@ public class mzId1_1 : Mapper {
 	/// Constructor
 	/// </summary>
 	public mzId1_1(Mapper.Software sw) : base(sw) {
-		m_Type = Mapper.SourceType.mzIdentML11;
+		m_Type = Mapper.SourceType.mzIdentML110;
 	}
 	
 	/// <summary>
@@ -194,10 +194,6 @@ public class mzId1_1 : Mapper {
 			spectrum.Psm = new List<PSM>();
 			Spectra.Add(spectrum);
 			foreach( SpectrumIdentificationItemType item in idres.SpectrumIdentificationItem ) {
-				if( RequirePassTh && !item.passThreshold )
-					continue;
-				if( RankThreshold != 0 && item.rank > RankThreshold )
-					continue;
 				GetPsmScore( item, out score, out type, out confidence );
 				PSM psm = new PSM();
 				psm.ID = PsmID++;
@@ -207,6 +203,7 @@ public class mzId1_1 : Mapper {
 				psm.Score = score;
 				psm.ScoreType = type;
 				psm.Confidence = confidence;
+				psm.passThreshold = item.passThreshold;
 				psm.Spectrum = spectrum;
 				spectrum.Psm.Add(psm);				
 				foreach( PeptideEvidenceRefType evref in item.PeptideEvidenceRef ) {
@@ -215,14 +212,8 @@ public class mzId1_1 : Mapper {
 					if( pep.Sequence == null || pep.Sequence.Length == 0 ) { // ProCon 0.9.348 bug
 						//Notify( "Skiped peptide with empty sequence: " + pep.DBRef );
 						continue;
-					}
-					if( pep.Psm == null )
-						pep.Psm = new List<PSM>();
-					if( !pep.Psm.Contains(psm) )
-						pep.Psm.Add(psm);
+					}					
 					psm.Peptide = pep;
-					if( pep.Confidence < confidence )
-						pep.Confidence = confidence;
 					Protein prot = m_SortedProteins[SortedAccession[evidence.dBSequence_ref]];
 					if( pep.Proteins.Contains(prot) )
 						continue;
@@ -249,13 +240,8 @@ public class mzId1_1 : Mapper {
 		foreach( SpectrumIdentificationResultType idres in
 			m_mzid.Data.DataCollection.AnalysisData.SpectrumIdentificationList[0].SpectrumIdentificationResult ) {
 			foreach( SpectrumIdentificationItemType item in idres.SpectrumIdentificationItem ) {
-				if( RequirePassTh && !item.passThreshold )
-					continue;
 				GetPsmScore( item, out score, out type, out confidence );
-				if( confidence < SeqThreshold )
-					item.passThreshold = false;
-				else
-					item.passThreshold = true;
+				item.passThreshold = CheckPsm(item.passThreshold,item.rank,confidence);
 			}
 		}
 	}

@@ -38,7 +38,7 @@ public abstract class Mapper {
 	/// <summary>
 	/// Supported input file types.
 	/// </summary>
-	public enum SourceType { Unknown, Plgs, mzIdentML10, mzIdentML11, mzIdentML12 };
+	public enum SourceType { Unknown, Plgs, mzIdentML100, mzIdentML110, mzIdentML111 };
 
 	/// <summary>
 	/// Counts
@@ -98,8 +98,8 @@ public abstract class Mapper {
 			switch( version ) {
 				case "1.1.0":
 					return new mzId1_1(sw);
-				case "1.2.0":
-					return new mzId1_2(sw);
+				case "1.1.1":
+					return new mzId1_1_1(sw);
 			}
 			throw new ApplicationException( "mzIdentML version '" + version + "' not supported" );
 		}
@@ -247,7 +247,7 @@ public abstract class Mapper {
 		w.WriteLine( "<li><a class=\"caption\" href=\"#summary\">Protein Summary</a>" );
 		w.WriteLine( "<li><a class=\"caption\" href=\"#proteins\">Protein List</a>" );
 		w.WriteLine( "<li><a class=\"caption\" href=\"#details\">Protein Details</a>" );
-		if( Spectra != null )
+		if( Spectra.Count != 0 )
 			w.WriteLine( "<li><a class=\"caption\" href=\"#spectra\">Spectra Details</a>" );
 		w.WriteLine( "</ol><br/>" );
 		#endregion
@@ -273,11 +273,13 @@ public abstract class Mapper {
 		w.WriteLine( tr.Render(th.Render("Input file type")+td.Render(ParserName)) );		
 		if( Type == SourceType.Plgs )
 			w.WriteLine( tr.Render(th.Render("PLGS peptide threshold")+td.Render(PlgsThreshold.ToString())) );
-		else if( Type >= SourceType.mzIdentML11 && Type <= SourceType.mzIdentML12 ) {
+		else {
 			w.WriteLine( tr.Render(th.Render("SpectrumIdentificationItem passThreshold")+td.Render(RequirePassTh.ToString())) );
 			w.WriteLine( tr.Render(th.Render("SpectrumIdentificationItem rank threshold")+td.Render(RankThreshold.ToString())) );
-			if( SeqThreshold != Peptide.ConfidenceType.NoThreshold )
-				w.WriteLine( tr.Render(th.Render("ProteomeDiscoverer/SEQUEST xcorr PSM threshold")+td.Render(SeqThreshold.ToString())) );
+			if( Type >= SourceType.mzIdentML110 && Type <= SourceType.mzIdentML111 ) {
+				if( SeqThreshold != Peptide.ConfidenceType.NoThreshold )
+					w.WriteLine( tr.Render(th.Render("ProteomeDiscoverer/SEQUEST xcorr PSM threshold")+td.Render(SeqThreshold.ToString())) );
+			}
 		}
 		w.WriteLine( "</table><br/>" );
 		#endregion
@@ -322,7 +324,7 @@ public abstract class Mapper {
 		#endregion
 		
 		#region Details
-		if( Spectra != null ) {
+		if( Spectra.Count != 0 ) {
 			w.WriteLine( "<hr/><a name=\"spectra\"/>" );
 			WriteSpectraDetails( w );
 		}
@@ -416,14 +418,17 @@ public abstract class Mapper {
 			w.WriteLine( "</table><br/>" );
 			return;
 		}
-		w.Write( tr+th.Render((p.Peptides.Count*8).ToString(),"Peptides") );
+		int rows = 7;
+		if( Spectra.Count != 0 )
+			rows++;
+		w.Write( tr+th.Render((p.Peptides.Count*rows).ToString(),"Peptides") );
 		bool first = true;
 		foreach( Peptide f in p.Peptides ) {
 			if( first )
 				first = false;
 			else
 				w.Write( tr.ToString() );
-			w.Write( th.Render("8",f.ToString()) );
+			w.Write( th.Render(rows.ToString(),f.ToString()) );
 			w.WriteLine( th.Render("<a name=\""+p.Accession+"__"+f.ID+"\"/>Confidence")+td.Render(f.Confidence.ToString())+tr );
 			tr.Hold = true;
 			w.Write( tr+th.Render("Runs")+td );
@@ -446,13 +451,15 @@ public abstract class Mapper {
         			w.Write( "Variant #"+(i++)+": "+Peptide.Variant2Str(v)+"<br/>" );
         	}
 			w.WriteLine( td.ToString()+tr );
-			w.Write( tr+th.Render("PSMs")+td );
-			if( f.Psm != null ) {
-				for( i = 0; i < f.Psm.Count-1; i++ )
-					w.Write( a.Render("#PSM"+f.Psm[i].ID,f.Psm[i].ID.ToString()) + ", " );
-				w.WriteLine( a.Render("#PSM"+f.Psm[i].ID,f.Psm[i].ID.ToString()) );
+			if( Spectra.Count != 0 ) {
+				w.Write( tr+th.Render("PSMs")+td );
+				if( f.Psm != null ) {
+					for( i = 0; i < f.Psm.Count-1; i++ )
+						w.Write( a.Render("#PSM"+f.Psm[i].ID,f.Psm[i].ID.ToString()) + ", " );
+					w.WriteLine( a.Render("#PSM"+f.Psm[i].ID,f.Psm[i].ID.ToString()) );
+				}
+				w.WriteLine( td.ToString()+tr );
 			}
-			w.WriteLine( td.ToString()+tr );
 			tr.Hold = false;
 		}
 		w.WriteLine( "</table><br/>" );
@@ -485,14 +492,14 @@ public abstract class Mapper {
 			w.WriteLine( "</table><br/>" );
 			return;
 		}
-		w.Write( tr+th.Render((s.Psm.Count*7).ToString(),"PSMs") );
+		w.Write( tr+th.Render((s.Psm.Count*8).ToString(),"PSMs") );
 		bool first = true;
 		foreach( PSM psm in s.Psm ) {
 			if( first )
 				first = false;
 			else
 				w.Write( tr.ToString() );
-			w.Write( th.Render("7",psm.ID.ToString()) );			
+			w.Write( th.Render("8",psm.ID.ToString()) );			
 			w.WriteLine( th.Render("<a name=\"PSM"+psm.ID+"\"/>Charge")+td.Render(psm.Charge.ToString())+tr );
 			tr.Hold = true;
 			w.WriteLine( tr+th.Render("M/Z")+td.Render(psm.Mz.ToString())+tr );
@@ -500,6 +507,7 @@ public abstract class Mapper {
 			w.WriteLine( tr+th.Render("Score")+td.Render(psm.Score<0.0?"N/A":psm.Score.ToString())+tr );
 			w.WriteLine( tr+th.Render("Score type")+td.Render(psm.ScoreType)+tr );
 			w.WriteLine( tr+th.Render("Confidence")+td.Render(psm.Confidence.ToString())+tr );
+			w.WriteLine( tr+th.Render("PassThreshold")+td.Render(psm.passThreshold.ToString())+tr );
 			w.Write( tr+th.Render("Peptide")+td );
 			if( psm.Peptide != null ) {
 				w.Write( psm.Peptide.ToString() );
@@ -542,6 +550,7 @@ public abstract class Mapper {
 	/// </summary>
 	public void Do() {
 		m_Run = 0;
+		FilterPsms();
 		FilterPeptides();
 		ClasifyPeptides();
 		ClasifyProteins();
@@ -563,7 +572,7 @@ public abstract class Mapper {
 		SortedList<string,Peptide> SortedPeptides = new SortedList<string, Peptide>();
 		foreach( Peptide f in Peptides ) {
 			// Low score peptide
-			if( !CheckConfidence(f) ) {
+			if( !CheckPeptide(f) ) {
 				if( f.Psm != null )
 					foreach( PSM psm in f.Psm )
 						psm.Spectrum.Psm.Remove(psm);
@@ -615,12 +624,68 @@ public abstract class Mapper {
 				p.Peptides.Add(f);
 	}
 	
-	private bool CheckConfidence( Peptide f ) {
+	/// <summary>
+	/// Removes invalid PSMs and their associated peptides (if neccessary).
+	/// </summary>
+	private void FilterPsms() {
+		if( Spectra.Count == 0 )
+			return;
+		List<Spectrum> spectra = new List<Spectrum>();
+
+		// Remove previous relations
+		foreach( Peptide f in Peptides )
+			f.Psm = new List<PSM>();
+		
+		foreach( Spectrum spectrum in Spectra ) {
+			if( spectrum.Psm == null )
+				continue;
+			Spectrum tmp = null;
+			foreach( PSM psm in spectrum.Psm ) {
+				if( !CheckPsm(psm) )
+					continue;
+				if( tmp == null ) {
+					tmp = new Spectrum();
+					tmp.File = spectrum.File;
+					tmp.ID = spectrum.ID;
+					tmp.SpectrumID = spectrum.SpectrumID;
+					tmp.Psm = new List<PSM>();
+				}
+				tmp.Psm.Add(psm);
+				Peptide f = psm.Peptide;
+				if( !f.Psm.Contains(psm) )
+					f.Psm.Add(psm);
+				if( f.Confidence < psm.Confidence )
+					f.Confidence = psm.Confidence;
+			}
+			if( tmp != null )
+				spectra.Add(tmp);
+		}
+		
+		Spectra = spectra;
+	}
+	
+	private bool CheckPeptide( Peptide f ) {
 		if( f.Proteins.Count == 0 )
+			return false;
+		if( Spectra.Count != 0 && (f.Psm == null || f.Psm.Count == 0) )
 			return false;
 		if( Type == SourceType.Plgs && (int)f.Confidence < (int)PlgsThreshold )
 			return false;
-		if( Type >= SourceType.mzIdentML11 && Type <= SourceType.mzIdentML12 && (int)f.Confidence < (int)SeqThreshold )
+		return true;
+	}
+	
+	private bool CheckPsm( PSM psm ) {
+		if( psm.Peptide == null )
+			return false;
+		return CheckPsm( psm.passThreshold, psm.Rank, psm.Confidence );
+	}
+	
+	protected bool CheckPsm( bool passThreshold, int rank, Peptide.ConfidenceType confidence ) {
+		if( RequirePassTh && !passThreshold )
+			return false;
+		if( RankThreshold != 0 && (rank == 0 || rank > RankThreshold) )
+			return false;		
+		if( Type >= SourceType.mzIdentML110 && Type <= SourceType.mzIdentML111 && (int)confidence < (int)SeqThreshold )
 			return false;
 		return true;
 	}
@@ -876,6 +941,22 @@ public abstract class Mapper {
 	/// The minimum number of runs required.
 	/// </summary>
 	public int RunsThreshold;
+	
+	/// <summary>
+	/// Gets the psm count.
+	/// </summary>
+	/// <value>
+	/// The psm count.
+	/// </value>
+	public int PsmCount {
+		get {
+			int count = 0;
+			foreach( Spectrum spectrum in Spectra )
+				if( spectrum.Psm != null )
+					count += spectrum.Psm.Count;
+			return count;
+		}
+	}
 		
 	private int m_gid;
 	private StatsStruct m_Stats;
