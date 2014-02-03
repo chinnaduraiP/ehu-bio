@@ -13,7 +13,7 @@
 		</ui:define>
 		<ui:define name="content">
 		<p>Following there is the Wregex user manual. For a technical explanation on the Wregex approach, please refer to:<br/><br/>
-		<i><a href="http://bioinformatics.oxfordjournals.org/content/early/2014/01/09/bioinformatics.btu016.abstract" target="blank">
+		<i><a href="http://bioinformatics.oxfordjournals.org/content/early/2014/01/09/bioinformatics.btu016.abstract" target="_blank">
 		Prediction of nuclear export signals using weighted regular expressions (Wregex)</a></i><br/>
 		Gorka Prieto; Asier Fullaondo; Jose A. Rodriguez<br/>
 		Bioinformatics 2014; doi: 10.1093/bioinformatics/btu016</p>
@@ -29,7 +29,7 @@
 		</ul>
 		
 		<h3><a id="overview">Overview</a></h3>
-		<img src="/resources/tutorial/BasicSearch.png" align="right"/>
+		<h:graphicImage name="tutorial/BasicSearch.png" style="float:right"/>
 		<p>Wregex (weighted regular expression) offers a new approach for amino acid motif searching. Wregex
 		combines a regular expression with an optional Position-Specific Scoring Matrix (PSSM). The regular
 		expression is used to obtain a candidate list matching the desired conditions, and the PSSM
@@ -53,7 +53,7 @@
 		<p>The grouping checkbox allows to configure whether overlapping candidates should be considered as
 		a single entry or separated into multiple entries. An overlap occurs when there are several combinations
 		that match the regular expression in the same region of the protein.</p>				
-		<img src="/resources/tutorial/Results.png" align="right"/>
+		<h:graphicImage name="tutorial/Results.png" style="float:right"/>
 		<p>Results can be downloaded as a CSV file, useful for further analysis using any spreadsheet, or as
 		a Clustal ALN file, which can be used to display the alignments of the results using the groups indicated
 		between parenthesis () in the regular expression. These results are also displayed on a table with the following
@@ -67,16 +67,16 @@
 		between true positives and false positives.</p>		
 		
 		<h3><a id="custom">Custom Search</a></h3>
-		<img src="/resources/tutorial/Custom.png" align="right"/>
+		<h:graphicImage name="tutorial/Custom.png" style="float:right"/>
 		<p>In the motif dropdown list "Custom" can be selected to let the user enter a custom motif, consisting on
 		a custom regular expression and an optional custom PSSM.</p>
-		<p>The syntax for the regular expression is the one used by the <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html" target="blank">
+		<p>The syntax for the regular expression is the one used by the <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html" target="_blank">
 		Pattern Java class</a>. For instance <tt>[LIMA].{2,3}[LIVMF]</tt> means any of leucine (L), isoleucine (I), methionine (M)
 		or alanine (A) followed by 2 or 3 ({2,3}) occurrences of any (.) amino acid and then followed by any of
 		leucine (L), isoleucine (I), valine (V), methionine (M) or phenylalanine (F).</p>
 		<p>This regular expression can be complemented with a Position-Specific Scoring Matrix (PSSM) so that any
 		match of the regular expression in the input fasta file will be assigned a score. In order to use a PSSM, the
-		different positions must be indicated within the regular expression by using <a href="http://docs.oracle.com/javase/tutorial/essential/regex/groups.html" target="blank">
+		different positions must be indicated within the regular expression by using <a href="http://docs.oracle.com/javase/tutorial/essential/regex/groups.html" target="_blank">
 		capturing groups</a>. Using the previous example, the following regular expression <tt>([LIMA])(.{2,3})([LIVMF])</tt>
 		will match the same sequences than before but it will also define 3 positions: the first one consisting on
 		the first hydrophobic amino acid, the second one on the 2-3 amino acid separation, and the third one on the
@@ -87,7 +87,7 @@
 		<p>A training web page is provided for allowing the user to build a custom PSSM. Basically this just requires
 		two steps: 1) define a custom regular expression with capturing groups to indicate the PSSM positions, and 2)
 		provide an input fasta file with the training sequences.</p>
-		<img src="/resources/tutorial/InputMotifs2.png" align="right"/><img src="/resources/tutorial/InputMotifs1.png" align="right"/>
+		<h:graphicImage name="tutorial/InputMotifs2.png" style="float:right"/><h:graphicImage name="tutorial/InputMotifs1.png" style="float:right"/>
 		<p>The regular expression must be indicated in the corresponding input text box of the training page. Then
 		clicking in the input motifs button will open a new input motifs page. In this input motifs page an input fasta file with
 		the training sequences must be selected. Then a table will be displayed when the user can assign a weight to
@@ -96,7 +96,7 @@
 		This number will be used to divide the motif weight between the different matches when building the PSSM.</p>
 		<p>The resulting training motif list can be downloaded as a fasta file. This file will have annotations of
 		the motif positions and weights that will be recovered if the same file is used later for further training.</p>
-		<img src="/resources/tutorial/Training.png" align="right"/>
+		<h:graphicImage name="tutorial/Training.png" style="float:right"/>
 		<p>Once the input motif list has been completed, clicking again in the training page will show the list of
 		training matches. Each of these matches will display the weight of the matched input motif, and the score resulting
 		from dividing this weight between the number of matches for that motif ("!"). If any of the matches is known to be
@@ -120,7 +120,7 @@
 		Downloads page.</p>
 		<p>Wregex execution at wregex.ehubio.es has some constraints, i.e. input fasta file size and execution time
 		in order to avoid denial of service to other users. This constrains can be avoided when running Wregex
-		locally. For more information, please go to the <a href="https://code.google.com/p/ehu-bio/wiki/Wregex" target="blank">
+		locally. For more information, please go to the <a href="https://code.google.com/p/ehu-bio/wiki/Wregex" target="_blank">
 		Wregex Google Code page</a></p>.				
 		
 		</ui:define>

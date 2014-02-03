@@ -210,19 +210,24 @@ public class SearchBean implements Serializable {
 	}
 	
 	public void search() {
-		searchError = null;
-		try {
+		searchError = null;		
+		try {			
 			if( !custom )
 				loadPssm();
 			usingPssm = pssm == null ? false : true;
 			String regex = custom ? getCustomRegex() : getRegex();
 			Wregex wregex = new Wregex(regex, pssm);
 			List<ResultGroup> resultGroups = new ArrayList<>();
+			long wdt = Long.parseLong(FacesContext.getCurrentInstance().getExternalContext().getInitParameter(
+					"wregex.watchdogtimer"))*1000;
+			long start = System.currentTimeMillis();
 			for( InputGroup inputGroup : inputGroups ) {
 				if( assayScores )
 					resultGroups.addAll(wregex.searchGroupingAssay(inputGroup));
 				else
 					resultGroups.addAll(wregex.searchGrouping(inputGroup.getFasta()));
+				if( System.currentTimeMillis() - start >= wdt )
+					throw new Exception("Too intensive search, try a more strict regular expression or a smaller fasta file");
 			}
 			results = new ArrayList<>();
 			for( ResultGroup resultGroup : resultGroups ) {
@@ -239,6 +244,8 @@ public class SearchBean implements Serializable {
 			searchError = "PSSM not valid: " + e.getMessage();
 		} catch( WregexException e ) {
 			searchError = "Invalid configuration: " + e.getMessage();
+		} catch( Exception e ) {
+			searchError = e.getMessage();
 		}
 	}	
 

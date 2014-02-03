@@ -3,11 +3,32 @@
 	xmlns:web="http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.5"
 	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
-	<display-name>JavaServerFaces</display-name>
+	<display-name>Wregex</display-name>
+	
+	<!-- Wregex default limits:
+		WatchDogTimer (10 seconds)
+		Maximum fasta size (30 MB)
+		Maximum PSSM size (10 kB)
+		Maximum training file size (1 MB) -->
+	<context-param>
+		<param-name>wregex.watchdogtimer</param-name>
+		<param-value>15</param-value>
+	</context-param>
+	<context-param>
+		<param-name>wregex.fasta</param-name>
+		<param-value>30000000</param-value>
+	</context-param>
+	<context-param>
+		<param-name>wregex.pssm</param-name>
+		<param-value>10000</param-value>
+	</context-param>
+	<context-param>
+		<param-name>wregex.training</param-name>
+		<param-value>1000000</param-value>
+	</context-param>
 
 	<context-param>
 		<param-name>javax.faces.STATE_SAVING_METHOD</param-name>
-		<!--<param-value>client</param-value> -->
 		<param-value>server</param-value>
 	</context-param>
 	<context-param>
@@ -21,10 +42,10 @@
 	</context-param>
 	<!-- Disable use of threading for single-threaded environments such as the 
 		Google AppEngine. -->
-	<context-param>
+	<!-- <context-param>
 		<param-name>com.sun.faces.enableThreading</param-name>
 		<param-value>false</param-value>
-	</context-param>
+	</context-param> -->
 	<!-- Change to "Production" when you are ready to deploy -->
 	<context-param>
 		<param-name>javax.faces.PROJECT_STAGE</param-name>
@@ -42,12 +63,12 @@
 	<context-param>
 		<param-name>primefaces.THEME</param-name>
 		<param-value>home</param-value>
-	</context-param>
+	</context-param>	
 
 	<!-- ***** Specify session timeout of thirty (30) minutes. ***** -->
 	<session-config>
 		<session-timeout>30</session-timeout>
-	</session-config>
+	</session-config>	
 
 	<!-- Welcome page -->
 	<welcome-file-list>
@@ -71,10 +92,10 @@
 	<filter>
 		<filter-name>PrimeFaces FileUpload Filter</filter-name>
 		<filter-class>org.primefaces.webapp.filter.FileUploadFilter</filter-class>
-		<init-param>
+		<!--<init-param>
 			<param-name>thresholdSize</param-name>
 			<param-value>2147483647</param-value>
-		</init-param>
+		</init-param>-->
 	</filter>
 	<filter-mapping>
 		<filter-name>PrimeFaces FileUpload Filter</filter-name>
@@ -85,7 +106,4 @@
 		<exception-type>javax.faces.application.ViewExpiredException</exception-type>
 		<location>/faces/expired.xhtml</location>
 	</error-page>
-
-	<!--<listener> <listener-class>es.ehu.grk.wregex.gae.ServletListener</listener-class> 
-		</listener> -->
 </web-app>
