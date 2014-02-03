@@ -21,6 +21,6 @@ For online use and the user manual, please go to the official Wregex website htt
 
 = Local installation =
 
-You can download the compiled [http://wregex.ehubio.es/xtatic/wregex.war wregex.war] file and copy it to webapps/ROOT.war in your Apache Tomcat 7 home directory.
+You can download the compiled [https://drive.google.com/folderview?id=0B1U_FilyidMsMlg0cGxoRkt0VFE wregex.war] file and copy it to webapps/ROOT.war in your Apache Tomcat 7 home directory.
 
 Or you can checkout the source code from [https://code.google.com/p/ehu-bio/source/checkout the SVN repository] and compile your customized version. In this case you probably want to relax the default Wregex limits in `WebContent/WEB-INF/web.xml`.
