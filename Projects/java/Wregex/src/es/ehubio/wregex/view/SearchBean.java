@@ -218,15 +218,14 @@ public class SearchBean implements Serializable {
 			String regex = custom ? getCustomRegex() : getRegex();
 			Wregex wregex = new Wregex(regex, pssm);
 			List<ResultGroup> resultGroups = new ArrayList<>();
-			long wdt = Long.parseLong(FacesContext.getCurrentInstance().getExternalContext().getInitParameter(
-					"wregex.watchdogtimer"))*1000;
-			long start = System.currentTimeMillis();
+			long wdt = System.currentTimeMillis() + Long.parseLong(FacesContext.getCurrentInstance().getExternalContext().getInitParameter("wregex.watchdogtimer"))*1000;
 			for( InputGroup inputGroup : inputGroups ) {
+				//System.out.println(inputGroup.getHeader());
 				if( assayScores )
 					resultGroups.addAll(wregex.searchGroupingAssay(inputGroup));
 				else
 					resultGroups.addAll(wregex.searchGrouping(inputGroup.getFasta()));
-				if( System.currentTimeMillis() - start >= wdt )
+				if( System.currentTimeMillis() >= wdt )
 					throw new Exception("Too intensive search, try a more strict regular expression or a smaller fasta file");
 			}
 			results = new ArrayList<>();

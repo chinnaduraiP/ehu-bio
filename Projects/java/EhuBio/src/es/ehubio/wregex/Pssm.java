@@ -42,8 +42,9 @@ public final class Pssm {
 	
 	public double getScore(Aminoacid aa, int pos) throws PssmException {
 		List<Double> list = pssm.get(aa);
+		//System.out.println(String.format("PSSM access: position=%d/%d, aminoacid=%c",pos+1,groups,aa.letter));
 		if( pos < 0 || pos >= groups || list == null )
-			throw new PssmException("Invalid PSSM position");
+			throw new PssmException(String.format("Invalid PSSM access: position=%d/%d, aminoacid=%c",pos+1,groups,aa.letter));
 		return list.get(pos);
 	}
 	

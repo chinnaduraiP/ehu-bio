@@ -6,7 +6,7 @@
 	<display-name>Wregex</display-name>
 	
 	<!-- Wregex default limits:
-		WatchDogTimer (10 seconds)
+		WatchDogTimer (15 seconds)
 		Maximum fasta size (30 MB)
 		Maximum PSSM size (10 kB)
 		Maximum training file size (1 MB) -->

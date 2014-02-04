@@ -22,7 +22,10 @@ public enum Aminoacid {
 	SELENOCYSTEINE("Selenocysteine",'U',"Sec",168.05300,-1.00,-1.00,-1.00,5.73,true,false,(short)0,true,false,false,false),
 	VALINE("Valine",'V',"Val",117.14784,6.00,2.39,9.74,-1.00,true,false,(short)0,true,false,false,true),
 	TRYPTOPHAN("Tryptophan",'W',"Trp",204.22844,5.89,2.46,9.41,-1.00,true,false,(short)0,false,false,true,false),
-	TYROSINE("Tyrosine",'Y',"Tyr",181.19124,5.64,2.20,9.21,10.46,false,true,(short)0,false,false,true,false);
+	TYROSINE("Tyrosine",'Y',"Tyr",181.19124,5.64,2.20,9.21,10.46,false,true,(short)0,false,false,true,false),
+	ASX("Aspartic acid or Asparagine",'B',"Asx",-1.00000,-1.00,-1.00,-1.00,-1.00,false,true,(short)0,true,false,false,false),
+	GLX("Glutamic acid or Glutamine",'Z',"Glx",-1.00000,-1.00,-1.00,-1.00,-1.00,false,true,(short)0,false,false,false,false);
+	
 	
 	public final String name;
 	public final char letter;
