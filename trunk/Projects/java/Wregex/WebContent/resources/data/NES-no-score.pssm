@@ -1,4 +1,4 @@
-# Generated from wregex.appspot.com (v1.1)
+# Generated from wregex.ehubio.es (2014-02-04)
 # Trained with 445 valid matches for 148 input motifs (NES-no-score.fasta)
 # Regex: (.{2})([LIVMFAWY])(.{2,3})([LIVMFAWY])([^P]{2,3})([LIVMFAWY])([^P])([LIVMFAWY])(.{4})
 # The following PSSM values are not normalized
@@ -24,3 +24,4 @@ M	-2	-1	-1	-1	-2	-1	-2	-1	-2
 T	-1	-5	-1	-5	-1	-5	-1	-5	-2
 L	-1	-0	-1	-0	-1	-0	-1	-0	-1
 Q	-1	-5	-1	-5	-1	-5	-1	-5	-1
+B	-2	-5	-1	-5	-1	-5	-1	-5	-2
