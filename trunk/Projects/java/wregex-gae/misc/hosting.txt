@@ -1,5 +1,0 @@
-Hostalia:
-25 gb, 1gb, 1000gb CentOS, // 2gb/3gb // 45€/3 meses, 75€, 105€
-
-GCS:
-https://developers.google.com/storage/docs/pricing-and-terms#pricing
