@@ -2,6 +2,7 @@ package es.ehubio.wregex.view;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -14,7 +15,7 @@ import java.util.Collections;
 import java.util.List;
 
 import javax.faces.bean.ManagedBean;
-import javax.faces.bean.SessionScoped;
+import javax.faces.bean.ViewScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ValueChangeEvent;
@@ -34,15 +35,18 @@ import es.ehubio.wregex.Wregex;
 import es.ehubio.wregex.Wregex.WregexException;
 
 @ManagedBean
-@SessionScoped
+@ViewScoped
 public class SearchBean implements Serializable {
 	private static final long serialVersionUID = 1L;
 	private String motif;
 	private String definition;
+	private String target;
 	private MotifConfiguration motifConfiguration;
+	private TargetConfiguration targetConfiguration;
 	private List<MotifInformation> elmMotifs;
 	private MotifInformation motifInformation;
 	private MotifDefinition motifDefinition;
+	private TargetInformation targetInformation;
 	private boolean custom = false;
 	private String customRegex;
 	private String customPssm;
@@ -52,14 +56,17 @@ public class SearchBean implements Serializable {
 	private boolean grouping = true;
 	private String baseFileName, pssmFileName, fastaFileName;
 	private boolean assayScores = false;
-	List<InputGroup> inputGroups = null;
-	Pssm pssm = null;
+	private List<InputGroup> inputGroups = null;
+	private Pssm pssm = null;
 	
 	public SearchBean() {		
 		try {
 			Reader rd = new InputStreamReader(FacesContext.getCurrentInstance().getExternalContext().getResourceAsStream("/resources/data/motifs.xml")); 		
 			motifConfiguration = MotifConfiguration.load(rd);
+			rd.close();
 			loadElmMotifs();
+			rd = new InputStreamReader(FacesContext.getCurrentInstance().getExternalContext().getResourceAsStream("/resources/data/targets.xml")); 		
+			targetConfiguration = TargetConfiguration.load(rd);
 			rd.close();
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -72,6 +79,10 @@ public class SearchBean implements Serializable {
 	
 	public List<MotifDefinition> getDefinitions() {
 		return motifInformation == null ? null : motifInformation.getDefinitions();
+	}
+	
+	public List<TargetInformation> getTargets() {
+		return targetConfiguration.getTargets();
 	}
 	
 	public String getRegex() {
@@ -101,6 +112,10 @@ public class SearchBean implements Serializable {
 	public MotifInformation getMotifInformation() {
 		return motifInformation;
 	}
+	
+	public TargetInformation getTargetInformation() {
+		return targetInformation;
+	}
 
 	public void setMotif(String motif) {
 		this.motif = motif;
@@ -112,6 +127,14 @@ public class SearchBean implements Serializable {
 
 	public void setConfiguration(String configuration) {
 		this.definition = configuration;
+	}
+	
+	public String getTarget() {
+		return target;
+	}
+
+	public void setTarget(String target) {
+		this.target = target;
 	}
 	
 	private MotifInformation stringToMotif( Object object ) {
@@ -134,6 +157,16 @@ public class SearchBean implements Serializable {
 		for( MotifDefinition def : getDefinitions() )
 			if( def.getName().equals(name) )
 				return def;
+		return null;
+	}
+	
+	private TargetInformation stringToTarget( Object object ) {
+		if( object == null )
+			return null;
+		String name = object.toString();
+		for( TargetInformation target : targetConfiguration.getTargets() )
+			if( name.startsWith(target.getName()) )
+				return target;
 		return null;
 	}
 	
@@ -168,6 +201,27 @@ public class SearchBean implements Serializable {
 		searchError = null;
 		results = null;
 		pssm = null;
+	}
+	
+	public void onChangeTarget( ValueChangeEvent event ) {
+		inputGroups = null;
+		results = null;
+		Object value = event.getNewValue();		
+		if( value == null || value.toString().equals("Default") ) {
+			targetInformation = null;
+			return;
+		}
+		targetInformation = stringToTarget(event.getNewValue());
+		if( targetInformation.getType().equals("fasta") ) {
+			try {
+				FileReader rd = new FileReader(targetInformation.getPath());
+				inputGroups = InputGroup.readEntries(rd);
+				rd.close();
+				fastaFileName = null;
+			} catch( Exception e ) {
+				searchError = e.getMessage();
+			}
+		}
 	}
 
 	public boolean isCustom() {
@@ -204,8 +258,10 @@ public class SearchBean implements Serializable {
 			if( motifDefinition == null )
 				return "A configuration must be selected for motif " + motif;
 		}
+		if( targetInformation == null )
+			return "A target must be selected";
 		if( inputGroups == null )
-			return "A fasta file with input sequences must be selected";
+			return "A fasta file with input sequences must be uploaded";
 		return null;
 	}
 	
@@ -406,6 +462,8 @@ public class SearchBean implements Serializable {
 	public String getFastaSummary() {
 		if( inputGroups == null )
 			return null;
+		if( fastaFileName == null )
+			return inputGroups.size() + " entries";
 		return fastaFileName + ": " + inputGroups.size() + " entries";
 	}
 	
@@ -460,5 +518,9 @@ public class SearchBean implements Serializable {
 	public void onGrouping() {
 		searchError = null;
 		results = null;
+	}
+	
+	public boolean isUploadTarget() {
+		return targetInformation == null ? false : targetInformation.getType().equals("upload");
 	}
 }

@@ -105,5 +105,6 @@ public final class Fasta {
 			pw.println(">" + f.header());
 			pw.println(f.sequence());
 		}
+		pw.flush();
 	}	
 }

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE project>
+<targets>
+    <target>
+        <name>Custom fasta file</name>
+        <type>upload</type>
+    </target>
+    <target>
+        <name>UniProtKB/Swiss-Prot Human Proteome</name>
+        <type>fasta</type>
+        <path>/media/data/Sequences/UniProt/current/SP_HUMAN.fasta</path>
+        <versionFile>/media/data/Sequences/UniProt/current/version.txt</versionFile>
+    </target>
+</targets>
