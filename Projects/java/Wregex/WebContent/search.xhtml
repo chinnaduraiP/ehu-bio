@@ -34,12 +34,12 @@
 							<p:ajax update="@form" />
 						</p:selectOneMenu>
 					</h:panelGroup>					
-					<h:outputText value="Summary:" rendered="#{!searchBean.custom}"/>
-					<h:outputText value="#{searchBean.summary}" rendered="#{!searchBean.custom}"/>
-					<h:outputText value="Description:" rendered="#{!searchBean.custom}"/>
-					<h:outputText value="#{searchBean.description}" rendered="#{!searchBean.custom}"/>
-					<h:outputText value="References:" rendered="#{!searchBean.custom}"/>					
-					<p:dataList value="#{searchBean.references}" var="ref" type="ordered" rendered="#{!searchBean.custom}" emptyMessage="">
+					<h:outputText value="Summary:" rendered="#{searchBean.motifInformation != null and !searchBean.custom}"/>
+					<h:outputText value="#{searchBean.summary}" rendered="#{searchBean.motifInformation != null and !searchBean.custom}"/>
+					<h:outputText value="Description:" rendered="#{searchBean.motifInformation != null and !searchBean.custom}"/>
+					<h:outputText value="#{searchBean.description}" rendered="#{searchBean.motifInformation != null and !searchBean.custom}"/>
+					<h:outputText value="References:" rendered="#{searchBean.motifInformation != null and !searchBean.custom}"/>					
+					<p:dataList value="#{searchBean.references}" var="ref" type="ordered" rendered="#{searchBean.motifInformation != null and !searchBean.custom}" emptyMessage="">
 						<h:outputLink value="#{ref.link}" target="_blank">
 							<h:outputText value="#{ref.html}" escape="false"/>&nbsp;<h:graphicImage name="images/link.png" height="15"/>
 						</h:outputLink>
@@ -50,7 +50,7 @@
 					<h:outputText value="PSSM file:"/>
 					<h:panelGroup rendered="#{!searchBean.custom}">
 						<h:outputText value="#{searchBean.pssm}"/>
-						<h:outputText value="Not available (scores will not be available)" rendered="#{searchBean.pssm == null}"/>
+						<h:outputText value="Not available (scores will not be available)" rendered="#{searchBean.motifInformation != null and searchBean.pssm == null}"/>
 						<p:commandButton value="Download" actionListener="#{searchBean.downloadPssm}" rendered="#{searchBean.pssm != null}" ajax="false"/>
 					</h:panelGroup>
 					<h:panelGroup rendered="#{searchBean.custom}">
@@ -61,20 +61,30 @@
 	            			auto="true"  
 	            			label="Select PSSM"
 	            			update="@form"
-	            			allowTypes="/(\.|\/)(te?xt|pssm)$/" />
+	            			allowTypes="/(\.|\/)(te?xt|pssm)$/"
+	            			style="width:400px;" />
 	            		<h:outputText id="pssm" value="#{searchBean.pssmSummary}"/>
             		</h:panelGroup>
-					<h:outputText value="Fasta file:"/>
+					<h:outputText value="Target:"/>
 					<h:panelGroup>
-						<p:fileUpload fileUploadListener="#{searchBean.uploadFasta}"  
-	            			mode="advanced"     
-	            			sizeLimit="#{initParam['wregex.fasta']}"
-	            			multiple="false"
-	            			auto="true"            			  
-	            			label="Select fasta"
-	            			update="@form"
-	            			allowTypes="/(\.|\/)(te?xt|fasta)$/" />
-	            		<h:outputText id="fasta" value="#{searchBean.fastaSummary}"/>
+						<p:panelGrid columns="3" style="border-style:hidden;">
+							<p:selectOneMenu value="#{searchBean.target}" valueChangeListener="#{searchBean.onChangeTarget}">
+								<f:selectItem itemLabel="--- Select target ---" itemValue="Default"/>
+								<f:selectItems value="#{searchBean.targets}" />							
+								<p:ajax update="@form" />
+							</p:selectOneMenu>
+							<p:fileUpload fileUploadListener="#{searchBean.uploadFasta}"  
+		            			mode="advanced"     
+		            			sizeLimit="#{initParam['wregex.fasta']}"
+		            			multiple="false"
+		            			auto="true"            			  
+		            			label="Select fasta"
+		            			update="@form"
+		            			allowTypes="/(\.|\/)(te?xt|fasta)$/"
+		            			rendered="#{searchBean.uploadTarget}"
+		            			style="width:400px;"/>
+		            		<h:outputText id="fasta" value="#{searchBean.fastaSummary}"/>
+		            	</p:panelGrid>
             		</h:panelGroup>
 					<h:outputLabel value="Grouping:" for="grouping"/>
 					<p:selectBooleanCheckbox id="grouping" value="#{searchBean.grouping}" valueChangeListener="#{searchBean.onGrouping}" update="@form" immediate="true" onchange="submit"/>
@@ -88,8 +98,8 @@
 						<p:commandButton value="Download as ALN" rendered="#{not empty searchBean.results}" actionListener="#{searchBean.downloadAln}" ajax="false"/>
 					</h:panelGroup>
 				</p:panelGrid>
-				<p:dataTable value="#{searchBean.results}" var="item" rendered="#{not empty searchBean.results}" scrollable="true" scrollHeight="300" liveScroll="true" scrollRows="20">
-					<f:facet name="header">Search results (live scroll)</f:facet>
+				<p:dataTable value="#{searchBean.results}" var="item" rendered="#{not empty searchBean.results}" scrollable="true" scrollHeight="300" liveScroll="true" scrollRows="40">
+					<f:facet name="header">Search results - live scroll (scroll and wait for more results)</f:facet>
 					<p:column width="200">
 						<f:facet name="header">Entry</f:facet>
 						<h:outputText value="#{item.entry}" styleClass="trn_name"/>
