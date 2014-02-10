@@ -8,7 +8,7 @@
     <target>
         <name>UniProtKB/Swiss-Prot Human Proteome</name>
         <type>fasta</type>
-        <path>/media/data/Sequences/UniProt/current/SP_HUMAN.fasta</path>
+        <path>/media/data/Sequences/UniProt/current/SP_HUMAN.fasta.gz</path>
         <versionFile>/media/data/Sequences/UniProt/current/version.txt</versionFile>
     </target>
 </targets>

@@ -1,6 +1,7 @@
 package es.ehubio.wregex.view;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Serializable;
@@ -19,19 +20,15 @@ public class TargetInformation implements Serializable {
 	
 	public void setName(String name) {
 		this.name = name;
-		fullName = null;
 	}
 	
 	@XmlTransient
-	public String getFullName() {
-		if( fullName == null ) {			
-			String v = getVersion();
-			if( v == null )
-				fullName = getName();
-			else
-				fullName = getName() + " (" + getVersion() + ")";
-		}			
-		return fullName;
+	public String getFullName() {			
+		String v = getVersion();
+		if( v == null )
+			return getName();
+		else
+			return getName() + " (" + getVersion() + ")";
 	}
 	
 	public String getType() {
@@ -60,21 +57,29 @@ public class TargetInformation implements Serializable {
 	}		
 	
 	public String getVersion() {
-		if( version == null && versionFile != null ) {			
-			try {
-				BufferedReader rd;
-				rd = new BufferedReader(new FileReader(getVersionFile()));
-				version = rd.readLine();
-				rd.close();
-			} catch(IOException e) {
-			}			
+		if( versionFile == null )
+			return version;
+		File v = new File(versionFile);
+		if( lastModified != v.lastModified() ) {
+			reloadVersion();
+			lastModified = v.lastModified();
 		}
 		return version;
+	}
+	
+	private void reloadVersion() {
+		version = null;
+		try {
+			BufferedReader rd;
+			rd = new BufferedReader(new FileReader(getVersionFile()));
+			version = rd.readLine();
+			rd.close();
+		} catch(IOException e) {
+		}
 	}
 
 	public void setVersion(String version) {
 		this.version = version;
-		fullName = null;
 	}
 	
 	@Override
@@ -88,5 +93,5 @@ public class TargetInformation implements Serializable {
 	private String path;
 	private String version;
 	private String versionFile;
-	private String fullName;
+	private long lastModified = -1;
 }
