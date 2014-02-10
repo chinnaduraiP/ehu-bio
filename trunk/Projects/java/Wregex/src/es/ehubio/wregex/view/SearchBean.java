@@ -2,7 +2,6 @@ package es.ehubio.wregex.view;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -15,7 +14,8 @@ import java.util.Collections;
 import java.util.List;
 
 import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ViewScoped;
+import javax.faces.bean.ManagedProperty;
+import javax.faces.bean.SessionScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ValueChangeEvent;
@@ -25,7 +25,6 @@ import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.UploadedFile;
 
 import es.ehubio.db.Fasta.InvalidSequenceException;
-import es.ehubio.io.UnixCfgReader;
 import es.ehubio.wregex.InputGroup;
 import es.ehubio.wregex.Pssm;
 import es.ehubio.wregex.PssmBuilder.PssmBuilderException;
@@ -35,15 +34,12 @@ import es.ehubio.wregex.Wregex;
 import es.ehubio.wregex.Wregex.WregexException;
 
 @ManagedBean
-@ViewScoped
+@SessionScoped
 public class SearchBean implements Serializable {
 	private static final long serialVersionUID = 1L;
 	private String motif;
 	private String definition;
 	private String target;
-	private MotifConfiguration motifConfiguration;
-	private TargetConfiguration targetConfiguration;
-	private List<MotifInformation> elmMotifs;
 	private MotifInformation motifInformation;
 	private MotifDefinition motifDefinition;
 	private TargetInformation targetInformation;
@@ -58,23 +54,14 @@ public class SearchBean implements Serializable {
 	private boolean assayScores = false;
 	private List<InputGroup> inputGroups = null;
 	private Pssm pssm = null;
+	@ManagedProperty(value="#{databasesBean}")
+	private DatabasesBean databases;
 	
-	public SearchBean() {		
-		try {
-			Reader rd = new InputStreamReader(FacesContext.getCurrentInstance().getExternalContext().getResourceAsStream("/resources/data/motifs.xml")); 		
-			motifConfiguration = MotifConfiguration.load(rd);
-			rd.close();
-			loadElmMotifs();
-			rd = new InputStreamReader(FacesContext.getCurrentInstance().getExternalContext().getResourceAsStream("/resources/data/targets.xml")); 		
-			targetConfiguration = TargetConfiguration.load(rd);
-			rd.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+	public SearchBean() {	 	
 	}
 	
 	public List<MotifInformation> getMotifs() {
-		return motifConfiguration.getMotifs();
+		return databases.getMotifConfiguration().getMotifs();
 	}
 	
 	public List<MotifDefinition> getDefinitions() {
@@ -82,7 +69,7 @@ public class SearchBean implements Serializable {
 	}
 	
 	public List<TargetInformation> getTargets() {
-		return targetConfiguration.getTargets();
+		return databases.getTargetConfiguration().getTargets();
 	}
 	
 	public String getRegex() {
@@ -141,10 +128,10 @@ public class SearchBean implements Serializable {
 		if( object == null )
 			return null;
 		String name = object.toString();
-		for( MotifInformation motif : motifConfiguration.getMotifs() )
+		for( MotifInformation motif : databases.getMotifConfiguration().getMotifs() )
 			if( motif.getName().equals(name) )
 				return motif;
-		for( MotifInformation motif : elmMotifs )
+		for( MotifInformation motif : databases.getElmMotifs() )
 			if( motif.getName().equals(name) )
 				return motif;
 		return null;
@@ -164,7 +151,7 @@ public class SearchBean implements Serializable {
 		if( object == null )
 			return null;
 		String name = object.toString();
-		for( TargetInformation target : targetConfiguration.getTargets() )
+		for( TargetInformation target : databases.getTargetConfiguration().getTargets() )
 			if( name.startsWith(target.getName()) )
 				return target;
 		return null;
@@ -214,9 +201,7 @@ public class SearchBean implements Serializable {
 		targetInformation = stringToTarget(event.getNewValue());
 		if( targetInformation.getType().equals("fasta") ) {
 			try {
-				FileReader rd = new FileReader(targetInformation.getPath());
-				inputGroups = InputGroup.readEntries(rd);
-				rd.close();
+				inputGroups = databases.getFasta(targetInformation.getPath());
 				fastaFileName = null;
 			} catch( Exception e ) {
 				searchError = e.getMessage();
@@ -474,46 +459,8 @@ public class SearchBean implements Serializable {
 	}
 	
 	public List<MotifInformation> getElmMotifs() {
-		return elmMotifs;
-	}
-	
-	void loadElmMotifs() throws IOException {
-		elmMotifs = new ArrayList<>();
-		MotifInformation motif;
-		MotifDefinition definition;
-		List<MotifDefinition> definitions;
-		MotifReference reference;
-		List<MotifReference> references;
-		UnixCfgReader rd = new UnixCfgReader(new InputStreamReader(FacesContext.getCurrentInstance().getExternalContext().getResourceAsStream("/resources/data/elm_classes.tsv")));
-		String line;
-		String[] fields;
-		boolean first = true;
-		while( (line=rd.readLine()) != null ) {
-			if( first == true ) {
-				first = false;
-				continue;
-			}
-			fields = line.replaceAll("\"","").split("\t");
-			motif = new MotifInformation();
-			motif.setName(fields[1]);
-			motif.setSummary(fields[2]);
-			definition = new MotifDefinition();
-			definition.setName(fields[0]);
-			definition.setDescription("ELM regular expression without using Wregex capturing groups and PSSM capabilities");
-			definition.setRegex(fields[3].replaceAll("\\(", "(?:"));
-			definitions = new ArrayList<>();
-			definitions.add(definition);
-			motif.setDefinitions(definitions);
-			reference = new MotifReference();
-			reference.setName("Original ELM entry");
-			reference.setLink("http://elm.eu.org/elms/elmPages/"+fields[1]+".html");
-			references = new ArrayList<>();
-			references.add(reference);
-			motif.setReferences(references);
-			elmMotifs.add(motif);
-		}
-		rd.close();
-	}
+		return databases.getElmMotifs();
+	}	
 	
 	public void onGrouping() {
 		searchError = null;
@@ -522,5 +469,9 @@ public class SearchBean implements Serializable {
 	
 	public boolean isUploadTarget() {
 		return targetInformation == null ? false : targetInformation.getType().equals("upload");
+	}
+
+	public void setDatabases(DatabasesBean databases) {
+		this.databases = databases;
 	}
 }
