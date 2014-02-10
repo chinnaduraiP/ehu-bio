@@ -6,6 +6,8 @@ import java.io.Reader;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import es.ehubio.io.UnixCfgReader;
 
@@ -13,7 +15,9 @@ public final class Fasta {
 	private final String mSequence;
 	private final String mHeader;
 	private final SequenceType mType;
-	private final String mGuessedAccession;
+	private final String mGuessedName;
+	private final String mGuessedGene;
+	private static Pattern headerPattern;
 	
 	public enum SequenceType {
 		PROTEIN, DNA, RNA
@@ -38,7 +42,17 @@ public final class Fasta {
 		mSequence = sequence.trim().replaceAll("[ \t]", "");		
 		mType = type;
 		checkSequence(mSequence, type);
-		mGuessedAccession = header.split("[ \t]")[0];
+		mGuessedName = header.split("[ \t]")[0];
+		String gene = null;
+		if( headerPattern == null )
+			headerPattern = Pattern.compile("(..)=(\\w+)");
+		Matcher matcher = headerPattern.matcher(header);
+		while( matcher.find() )
+			if( matcher.group(1).equalsIgnoreCase("GN") ) {
+				gene = matcher.group(2);
+				break;
+			}
+		mGuessedGene = gene;
 	}
 	
 	public static void checkSequence( String sequence, SequenceType type ) throws InvalidSequenceException {
@@ -76,8 +90,12 @@ public final class Fasta {
 		return mType;
 	}
 	
-	public String guessAccession() {
-		return mGuessedAccession;
+	public String guessName() {
+		return mGuessedName;
+	}
+	
+	public String guessGene() {
+		return mGuessedGene;
 	}
 	
 	public static List<Fasta> readEntries( Reader rd, SequenceType type ) throws IOException, InvalidSequenceException {
@@ -106,5 +124,5 @@ public final class Fasta {
 			pw.println(f.sequence());
 		}
 		pw.flush();
-	}	
+	}
 }

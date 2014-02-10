@@ -48,7 +48,7 @@ public final class InputMotif implements Serializable {
 	}
 	
 	public String getAccession() {
-		return fasta.guessAccession();
+		return fasta.guessName();
 	}
 	
 	public boolean contains(Result result) {

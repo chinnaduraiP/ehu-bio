@@ -1,5 +1,8 @@
 package es.ehubio.db;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public enum Aminoacid {
 	ALANINE("Alanine",'A',"Ala",89.09404,6.01,2.35,9.87,-1.00,true,false,(short)0,true,true,false,false),
 	CYSTEINE("Cysteine",'C',"Cys",121.15404,5.05,1.92,10.70,8.18,false,false,(short)0,true,false,false,false),
@@ -85,14 +88,35 @@ public enum Aminoacid {
 			lut[aa.letter-'A'] = aa;
 	}
 	
+	private static void createMap() {
+		map = new HashMap<>();
+		for( Aminoacid aa : values() )
+			map.put(aa.abbrev, aa);
+	}
+	
 	public static Aminoacid parseLetter( char ch ) {
 		if( lut == null )
 			createLut();
 		int i = Character.toUpperCase(ch) - 'A';
-		if( i >= lut.length )
+		if( i < 0 || i >= lut.length )
 			return null;
 		return lut[i]; 
 	}
 	
+	public static Aminoacid parseAbbrev( String abbrev ) {
+		if( map == null )
+			createMap();
+		return map.get(abbrev);
+	}
+	
+	public static Aminoacid parse( String str ) {
+		if( str.length() == 1 )
+			return parseLetter(str.charAt(0));
+		if( str.length() == 3 )
+			return parseAbbrev(str);
+		return null;
+	}
+	
 	private static Aminoacid[] lut = null;	// Look-up table
+	private static Map<String,Aminoacid> map;
 }

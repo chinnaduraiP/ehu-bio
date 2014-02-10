@@ -19,7 +19,7 @@ public final class InputGroup {
 	 */
 	public InputGroup(Fasta fasta) {
 		mFasta = fasta;
-		mId = fasta.guessAccession();
+		mId = fasta.guessName();
 		loadMotifs();
 		if (mMotifs.isEmpty())
 			mMotifs.add(new InputMotif(mFasta, 1, mFasta.sequence().length(), 100.0));

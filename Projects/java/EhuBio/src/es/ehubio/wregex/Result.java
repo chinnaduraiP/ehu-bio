@@ -31,7 +31,7 @@ public final class Result implements Comparable<Result> {
 		this.fasta = fasta;		
 		this.start = start;
 		this.end = start+match.length()-1;
-		this.name = fasta.guessAccession()+"@"+start+"-"+end;		 		
+		this.name = fasta.guessName()+"@"+start+"-"+end;		 		
 		this.match = match;
 		this.groups = new ArrayList<String>(groups);		
 		
@@ -54,7 +54,7 @@ public final class Result implements Comparable<Result> {
 	}
 	
 	public String getEntry() {
-		return fasta.guessAccession();
+		return fasta.guessName();
 	}
 
 	public int getStart() {

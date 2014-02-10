@@ -60,8 +60,12 @@ public class SearchBean implements Serializable {
 	public SearchBean() {	 	
 	}
 	
-	public List<MotifInformation> getMotifs() {
-		return databases.getMotifConfiguration().getMotifs();
+	public List<MotifInformation> getWregexMotifs() {
+		return databases.getWregexMotifs();
+	}
+	
+	public List<MotifInformation> getElmMotifs() {
+		return databases.getElmMotifs();
 	}
 	
 	public List<MotifDefinition> getDefinitions() {
@@ -69,7 +73,7 @@ public class SearchBean implements Serializable {
 	}
 	
 	public List<TargetInformation> getTargets() {
-		return databases.getTargetConfiguration().getTargets();
+		return databases.getTargets();
 	}
 	
 	public String getRegex() {
@@ -128,7 +132,7 @@ public class SearchBean implements Serializable {
 		if( object == null )
 			return null;
 		String name = object.toString();
-		for( MotifInformation motif : databases.getMotifConfiguration().getMotifs() )
+		for( MotifInformation motif : databases.getWregexMotifs() )
 			if( motif.getName().equals(name) )
 				return motif;
 		for( MotifInformation motif : databases.getElmMotifs() )
@@ -151,7 +155,7 @@ public class SearchBean implements Serializable {
 		if( object == null )
 			return null;
 		String name = object.toString();
-		for( TargetInformation target : databases.getTargetConfiguration().getTargets() )
+		for( TargetInformation target : databases.getTargets() )
 			if( name.startsWith(target.getName()) )
 				return target;
 		return null;
@@ -457,10 +461,6 @@ public class SearchBean implements Serializable {
 			return pssmFileName;
 		return null;
 	}
-	
-	public List<MotifInformation> getElmMotifs() {
-		return databases.getElmMotifs();
-	}	
 	
 	public void onGrouping() {
 		searchError = null;

@@ -16,6 +16,7 @@ import javax.faces.bean.ApplicationScoped;
 import javax.faces.bean.ManagedBean;
 import javax.faces.context.FacesContext;
 
+import es.ehubio.cosmic.Loci;
 import es.ehubio.db.Fasta.InvalidSequenceException;
 import es.ehubio.io.UnixCfgReader;
 import es.ehubio.wregex.InputGroup;
@@ -23,10 +24,17 @@ import es.ehubio.wregex.InputGroup;
 @ManagedBean
 @ApplicationScoped
 public class DatabasesBean {
+	private static final String WregexMotifsPath = "/resources/data/motifs.xml";
+	private static final String ElmMotifsPath = "/resources/data/elm_classes.tsv";
+	private static final String TargetsPath = "/resources/data/targets.xml";
+	private static final String CosmicPath = "/media/data/Sequences/Cosmic/current/CosmicMutantExportIncFus.tsv.gz";
+	
 	private MotifConfiguration motifConfiguration;
 	private TargetConfiguration targetConfiguration;
 	private List<MotifInformation> elmMotifs;
 	private Map<String,FastaDb> mapFasta;
+	private Map<String,Loci> mapCosmic;
+	private long lastModifiedCosmic;
 	
 	private class FastaDb {
 		public long lastModified;
@@ -46,13 +54,20 @@ public class DatabasesBean {
 	}
 
 	private void loadDatabases() throws IOException, InvalidSequenceException {
-		Reader rd = new InputStreamReader(FacesContext.getCurrentInstance().getExternalContext().getResourceAsStream("/resources/data/motifs.xml")); 		
+		// Wregex motifs
+		Reader rd = new InputStreamReader(FacesContext.getCurrentInstance().getExternalContext().getResourceAsStream(WregexMotifsPath)); 		
 		motifConfiguration = MotifConfiguration.load(rd);
 		rd.close();
+		
+		// ELM motifs
 		loadElmMotifs();
-		rd = new InputStreamReader(FacesContext.getCurrentInstance().getExternalContext().getResourceAsStream("/resources/data/targets.xml")); 		
+		
+		// Targets
+		rd = new InputStreamReader(FacesContext.getCurrentInstance().getExternalContext().getResourceAsStream(TargetsPath)); 		
 		targetConfiguration = TargetConfiguration.load(rd);
 		rd.close();
+		
+		// Fastas
 		mapFasta = new HashMap<>();
 		for( TargetInformation target : targetConfiguration.getTargets() ) {
 			if( !target.getType().equals("fasta") )
@@ -63,6 +78,10 @@ public class DatabasesBean {
 			fasta.entries = loadFasta(target.getPath());
 			mapFasta.put(target.getPath(), fasta);			
 		}
+		
+		// Cosmic
+		mapCosmic = Loci.load(CosmicPath);
+		lastModifiedCosmic = new File(CosmicPath).lastModified();
 	}
 	
 	private List<InputGroup> loadFasta( String path ) throws IOException, InvalidSequenceException {
@@ -75,12 +94,12 @@ public class DatabasesBean {
 		rd.close();return result;
 	}
 	
-	public MotifConfiguration getMotifConfiguration() {
-		return motifConfiguration;
+	public List<MotifInformation> getWregexMotifs() {
+		return motifConfiguration.getMotifs();
 	}
 	
-	public TargetConfiguration getTargetConfiguration() {
-		return targetConfiguration;
+	public List<TargetInformation> getTargets() {
+		return targetConfiguration.getTargets();
 	}
 	
 	public List<MotifInformation> getElmMotifs() {
@@ -102,6 +121,19 @@ public class DatabasesBean {
 		return fasta.entries;
 	}
 	
+	public Map<String,Loci> getMapCosmic() {
+		File file = new File(CosmicPath);
+		if( file.lastModified() != lastModifiedCosmic ) {
+			try {
+				mapCosmic = Loci.load(CosmicPath);				
+			} catch( Exception e ) {
+				e.printStackTrace();
+			}
+			lastModifiedCosmic = file.lastModified();
+		}
+		return mapCosmic;
+	}
+	
 	private void loadElmMotifs() throws IOException {
 		elmMotifs = new ArrayList<>();
 		MotifInformation motif;
@@ -109,7 +141,8 @@ public class DatabasesBean {
 		List<MotifDefinition> definitions;
 		MotifReference reference;
 		List<MotifReference> references;
-		UnixCfgReader rd = new UnixCfgReader(new InputStreamReader(FacesContext.getCurrentInstance().getExternalContext().getResourceAsStream("/resources/data/elm_classes.tsv")));
+		UnixCfgReader rd = new UnixCfgReader(new InputStreamReader(
+				FacesContext.getCurrentInstance().getExternalContext().getResourceAsStream(ElmMotifsPath)));
 		String line;
 		String[] fields;
 		boolean first = true;
@@ -138,5 +171,5 @@ public class DatabasesBean {
 			elmMotifs.add(motif);
 		}
 		rd.close();
-	}
+	}	
 }

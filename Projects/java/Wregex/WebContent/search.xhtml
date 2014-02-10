@@ -21,7 +21,7 @@
 							valueChangeListener="#{searchBean.onChangeMotif}">
 							<f:selectItem itemLabel="--- Select motif ---" itemValue="Default" />
 							<f:selectItem itemLabel="Custom" itemValue="Custom" />
-							<f:selectItems value="#{searchBean.motifs}" />
+							<f:selectItems value="#{searchBean.wregexMotifs}" />
 							<f:selectItem itemLabel="--- ELM ---" itemValue="ELM"/>
 							<f:selectItems value="#{searchBean.elmMotifs}" />
 							<p:ajax update="@form" />	
