@@ -88,9 +88,7 @@
             		</h:panelGroup>
 					<h:outputLabel value="Options:"/>					
 					<h:panelGroup>
-						<p:selectBooleanCheckbox itemLabel="Grouping" value="#{searchBean.grouping}" valueChangeListener="#{searchBean.onGrouping}" update="@form" immediate="true" onchange="submit"/>
-						&nbsp;						
-						<p:selectBooleanCheckbox itemLabel="#{searchBean.cosmicInformation.fullName}" value="#{searchBean.cosmic}" valueChangeListener="#{searchBean.onCosmic}" update="@form" immediate="true" onchange="submit"/>
+						<p:selectBooleanCheckbox itemLabel="Grouping" value="#{searchBean.grouping}" valueChangeListener="#{searchBean.onGrouping}" update="@form" immediate="true" onchange="submit"/>						
 					</h:panelGroup>
 					<h:outputText value="Status:" rendered="#{searchBean.configError != null}"/>
 					<h:outputText value="#{searchBean.configError}" rendered="#{searchBean.configError != null}" style="color:red"/>

@@ -7,8 +7,6 @@ import java.util.List;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.RequestScoped;
 
-import es.ehubio.wregex.Wregex;
-
 @ManagedBean
 @RequestScoped
 public class HomeBean implements Serializable {
@@ -52,9 +50,8 @@ public class HomeBean implements Serializable {
 		pages.add(page);
 		
 		news = new ArrayList<>();
-		news.add(new LatestNew("Feb 11, 2014", "Included beta support for COSMIC database"));
-		news.add(new LatestNew("Feb 10, 2014", "Included human proteome as a predefined target"));
-		news.add(new LatestNew("Jan 06, 2014", "Wregex published in Bioinformatics!"));
+		news.add(new LatestNew("Feb 11, 2014", "Website documentation completed"));
+		news.add(new LatestNew("Jan 06, 2014", "Wregex v1.0 published in Bioinformatics!"));
 	}
 	
 	public List<PageSummary> getPages() {
@@ -66,7 +63,7 @@ public class HomeBean implements Serializable {
 	}
 	
 	public String getSignature() {
-		return "Wregex (v"+Wregex.getVersion()+")";
+		return "Wregex (v1.0)";
 	}
 	
 	public String getLastUpdated() {
