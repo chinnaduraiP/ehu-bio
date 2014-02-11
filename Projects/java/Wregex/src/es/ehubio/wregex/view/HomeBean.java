@@ -13,7 +13,8 @@ import es.ehubio.wregex.Wregex;
 @RequestScoped
 public class HomeBean implements Serializable {
 	private static final long serialVersionUID = 1L;
-	final List<PageSummary> pages;		
+	final List<PageSummary> pages;
+	final List<LatestNew> news;	
 
 	public HomeBean() {
 		pages = new ArrayList<>();
@@ -48,14 +49,27 @@ public class HomeBean implements Serializable {
 			"Wregex is free software and licensed under the GPL. In this page you can find a link to the source code " +
 			"and the binary redistributable." );
 		page.setAction("downloads");
-		pages.add(page);		
+		pages.add(page);
+		
+		news = new ArrayList<>();
+		news.add(new LatestNew("Feb 11, 2014", "Included beta support for COSMIC database"));
+		news.add(new LatestNew("Feb 10, 2014", "Included human proteome as a predefined target"));
+		news.add(new LatestNew("Jan 06, 2014", "Wregex published in Bioinformatics!"));
 	}
 	
 	public List<PageSummary> getPages() {
 		return pages;
 	}
 	
+	public List<LatestNew> getNews() {
+		return news;
+	}
+	
 	public String getSignature() {
 		return "Wregex (v"+Wregex.getVersion()+")";
+	}
+	
+	public String getLastUpdated() {
+		return news.get(0).getDate();
 	}
 }

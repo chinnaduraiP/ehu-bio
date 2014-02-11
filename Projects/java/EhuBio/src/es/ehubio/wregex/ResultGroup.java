@@ -11,15 +11,12 @@ public final class ResultGroup implements Iterable<Result> {
 		this.size = size;
 		this.representative = searchRespresentative();
 		this.assay = -1.0;
-		this.assayString = "?";
 	}
 	
 	void updateAssay() {		
 		for( Result result : list )
-			if( result.getAssay() > assay ) {
+			if( result.getAssay() > assay )
 				assay = result.getAssay();
-				assayString = result.getAssayAsString();
-			}
 	}
 	
 	@Override
@@ -60,13 +57,8 @@ public final class ResultGroup implements Iterable<Result> {
 		return assay;
 	}
 
-	public String getAssayAsString() {
-		return assayString;
-	}
-
 	private final Iterable<Result> list;
 	private final int size;
 	private final Result representative;
 	private double assay;
-	private String assayString;
 }

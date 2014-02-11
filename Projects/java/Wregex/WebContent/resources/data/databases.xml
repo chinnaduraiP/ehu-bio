@@ -1,14 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE project>
-<targets>
-    <target>
+<databases>
+    <database>
         <name>Custom fasta file</name>
         <type>upload</type>
-    </target>
-    <target>
+    </database>
+    <database>
         <name>UniProtKB/Swiss-Prot Human Proteome</name>
         <type>fasta</type>
         <path>/media/data/Sequences/UniProt/current/SP_HUMAN.fasta.gz</path>
         <versionFile>/media/data/Sequences/UniProt/current/version.txt</versionFile>
-    </target>
-</targets>
+    </database>
+    <database>
+        <name>COSMIC</name>
+        <type>cosmic</type>
+        <path>/media/data/Sequences/Cosmic/current/CosmicMutantExportIncFus.tsv.gz</path>
+        <versionFile>/media/data/Sequences/Cosmic/current/version.txt</versionFile>
+    </database>
+</databases>

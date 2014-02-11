@@ -12,6 +12,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
@@ -24,6 +25,9 @@ import org.apache.commons.io.FilenameUtils;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.UploadedFile;
 
+import es.ehubio.cosmic.Loci;
+import es.ehubio.cosmic.Locus;
+import es.ehubio.db.Aminoacid;
 import es.ehubio.db.Fasta.InvalidSequenceException;
 import es.ehubio.wregex.InputGroup;
 import es.ehubio.wregex.Pssm;
@@ -42,14 +46,15 @@ public class SearchBean implements Serializable {
 	private String target;
 	private MotifInformation motifInformation;
 	private MotifDefinition motifDefinition;
-	private TargetInformation targetInformation;
+	private DatabaseInformation targetInformation;
 	private boolean custom = false;
 	private String customRegex;
 	private String customPssm;
 	private String searchError;
-	private List<Result> results = null;
+	private List<ResultEx> results = null;
 	private boolean usingPssm;
 	private boolean grouping = true;
+	private boolean cosmic = false;
 	private String baseFileName, pssmFileName, fastaFileName;
 	private boolean assayScores = false;
 	private List<InputGroup> inputGroups = null;
@@ -72,7 +77,7 @@ public class SearchBean implements Serializable {
 		return motifInformation == null ? null : motifInformation.getDefinitions();
 	}
 	
-	public List<TargetInformation> getTargets() {
+	public List<DatabaseInformation> getTargets() {
 		return databases.getTargets();
 	}
 	
@@ -104,8 +109,12 @@ public class SearchBean implements Serializable {
 		return motifInformation;
 	}
 	
-	public TargetInformation getTargetInformation() {
+	public DatabaseInformation getTargetInformation() {
 		return targetInformation;
+	}
+	
+	public DatabaseInformation getCosmicInformation() {
+		return databases.getCosmicInformation();
 	}
 
 	public void setMotif(String motif) {
@@ -151,11 +160,11 @@ public class SearchBean implements Serializable {
 		return null;
 	}
 	
-	private TargetInformation stringToTarget( Object object ) {
+	private DatabaseInformation stringToTarget( Object object ) {
 		if( object == null )
 			return null;
 		String name = object.toString();
-		for( TargetInformation target : databases.getTargets() )
+		for( DatabaseInformation target : databases.getTargets() )
 			if( name.startsWith(target.getName()) )
 				return target;
 		return null;
@@ -276,11 +285,13 @@ public class SearchBean implements Serializable {
 			results = new ArrayList<>();
 			for( ResultGroup resultGroup : resultGroups ) {
 				if( grouping )
-					results.add(resultGroup.getRepresentative());
+					results.add(new ResultEx(resultGroup.getRepresentative()));
 				else
 					for( Result r : resultGroup )
-						results.add(r);
+						results.add(new ResultEx(r));
 			}
+			if( cosmic )
+				searchCosmic();
 			Collections.sort(results);
 		} catch( IOException e ) {
 			searchError = "File error: " + e.getMessage();
@@ -292,6 +303,38 @@ public class SearchBean implements Serializable {
 			searchError = e.getMessage();
 		}
 	}	
+
+	private void searchCosmic() {
+		Map<String,Loci> map = databases.getMapCosmic();
+		int missense;
+		boolean invalid;
+		for( ResultEx result : results ) {
+			Loci loci = map.get(result.getGene());
+			if( loci == null )
+				continue;			
+			missense = 0;
+			invalid = false;
+			for( Locus locus : loci.getLoci().values() ) {
+				if( locus.position > result.getFasta().sequence().length() ||
+					locus.aa != Aminoacid.parseLetter(result.getFasta().sequence().charAt(locus.position-1)) ) {
+					invalid = true;
+					break;
+				}
+				if( locus.position >= result.getStart() && locus.position <= result.getEnd() )
+					missense += locus.mutations;
+			}
+			if( invalid ) {
+				result.setCosmicUrl( String.format(
+					"http://cancer.sanger.ac.uk/cosmic/gene/analysis?ln=%s&mut=%s",
+					result.getGene(), "substitution_missense") );
+				continue;
+			}
+			result.setCosmicUrl( String.format(
+				"http://cancer.sanger.ac.uk/cosmic/gene/analysis?ln=%s&start=%d&end=%d&mut=%s",
+				result.getGene(), result.getStart(), result.getEnd(), "substitution_missense") );
+			result.setCosmicMissense(missense);
+		}
+	}
 
 	public void uploadPssm( FileUploadEvent event ) {
 		searchError = null;
@@ -357,7 +400,7 @@ public class SearchBean implements Serializable {
 		return searchError;
 	}
 
-	public List<Result> getResults() {
+	public List<ResultEx> getResults() {
 		return results;
 	}
 	
@@ -393,10 +436,7 @@ public class SearchBean implements Serializable {
 	    ec.setResponseHeader("Content-Disposition", "attachment; filename=\""+baseFileName+".csv\"");
 		try {
 			OutputStream output = ec.getResponseOutputStream();
-			if( assayScores )
-				Result.saveAssay(new OutputStreamWriter(output), results, grouping);
-			else
-				Result.saveCsv(new OutputStreamWriter(output), results);
+			ResultEx.saveCsv(new OutputStreamWriter(output), results, assayScores, cosmic );
 		} catch( Exception e ) {
 			e.printStackTrace();
 		}
@@ -412,7 +452,7 @@ public class SearchBean implements Serializable {
 	    ec.setResponseHeader("Content-Disposition", "attachment; filename=\""+baseFileName+".aln\"");
 		try {
 			OutputStream output = ec.getResponseOutputStream();
-			Result.saveAln(new OutputStreamWriter(output), results);
+			ResultEx.saveAln(new OutputStreamWriter(output), results);
 		} catch( Exception e ) {
 			e.printStackTrace();
 		}
@@ -467,11 +507,24 @@ public class SearchBean implements Serializable {
 		results = null;
 	}
 	
+	public void onCosmic() {
+		searchError = null;
+		results = null;
+	}
+	
 	public boolean isUploadTarget() {
 		return targetInformation == null ? false : targetInformation.getType().equals("upload");
 	}
 
 	public void setDatabases(DatabasesBean databases) {
 		this.databases = databases;
+	}
+
+	public boolean isCosmic() {
+		return cosmic;
+	}
+
+	public void setCosmic(boolean cosmic) {
+		this.cosmic = cosmic;
 	}
 }

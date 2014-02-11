@@ -86,8 +86,12 @@
 		            		<h:outputText id="fasta" value="#{searchBean.fastaSummary}"/>
 		            	</p:panelGrid>
             		</h:panelGroup>
-					<h:outputLabel value="Grouping:" for="grouping"/>
-					<p:selectBooleanCheckbox id="grouping" value="#{searchBean.grouping}" valueChangeListener="#{searchBean.onGrouping}" update="@form" immediate="true" onchange="submit"/>
+					<h:outputLabel value="Options:"/>					
+					<h:panelGroup>
+						<p:selectBooleanCheckbox itemLabel="Grouping" value="#{searchBean.grouping}" valueChangeListener="#{searchBean.onGrouping}" update="@form" immediate="true" onchange="submit"/>
+						&nbsp;						
+						<p:selectBooleanCheckbox itemLabel="#{searchBean.cosmicInformation.fullName}" value="#{searchBean.cosmic}" valueChangeListener="#{searchBean.onCosmic}" update="@form" immediate="true" onchange="submit"/>
+					</h:panelGroup>
 					<h:outputText value="Status:" rendered="#{searchBean.configError != null}"/>
 					<h:outputText value="#{searchBean.configError}" rendered="#{searchBean.configError != null}" style="color:red"/>
 					<p:commandButton value="Search!" actionListener="#{searchBean.search}" rendered="#{searchBean.configError == null}" ajax="false"/>
@@ -98,37 +102,51 @@
 						<p:commandButton value="Download as ALN" rendered="#{not empty searchBean.results}" actionListener="#{searchBean.downloadAln}" ajax="false"/>
 					</h:panelGroup>
 				</p:panelGrid>
-				<p:dataTable value="#{searchBean.results}" var="item" rendered="#{not empty searchBean.results}" scrollable="true" scrollHeight="300" liveScroll="true" scrollRows="40">
+				<br/>
+				<p:dataTable value="#{searchBean.results}" rowIndexVar="row" var="item" rendered="#{not empty searchBean.results}" scrollable="true" scrollHeight="300" liveScroll="true" scrollRows="40">
 					<f:facet name="header">Search results - live scroll (scroll and wait for more results)</f:facet>
+					<p:column width="50" style="text-align:center;">
+						<f:facet name="header">#</f:facet>
+						<h:outputText value="#{row + 1}"/>
+					</p:column>
 					<p:column width="200">
 						<f:facet name="header">Entry</f:facet>
-						<h:outputText value="#{item.entry}" styleClass="trn_name"/>
+						<h:outputText value="#{item.entry}"/>
 					</p:column>
 					<p:column styleClass="trn_pos">
 						<f:facet name="header">Start</f:facet>
-						<h:outputText value="#{item.start}" styleClass="trn_pos" />
+						<h:outputText value="#{item.start}"/>
 					</p:column>
 					<p:column styleClass="trn_pos">
 						<f:facet name="header">End</f:facet>
-						<h:outputText value="#{item.end}" styleClass="trn_pos" />
+						<h:outputText value="#{item.end}"/>
 					</p:column>
 					<p:column>
 						<f:facet name="header">Motif</f:facet>
-						<h:outputText value="#{item.alignment}" styleClass="trn_seq" />
+						<h:outputText value="#{item.alignment}"/>
 					</p:column>
-					<p:column width="30">
+					<p:column styleClass="trn_pos">
 						<f:facet name="header">"!"</f:facet>
-						<h:outputText value="#{item.combinations}" styleClass="trn_pos" />
+						<h:outputText value="#{item.combinations}"/>
 					</p:column>
 					<p:column styleClass="trn_weight">
 						<f:facet name="header">Score</f:facet>
-						<h:outputText value="#{item.scoreAsString}" styleClass="trn_weight" rendered="#{searchBean.usingPssm}" />
+						<h:outputText value="#{item.scoreAsString}" rendered="#{searchBean.usingPssm}" />
 						<h:outputText value="N/A" rendered="#{!searchBean.usingPssm}"/>
 					</p:column>
 					<p:column rendered="#{searchBean.assayScores}" styleClass="trn_weight">
 						<f:facet name="header">Assay</f:facet>
 						<h:outputText value="#{item.assayAsString}"/>
-					</p:column>					
+					</p:column>		
+					<p:column rendered="#{searchBean.cosmic}" width="100">
+						<f:facet name="header">Gene</f:facet>
+						<h:outputText value="#{item.gene}"/>
+					</p:column>
+					<p:column rendered="#{searchBean.cosmic}" width="80" style="text-align:center;">
+						<f:facet name="header">COSMIC missense</f:facet>
+						<h:outputText rendered="#{item.cosmicUrl == null}" value="#{item.cosmicMissenseAsString}"/>
+						<h:outputLink rendered="#{item.cosmicUrl != null}" value="#{item.cosmicUrl}" target="_blank">#{item.cosmicMissenseAsString}&nbsp;<h:graphicImage name="images/link.png" height="15"/></h:outputLink>
+					</p:column>
 				</p:dataTable>
 			</h:form>
 		</ui:define>

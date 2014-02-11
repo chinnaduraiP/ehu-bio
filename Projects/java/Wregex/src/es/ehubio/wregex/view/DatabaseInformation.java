@@ -11,9 +11,9 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
-@XmlRootElement(name = "target")
+@XmlRootElement(name = "database")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class TargetInformation implements Serializable {
+public class DatabaseInformation implements Serializable {
 	public String getName() {
 		return name;
 	}
