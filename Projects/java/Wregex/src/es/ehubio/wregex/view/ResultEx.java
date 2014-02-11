@@ -17,13 +17,15 @@ public class ResultEx implements Comparable<ResultEx> {
 	private static final char separator = ',';
 
 	public int compareTo(ResultEx o) {
-		int cmp = result.compareTo(o.result);
-		if( cmp == 0 ) {
+		int cmp = 0;
+		if( cosmicMissense != -1 || o.cosmicMissense != -1 ) {
 			if( cosmicMissense > o.cosmicMissense )
 				cmp = -1;
 			else if( cosmicMissense < o.cosmicMissense )
 				cmp = 1;
 		}
+		if( cmp == 0 )
+			cmp = result.compareTo(o.result);
 		return cmp;
 	}
 
