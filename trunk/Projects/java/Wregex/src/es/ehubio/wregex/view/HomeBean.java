@@ -50,9 +50,11 @@ public class HomeBean implements Serializable {
 		pages.add(page);
 		
 		news = new ArrayList<>();
+		news.add(new LatestNew("Feb 11, 2014", "Results are sorted by mutations when COSMIC is enabled"));
 		news.add(new LatestNew("Feb 11, 2014", "Wregex-v1.1 beta features moved to a test server"));
 		news.add(new LatestNew("Feb 11, 2014", "Included beta support for COSMIC database"));
 		news.add(new LatestNew("Feb 10, 2014", "Included human proteome as a predefined target"));
+		news.add(new LatestNew("Jan 06, 2014", "Wregex v1.0 published in Bioinformatics!"));
 	}
 	
 	public List<PageSummary> getPages() {
