@@ -39,7 +39,12 @@
 			<p>This project has been developed in the context of the <a href="http://www.ehubio.es/" target="_blank">EhuBio</a>
 			collaboration. For further information please contact <a href="mailto:wregex@ehubio.es">wregex@ehubio.es</a>.</p>
 			
-			<p style="text-align:right">Site last updated: February 10, 2014</p>
+			<p style="text-align:right">Site last updated: #{homeBean.lastUpdated}</p>
+			
+			<h3>Latest news</h3><p:separator/>
+			<p:dataList value="#{homeBean.news}" var="latest" itemType="circle">
+				#{latest.date} - #{latest.summary}
+			</p:dataList>
 		</h:form>			
 		</ui:define>
 	</ui:composition>

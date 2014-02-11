@@ -14,27 +14,27 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-@XmlRootElement(name = "targets")
+@XmlRootElement(name = "databases")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class TargetConfiguration implements Serializable {
+public class DatabaseConfiguration implements Serializable {
 	private static final long serialVersionUID = 1L;
-	@XmlElement(name="target")
-	private List<TargetInformation> targets;
+	@XmlElement(name="database")
+	private List<DatabaseInformation> databases;
 	
-	public List<TargetInformation> getTargets() {
-		return targets;
+	public List<DatabaseInformation> getDatabases() {
+		return databases;
 	}
 	
-	public void setTargets(List<TargetInformation> targets) {
-		this.targets = targets;
+	public void setDatabases(List<DatabaseInformation> databses) {
+		this.databases = databses;
 	}
 	
-	public static TargetConfiguration load( Reader rd ) {
-		TargetConfiguration configuration = null;
+	public static DatabaseConfiguration load( Reader rd ) {
+		DatabaseConfiguration configuration = null;
 		try {
-			JAXBContext context = JAXBContext.newInstance(TargetConfiguration.class);
+			JAXBContext context = JAXBContext.newInstance(DatabaseConfiguration.class);
 			Unmarshaller um = context.createUnmarshaller();
-			configuration = (TargetConfiguration)um.unmarshal(rd);
+			configuration = (DatabaseConfiguration)um.unmarshal(rd);
 		} catch (JAXBException e) {
 			throw new RuntimeException(e);
 		}
@@ -43,7 +43,7 @@ public class TargetConfiguration implements Serializable {
 	
 	public void save( PrintStream writer ) {
 		try {
-			JAXBContext context = JAXBContext.newInstance(TargetConfiguration.class);
+			JAXBContext context = JAXBContext.newInstance(DatabaseConfiguration.class);
 			Marshaller m = context.createMarshaller();
 		    m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
 		    m.marshal(this,writer);

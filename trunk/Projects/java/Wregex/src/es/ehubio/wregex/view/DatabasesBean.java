@@ -26,12 +26,13 @@ import es.ehubio.wregex.InputGroup;
 public class DatabasesBean {
 	private static final String WregexMotifsPath = "/resources/data/motifs.xml";
 	private static final String ElmMotifsPath = "/resources/data/elm_classes.tsv";
-	private static final String TargetsPath = "/resources/data/targets.xml";
-	private static final String CosmicPath = "/media/data/Sequences/Cosmic/current/CosmicMutantExportIncFus.tsv.gz";
+	private static final String DatabasesPath = "/resources/data/databases.xml";
 	
 	private MotifConfiguration motifConfiguration;
-	private TargetConfiguration targetConfiguration;
+	private DatabaseConfiguration databaseConfiguration;
 	private List<MotifInformation> elmMotifs;
+	private List<DatabaseInformation> targets;
+	private DatabaseInformation cosmic;
 	private Map<String,FastaDb> mapFasta;
 	private Map<String,Loci> mapCosmic;
 	private long lastModifiedCosmic;
@@ -48,10 +49,6 @@ public class DatabasesBean {
 			e.printStackTrace();
 		}
 	}
-	
-	public String getTest() {
-		return "i'm here";
-	}
 
 	private void loadDatabases() throws IOException, InvalidSequenceException {
 		// Wregex motifs
@@ -62,26 +59,30 @@ public class DatabasesBean {
 		// ELM motifs
 		loadElmMotifs();
 		
-		// Targets
-		rd = new InputStreamReader(FacesContext.getCurrentInstance().getExternalContext().getResourceAsStream(TargetsPath)); 		
-		targetConfiguration = TargetConfiguration.load(rd);
+		// Databases
+		rd = new InputStreamReader(FacesContext.getCurrentInstance().getExternalContext().getResourceAsStream(DatabasesPath)); 		
+		databaseConfiguration = DatabaseConfiguration.load(rd);
 		rd.close();
-		
-		// Fastas
 		mapFasta = new HashMap<>();
-		for( TargetInformation target : targetConfiguration.getTargets() ) {
-			if( !target.getType().equals("fasta") )
+		targets = new ArrayList<>();
+		for( DatabaseInformation database : databaseConfiguration.getDatabases() ) {
+			if( database.getType().equals("cosmic") ) {
+				cosmic = database;
+				continue;
+			}
+			targets.add(database);
+			if( !database.getType().equals("fasta") )
 				continue;
 			FastaDb fasta = new FastaDb();			
-			File f = new File(target.getPath());
+			File f = new File(database.getPath());
 			fasta.lastModified = f.lastModified();
-			fasta.entries = loadFasta(target.getPath());
-			mapFasta.put(target.getPath(), fasta);			
+			fasta.entries = loadFasta(database.getPath());
+			mapFasta.put(database.getPath(), fasta);			
 		}
 		
 		// Cosmic
-		mapCosmic = Loci.load(CosmicPath);
-		lastModifiedCosmic = new File(CosmicPath).lastModified();
+		mapCosmic = Loci.load(cosmic.getPath());
+		lastModifiedCosmic = new File(cosmic.getPath()).lastModified();
 	}
 	
 	private List<InputGroup> loadFasta( String path ) throws IOException, InvalidSequenceException {
@@ -98,8 +99,8 @@ public class DatabasesBean {
 		return motifConfiguration.getMotifs();
 	}
 	
-	public List<TargetInformation> getTargets() {
-		return targetConfiguration.getTargets();
+	public List<DatabaseInformation> getTargets() {
+		return targets;
 	}
 	
 	public List<MotifInformation> getElmMotifs() {
@@ -121,11 +122,15 @@ public class DatabasesBean {
 		return fasta.entries;
 	}
 	
+	public DatabaseInformation getCosmicInformation() {
+		return cosmic;
+	}
+	
 	public Map<String,Loci> getMapCosmic() {
-		File file = new File(CosmicPath);
+		File file = new File(cosmic.getPath());
 		if( file.lastModified() != lastModifiedCosmic ) {
 			try {
-				mapCosmic = Loci.load(CosmicPath);				
+				mapCosmic = Loci.load(cosmic.getPath());				
 			} catch( Exception e ) {
 				e.printStackTrace();
 			}
