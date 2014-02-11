@@ -39,10 +39,8 @@
 					rendered="#{not empty trainingBean.trainingList}">
 					<p:column>
 						<f:facet name="header">Valid</f:facet>
-						<h:panelGroup layout="block" rendered="#{item.valid}"
-							styleClass="ok" />
-						<h:panelGroup layout="block" rendered="#{!item.valid}"
-							styleClass="ko" />
+						<h:graphicImage name="images/ok.png" rendered="#{item.valid}"/>
+						<h:graphicImage name="images/ko.png" rendered="#{!item.valid}"/>
 					</p:column>
 					<p:column>
 						<f:facet name="header">Entry</f:facet>
@@ -78,12 +76,12 @@
 						<f:facet name="header">Action</f:facet>
 						<h:panelGroup layout="block" rendered="#{item.valid}">
 							<p:commandLink actionListener="#{item.remove}" update="@form">
-								<h:panelGroup layout="block" styleClass="trash" />
+								<h:graphicImage name="images/trash.png"/>
 							</p:commandLink>
 						</h:panelGroup>
 						<h:panelGroup layout="block" rendered="#{!item.valid}">
 							<p:commandLink actionListener="#{item.recycle}" update="@form">
-								<h:panelGroup layout="block" styleClass="recycle" />
+								<h:graphicImage name="images/recycle.png"/>
 							</p:commandLink>
 						</h:panelGroup>
 					</p:column>

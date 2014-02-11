@@ -84,23 +84,6 @@ img {
 	list-style-position: inside;
 }
 
-/* Icons */
-div.ok {
-	content: url(/resources/images/ok.png);
-}
-
-div.ko {
-	content: url(/resources/images/ko.png);
-}
-
-div.trash {
-	content: url(/resources/images/trash.png);
-}
-
-div.recycle {
-	content: url(/resources/images/recycle.png);
-}
-
 /* Training */
 .trn_name {
 }

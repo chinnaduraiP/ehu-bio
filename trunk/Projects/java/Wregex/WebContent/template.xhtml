@@ -30,11 +30,11 @@
 		<a href="http://www.ehu.es" target="_blank"><h:graphicImage name="images/ehu.png" style="float:right;margin-right:10px;"/></a>
 	</div>
 	<div id="menubar">
-		<a href="/faces/home.xhtml" style="color:white">Home</a> &nbsp; | &nbsp;
-		<a href="/faces/search.xhtml" style="color:white">Search</a> &nbsp; | &nbsp;
-		<a href="/faces/training.xhtml" style="color:white">Training</a> &nbsp; | &nbsp;
-		<a href="/faces/documentation.xhtml" style="color:white">Documentation</a> &nbsp; | &nbsp;
-		<a href="/faces/downloads.xhtml" style="color:white">Downloads</a>
+		<h:link value="Home" outcome="home" style="color:white"/> &nbsp; | &nbsp;
+		<h:link value="Search" outcome="search" style="color:white"/> &nbsp; | &nbsp;
+		<h:link value="Training" outcome="training" style="color:white"/> &nbsp; | &nbsp;
+		<h:link value="Documentation" outcome="documentation" style="color:white"/> &nbsp; | &nbsp;
+		<h:link value="Downloads" outcome="downloads" style="color:white"/>
 	</div>
 	<div id="body">
 	<ui:insert name="content" />
