@@ -6,6 +6,18 @@
         <type>upload</type>
     </database>
     <database>
+        <name>COSMIC</name>
+        <type>cosmic</type>
+        <path>/media/data/Sequences/Cosmic/current/CosmicMutantExportIncFus.tsv.gz</path>
+        <versionFile>/media/data/Sequences/Cosmic/current/version.txt</versionFile>
+    </database>
+    <database>
+        <name>UniProtKB/Swiss-Prot Human Proteome</name>
+        <type>fasta</type>
+        <path>/media/data/Sequences/UniProt/current/SP_HUMAN.fasta.gz</path>
+        <versionFile>/media/data/Sequences/UniProt/current/version.txt</versionFile>
+    </database>    
+    <database>
         <name>ValidNES</name>
         <type>fasta</type>
         <path>/media/data/Sequences/Fasta/ValidNES.fasta</path>
