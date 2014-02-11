@@ -6,15 +6,21 @@
         <type>upload</type>
     </database>
     <database>
-        <name>UniProtKB/Swiss-Prot Human Proteome</name>
+        <name>ValidNES</name>
         <type>fasta</type>
-        <path>/media/data/Sequences/UniProt/current/SP_HUMAN.fasta.gz</path>
-        <versionFile>/media/data/Sequences/UniProt/current/version.txt</versionFile>
+        <path>/media/data/Sequences/Fasta/ValidNES.fasta</path>
+        <versionFile>/media/data/Sequences/Fasta/ValidNES.version</versionFile>
     </database>
     <database>
-        <name>COSMIC</name>
-        <type>cosmic</type>
-        <path>/media/data/Sequences/Cosmic/current/CosmicMutantExportIncFus.tsv.gz</path>
-        <versionFile>/media/data/Sequences/Cosmic/current/version.txt</versionFile>
+        <name>TotalNES</name>
+        <type>fasta</type>
+        <path>/media/data/Sequences/Fasta/ValidNES-DUBs-Ligases.fasta</path>
+        <versionFile>/media/data/Sequences/Fasta/WregexNES.version</versionFile>
+    </database>
+    <database>
+        <name>ScoreNES</name>
+        <type>fasta</type>
+        <path>/media/data/Sequences/Fasta/NES-score.fasta</path>
+        <versionFile>/media/data/Sequences/Fasta/WregexNES.version</versionFile>
     </database>
 </databases>
