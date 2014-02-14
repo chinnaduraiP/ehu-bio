@@ -14,6 +14,7 @@ public class ResultEx implements Comparable<ResultEx> {
 	private final Result result;
 	private int cosmicMissense = -1;
 	private String cosmicUrl;
+	private String motif;
 	private static final char separator = ',';
 
 	public int compareTo(ResultEx o) {
@@ -95,6 +96,8 @@ public class ResultEx implements Comparable<ResultEx> {
 	}
 
 	public String getScoreAsString() {
+		if( getScore() < 0.0 )
+			return "?";
 		return String.format("%.1f", getScore());
 	}
 
@@ -125,7 +128,7 @@ public class ResultEx implements Comparable<ResultEx> {
 	public static void saveCsv(Writer wr, List<ResultEx> results, boolean assays, boolean cosmic ) {
 		PrintWriter pw = new PrintWriter(wr);
 		List<String> fields = new ArrayList<>();
-		fields.addAll(Arrays.asList(new String[]{"ID","Entry","Begin","End","Combinations","Sequence","Alignment","Score"}));
+		fields.addAll(Arrays.asList(new String[]{"ID","Entry","Motif","Begin","End","Combinations","Sequence","Alignment","Score"}));
 		if( assays ) { fields.add("Assay"); fields.add("Assay"); }
 		if( cosmic ) { fields.add("Gene"); fields.add("COSMIC:Missense"); }
 		pw.println(Utils.getCsv(separator, fields.toArray()));
@@ -133,6 +136,7 @@ public class ResultEx implements Comparable<ResultEx> {
 			fields.clear();			
 			fields.add(result.getName());
 			fields.add(result.getEntry());
+			fields.add(result.getMotif());
 			fields.add(""+result.getStart());
 			fields.add(""+result.getEnd());
 			fields.add(""+result.getCombinations());
@@ -183,5 +187,13 @@ public class ResultEx implements Comparable<ResultEx> {
 
 	public void setCosmicUrl(String cosmicUrl) {
 		this.cosmicUrl = cosmicUrl;
+	}
+
+	public String getMotif() {
+		return motif;
+	}
+
+	public void setMotif(String motif) {
+		this.motif = motif;
 	}
 }

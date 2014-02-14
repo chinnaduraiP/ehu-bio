@@ -50,11 +50,12 @@ public class HomeBean implements Serializable {
 		pages.add(page);
 		
 		news = new ArrayList<>();
-		news.add(new LatestNew("Feb 11, 2014", "Results are sorted by mutations when COSMIC is enabled"));
+		news.add(new LatestNew("Feb 13, 2014", "Now it is possible to search for all Wregex and ELM motifs at the same time!"));
+		news.add(new LatestNew("Feb 11, 2014", "Included proteins of cancer genes from nature12912 paper as a predefined target"));
 		news.add(new LatestNew("Feb 11, 2014", "Wregex-v1.1 beta features moved to a test server"));
-		news.add(new LatestNew("Feb 11, 2014", "Included beta support for COSMIC database"));
+		news.add(new LatestNew("Feb 11, 2014", "Included beta support for COSMIC database! Results are sorted by mutations when COSMIC is enabled"));
 		news.add(new LatestNew("Feb 10, 2014", "Included human proteome as a predefined target"));
-		news.add(new LatestNew("Jan 06, 2014", "Wregex v1.0 published in Bioinformatics!"));
+		news.add(new LatestNew("Jan 06, 2014", "Wregex v1.0 published in Bioinformatics"));
 	}
 	
 	public List<PageSummary> getPages() {
@@ -66,7 +67,7 @@ public class HomeBean implements Serializable {
 	}
 	
 	public String getSignature() {
-		return "Wregex (v1.1b1)";
+		return "Wregex (v1.1b2)";
 	}
 	
 	public String getLastUpdated() {

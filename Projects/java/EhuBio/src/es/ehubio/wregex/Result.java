@@ -20,7 +20,7 @@ public final class Result implements Comparable<Result> {
 	private final String alignment;
 	private String printString = null;
 	private final Fasta fasta;
-	private double score = 0.0;
+	private double score = -1.0;
 	private double assay = -1.0;
 	private ResultGroup group = null;
 	private int combinations = 0;
