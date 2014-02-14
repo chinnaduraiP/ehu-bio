@@ -129,6 +129,10 @@ public final class Result implements Comparable<Result> {
 			return -1;
 		if( combinations < o.combinations )
 			return 1;
+		if( match.length() > o.match.length() )
+			return -1;
+		if( match.length() < o.match.length() )
+			return 1;
 		return 0;
 	}
 	
