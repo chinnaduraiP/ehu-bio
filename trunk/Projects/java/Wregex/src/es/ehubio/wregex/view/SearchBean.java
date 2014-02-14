@@ -32,7 +32,6 @@ import es.ehubio.db.Fasta.InvalidSequenceException;
 import es.ehubio.wregex.InputGroup;
 import es.ehubio.wregex.Pssm;
 import es.ehubio.wregex.PssmBuilder.PssmBuilderException;
-import es.ehubio.wregex.Result;
 import es.ehubio.wregex.ResultGroup;
 import es.ehubio.wregex.Wregex;
 import es.ehubio.wregex.Wregex.WregexException;
@@ -55,6 +54,7 @@ public class SearchBean implements Serializable {
 	private boolean usingPssm;
 	private boolean grouping = true;
 	private boolean cosmic = false;
+	private boolean allMotifs = false;
 	private String baseFileName, pssmFileName, fastaFileName;
 	private boolean assayScores = false;
 	private List<InputGroup> inputGroups = null;
@@ -172,17 +172,16 @@ public class SearchBean implements Serializable {
 	
 	public void onChangeMotif( ValueChangeEvent event ) {
 		Object value = event.getNewValue();
-		if( value == null ) {
-			custom = false;
-			motifInformation = null;
-		} else {
-			if( value.toString().equals("Custom") ) {
-				motifInformation = null;
+		custom = false;
+		allMotifs = false;
+		motifInformation = null;
+		if( value != null ) {			
+			if( value.toString().equals("Custom") )
 				custom = true;
-			} else {
+			else if( value.toString().equals("All") )
+				allMotifs = true;
+			else
 				motifInformation = (MotifInformation)stringToMotif(event.getNewValue());
-				custom = false;
-			}
 		}
 		if( motifInformation == null ) {
 			motifDefinition = null;
@@ -250,7 +249,7 @@ public class SearchBean implements Serializable {
 		if( custom ) {
 			if( customRegex == null || customRegex.isEmpty() )
 				return "A regular expression must be defined";
-		} else {
+		} else if( !allMotifs ) {
 			if( motifInformation == null )
 				return "A motif must be selected";
 			if( motifDefinition == null )
@@ -260,35 +259,22 @@ public class SearchBean implements Serializable {
 			return "A target must be selected";
 		if( inputGroups == null )
 			return "A fasta file with input sequences must be uploaded";
+		if( allMotifs && inputGroups.size() > getInitNumber("wregex.allMotifs") )
+			return String.format("Sorry, when searching for all motifs the number of target sequences is limited to %d", getInitNumber("wregex.allMotifs"));
 		return null;
 	}
 	
 	public void search() {
 		searchError = null;		
-		try {			
-			if( !custom )
-				loadPssm();
-			usingPssm = pssm == null ? false : true;
-			String regex = custom ? getCustomRegex() : getRegex();
-			Wregex wregex = new Wregex(regex, pssm);
-			List<ResultGroup> resultGroups = new ArrayList<>();
-			long wdt = System.currentTimeMillis() + Long.parseLong(FacesContext.getCurrentInstance().getExternalContext().getInitParameter("wregex.watchdogtimer"))*1000;
-			for( InputGroup inputGroup : inputGroups ) {
-				//System.out.println(inputGroup.getHeader());
-				if( assayScores )
-					resultGroups.addAll(wregex.searchGroupingAssay(inputGroup));
-				else
-					resultGroups.addAll(wregex.searchGrouping(inputGroup.getFasta()));
-				if( System.currentTimeMillis() >= wdt )
-					throw new Exception("Too intensive search, try a more strict regular expression or a smaller fasta file");
-			}
+		try {						
+			List<ResultGroupEx> resultGroups = allMotifs == false ? singleSearch() : allSearch();			
 			results = new ArrayList<>();
-			for( ResultGroup resultGroup : resultGroups ) {
+			for( ResultGroupEx resultGroup : resultGroups ) {
 				if( grouping )
-					results.add(new ResultEx(resultGroup.getRepresentative()));
+					results.add(resultGroup.getRepresentative());
 				else
-					for( Result r : resultGroup )
-						results.add(new ResultEx(r));
+					for( ResultEx r : resultGroup )
+						results.add(r);
 			}
 			if( cosmic )
 				searchCosmic();
@@ -302,7 +288,76 @@ public class SearchBean implements Serializable {
 		} catch( Exception e ) {
 			searchError = e.getMessage();
 		}
-	}	
+	}		
+
+	private List<ResultGroupEx> directSearch( Wregex wregex, String motif, long tout ) throws Exception {
+		List<ResultGroupEx> resultGroupsEx = new ArrayList<>();
+		List<ResultGroup> resultGroups;
+		ResultGroupEx resultGroupEx;
+		long wdt = System.currentTimeMillis() + tout;
+		for( InputGroup inputGroup : inputGroups ) {
+			//System.out.println(inputGroup.getHeader());
+			if( assayScores )
+				resultGroups = wregex.searchGroupingAssay(inputGroup);
+			else
+				resultGroups = wregex.searchGrouping(inputGroup.getFasta());
+			for( ResultGroup resultGroup : resultGroups ) {
+				resultGroupEx = new ResultGroupEx(resultGroup);
+				if( motif != null )
+					resultGroupEx.setMotif(motif);
+				resultGroupsEx.add(resultGroupEx);
+			}
+			if( System.currentTimeMillis() >= wdt )
+				throw new Exception("Too intensive search, try a more strict regular expression or a smaller fasta file");
+		}
+		return resultGroupsEx;
+	}
+	
+	private List<ResultGroupEx> singleSearch() throws NumberFormatException, Exception {
+		if( !custom && getPssm() != null ) {
+			Reader rd = getResourceReader("data/"+getPssm());
+			pssm = Pssm.load(rd, true);
+			rd.close();
+		}		
+		usingPssm = pssm == null ? false : true;
+		String regex = custom ? getCustomRegex() : getRegex();
+		Wregex wregex = new Wregex(regex, pssm);
+		return directSearch(wregex, motifInformation.getName(), getInitNumber("wregex.watchdogtimer")*1000);
+	}
+	
+	private List<ResultGroupEx> allSearch() throws Exception {
+		List<ResultGroupEx> results = new ArrayList<>();
+		MotifDefinition def;
+		Reader rd;
+		Pssm pssm;
+		Wregex wregex;
+		//long div = getWregexMotifs().size() + getElmMotifs().size();
+		//long tout = getInitNumber("wregex.watchdogtimer")*1000/div;
+		long tout = getInitNumber("wregex.watchdogtimer")*1000;
+		for( MotifInformation motif : getWregexMotifs() ) {
+			def = motif.getDefinitions().get(0);
+			rd = getResourceReader("data/"+def.getPssm());
+			pssm = Pssm.load(rd, true);
+			rd.close();
+			wregex = new Wregex(def.getRegex(), pssm);
+			results.addAll(directSearch(wregex, motif.getName(), tout));
+		}
+		for( MotifInformation motif : getElmMotifs() ) {
+			def = motif.getDefinitions().get(0);
+			wregex = new Wregex(def.getRegex(), null);
+			results.addAll(directSearch(wregex, motif.getName(), tout));
+		}
+		usingPssm = true;
+		return results;
+	}
+	
+	private static long getInitNumber( String param ) {
+		return Long.parseLong(FacesContext.getCurrentInstance().getExternalContext().getInitParameter(param));
+	}
+	
+	private static Reader getResourceReader( String resource ) {
+		return new InputStreamReader(FacesContext.getCurrentInstance().getExternalContext().getResourceAsStream("/resources/"+resource));
+	}
 
 	private void searchCosmic() {
 		Map<String,Loci> map = databases.getMapCosmic();
@@ -355,15 +410,6 @@ public class SearchBean implements Serializable {
 		} catch (PssmBuilderException e) {
 			searchError = "PSSM not valid: " + e.getMessage();
 		}		
-	}
-	
-	private void loadPssm() throws IOException, PssmBuilderException {
-		String file = getPssm();
-		if( file == null )
-			return;
-		Reader rd = new InputStreamReader(FacesContext.getCurrentInstance().getExternalContext().getResourceAsStream("/resources/data/"+file));
-		pssm = Pssm.load(rd, true);
-		rd.close();
 	}
 	
 	public void uploadFasta(FileUploadEvent event) {
@@ -526,5 +572,9 @@ public class SearchBean implements Serializable {
 
 	public void setCosmic(boolean cosmic) {
 		this.cosmic = cosmic;
+	}
+
+	public boolean isAllMotifs() {
+		return allMotifs;
 	}
 }

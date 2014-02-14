@@ -5,26 +5,32 @@
 	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
 	<display-name>Wregex</display-name>
 	
-	<!-- Wregex default limits:
-		WatchDogTimer (15 seconds)
-		Maximum fasta size (30 MB)
-		Maximum PSSM size (10 kB)
-		Maximum training file size (1 MB) -->
+	<!-- Wregex default limits -->
+
+	<!-- WatchDogTimer (15 seconds) -->
 	<context-param>
 		<param-name>wregex.watchdogtimer</param-name>
 		<param-value>15</param-value>
 	</context-param>
+	<!-- Maximum fasta size (30 MB) -->
 	<context-param>
 		<param-name>wregex.fasta</param-name>
 		<param-value>30000000</param-value>
 	</context-param>
+	<!-- Maximum PSSM size (10 kB) -->
 	<context-param>
 		<param-name>wregex.pssm</param-name>
 		<param-value>10000</param-value>
 	</context-param>
+	<!-- Maximum training file size (1 MB) -->
 	<context-param>
 		<param-name>wregex.training</param-name>
 		<param-value>1000000</param-value>
+	</context-param>
+	<!-- Maximum number of fasta entries when searching all motifs (10) -->
+	<context-param>
+		<param-name>wregex.allMotifs</param-name>
+		<param-value>350</param-value>
 	</context-param>
 
 	<context-param>

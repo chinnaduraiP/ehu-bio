@@ -16,7 +16,13 @@
         <type>fasta</type>
         <path>/media/data/Sequences/UniProt/current/SP_HUMAN.fasta.gz</path>
         <versionFile>/media/data/Sequences/UniProt/current/version.txt</versionFile>
-    </database>    
+    </database>
+    <database>
+        <name>Proteins of Cancer Genes</name>
+        <type>fasta</type>
+        <path>/media/data/Sequences/Fasta/nature12912.fasta</path>
+        <versionFile>/media/data/Sequences/Fasta/nature12912.version</versionFile>
+    </database>
     <database>
         <name>ValidNES</name>
         <type>fasta</type>

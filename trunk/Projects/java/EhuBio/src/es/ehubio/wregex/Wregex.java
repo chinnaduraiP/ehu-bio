@@ -167,10 +167,10 @@ public final class Wregex {
 		return results;
 	}
 	
-	double getScore(Result result) {
-		double score = 0.0;
+	double getScore(Result result) {		
 		if( mPssm == null )
-			return score;
+			return -1.0;
+		double score = 0.0;
 		List<String> groups = result.getGroups();
 		String group;
 		for( int g = 0; g < groups.size(); g++ ) {
@@ -187,10 +187,10 @@ public final class Wregex {
 	}
 	
 	/*double getScore(Result result) {
-		double score = 0.0, tmp;
-		int i, g;
 		if( mPssm == null )
-			return score;
+			return -1.0;
+		double score = 0.0, tmp;
+		int i, g;		
 		List<String> groups = result.getGroups();
 		String group;
 		for( g = 0; g < groups.size(); g++ ) {
@@ -209,10 +209,10 @@ public final class Wregex {
 	}*/
 	
 	/*double getScore(Result result) {
-		double score = 0.0, tmp;
-		int i, g;
 		if( mPssm == null )
-			return score;
+			return -1.0;
+		double score = 0.0, tmp;
+		int i, g;		
 		List<String> groups = result.getGroups();
 		String group;
 		for( g = 0; g < groups.size(); g++ ) {
@@ -229,12 +229,6 @@ public final class Wregex {
 		}
 		return Math.pow(10.0,score)*100.0;
 	}*/
-	
-	public static String getVersion() {
-		return version;
-	}
-
-	private static final String version = "1.0";
 	
 	private final Pattern mPattern;
 	private final Pssm mPssm;

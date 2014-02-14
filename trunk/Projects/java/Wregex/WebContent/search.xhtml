@@ -20,6 +20,7 @@
 						<p:selectOneMenu value="#{searchBean.motif}"
 							valueChangeListener="#{searchBean.onChangeMotif}">
 							<f:selectItem itemLabel="--- Select motif ---" itemValue="Default" />
+							<f:selectItem itemLabel="All motifs" itemValue="All" />
 							<f:selectItem itemLabel="Custom" itemValue="Custom" />
 							<f:selectItems value="#{searchBean.wregexMotifs}" />
 							<f:selectItem itemLabel="--- ELM ---" itemValue="ELM"/>
@@ -45,14 +46,16 @@
 						</h:outputLink>
 					</p:dataList>
 					<h:outputText value="Regex:"/>
-					<h:outputText value="#{searchBean.regex}" rendered="#{!searchBean.custom}"/>
+					<h:outputText value="#{searchBean.regex}" rendered="#{!searchBean.custom and !searchBean.allMotifs}"/>
+					<h:outputText value="All Wregex and ELM regular expressions" rendered="#{searchBean.allMotifs}"/>
 					<p:inputText value="#{searchBean.customRegex}" rendered="#{searchBean.custom}" styleClass="trn_regex" onchange="submit()"/>
 					<h:outputText value="PSSM file:"/>
-					<h:panelGroup rendered="#{!searchBean.custom}">
+					<h:panelGroup rendered="#{!searchBean.custom and !searchBean.allMotifs}">
 						<h:outputText value="#{searchBean.pssm}"/>
 						<h:outputText value="Not available (scores will not be available)" rendered="#{searchBean.motifInformation != null and searchBean.pssm == null}"/>
 						<p:commandButton value="Download" actionListener="#{searchBean.downloadPssm}" rendered="#{searchBean.pssm != null}" ajax="false"/>
 					</h:panelGroup>
+					<h:outputText value="Scores will be available only for motifs with a PSSM (Wregex but not ELM)" rendered="#{searchBean.allMotifs}"/>
 					<h:panelGroup rendered="#{searchBean.custom}">
 						<p:fileUpload fileUploadListener="#{searchBean.uploadPssm}"  
 	            			mode="advanced"     
@@ -121,8 +124,12 @@
 						<f:facet name="header">End</f:facet>
 						<h:outputText value="#{item.end}"/>
 					</p:column>
-					<p:column>
+					<p:column rendered="#{searchBean.allMotifs}" width="200">
 						<f:facet name="header">Motif</f:facet>
+						<h:outputText value="#{item.motif}"/>
+					</p:column>
+					<p:column>
+						<f:facet name="header">Sequence</f:facet>
 						<h:outputText value="#{item.alignment}"/>
 					</p:column>
 					<p:column styleClass="trn_pos">
