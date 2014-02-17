@@ -2,6 +2,7 @@ package es.ehubio.wregex.view;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -18,6 +19,7 @@ import javax.faces.context.FacesContext;
 
 import es.ehubio.cosmic.Loci;
 import es.ehubio.db.Fasta.InvalidSequenceException;
+import es.ehubio.dbptm.ProteinPtms;
 import es.ehubio.io.UnixCfgReader;
 import es.ehubio.wregex.InputGroup;
 
@@ -25,17 +27,21 @@ import es.ehubio.wregex.InputGroup;
 @ApplicationScoped
 public class DatabasesBean {
 	private static final String WregexMotifsPath = "/resources/data/motifs.xml";
-	private static final String ElmMotifsPath = "/resources/data/elm_classes.tsv";
 	private static final String DatabasesPath = "/resources/data/databases.xml";
 	
 	private MotifConfiguration motifConfiguration;
 	private DatabaseConfiguration databaseConfiguration;
 	private List<MotifInformation> elmMotifs;
 	private List<DatabaseInformation> targets;
+	private DatabaseInformation elm;
 	private DatabaseInformation cosmic;
+	private DatabaseInformation dbPtm;
 	private Map<String,FastaDb> mapFasta;
 	private Map<String,Loci> mapCosmic;
+	private Map<String, ProteinPtms> mapDbPtm;
 	private long lastModifiedCosmic;
+	private long lastModifiedElm;
+	private long lastModifiedDbPtm;
 	
 	private class FastaDb {
 		public long lastModified;
@@ -56,9 +62,6 @@ public class DatabasesBean {
 		motifConfiguration = MotifConfiguration.load(rd);
 		rd.close();
 		
-		// ELM motifs
-		loadElmMotifs();
-		
 		// Databases
 		rd = new InputStreamReader(FacesContext.getCurrentInstance().getExternalContext().getResourceAsStream(DatabasesPath)); 		
 		databaseConfiguration = DatabaseConfiguration.load(rd);
@@ -66,8 +69,19 @@ public class DatabasesBean {
 		mapFasta = new HashMap<>();
 		targets = new ArrayList<>();
 		for( DatabaseInformation database : databaseConfiguration.getDatabases() ) {
+			if( database.getType().equals("elm") ) {
+				elm = database;
+				loadElmMotifs();
+				continue;
+			}
 			if( database.getType().equals("cosmic") ) {
 				cosmic = database;
+				loadCosmic();
+				continue;
+			}
+			if( database.getType().equals("dbptm") ) {
+				dbPtm = database;
+				loadDbPtm();
 				continue;
 			}
 			targets.add(database);
@@ -79,10 +93,6 @@ public class DatabasesBean {
 			fasta.entries = loadFasta(database.getPath());
 			mapFasta.put(database.getPath(), fasta);			
 		}
-		
-		// Cosmic
-		mapCosmic = Loci.load(cosmic.getPath());
-		lastModifiedCosmic = new File(cosmic.getPath()).lastModified();
 	}
 	
 	private List<InputGroup> loadFasta( String path ) throws IOException, InvalidSequenceException {
@@ -92,7 +102,9 @@ public class DatabasesBean {
 		else
 			rd = new FileReader(path);
 		List<InputGroup> result = InputGroup.readEntries(rd);
-		rd.close();return result;
+		rd.close();
+		System.out.println("Loaded DB: " + path);
+		return result;
 	}
 	
 	public List<MotifInformation> getWregexMotifs() {
@@ -104,6 +116,13 @@ public class DatabasesBean {
 	}
 	
 	public List<MotifInformation> getElmMotifs() {
+		File file = new File(elm.getPath());
+		if( file.lastModified() != lastModifiedElm )
+			try {
+				loadElmMotifs();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		return elmMotifs;
 	}
 	
@@ -122,21 +141,40 @@ public class DatabasesBean {
 		return fasta.entries;
 	}
 	
+	public DatabaseInformation getElmInformation() {
+		return elm;
+	}
+	
 	public DatabaseInformation getCosmicInformation() {
 		return cosmic;
+	}
+	
+	public DatabaseInformation getDbPtmInformation() {
+		return dbPtm;
 	}
 	
 	public Map<String,Loci> getMapCosmic() {
 		File file = new File(cosmic.getPath());
 		if( file.lastModified() != lastModifiedCosmic ) {
 			try {
-				mapCosmic = Loci.load(cosmic.getPath());				
+				loadCosmic();				
 			} catch( Exception e ) {
 				e.printStackTrace();
 			}
-			lastModifiedCosmic = file.lastModified();
 		}
 		return mapCosmic;
+	}
+	
+	public Map<String, ProteinPtms> getMapDbPtm() {
+		File file = new File(dbPtm.getPath());
+		if( file.lastModified() != lastModifiedDbPtm ) {
+			try {
+				loadDbPtm();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		return mapDbPtm;
 	}
 	
 	private void loadElmMotifs() throws IOException {
@@ -146,8 +184,8 @@ public class DatabasesBean {
 		List<MotifDefinition> definitions;
 		MotifReference reference;
 		List<MotifReference> references;
-		UnixCfgReader rd = new UnixCfgReader(new InputStreamReader(
-				FacesContext.getCurrentInstance().getExternalContext().getResourceAsStream(ElmMotifsPath)));
+		File elmFile = new File(elm.getPath());
+		UnixCfgReader rd = new UnixCfgReader(new FileReader(elmFile));
 		String line;
 		String[] fields;
 		boolean first = true;
@@ -176,5 +214,22 @@ public class DatabasesBean {
 			elmMotifs.add(motif);
 		}
 		rd.close();
+		lastModifiedElm = elmFile.lastModified();
+		String version = rd.getComment("ELM_Classes_Download_Date");
+		if( version != null )
+			elm.setVersion(version.split(" ")[1]);
+		System.out.println("Loaded DB: " + elm.getFullName());
+	}
+	
+	private void loadCosmic() throws FileNotFoundException, IOException {
+		mapCosmic = Loci.load(cosmic.getPath());
+		lastModifiedCosmic = new File(cosmic.getPath()).lastModified();
+		System.out.println("Loaded DB: " + cosmic.getFullName());
+	}
+	
+	private void loadDbPtm() throws IOException {
+		mapDbPtm = ProteinPtms.load(dbPtm.getPath());
+		lastModifiedDbPtm = new File(dbPtm.getPath()).lastModified();
+		System.out.println("Loaded DB: " + dbPtm.getFullName());
 	}	
 }

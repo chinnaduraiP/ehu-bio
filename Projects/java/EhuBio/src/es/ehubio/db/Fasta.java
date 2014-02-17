@@ -15,8 +15,10 @@ public final class Fasta {
 	private final String mSequence;
 	private final String mHeader;
 	private final SequenceType mType;
+	private final String mGuessedAccession;
 	private final String mGuessedName;
 	private final String mGuessedGene;
+	private static Pattern uniProtPattern;
 	private static Pattern headerPattern;
 	
 	public enum SequenceType {
@@ -42,11 +44,22 @@ public final class Fasta {
 		mSequence = sequence.trim().replaceAll("[ \t]", "");		
 		mType = type;
 		checkSequence(mSequence, type);
+		
+		// Fields in header identifier
 		mGuessedName = header.split("[ \t]")[0];
-		String gene = null;
+		if( uniProtPattern == null )
+			uniProtPattern = Pattern.compile("^(..)\\|(\\w+)\\|(\\w+)");
+		Matcher matcher = uniProtPattern.matcher(header);
+		String accession = null;
+		if( matcher.find() )
+			accession = matcher.group(2);
+		mGuessedAccession = accession;
+		
+		// Fields in header description
 		if( headerPattern == null )
 			headerPattern = Pattern.compile("(..)=(\\w+)");
-		Matcher matcher = headerPattern.matcher(header);
+		matcher = headerPattern.matcher(header);
+		String gene = null;
 		while( matcher.find() )
 			if( matcher.group(1).equalsIgnoreCase("GN") ) {
 				gene = matcher.group(2);
@@ -90,6 +103,10 @@ public final class Fasta {
 		return mType;
 	}
 	
+	public String guessAccession() {
+		return mGuessedAccession;
+	}
+	
 	public String guessName() {
 		return mGuessedName;
 	}
@@ -124,5 +141,5 @@ public final class Fasta {
 			pw.println(f.sequence());
 		}
 		pw.flush();
-	}
+	}	
 }

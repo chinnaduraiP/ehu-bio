@@ -29,6 +29,8 @@ import es.ehubio.cosmic.Loci;
 import es.ehubio.cosmic.Locus;
 import es.ehubio.db.Aminoacid;
 import es.ehubio.db.Fasta.InvalidSequenceException;
+import es.ehubio.dbptm.ProteinPtms;
+import es.ehubio.dbptm.Ptm;
 import es.ehubio.wregex.InputGroup;
 import es.ehubio.wregex.Pssm;
 import es.ehubio.wregex.PssmBuilder.PssmBuilderException;
@@ -54,6 +56,7 @@ public class SearchBean implements Serializable {
 	private boolean usingPssm;
 	private boolean grouping = true;
 	private boolean cosmic = false;
+	private boolean dbPtm = false;
 	private boolean allMotifs = false;
 	private String baseFileName, pssmFileName, fastaFileName;
 	private boolean assayScores = false;
@@ -113,8 +116,16 @@ public class SearchBean implements Serializable {
 		return targetInformation;
 	}
 	
+	public DatabaseInformation getElmInformation() {
+		return databases.getElmInformation();
+	}
+	
 	public DatabaseInformation getCosmicInformation() {
 		return databases.getCosmicInformation();
+	}
+	
+	public DatabaseInformation getDbPtmInformation() {
+		return databases.getDbPtmInformation();
 	}
 
 	public void setMotif(String motif) {
@@ -278,6 +289,8 @@ public class SearchBean implements Serializable {
 			}
 			if( cosmic )
 				searchCosmic();
+			if( dbPtm )
+				searchDbPtm();
 			Collections.sort(results);
 		} catch( IOException e ) {
 			searchError = "File error: " + e.getMessage();
@@ -290,7 +303,7 @@ public class SearchBean implements Serializable {
 		}
 	}		
 
-	private List<ResultGroupEx> directSearch( Wregex wregex, String motif, long tout ) throws Exception {
+	private List<ResultGroupEx> directSearch( Wregex wregex, MotifInformation motif, long tout ) throws Exception {
 		List<ResultGroupEx> resultGroupsEx = new ArrayList<>();
 		List<ResultGroup> resultGroups;
 		ResultGroupEx resultGroupEx;
@@ -303,8 +316,10 @@ public class SearchBean implements Serializable {
 				resultGroups = wregex.searchGrouping(inputGroup.getFasta());
 			for( ResultGroup resultGroup : resultGroups ) {
 				resultGroupEx = new ResultGroupEx(resultGroup);
-				if( motif != null )
-					resultGroupEx.setMotif(motif);
+				if( motif != null ) {
+					resultGroupEx.setMotif(motif.getName());
+					resultGroupEx.setMotifUrl(motif.getReferences().get(0).getLink());
+				}
 				resultGroupsEx.add(resultGroupEx);
 			}
 			if( System.currentTimeMillis() >= wdt )
@@ -322,7 +337,7 @@ public class SearchBean implements Serializable {
 		usingPssm = pssm == null ? false : true;
 		String regex = custom ? getCustomRegex() : getRegex();
 		Wregex wregex = new Wregex(regex, pssm);
-		return directSearch(wregex, motifInformation.getName(), getInitNumber("wregex.watchdogtimer")*1000);
+		return directSearch(wregex, motifInformation, getInitNumber("wregex.watchdogtimer")*1000);
 	}
 	
 	private List<ResultGroupEx> allSearch() throws Exception {
@@ -340,12 +355,12 @@ public class SearchBean implements Serializable {
 			pssm = Pssm.load(rd, true);
 			rd.close();
 			wregex = new Wregex(def.getRegex(), pssm);
-			results.addAll(directSearch(wregex, motif.getName(), tout));
+			results.addAll(directSearch(wregex, motif, tout));
 		}
 		for( MotifInformation motif : getElmMotifs() ) {
 			def = motif.getDefinitions().get(0);
 			wregex = new Wregex(def.getRegex(), null);
-			results.addAll(directSearch(wregex, motif.getName(), tout));
+			results.addAll(directSearch(wregex, motif, tout));
 		}
 		usingPssm = true;
 		return results;
@@ -388,6 +403,23 @@ public class SearchBean implements Serializable {
 				"http://cancer.sanger.ac.uk/cosmic/gene/analysis?ln=%s&start=%d&end=%d&mut=%s",
 				result.getGene(), result.getStart(), result.getEnd(), "substitution_missense") );
 			result.setCosmicMissense(missense);
+		}
+	}
+	
+	private void searchDbPtm() {
+		Map<String, ProteinPtms> map = databases.getMapDbPtm();
+		int count;
+		for( ResultEx result : results ) {
+			ProteinPtms ptms = map.get(result.getAccession());
+			if( ptms == null )
+				continue;
+			count = 0;
+			for( Ptm ptm : ptms.getPtms().values() )
+				if( ptm.position >= result.getStart() && ptm.position <= result.getEnd() )
+					count += ptm.count;
+			result.setDbPtmUrl(String.format(
+				"http://dbptm.mbc.nctu.edu.tw/search_result.php?search_type=db_id&swiss_id=%s",ptms.getId()));
+			result.setDbPtms(count);			
 		}
 	}
 
@@ -482,7 +514,7 @@ public class SearchBean implements Serializable {
 	    ec.setResponseHeader("Content-Disposition", "attachment; filename=\""+baseFileName+".csv\"");
 		try {
 			OutputStream output = ec.getResponseOutputStream();
-			ResultEx.saveCsv(new OutputStreamWriter(output), results, assayScores, cosmic );
+			ResultEx.saveCsv(new OutputStreamWriter(output), results, assayScores, cosmic, dbPtm );
 		} catch( Exception e ) {
 			e.printStackTrace();
 		}
@@ -548,16 +580,11 @@ public class SearchBean implements Serializable {
 		return null;
 	}
 	
-	public void onGrouping() {
+	public void onChangeOption() {
 		searchError = null;
 		results = null;
 	}
-	
-	public void onCosmic() {
-		searchError = null;
-		results = null;
-	}
-	
+		
 	public boolean isUploadTarget() {
 		return targetInformation == null ? false : targetInformation.getType().equals("upload");
 	}
@@ -576,5 +603,13 @@ public class SearchBean implements Serializable {
 
 	public boolean isAllMotifs() {
 		return allMotifs;
+	}
+
+	public boolean isDbPtm() {
+		return dbPtm;
+	}
+
+	public void setDbPtm(boolean dbPtm) {
+		this.dbPtm = dbPtm;
 	}
 }
