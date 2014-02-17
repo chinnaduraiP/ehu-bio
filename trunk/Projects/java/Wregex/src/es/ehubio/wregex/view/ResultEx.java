@@ -14,20 +14,39 @@ public class ResultEx implements Comparable<ResultEx> {
 	private final Result result;
 	private int cosmicMissense = -1;
 	private String cosmicUrl;
+	private int dbPtms = -1;
+	private String dbPtmUrl;
 	private String motif;
+	private String motifUrl;
 	private static final char separator = ',';
 
 	public int compareTo(ResultEx o) {
-		int cmp = 0;
-		if( cosmicMissense != -1 || o.cosmicMissense != -1 ) {
-			if( cosmicMissense > o.cosmicMissense )
-				cmp = -1;
-			else if( cosmicMissense < o.cosmicMissense )
-				cmp = 1;
-		}
-		if( cmp == 0 )
-			cmp = result.compareTo(o.result);
-		return cmp;
+		// 1. COSMIC
+		if( cosmicMissense > o.cosmicMissense )
+			return -1;
+		if( cosmicMissense < o.cosmicMissense )
+			return 1;
+		// 2. Wregex Score
+		if( getScore() > o.getScore() )
+			return -1;
+		if( getScore() < o.getScore() )
+			return 1;		
+		// 3. PTMs
+		if( dbPtms > o.dbPtms )
+			return -1;
+		if( dbPtms < o.dbPtms )
+			return 1;
+		// 4. Wregex Combinations
+		if( getCombinations() > o.getCombinations() )
+			return -1;
+		if( getCombinations() < o.getCombinations() )
+			return 1;
+		// 5. Match length
+		if( getMatch().length() > o.getMatch().length() )
+			return -1;
+		if( getMatch().length() < o.getMatch().length() )
+			return 1;
+		return 0;
 	}
 
 	public boolean equals(Object obj) {
@@ -125,12 +144,13 @@ public class ResultEx implements Comparable<ResultEx> {
 		Result.saveAln(wr, getResults(results)); 		
 	}
 	
-	public static void saveCsv(Writer wr, List<ResultEx> results, boolean assays, boolean cosmic ) {
+	public static void saveCsv(Writer wr, List<ResultEx> results, boolean assays, boolean cosmic, boolean dbPtm ) {
 		PrintWriter pw = new PrintWriter(wr);
 		List<String> fields = new ArrayList<>();
 		fields.addAll(Arrays.asList(new String[]{"ID","Entry","Motif","Begin","End","Combinations","Sequence","Alignment","Score"}));
 		if( assays ) { fields.add("Assay"); fields.add("Assay"); }
 		if( cosmic ) { fields.add("Gene"); fields.add("COSMIC:Missense"); }
+		if( dbPtm ) fields.add("dbPTM");
 		pw.println(Utils.getCsv(separator, fields.toArray()));
 		for( ResultEx result : results ) {
 			fields.clear();			
@@ -151,6 +171,8 @@ public class ResultEx implements Comparable<ResultEx> {
 				fields.add(result.getGene());
 				fields.add(result.getCosmicMissenseAsString());
 			}
+			if( dbPtm )
+				fields.add(result.getDbPtmsAsString());
 			pw.println(Utils.getCsv(separator, fields.toArray()));
 		}
 		pw.flush();
@@ -161,6 +183,12 @@ public class ResultEx implements Comparable<ResultEx> {
 		for( ResultEx result : results )
 			list.add(result.result);
 		return list;
+	}
+	
+	public String getAccession() {
+		if( result.getFasta().guessAccession() == null )
+			return "?";
+		return result.getFasta().guessAccession();
 	}
 	
 	public String getGene() {
@@ -195,5 +223,33 @@ public class ResultEx implements Comparable<ResultEx> {
 
 	public void setMotif(String motif) {
 		this.motif = motif;
+	}
+
+	public String getMotifUrl() {
+		return motifUrl;
+	}
+
+	public void setMotifUrl(String motifUrl) {
+		this.motifUrl = motifUrl;
+	}
+
+	public int getDbPtms() {
+		return dbPtms;
+	}
+	
+	public String getDbPtmsAsString() {
+		return dbPtms < 0 ? "?" : ""+dbPtms;
+	}
+
+	public void setDbPtms(int dbPtms) {
+		this.dbPtms = dbPtms;
+	}
+
+	public String getDbPtmUrl() {
+		return dbPtmUrl;
+	}
+
+	public void setDbPtmUrl(String dbPtmUrl) {
+		this.dbPtmUrl = dbPtmUrl;
 	}
 }

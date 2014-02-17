@@ -50,6 +50,7 @@ public class HomeBean implements Serializable {
 		pages.add(page);
 		
 		news = new ArrayList<>();
+		news.add(new LatestNew("Feb 17, 2014", "Included support for dbPTM!"));
 		news.add(new LatestNew("Feb 13, 2014", "Now it is possible to search for all Wregex and ELM motifs at the same time!"));
 		news.add(new LatestNew("Feb 11, 2014", "Included proteins of cancer genes from nature12912 paper as a predefined target"));
 		news.add(new LatestNew("Feb 11, 2014", "Wregex-v1.1 beta features moved to a test server"));

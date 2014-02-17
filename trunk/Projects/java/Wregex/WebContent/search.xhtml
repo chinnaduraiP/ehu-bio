@@ -23,7 +23,7 @@
 							<f:selectItem itemLabel="All motifs" itemValue="All" />
 							<f:selectItem itemLabel="Custom" itemValue="Custom" />
 							<f:selectItems value="#{searchBean.wregexMotifs}" />
-							<f:selectItem itemLabel="--- ELM ---" itemValue="ELM"/>
+							<f:selectItem itemLabel="--- #{searchBean.elmInformation.fullName} ---" itemValue="ELM"/>
 							<f:selectItems value="#{searchBean.elmMotifs}" />
 							<p:ajax update="@form" />	
 						</p:selectOneMenu>
@@ -91,9 +91,11 @@
             		</h:panelGroup>
 					<h:outputLabel value="Options:"/>					
 					<h:panelGroup>
-						<p:selectBooleanCheckbox itemLabel="Grouping" value="#{searchBean.grouping}" valueChangeListener="#{searchBean.onGrouping}" update="@form" immediate="true" onchange="submit"/>
+						<p:selectBooleanCheckbox itemLabel="Grouping" value="#{searchBean.grouping}" valueChangeListener="#{searchBean.onChangeOption}" update="@form" immediate="true" onchange="submit"/>
 						&nbsp;
-						<p:selectBooleanCheckbox itemLabel="#{searchBean.cosmicInformation.fullName}" value="#{searchBean.cosmic}" valueChangeListener="#{searchBean.onCosmic}" update="@form" immediate="true" onchange="submit"/>						
+						<p:selectBooleanCheckbox itemLabel="#{searchBean.cosmicInformation.fullName}" value="#{searchBean.cosmic}" valueChangeListener="#{searchBean.onChangeOption}" update="@form" immediate="true" onchange="submit"/>
+						&nbsp;
+						<p:selectBooleanCheckbox itemLabel="#{searchBean.dbPtmInformation.fullName}" value="#{searchBean.dbPtm}" valueChangeListener="#{searchBean.onChangeOption}" update="@form" immediate="true" onchange="submit"/>
 					</h:panelGroup>
 					<h:outputText value="Status:" rendered="#{searchBean.configError != null}"/>
 					<h:outputText value="#{searchBean.configError}" rendered="#{searchBean.configError != null}" style="color:red"/>
@@ -126,7 +128,7 @@
 					</p:column>
 					<p:column rendered="#{searchBean.allMotifs}" width="200">
 						<f:facet name="header">Motif</f:facet>
-						<h:outputText value="#{item.motif}"/>
+						<h:outputLink value="#{item.motifUrl}" target="_blank">#{item.motif}&nbsp;<h:graphicImage name="images/link.png" height="15"/></h:outputLink>
 					</p:column>
 					<p:column>
 						<f:facet name="header">Sequence</f:facet>
@@ -153,6 +155,11 @@
 						<f:facet name="header">COSMIC missense</f:facet>
 						<h:outputText rendered="#{item.cosmicUrl == null}" value="#{item.cosmicMissenseAsString}"/>
 						<h:outputLink rendered="#{item.cosmicUrl != null}" value="#{item.cosmicUrl}" target="_blank">#{item.cosmicMissenseAsString}&nbsp;<h:graphicImage name="images/link.png" height="15"/></h:outputLink>
+					</p:column>
+					<p:column rendered="#{searchBean.dbPtm}" width="80" style="text-align:center;">
+						<f:facet name="header">dbPTM entries</f:facet>
+						<h:outputText rendered="#{item.dbPtmUrl == null}" value="#{item.dbPtmsAsString}"/>
+						<h:outputLink rendered="#{item.dbPtmUrl != null}" value="#{item.dbPtmUrl}" target="_blank">#{item.dbPtmsAsString}&nbsp;<h:graphicImage name="images/link.png" height="15"/></h:outputLink>
 					</p:column>
 				</p:dataTable>
 			</h:form>
