@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
 
 import javax.faces.bean.ApplicationScoped;
@@ -18,7 +19,7 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.context.FacesContext;
 
 import es.ehubio.cosmic.Loci;
-import es.ehubio.db.Fasta.InvalidSequenceException;
+import es.ehubio.db.fasta.Fasta.InvalidSequenceException;
 import es.ehubio.dbptm.ProteinPtms;
 import es.ehubio.io.UnixCfgReader;
 import es.ehubio.wregex.InputGroup;
@@ -26,6 +27,7 @@ import es.ehubio.wregex.InputGroup;
 @ManagedBean
 @ApplicationScoped
 public class DatabasesBean {
+	private final static Logger logger = Logger.getLogger(DatabasesBean.class.getName());
 	private static final String WregexMotifsPath = "/resources/data/motifs.xml";
 	private static final String DatabasesPath = "/resources/data/databases.xml";
 	
@@ -96,6 +98,7 @@ public class DatabasesBean {
 	}
 	
 	private List<InputGroup> loadFasta( String path ) throws IOException, InvalidSequenceException {
+		logger.info("Loading DB: " + path);
 		Reader rd;
 		if( path.endsWith("gz") )
 			rd = new InputStreamReader(new GZIPInputStream(new FileInputStream(path)));
@@ -103,7 +106,7 @@ public class DatabasesBean {
 			rd = new FileReader(path);
 		List<InputGroup> result = InputGroup.readEntries(rd);
 		rd.close();
-		System.out.println("Loaded DB: " + path);
+		logger.info("Loaded!");
 		return result;
 	}
 	
@@ -178,6 +181,7 @@ public class DatabasesBean {
 	}
 	
 	private void loadElmMotifs() throws IOException {
+		logger.info("Loading DB: " + elm.getPath());
 		elmMotifs = new ArrayList<>();
 		MotifInformation motif;
 		MotifDefinition definition;
@@ -218,18 +222,20 @@ public class DatabasesBean {
 		String version = rd.getComment("ELM_Classes_Download_Date");
 		if( version != null )
 			elm.setVersion(version.split(" ")[1]);
-		System.out.println("Loaded DB: " + elm.getFullName());
+		logger.info("Loaded " + elm.getFullName() + "!");
 	}
 	
 	private void loadCosmic() throws FileNotFoundException, IOException {
+		logger.info("Loading DB: " + cosmic.getFullName());
 		mapCosmic = Loci.load(cosmic.getPath());
 		lastModifiedCosmic = new File(cosmic.getPath()).lastModified();
-		System.out.println("Loaded DB: " + cosmic.getFullName());
+		logger.info("Loaded!");
 	}
 	
 	private void loadDbPtm() throws IOException {
+		logger.info("Loading DB: " + dbPtm.getFullName());
 		mapDbPtm = ProteinPtms.load(dbPtm.getPath());
 		lastModifiedDbPtm = new File(dbPtm.getPath()).lastModified();
-		System.out.println("Loaded DB: " + dbPtm.getFullName());
+		logger.info("Loaded!");
 	}	
 }

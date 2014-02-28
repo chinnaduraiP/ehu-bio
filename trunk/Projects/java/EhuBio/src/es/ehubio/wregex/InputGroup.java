@@ -7,9 +7,9 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
 
-import es.ehubio.db.Fasta;
-import es.ehubio.db.Fasta.InvalidSequenceException;
-import es.ehubio.db.Fasta.SequenceType;
+import es.ehubio.db.fasta.Fasta;
+import es.ehubio.db.fasta.Fasta.InvalidSequenceException;
+import es.ehubio.db.fasta.Fasta.SequenceType;
 
 public final class InputGroup {	
 	/**
@@ -19,14 +19,14 @@ public final class InputGroup {
 	 */
 	public InputGroup(Fasta fasta) {
 		mFasta = fasta;
-		mId = fasta.guessName();
+		mId = fasta.getProteinName();
 		loadMotifs();
 		if (mMotifs.isEmpty())
-			mMotifs.add(new InputMotif(mFasta, 1, mFasta.sequence().length(), 100.0));
+			mMotifs.add(new InputMotif(mFasta, 1, mFasta.getSequence().length(), 100.0));
 	}
 
 	private void loadMotifs() {
-		String[] fields = mFasta.header().split("[ \t]");
+		String[] fields = mFasta.getHeader().split("[ \t]");
 		if (fields.length == 1)
 			return;
 		String str = fields[fields.length - 1];
@@ -59,11 +59,11 @@ public final class InputGroup {
 	}
 
 	public String getSequence() {
-		return mFasta.sequence();
+		return mFasta.getSequence();
 	}
 
 	public String getHeader() {
-		return mFasta.header();
+		return mFasta.getHeader();
 	}
 
 	public List<InputMotif> getMotifs() {

@@ -19,7 +19,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.UploadedFile;
 
-import es.ehubio.db.Fasta.InvalidSequenceException;
+import es.ehubio.db.fasta.Fasta.InvalidSequenceException;
 import es.ehubio.wregex.InputGroup;
 import es.ehubio.wregex.InputMotif;
 import es.ehubio.wregex.Pssm;

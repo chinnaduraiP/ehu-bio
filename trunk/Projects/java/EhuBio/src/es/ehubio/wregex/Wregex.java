@@ -6,7 +6,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import es.ehubio.db.Aminoacid;
-import es.ehubio.db.Fasta;
+import es.ehubio.db.fasta.Fasta;
 import es.ehubio.wregex.Pssm.PssmException;
 
 public final class Wregex {
@@ -47,7 +47,7 @@ public final class Wregex {
 	
 	private List<Result> searchFirst( Fasta fasta ) {
 		List<Result> results = new ArrayList<Result>();
-		Matcher matcher = mPattern.matcher(fasta.sequence());
+		Matcher matcher = mPattern.matcher(fasta.getSequence());
 		Matcher sub; // match all combinations
 		String str;
 		List<String> groups = new ArrayList<String>();
@@ -171,10 +171,13 @@ public final class Wregex {
 		if( mPssm == null )
 			return -1.0;
 		double score = 0.0;
+		int len = 0;
 		List<String> groups = result.getGroups();
 		String group;
 		for( int g = 0; g < groups.size(); g++ ) {
 			group = groups.get(g);
+			if( group == null )
+				continue;
 			for( int i = 0; i < group.length(); i++ ) {
 				try {
 					score += mPssm.getScore(Aminoacid.parseLetter(group.charAt(i)),g);
@@ -182,8 +185,9 @@ public final class Wregex {
 					throw new RuntimeException(e);
 				}
 			}
+			len += group.length();
 		}
-		return Math.pow(10.0,score/result.getMatch().length())*100.0;
+		return Math.pow(10.0,score/len)*100.0;
 	}
 	
 	/*double getScore(Result result) {

@@ -28,7 +28,7 @@ import org.primefaces.model.UploadedFile;
 import es.ehubio.cosmic.Loci;
 import es.ehubio.cosmic.Locus;
 import es.ehubio.db.Aminoacid;
-import es.ehubio.db.Fasta.InvalidSequenceException;
+import es.ehubio.db.fasta.Fasta.InvalidSequenceException;
 import es.ehubio.dbptm.ProteinPtms;
 import es.ehubio.dbptm.Ptm;
 import es.ehubio.wregex.InputGroup;
@@ -385,8 +385,8 @@ public class SearchBean implements Serializable {
 			missense = 0;
 			invalid = false;
 			for( Locus locus : loci.getLoci().values() ) {
-				if( locus.position > result.getFasta().sequence().length() ||
-					locus.aa != Aminoacid.parseLetter(result.getFasta().sequence().charAt(locus.position-1)) ) {
+				if( locus.position > result.getFasta().getSequence().length() ||
+					locus.aa != Aminoacid.parseLetter(result.getFasta().getSequence().charAt(locus.position-1)) ) {
 					invalid = true;
 					break;
 				}

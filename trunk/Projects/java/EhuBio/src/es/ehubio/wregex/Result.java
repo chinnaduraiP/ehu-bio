@@ -8,7 +8,7 @@ import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 
-import es.ehubio.db.Fasta;
+import es.ehubio.db.fasta.Fasta;
 
 /** Inmutable class for storing a Wregex result*/
 public final class Result implements Comparable<Result> {
@@ -31,13 +31,14 @@ public final class Result implements Comparable<Result> {
 		this.fasta = fasta;		
 		this.start = start;
 		this.end = start+match.length()-1;
-		this.name = fasta.guessName()+"@"+start+"-"+end;		 		
+		this.name = fasta.getEntry()+"@"+start+"-"+end;		 		
 		this.match = match;
 		this.groups = new ArrayList<String>(groups);		
 		
 		StringBuilder builder = new StringBuilder();
 		for( String str : groups )
-			builder.append(str+"-");
+			if( str != null )
+				builder.append(str+"-");
 		builder.deleteCharAt(builder.length()-1);
 		this.alignment = builder.toString();				
 	}
@@ -54,7 +55,7 @@ public final class Result implements Comparable<Result> {
 	}
 	
 	public String getEntry() {
-		return fasta.guessName();
+		return fasta.getProteinName();
 	}
 
 	public int getStart() {

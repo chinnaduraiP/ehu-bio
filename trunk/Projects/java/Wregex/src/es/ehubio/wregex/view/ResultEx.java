@@ -7,7 +7,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import es.ehubio.Utils;
-import es.ehubio.db.Fasta;
+import es.ehubio.db.fasta.Fasta;
 import es.ehubio.wregex.Result;
 
 public class ResultEx implements Comparable<ResultEx> {
@@ -186,15 +186,15 @@ public class ResultEx implements Comparable<ResultEx> {
 	}
 	
 	public String getAccession() {
-		if( result.getFasta().guessAccession() == null )
+		if( result.getFasta().getAccession() == null )
 			return "?";
-		return result.getFasta().guessAccession();
+		return result.getFasta().getAccession();
 	}
 	
 	public String getGene() {
-		if( result.getFasta().guessGene() == null )
+		if( result.getFasta().getGeneName() == null )
 			return "?";
-		return result.getFasta().guessGene();
+		return result.getFasta().getGeneName();
 	}
 
 	public int getCosmicMissense() {
