@@ -2,7 +2,7 @@ package es.ehubio.wregex;
 
 import java.io.Serializable;
 
-import es.ehubio.db.Fasta;
+import es.ehubio.db.fasta.Fasta;
 
 public final class InputMotif implements Serializable {
 	private static final long serialVersionUID = 1L;
@@ -36,7 +36,7 @@ public final class InputMotif implements Serializable {
 	}
 	
 	public String getMotif() {
-		return fasta.sequence().substring(start-1, end);
+		return fasta.getSequence().substring(start-1, end);
 	}
 
 	public double getWeight() {
@@ -47,8 +47,8 @@ public final class InputMotif implements Serializable {
 		this.weight = weight;
 	}
 	
-	public String getAccession() {
-		return fasta.guessName();
+	public String getId() {
+		return fasta.getEntry();
 	}
 	
 	public boolean contains(Result result) {

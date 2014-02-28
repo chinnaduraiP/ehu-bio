@@ -85,6 +85,8 @@ public final class Trainer {
 				scores[i] = 0.0;
 				double sum = 0.0;
 				for( TrainingMotif motif : motifs ) {
+					if( motif.getRegexGroups().get(i) == null )
+						continue;
 					String str = motif.getRegexGroups().get(i).toUpperCase();
 					sum += str.length()*motif.getDividedWeight();
 					int last = 0;
@@ -93,7 +95,7 @@ public final class Trainer {
 						last++;
 					}
 				}
-				scores[i] = Math.log10(scores[i]/sum+0.00001); 
+				scores[i] = Math.log10((sum==0.0?0.0:scores[i]/sum)+0.00001); 
 			}
 			pssm.setScores(aa, Arrays.asList(scores));
 		}

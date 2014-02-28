@@ -1,4 +1,4 @@
-package es.ehubio.db;
+package es.ehubio.db.fasta;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -6,20 +6,19 @@ import java.io.Reader;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
+import es.ehubio.db.Aminoacid;
+import es.ehubio.db.Nucleotide;
 import es.ehubio.io.UnixCfgReader;
 
 public final class Fasta {
-	private final String mSequence;
-	private final String mHeader;
-	private final SequenceType mType;
-	private final String mGuessedAccession;
-	private final String mGuessedName;
-	private final String mGuessedGene;
-	private static Pattern uniProtPattern;
-	private static Pattern headerPattern;
+	private final String sequence;
+	private final String header;
+	private final SequenceType type;
+	private final String entry;
+	private final String accession;
+	private final String proteinName;
+	private final String geneName;
 	
 	public enum SequenceType {
 		PROTEIN, DNA, RNA
@@ -39,33 +38,35 @@ public final class Fasta {
 	}
 	
 	public Fasta( String header, String sequence, SequenceType type ) throws InvalidSequenceException {
+		this(header, guessParser(header), sequence, type);
+	}
+	
+	public Fasta( String header, HeaderParser parser, String sequence, SequenceType type ) throws InvalidSequenceException {
 		assert header != null && sequence != null;
-		mHeader = header;
-		mSequence = sequence.trim().replaceAll("[ \t]", "");		
-		mType = type;
-		checkSequence(mSequence, type);
-		
-		// Fields in header identifier
-		mGuessedName = header.split("[ \t]")[0];
-		if( uniProtPattern == null )
-			uniProtPattern = Pattern.compile("^(..)\\|(\\w+)\\|(\\w+)");
-		Matcher matcher = uniProtPattern.matcher(header);
-		String accession = null;
-		if( matcher.find() )
-			accession = matcher.group(2);
-		mGuessedAccession = accession;
-		
-		// Fields in header description
-		if( headerPattern == null )
-			headerPattern = Pattern.compile("(..)=(\\w+)");
-		matcher = headerPattern.matcher(header);
-		String gene = null;
-		while( matcher.find() )
-			if( matcher.group(1).equalsIgnoreCase("GN") ) {
-				gene = matcher.group(2);
-				break;
-			}
-		mGuessedGene = gene;
+		this.header = header;
+		this.sequence = sequence.trim().replaceAll("[ \t]", "");		
+		this.type = type;
+		checkSequence(this.sequence, type);
+		this.entry = header.split("[ \t]")[0];
+		if( parser == null ) {
+			accession = null;
+			proteinName = null;
+			geneName = null;
+		} else {
+			accession = parser.getAccession();
+			proteinName = parser.getProteinName();
+			geneName = parser.getGeneName();
+		}
+	}
+	
+	private static HeaderParser guessParser( String header ) {
+		HeaderParser parser = new UniprotParser();
+		if( parser.parse(header) )
+			return parser;
+		parser = new NextprotParser();
+		if( parser.parse(header) )
+			return parser;
+		return null;
 	}
 	
 	public static void checkSequence( String sequence, SequenceType type ) throws InvalidSequenceException {
@@ -91,28 +92,32 @@ public final class Fasta {
 				new InvalidSequenceException(c);
 	}
 	
-	public String sequence() {
-		return mSequence;
+	public String getSequence() {
+		return sequence;
 	}
 	
-	public String header() {
-		return mHeader;
+	public String getHeader() {
+		return header;
 	}
 	
-	public SequenceType type() {
-		return mType;
+	public SequenceType getType() {
+		return type;
 	}
 	
-	public String guessAccession() {
-		return mGuessedAccession;
+	public String getEntry() {
+		return entry;
 	}
 	
-	public String guessName() {
-		return mGuessedName;
+	public String getAccession() {
+		return accession;
 	}
 	
-	public String guessGene() {
-		return mGuessedGene;
+	public String getProteinName() {
+		return proteinName;
+	}
+	
+	public String getGeneName() {
+		return geneName;
 	}
 	
 	public static List<Fasta> readEntries( Reader rd, SequenceType type ) throws IOException, InvalidSequenceException {
@@ -137,9 +142,9 @@ public final class Fasta {
 	public static void writeEntries( Writer wr, Iterable<Fasta> list) {
 		PrintWriter pw = new PrintWriter(wr);
 		for( Fasta f : list ) {
-			pw.println(">" + f.header());
-			pw.println(f.sequence());
+			pw.println(">" + f.getHeader());
+			pw.println(f.getSequence());
 		}
 		pw.flush();
-	}	
+	}
 }
