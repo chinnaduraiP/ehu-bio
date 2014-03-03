@@ -108,7 +108,7 @@
 					</h:panelGroup>
 				</p:panelGrid>
 				<br/>
-				<p:dataTable value="#{searchBean.results}" rowIndexVar="row" var="item" rendered="#{not empty searchBean.results}" scrollable="true" scrollHeight="300" liveScroll="true" scrollRows="40">
+				<p:dataTable value="#{searchBean.results}" rowIndexVar="row" var="item" rendered="#{not empty searchBean.results and searchBean.configError == null}" scrollable="true" scrollHeight="300" liveScroll="true" scrollRows="40">
 					<f:facet name="header">Search results - live scroll (scroll and wait for more results)</f:facet>
 					<p:column width="50" style="text-align:center;">
 						<f:facet name="header">#</f:facet>

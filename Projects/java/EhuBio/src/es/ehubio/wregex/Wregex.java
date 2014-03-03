@@ -19,15 +19,29 @@ public final class Wregex {
 	}
 	
 	public Wregex( String regex, Pssm pssm ) throws WregexException {
-		int check = regex.length()-regex.replaceAll("[()]", "").length();
-		if( check == 0 && pssm != null )
+		int unmatchedGroups = countUnmatchedGroups(regex);
+		if( unmatchedGroups > 0 )
+			throw new WregexException(String.format("%d unclosed regex %s", unmatchedGroups, unmatchedGroups>1?"groups":"group"));
+		else if( unmatchedGroups < 0 )
+			throw new WregexException(String.format("%d extra regex closing %s", -unmatchedGroups, unmatchedGroups<-1?"groups":"group"));
+		int capturingGroups = countCapturingGroups(regex);
+		if( capturingGroups == 0 && pssm != null )
 			throw new WregexException("Regex groups must be defined for using a PSSM");
-		else if( check%2 != 0 )
-			throw new WregexException("Some regex groups are not closed");
-		else if( pssm != null && check/2 != pssm.getGroups() )
+		else if( pssm != null && capturingGroups != pssm.getGroups() )
 			throw new WregexException("Provided regex and PSSM parameters are incompatible");
 		mPattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE | Pattern.COMMENTS);
 		mPssm = pssm;
+	}
+	
+	public static int countUnmatchedGroups( String regex ) {
+		return regex.replaceAll("\\)", "").length()-regex.replaceAll("\\(", "").length();
+	}
+	
+	public static int countCapturingGroups( String regex ) {
+		if( regex == null )
+			return 0;
+		String tmp = regex.replaceAll("\\(\\?","");
+		return tmp.length()-tmp.replaceAll("\\(", "").length();
 	}
 
 	public String getRegex() {

@@ -257,9 +257,18 @@ public class SearchBean implements Serializable {
 	}
 
 	public String getConfigError() {
+		String error = checkConfigError();
+		if( error != null )
+			results = null;
+		return error;
+	}
+	
+	private String checkConfigError() {
 		if( custom ) {
 			if( customRegex == null || customRegex.isEmpty() )
 				return "A regular expression must be defined";
+			/*if( Wregex.countCapturingGroups(customRegex) > 0 && customPssm == null )
+				return "A PSSM must be provided when using regex groups";*/
 		} else if( !allMotifs ) {
 			if( motifInformation == null )
 				return "A motif must be selected";
@@ -337,6 +346,7 @@ public class SearchBean implements Serializable {
 		usingPssm = pssm == null ? false : true;
 		String regex = custom ? getCustomRegex() : getRegex();
 		Wregex wregex = new Wregex(regex, pssm);
+		updateAssayScores();
 		return directSearch(wregex, motifInformation, getInitNumber("wregex.watchdogtimer")*1000);
 	}
 	
@@ -346,6 +356,7 @@ public class SearchBean implements Serializable {
 		Reader rd;
 		Pssm pssm;
 		Wregex wregex;
+		assayScores = false;
 		//long div = getWregexMotifs().size() + getElmMotifs().size();
 		//long tout = getInitNumber("wregex.watchdogtimer")*1000/div;
 		long tout = getInitNumber("wregex.watchdogtimer")*1000;
@@ -465,13 +476,16 @@ public class SearchBean implements Serializable {
 			searchError = "Fasta not valid: " + e.getMessage();
 			return;
 		} 		
+		baseFileName = FilenameUtils.removeExtension(fastaFile.getFileName());
+	}
+	
+	private void updateAssayScores() {
 		assayScores = true;
 		for( InputGroup inputGroup : inputGroups )
 			if( !inputGroup.hasScores() ) {
 				assayScores = false;
 				break;
 			}
-		baseFileName = FilenameUtils.removeExtension(fastaFile.getFileName());
 	}
 
 	public String getSearchError() {

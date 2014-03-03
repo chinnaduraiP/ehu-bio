@@ -38,7 +38,7 @@ public final class InputGroup {
 		double w;
 		String[] tmp;
 		scores = true;
-		for (String range : str.split(";")) {
+		for( String range : str.split(";") ) {
 			fields = range.split("-");
 			if (fields.length != 2)
 				return;
