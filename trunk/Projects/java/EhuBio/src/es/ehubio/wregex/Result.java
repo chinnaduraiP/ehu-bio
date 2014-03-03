@@ -55,7 +55,7 @@ public final class Result implements Comparable<Result> {
 	}
 	
 	public String getEntry() {
-		return fasta.getProteinName();
+		return fasta.getEntry();
 	}
 
 	public int getStart() {

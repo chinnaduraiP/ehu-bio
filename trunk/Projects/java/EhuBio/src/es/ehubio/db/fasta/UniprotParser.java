@@ -14,10 +14,10 @@ public class UniprotParser implements HeaderParser {
 		
 		accession = matcher.group(2);
 		name = matcher.group(3);
-		String[] fields = header.split("=");
-		for( int i = 0; i < fields.length-1; i +=2 )
-			if( fields[i].equals("GN") )
-				geneName = fields[i+1].trim();
+		String[] fields = header.split("[ \\t]");
+		for( int i = 0; i < fields.length; i++ )
+			if( fields[i].contains("GN=") )
+				geneName = fields[i].replaceAll("GN=", "");
 		
 		return true;
 	}
