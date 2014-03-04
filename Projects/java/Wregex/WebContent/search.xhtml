@@ -12,7 +12,7 @@
 			<meta name="description" content="Wregex search page. A novel approach for amino acid motif searching combining a regular expression with a Position-Specific Scoring Matrix (PSSM)."/>
 		</ui:define>
 		<ui:define name="content">
-			<h:form enctype="multipart/form-data">
+			<h:form enctype="multipart/form-data" rendered="#{searchBean.initialized}">
 				<p:panelGrid columns="2" headerClass="cfg_header">
 					<f:facet name="header">Search configuration</f:facet>
 					<h:outputText value="Motif:"/>
@@ -163,6 +163,7 @@
 					</p:column>
 				</p:dataTable>
 			</h:form>
+			<h:outputText value="Sorry, databases are beeing updated, please try again later" rendered="#{!searchBean.initialized}"/>
 		</ui:define>
 	</ui:composition>
 </h:body>

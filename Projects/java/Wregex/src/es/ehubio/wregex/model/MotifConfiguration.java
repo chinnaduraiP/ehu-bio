@@ -1,4 +1,4 @@
-package es.ehubio.wregex.view;
+package es.ehubio.wregex.model;
 
 import java.io.PrintStream;
 import java.io.Reader;

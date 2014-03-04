@@ -9,10 +9,8 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.Reader;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
@@ -25,18 +23,19 @@ import org.apache.commons.io.FilenameUtils;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.UploadedFile;
 
-import es.ehubio.cosmic.Loci;
-import es.ehubio.cosmic.Locus;
-import es.ehubio.db.Aminoacid;
 import es.ehubio.db.fasta.Fasta.InvalidSequenceException;
-import es.ehubio.dbptm.ProteinPtms;
-import es.ehubio.dbptm.Ptm;
 import es.ehubio.wregex.InputGroup;
 import es.ehubio.wregex.Pssm;
 import es.ehubio.wregex.PssmBuilder.PssmBuilderException;
-import es.ehubio.wregex.ResultGroup;
 import es.ehubio.wregex.Wregex;
 import es.ehubio.wregex.Wregex.WregexException;
+import es.ehubio.wregex.model.DatabaseInformation;
+import es.ehubio.wregex.model.MotifDefinition;
+import es.ehubio.wregex.model.MotifInformation;
+import es.ehubio.wregex.model.MotifReference;
+import es.ehubio.wregex.model.ResultEx;
+import es.ehubio.wregex.model.ResultGroupEx;
+import es.ehubio.wregex.model.Services;
 
 @ManagedBean
 @SessionScoped
@@ -74,6 +73,10 @@ public class SearchBean implements Serializable {
 	
 	public List<MotifInformation> getElmMotifs() {
 		return databases.getElmMotifs();
+	}
+	
+	public List<MotifInformation> getAllMotifs() {
+		return databases.getAllMotifs();
 	}
 	
 	public List<MotifDefinition> getDefinitions() {
@@ -287,15 +290,8 @@ public class SearchBean implements Serializable {
 	public void search() {
 		searchError = null;		
 		try {						
-			List<ResultGroupEx> resultGroups = allMotifs == false ? singleSearch() : allSearch();			
-			results = new ArrayList<>();
-			for( ResultGroupEx resultGroup : resultGroups ) {
-				if( grouping )
-					results.add(resultGroup.getRepresentative());
-				else
-					for( ResultEx r : resultGroup )
-						results.add(r);
-			}
+			List<ResultGroupEx> resultGroups = allMotifs == false ? singleSearch() : allSearch();
+			results = Services.expand(resultGroups, grouping);
 			if( cosmic )
 				searchCosmic();
 			if( dbPtm )
@@ -310,128 +306,38 @@ public class SearchBean implements Serializable {
 		} catch( Exception e ) {
 			searchError = e.getMessage();
 		}
-	}		
-
-	private List<ResultGroupEx> directSearch( Wregex wregex, MotifInformation motif, long tout ) throws Exception {
-		List<ResultGroupEx> resultGroupsEx = new ArrayList<>();
-		List<ResultGroup> resultGroups;
-		ResultGroupEx resultGroupEx;
-		long wdt = System.currentTimeMillis() + tout;
-		for( InputGroup inputGroup : inputGroups ) {
-			//System.out.println(inputGroup.getHeader());
-			if( assayScores )
-				resultGroups = wregex.searchGroupingAssay(inputGroup);
-			else
-				resultGroups = wregex.searchGrouping(inputGroup.getFasta());
-			for( ResultGroup resultGroup : resultGroups ) {
-				resultGroupEx = new ResultGroupEx(resultGroup);
-				if( motif != null ) {
-					resultGroupEx.setMotif(motif.getName());
-					resultGroupEx.setMotifUrl(motif.getReferences().get(0).getLink());
-				}
-				resultGroupsEx.add(resultGroupEx);
-			}
-			if( System.currentTimeMillis() >= wdt )
-				throw new Exception("Too intensive search, try a more strict regular expression or a smaller fasta file");
-		}
-		return resultGroupsEx;
 	}
 	
 	private List<ResultGroupEx> singleSearch() throws NumberFormatException, Exception {
-		if( !custom && getPssm() != null ) {
-			Reader rd = getResourceReader("data/"+getPssm());
-			pssm = Pssm.load(rd, true);
-			rd.close();
-		}		
+		if( !custom && getPssm() != null )
+			pssm = Services.getPssm(getPssm());
 		usingPssm = pssm == null ? false : true;
 		String regex = custom ? getCustomRegex() : getRegex();
 		Wregex wregex = new Wregex(regex, pssm);
 		updateAssayScores();
-		return directSearch(wregex, motifInformation, getInitNumber("wregex.watchdogtimer")*1000);
+		return Services.search(wregex, motifInformation, inputGroups, assayScores, getInitNumber("wregex.watchdogtimer")*1000);
 	}
 	
 	private List<ResultGroupEx> allSearch() throws Exception {
-		List<ResultGroupEx> results = new ArrayList<>();
-		MotifDefinition def;
-		Reader rd;
-		Pssm pssm;
-		Wregex wregex;
 		assayScores = false;
 		//long div = getWregexMotifs().size() + getElmMotifs().size();
 		//long tout = getInitNumber("wregex.watchdogtimer")*1000/div;
 		long tout = getInitNumber("wregex.watchdogtimer")*1000;
-		for( MotifInformation motif : getWregexMotifs() ) {
-			def = motif.getDefinitions().get(0);
-			rd = getResourceReader("data/"+def.getPssm());
-			pssm = Pssm.load(rd, true);
-			rd.close();
-			wregex = new Wregex(def.getRegex(), pssm);
-			results.addAll(directSearch(wregex, motif, tout));
-		}
-		for( MotifInformation motif : getElmMotifs() ) {
-			def = motif.getDefinitions().get(0);
-			wregex = new Wregex(def.getRegex(), null);
-			results.addAll(directSearch(wregex, motif, tout));
-		}
+		List<ResultGroupEx> results = Services.searchAll(getAllMotifs(), inputGroups, tout);
 		usingPssm = true;
 		return results;
 	}
 	
 	private static long getInitNumber( String param ) {
 		return Long.parseLong(FacesContext.getCurrentInstance().getExternalContext().getInitParameter(param));
-	}
-	
-	private static Reader getResourceReader( String resource ) {
-		return new InputStreamReader(FacesContext.getCurrentInstance().getExternalContext().getResourceAsStream("/resources/"+resource));
-	}
+	}		
 
 	private void searchCosmic() {
-		Map<String,Loci> map = databases.getMapCosmic();
-		int missense;
-		boolean invalid;
-		for( ResultEx result : results ) {
-			Loci loci = map.get(result.getGene());
-			if( loci == null )
-				continue;			
-			missense = 0;
-			invalid = false;
-			for( Locus locus : loci.getLoci().values() ) {
-				if( locus.position > result.getFasta().getSequence().length() ||
-					locus.aa != Aminoacid.parseLetter(result.getFasta().getSequence().charAt(locus.position-1)) ) {
-					invalid = true;
-					break;
-				}
-				if( locus.position >= result.getStart() && locus.position <= result.getEnd() )
-					missense += locus.mutations;
-			}
-			if( invalid ) {
-				result.setCosmicUrl( String.format(
-					"http://cancer.sanger.ac.uk/cosmic/gene/analysis?ln=%s&mut=%s",
-					result.getGene(), "substitution_missense") );
-				continue;
-			}
-			result.setCosmicUrl( String.format(
-				"http://cancer.sanger.ac.uk/cosmic/gene/analysis?ln=%s&start=%d&end=%d&mut=%s",
-				result.getGene(), result.getStart(), result.getEnd(), "substitution_missense") );
-			result.setCosmicMissense(missense);
-		}
+		Services.searchCosmic(databases.getMapCosmic(), results);
 	}
 	
 	private void searchDbPtm() {
-		Map<String, ProteinPtms> map = databases.getMapDbPtm();
-		int count;
-		for( ResultEx result : results ) {
-			ProteinPtms ptms = map.get(result.getAccession());
-			if( ptms == null )
-				continue;
-			count = 0;
-			for( Ptm ptm : ptms.getPtms().values() )
-				if( ptm.position >= result.getStart() && ptm.position <= result.getEnd() )
-					count += ptm.count;
-			result.setDbPtmUrl(String.format(
-				"http://dbptm.mbc.nctu.edu.tw/search_result.php?search_type=db_id&swiss_id=%s",ptms.getId()));
-			result.setDbPtms(count);			
-		}
+		Services.searchDbPtm(databases.getMapDbPtm(), results);
 	}
 
 	public void uploadPssm( FileUploadEvent event ) {
@@ -625,5 +531,9 @@ public class SearchBean implements Serializable {
 
 	public void setDbPtm(boolean dbPtm) {
 		this.dbPtm = dbPtm;
+	}
+	
+	public boolean isInitialized() {
+		return databases.isInitialized();
 	}
 }

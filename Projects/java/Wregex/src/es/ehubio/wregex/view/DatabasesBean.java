@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
 
+import javax.annotation.PostConstruct;
 import javax.faces.bean.ApplicationScoped;
 import javax.faces.bean.ManagedBean;
 import javax.faces.context.FacesContext;
@@ -23,6 +24,12 @@ import es.ehubio.db.fasta.Fasta.InvalidSequenceException;
 import es.ehubio.dbptm.ProteinPtms;
 import es.ehubio.io.UnixCfgReader;
 import es.ehubio.wregex.InputGroup;
+import es.ehubio.wregex.model.DatabaseConfiguration;
+import es.ehubio.wregex.model.DatabaseInformation;
+import es.ehubio.wregex.model.MotifConfiguration;
+import es.ehubio.wregex.model.MotifDefinition;
+import es.ehubio.wregex.model.MotifInformation;
+import es.ehubio.wregex.model.MotifReference;
 
 @ManagedBean
 @ApplicationScoped
@@ -34,6 +41,7 @@ public class DatabasesBean {
 	private MotifConfiguration motifConfiguration;
 	private DatabaseConfiguration databaseConfiguration;
 	private List<MotifInformation> elmMotifs;
+	private List<MotifInformation> allMotifs;
 	private List<DatabaseInformation> targets;
 	private DatabaseInformation elm;
 	private DatabaseInformation cosmic;
@@ -44,15 +52,22 @@ public class DatabasesBean {
 	private long lastModifiedCosmic;
 	private long lastModifiedElm;
 	private long lastModifiedDbPtm;
+	private String humanProteome;
+	private boolean initialized = false;
 	
 	private class FastaDb {
 		public long lastModified;
 		public List<InputGroup> entries;
 	}
 	
-	public DatabasesBean() {
+	public DatabasesBean() {		
+	}
+	
+	@PostConstruct
+	public void init() {
 		try {
 			loadDatabases();
+			initialized = true;
 		} catch( Exception e ) {
 			e.printStackTrace();
 		}
@@ -93,7 +108,9 @@ public class DatabasesBean {
 			File f = new File(database.getPath());
 			fasta.lastModified = f.lastModified();
 			fasta.entries = loadFasta(database.getPath());
-			mapFasta.put(database.getPath(), fasta);			
+			mapFasta.put(database.getPath(), fasta);
+			if( database.getName().contains("Human Proteome") )
+				humanProteome = database.getPath();
 		}
 	}
 	
@@ -129,6 +146,16 @@ public class DatabasesBean {
 		return elmMotifs;
 	}
 	
+	public List<MotifInformation> getAllMotifs() {
+		File file = new File(elm.getPath());
+		if( file.lastModified() != lastModifiedElm || allMotifs == null ) {
+			allMotifs = new ArrayList<>();
+			allMotifs.addAll(getWregexMotifs());
+			allMotifs.addAll(getElmMotifs());
+		}
+		return allMotifs;
+	}
+	
 	public List<InputGroup> getFasta( String path ) throws IOException, InvalidSequenceException {		
 		File file = new File(path);
 		FastaDb fasta = mapFasta.get(path);
@@ -142,6 +169,10 @@ public class DatabasesBean {
 			fasta.lastModified = file.lastModified();
 		}
 		return fasta.entries;
+	}
+	
+	public List<InputGroup> getHumanProteome() throws IOException, InvalidSequenceException {
+		return getFasta(humanProteome);
 	}
 	
 	public DatabaseInformation getElmInformation() {
@@ -237,5 +268,9 @@ public class DatabasesBean {
 		mapDbPtm = ProteinPtms.load(dbPtm.getPath());
 		lastModifiedDbPtm = new File(dbPtm.getPath()).lastModified();
 		logger.info("Loaded!");
+	}
+
+	public boolean isInitialized() {
+		return initialized;
 	}	
 }
