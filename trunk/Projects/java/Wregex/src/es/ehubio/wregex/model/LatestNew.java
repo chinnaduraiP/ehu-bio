@@ -1,4 +1,4 @@
-package es.ehubio.wregex.view;
+package es.ehubio.wregex.model;
 
 public final class LatestNew {
 	private final String date;

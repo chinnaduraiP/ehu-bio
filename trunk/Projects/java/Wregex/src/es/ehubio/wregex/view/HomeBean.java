@@ -7,6 +7,9 @@ import java.util.List;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.RequestScoped;
 
+import es.ehubio.wregex.model.LatestNew;
+import es.ehubio.wregex.model.PageSummary;
+
 @ManagedBean
 @RequestScoped
 public class HomeBean implements Serializable {
@@ -50,6 +53,7 @@ public class HomeBean implements Serializable {
 		pages.add(page);
 		
 		news = new ArrayList<>();
+		news.add(new LatestNew("Mar 04, 2014", "First bubble chart support!"));
 		news.add(new LatestNew("Mar 03, 2014", "Included Wregex NLS motifs"));
 		news.add(new LatestNew("Mar 03, 2014", "Included support for optional capturing groups"));
 		news.add(new LatestNew("Feb 17, 2014", "Included support for dbPTM!"));
@@ -70,7 +74,7 @@ public class HomeBean implements Serializable {
 	}
 	
 	public String getSignature() {
-		return "Wregex (v1.1b2)";
+		return "Wregex (v2.0-alfa)";
 	}
 	
 	public String getLastUpdated() {
