@@ -1,4 +1,4 @@
-package es.ehubio.wregex.model;
+package es.ehubio.wregex.data;
 
 import java.io.BufferedReader;
 import java.io.File;

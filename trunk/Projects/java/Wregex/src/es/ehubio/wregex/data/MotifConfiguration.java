@@ -1,4 +1,4 @@
-package es.ehubio.wregex.model;
+package es.ehubio.wregex.data;
 
 import java.io.PrintStream;
 import java.io.Reader;
@@ -14,27 +14,27 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-@XmlRootElement(name = "databases")
+@XmlRootElement(name = "motifs")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class DatabaseConfiguration implements Serializable {
+public final class MotifConfiguration implements Serializable {
 	private static final long serialVersionUID = 1L;
-	@XmlElement(name="database")
-	private List<DatabaseInformation> databases;
-	
-	public List<DatabaseInformation> getDatabases() {
-		return databases;
+	@XmlElement(name="motif")
+	private List<MotifInformation> motifs;
+
+	public List<MotifInformation> getMotifs() {
+		return motifs;
+	}
+
+	public void setMotifs(List<MotifInformation> motifs) {
+		this.motifs = motifs;
 	}
 	
-	public void setDatabases(List<DatabaseInformation> databses) {
-		this.databases = databses;
-	}
-	
-	public static DatabaseConfiguration load( Reader rd ) {
-		DatabaseConfiguration configuration = null;
+	public static MotifConfiguration load( Reader rd ) {
+		MotifConfiguration configuration = null;
 		try {
-			JAXBContext context = JAXBContext.newInstance(DatabaseConfiguration.class);
+			JAXBContext context = JAXBContext.newInstance(MotifConfiguration.class);
 			Unmarshaller um = context.createUnmarshaller();
-			configuration = (DatabaseConfiguration)um.unmarshal(rd);
+			configuration = (MotifConfiguration)um.unmarshal(rd);
 		} catch (JAXBException e) {
 			throw new RuntimeException(e);
 		}
@@ -43,7 +43,7 @@ public class DatabaseConfiguration implements Serializable {
 	
 	public void save( PrintStream writer ) {
 		try {
-			JAXBContext context = JAXBContext.newInstance(DatabaseConfiguration.class);
+			JAXBContext context = JAXBContext.newInstance(MotifConfiguration.class);
 			Marshaller m = context.createMarshaller();
 		    m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
 		    m.marshal(this,writer);

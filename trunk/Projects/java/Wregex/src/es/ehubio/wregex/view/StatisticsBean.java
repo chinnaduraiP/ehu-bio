@@ -18,13 +18,13 @@ import javax.faces.bean.ManagedProperty;
 import es.ehubio.db.fasta.Fasta.InvalidSequenceException;
 import es.ehubio.wregex.Pssm;
 import es.ehubio.wregex.Wregex;
-import es.ehubio.wregex.model.BubbleChartData;
-import es.ehubio.wregex.model.DatabaseInformation;
-import es.ehubio.wregex.model.MotifDefinition;
-import es.ehubio.wregex.model.MotifInformation;
-import es.ehubio.wregex.model.ResultEx;
-import es.ehubio.wregex.model.ResultGroupEx;
-import es.ehubio.wregex.model.Services;
+import es.ehubio.wregex.data.BubbleChartData;
+import es.ehubio.wregex.data.DatabaseInformation;
+import es.ehubio.wregex.data.MotifDefinition;
+import es.ehubio.wregex.data.MotifInformation;
+import es.ehubio.wregex.data.ResultEx;
+import es.ehubio.wregex.data.ResultGroupEx;
+import es.ehubio.wregex.data.Services;
 
 @ManagedBean
 @ApplicationScoped
@@ -63,8 +63,9 @@ public class StatisticsBean {
 				loadBubbles();
 			} else {
 				searchHumanProteome();
-				createJson();
+				createJson();				
 				saveJson();
+				logger.info("Bubbles saved for future uses");
 			}
 			initialized = true;
 		} catch( Exception e ) {
@@ -107,7 +108,7 @@ public class StatisticsBean {
 			results = Services.expand(resultGroups, true);
 			Services.searchCosmic(databases.getMapCosmic(), results);
 			Collections.sort(results);
-			motif = new BubbleChartData(motifInformation.getName());			
+			motif = new BubbleChartData(motifInformation.getName(),motifInformation.getSummary());			
 			count = topCount;
 			for( ResultEx result : results ) {
 				if( result.getGene() == null )
@@ -140,9 +141,13 @@ public class StatisticsBean {
 			if( motif.getTotalSize() < minMutations )
 				continue;
 			bubbles.addChild(motif);
-			for( BubbleChartData gene : motif.getChildren() )
+			for( BubbleChartData gene : motif.getChildren() ) {
+				gene.setDescription(String.format(
+					"%d COSMIC mutations in potential motif candidates for this gene",
+					gene.getSize()));
 				if( gene.getSize() > maxMutations )
 					gene.setSize(maxMutations);
+			}
 		}
 		jsonMotifs = bubbles.toString(null);
 	}
