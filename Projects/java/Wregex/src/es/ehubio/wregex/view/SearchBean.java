@@ -29,13 +29,13 @@ import es.ehubio.wregex.Pssm;
 import es.ehubio.wregex.PssmBuilder.PssmBuilderException;
 import es.ehubio.wregex.Wregex;
 import es.ehubio.wregex.Wregex.WregexException;
-import es.ehubio.wregex.model.DatabaseInformation;
-import es.ehubio.wregex.model.MotifDefinition;
-import es.ehubio.wregex.model.MotifInformation;
-import es.ehubio.wregex.model.MotifReference;
-import es.ehubio.wregex.model.ResultEx;
-import es.ehubio.wregex.model.ResultGroupEx;
-import es.ehubio.wregex.model.Services;
+import es.ehubio.wregex.data.DatabaseInformation;
+import es.ehubio.wregex.data.MotifDefinition;
+import es.ehubio.wregex.data.MotifInformation;
+import es.ehubio.wregex.data.MotifReference;
+import es.ehubio.wregex.data.ResultEx;
+import es.ehubio.wregex.data.ResultGroupEx;
+import es.ehubio.wregex.data.Services;
 
 @ManagedBean
 @SessionScoped

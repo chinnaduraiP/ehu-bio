@@ -25,12 +25,12 @@ import es.ehubio.db.fasta.Fasta.InvalidSequenceException;
 import es.ehubio.dbptm.ProteinPtms;
 import es.ehubio.io.UnixCfgReader;
 import es.ehubio.wregex.InputGroup;
-import es.ehubio.wregex.model.DatabaseConfiguration;
-import es.ehubio.wregex.model.DatabaseInformation;
-import es.ehubio.wregex.model.MotifConfiguration;
-import es.ehubio.wregex.model.MotifDefinition;
-import es.ehubio.wregex.model.MotifInformation;
-import es.ehubio.wregex.model.MotifReference;
+import es.ehubio.wregex.data.DatabaseConfiguration;
+import es.ehubio.wregex.data.DatabaseInformation;
+import es.ehubio.wregex.data.MotifConfiguration;
+import es.ehubio.wregex.data.MotifDefinition;
+import es.ehubio.wregex.data.MotifInformation;
+import es.ehubio.wregex.data.MotifReference;
 
 @ManagedBean
 @ApplicationScoped

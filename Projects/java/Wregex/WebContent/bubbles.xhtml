@@ -6,10 +6,10 @@
 	xmlns:p="http://primefaces.org/ui">
 
 <h:body>
-	<ui:composition template="./template.xhtml">
-		<ui:define name="title">Home</ui:define>
-		<ui:define name="htmlhead">
-			<meta name="description" content="Wregex home page. A novel approach for amino acid motif searching combining a regular expression with a Position-Specific Scoring Matrix (PSSM)."/>
+<ui:composition template="./template.xhtml">
+<ui:define name="title">Home</ui:define>
+<ui:define name="htmlhead">
+<meta name="description" content="Wregex home page. A novel approach for amino acid motif searching combining a regular expression with a Position-Specific Scoring Matrix (PSSM)."/>
 <style type="text/css">
 text {
   font-size: 11px;
@@ -38,7 +38,68 @@ circle.parent:hover {
 }
 
 circle.child {
-  pointer-events: none;
+  pointer-events: all;
+}
+
+circle.child:hover {
+  stroke: #ff7f0e;
+  stroke-width: .5px;
+}
+
+#tooltip {
+  text-align:center;  
+  z-index: 1000;
+  position: absolute;
+  display: none;
+}
+
+#tooltip .tail {
+  position: absolute;
+  bottom: -8px;
+  left: 105px;
+  width: 40px;
+  height: 8px;
+  background: url(http://graphics8.nytimes.com/packages/images/newsgraphics/2012/0202-federal-budget/tail_white.png) 50% 0%;
+}
+
+#tooltip .name {
+  text-transform: uppercase;
+  text-align: left;
+  font-size: 10px;
+  margin-bottom: 2px;
+  color:#666;
+  text-align:center;  
+}
+
+#tooltip .rule{
+  height:1px;
+  margin:1px auto 3px;
+  background:#ddd;
+  width:130px;
+}
+
+#tooltip .description {
+  text-align: left;
+  font-size: 13px;
+/*  width:170px;*/
+  text-align:center;  
+}
+
+#tooltipContainer {
+  position: absolute;
+  bottom: 0;
+  width: 230px;
+  left: -125px;
+  font-size: 12px;
+  line-height: 16px;
+  padding: 10px;
+  border-radius: 3px;
+  background: rgba(255,255,255,0.9);
+  color: #000;
+  box-shadow: 0 1px 5px rgba(0,0,0,0.4);
+  -moz-box-shadow: 0 1px 5px rgba(0,0,0,0.4);  
+  border:1px solid rgba(200,200,200,0.85);
+  text-align:center;
 }
 </style>
 		</ui:define>
@@ -77,7 +138,23 @@ d3.json("json.xhtml", function(data) {
       .attr("cx", function(d) { return d.x; })
       .attr("cy", function(d) { return d.y; })
       .attr("r", function(d) { return d.r; })
-      .on("click", function(d) { return zoom(node == d ? root : d); });
+      .on("click", function(d) { return zoom(node == d ? root : d); })
+      .on("mouseover",function(d,i) {
+    	  var el = d3.select(this);
+          var xpos = Number(el.attr('cx'));
+          var ypos = Number(el.attr('cy'))+100-d.r/2-10;
+          d3.select("#tooltip")
+          	.style('top',ypos+"px")
+          	.style('left',xpos+"px")
+          	.style('display', d.name.length == 0 ? 'none': 'block');
+          d3.select("#tooltip .name")
+          	.text(d.name);
+          d3.select("#tooltip .description")
+        	.text(d.description);
+      })
+      .on("mouseout",function(d) {          
+          d3.select("#tooltip").style('display','none')}
+      );
 
   vis.selectAll("text")
       .data(nodes)
@@ -115,12 +192,20 @@ function zoom(d, i) {
   d3.event.stopPropagation();
 }
 </script>
-			<h3>Top #{statisticsBean.topCount} proteins with COSMIC missense mutations for top Wregex motifs</h3><br/>
-			<p:dataList value="#{statisticsBean.displayTips}" var="tip" itemType="circle">
-				<f:facet name="header">Display considerations:</f:facet>
-				#{tip}
-			</p:dataList>
-		</ui:define>		
-	</ui:composition>
+<div id="tooltip">
+	<div id="tooltipContainer">
+		<div class="name"></div>
+		<div class="rule"></div>
+		<div class="description"></div>
+<!-- 		<div class="tail"></div> -->
+	</div>	
+</div>
+<h3>Top #{statisticsBean.topCount} proteins with COSMIC missense mutations for top Wregex motifs</h3>
+<p:dataList value="#{statisticsBean.displayTips}" var="tip" itemType="circle">
+	<f:facet name="header">Display considerations:</f:facet>
+	#{tip}
+</p:dataList>
+</ui:define>		
+</ui:composition>
 </h:body>
 </html>

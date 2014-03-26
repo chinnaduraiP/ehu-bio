@@ -7,8 +7,8 @@ import java.util.List;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.RequestScoped;
 
-import es.ehubio.wregex.model.LatestNew;
-import es.ehubio.wregex.model.PageSummary;
+import es.ehubio.wregex.data.LatestNew;
+import es.ehubio.wregex.data.PageSummary;
 
 @ManagedBean
 @RequestScoped
@@ -53,6 +53,7 @@ public class HomeBean implements Serializable {
 		pages.add(page);
 		
 		news = new ArrayList<>();
+		news.add(new LatestNew("Mar 26, 2014", "Included tooltips in bubble chart"));
 		news.add(new LatestNew("Mar 04, 2014", "First bubble chart support!"));
 		news.add(new LatestNew("Mar 03, 2014", "Included Wregex NLS motifs"));
 		news.add(new LatestNew("Mar 03, 2014", "Included support for optional capturing groups"));

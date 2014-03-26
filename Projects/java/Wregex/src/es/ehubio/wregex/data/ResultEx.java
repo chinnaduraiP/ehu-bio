@@ -1,4 +1,4 @@
-package es.ehubio.wregex.model;
+package es.ehubio.wregex.data;
 
 import java.io.PrintWriter;
 import java.io.Writer;

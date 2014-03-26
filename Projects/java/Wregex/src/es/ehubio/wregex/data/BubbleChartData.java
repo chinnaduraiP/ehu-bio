@@ -1,16 +1,26 @@
-package es.ehubio.wregex.model;
+package es.ehubio.wregex.data;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class BubbleChartData {
 	private String name;
+	private String description;
 	private int size;
 	private List<BubbleChartData> children = new ArrayList<>();
 	
-	public BubbleChartData( String name, int size ) {
+	public BubbleChartData( String name, String description, int size ) {
 		this.name = name;
+		this.description = description;
 		this.size = size;
+	}
+	
+	public BubbleChartData( String name, String description ) {
+		this(name,description,0);
+	}
+	
+	public BubbleChartData( String name, int size ) {
+		this(name,"",size);
 	}
 	
 	public BubbleChartData( String name ) {
@@ -73,7 +83,9 @@ public class BubbleChartData {
 		} else {
 			sb = stringBuilder;
 		}
-		sb.append("{").append("\n").append("\"name\": \"").append(this.getName()).append("\",\n");
+		sb.append("{").append("\n")
+			.append("\"name\": \"").append(this.getName()).append("\",\n")
+			.append("\"description\": \"").append(this.getDescription()).append("\",\n");
 		if( this.getChildren() != null ) {
 			if( this.getChildren().size() > 0 ) {
 				sb.append("\"children\": [\n");				
@@ -88,5 +100,13 @@ public class BubbleChartData {
 		}
 		sb.append("}");
 		return sb.toString();
+	}
+
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
 	}
 }

@@ -1,4 +1,4 @@
-package es.ehubio.wregex.model;
+package es.ehubio.wregex.data;
 
 import java.util.ArrayList;
 import java.util.HashMap;
