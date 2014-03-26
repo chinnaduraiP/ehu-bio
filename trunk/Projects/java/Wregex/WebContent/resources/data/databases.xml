@@ -23,6 +23,11 @@
         <version>3.0</version>
     </database>
     <database>
+        <name>Cached searchAll</name>
+        <type>bubbles</type>
+        <path>/media/data/Sequences/Wregex/searchAll.json</path>
+    </database>
+    <database>
         <name>UniProtKB/Swiss-Prot Human Proteome</name>
         <type>fasta</type>
         <path>/media/data/Sequences/UniProt/current/SP_HUMAN.fasta.gz</path>

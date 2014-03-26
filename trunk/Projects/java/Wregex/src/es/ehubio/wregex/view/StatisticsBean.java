@@ -1,9 +1,13 @@
 package es.ehubio.wregex.view;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Scanner;
 import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
@@ -15,6 +19,7 @@ import es.ehubio.db.fasta.Fasta.InvalidSequenceException;
 import es.ehubio.wregex.Pssm;
 import es.ehubio.wregex.Wregex;
 import es.ehubio.wregex.model.BubbleChartData;
+import es.ehubio.wregex.model.DatabaseInformation;
 import es.ehubio.wregex.model.MotifDefinition;
 import es.ehubio.wregex.model.MotifInformation;
 import es.ehubio.wregex.model.ResultEx;
@@ -31,14 +36,14 @@ public class StatisticsBean {
 	private boolean initialized = false;
 	private final int topCount = 10;
 	private final int maxMutations = 800;
-	private final int minMutations = 4;
+	private final int minMutations = 100;
 	private BubbleChartData motifs;
 	private final List<String> displayTips;
 	
 	public StatisticsBean() {
 		displayTips = new ArrayList<>();
 		displayTips.add(String.format("Bubble size has been limited to %d mutations", maxMutations));
-		displayTips.add(String.format("Motifs with less than %d mutations have been filtered", minMutations));
+		displayTips.add(String.format("Motifs with less than %d mutations have been filtered", minMutations));	
 	}
 	
 	public DatabasesBean getDatabases() {
@@ -52,16 +57,29 @@ public class StatisticsBean {
 	@PostConstruct
 	public void init() {
 		try {
-			searchHumanProteome();
-			createJson();
+			DatabaseInformation bubbles = databases.getDbBubbles();
+			if( bubbles != null && bubbles.exists() ) {
+				logger.info("Using cached bubbles");
+				loadBubbles();
+			} else {
+				searchHumanProteome();
+				createJson();
+				saveJson();
+			}
 			initialized = true;
 		} catch( Exception e ) {
 			e.printStackTrace();
 		}
 	}
 	
+	private void loadBubbles() throws IOException {
+		Scanner scanner = new Scanner(new File(databases.getDbBubbles().getPath())); 
+		jsonMotifs = scanner.useDelimiter("\\A").next();
+		scanner.close();
+	}
+
 	private void searchHumanProteome() throws IOException, InvalidSequenceException, Exception {		
-		List<MotifInformation> allMotis = databases.getAllMotifs();
+		List<MotifInformation> allMotis = databases.getNrMotifs();
 		motifs = new BubbleChartData("");
 		BubbleChartData motif, child;
 		List<ResultGroupEx> resultGroups;
@@ -72,6 +90,7 @@ public class StatisticsBean {
 		int max = 2000;
 		int count;
 		int i = 0;
+		long tout = Services.getInitNumber("wregex.watchdogtimer")*1000;
 		for( MotifInformation motifInformation : allMotis ) {
 			logger.info(String.format(
 				"Searching human proteome for %s motif (%d/%d) ...",
@@ -79,14 +98,20 @@ public class StatisticsBean {
 			def = motifInformation.getDefinitions().get(0);
 			pssm = Services.getPssm(def.getPssm());
 			wregex = new Wregex(def.getRegex(), pssm);
-			resultGroups = Services.search(wregex, motifInformation, databases.getHumanProteome(), false, 0);
+			try {
+				resultGroups = Services.search(wregex, motifInformation, databases.getHumanProteome(), false, tout);
+			} catch( Exception e ) {
+				logger.severe("Discarded by tout");
+				continue;
+			}
 			results = Services.expand(resultGroups, true);
 			Services.searchCosmic(databases.getMapCosmic(), results);
 			Collections.sort(results);
-			motif = new BubbleChartData(motifInformation.getName());
-			motifs.addChild(motif);
+			motif = new BubbleChartData(motifInformation.getName());			
 			count = topCount;
 			for( ResultEx result : results ) {
+				if( result.getGene() == null )
+					continue;
 				child = motif.getChild(result.getGene());
 				if( child != null ) {
 					if( result.getCosmicMissense() > 0 )
@@ -100,6 +125,9 @@ public class StatisticsBean {
 				if( --count <= 0 )
 					break;
 			}
+			if( motif.getChildren().isEmpty() )
+				continue;
+			motifs.addChild(motif);
 			if( --max <= 0 )
 				break;
 		}						
@@ -117,6 +145,19 @@ public class StatisticsBean {
 					gene.setSize(maxMutations);
 		}
 		jsonMotifs = bubbles.toString(null);
+	}
+	
+	private void saveJson() {
+		DatabaseInformation db = databases.getDbBubbles();
+		if( db == null )
+			return;
+		try {
+			PrintWriter pw = new PrintWriter(db.getPath());
+			pw.print(jsonMotifs);
+			pw.close();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public String getJsonMotifs() {

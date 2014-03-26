@@ -282,8 +282,8 @@ public class SearchBean implements Serializable {
 			return "A target must be selected";
 		if( inputGroups == null )
 			return "A fasta file with input sequences must be uploaded";
-		if( allMotifs && inputGroups.size() > getInitNumber("wregex.allMotifs") )
-			return String.format("Sorry, when searching for all motifs the number of target sequences is limited to %d", getInitNumber("wregex.allMotifs"));
+		if( allMotifs && inputGroups.size() > Services.getInitNumber("wregex.allMotifs") )
+			return String.format("Sorry, when searching for all motifs the number of target sequences is limited to %d", Services.getInitNumber("wregex.allMotifs"));
 		return null;
 	}
 	
@@ -315,22 +315,18 @@ public class SearchBean implements Serializable {
 		String regex = custom ? getCustomRegex() : getRegex();
 		Wregex wregex = new Wregex(regex, pssm);
 		updateAssayScores();
-		return Services.search(wregex, motifInformation, inputGroups, assayScores, getInitNumber("wregex.watchdogtimer")*1000);
+		return Services.search(wregex, motifInformation, inputGroups, assayScores, Services.getInitNumber("wregex.watchdogtimer")*1000);
 	}
 	
 	private List<ResultGroupEx> allSearch() throws Exception {
 		assayScores = false;
 		//long div = getWregexMotifs().size() + getElmMotifs().size();
 		//long tout = getInitNumber("wregex.watchdogtimer")*1000/div;
-		long tout = getInitNumber("wregex.watchdogtimer")*1000;
+		long tout = Services.getInitNumber("wregex.watchdogtimer")*1000;
 		List<ResultGroupEx> results = Services.searchAll(getAllMotifs(), inputGroups, tout);
 		usingPssm = true;
 		return results;
 	}
-	
-	private static long getInitNumber( String param ) {
-		return Long.parseLong(FacesContext.getCurrentInstance().getExternalContext().getInitParameter(param));
-	}		
 
 	private void searchCosmic() {
 		Services.searchCosmic(databases.getMapCosmic(), results);

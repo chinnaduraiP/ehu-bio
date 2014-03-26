@@ -1,11 +1,20 @@
 package es.ehubio.db.fasta;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.Reader;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import es.ehubio.db.Aminoacid;
 import es.ehubio.db.Nucleotide;
@@ -120,6 +129,17 @@ public final class Fasta {
 		return geneName;
 	}
 	
+	public static List<Fasta> readEntries( String path, SequenceType type ) throws IOException, InvalidSequenceException {
+		Reader rd;
+		if( path.endsWith("gz") )
+			rd = new InputStreamReader(new GZIPInputStream(new FileInputStream(path)));
+		else
+			rd = new FileReader(path);
+		List<Fasta> list = readEntries(rd, type);
+		rd.close();
+		return list;
+	}
+	
 	public static List<Fasta> readEntries( Reader rd, SequenceType type ) throws IOException, InvalidSequenceException {
 		List<Fasta> list = new ArrayList<Fasta>();
 		UnixCfgReader br = new UnixCfgReader(rd);
@@ -137,6 +157,16 @@ public final class Fasta {
 		if( header != null )
 			list.add(new Fasta(header, sequence.toString(), type));
 		return list;
+	}
+	
+	public static void writeEntries( String path, Iterable<Fasta> list) throws FileNotFoundException, IOException {
+		Writer wr;
+		if( path.endsWith("gz") )
+			wr = new OutputStreamWriter(new GZIPOutputStream(new FileOutputStream(path)));
+		else
+			wr = new FileWriter(path);
+		writeEntries(wr, list);
+		wr.close();
 	}
 	
 	public static void writeEntries( Writer wr, Iterable<Fasta> list) {

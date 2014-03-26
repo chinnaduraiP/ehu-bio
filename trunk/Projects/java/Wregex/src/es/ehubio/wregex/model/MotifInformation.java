@@ -14,6 +14,7 @@ public final class MotifInformation implements Serializable {
 	private static final long serialVersionUID = 1L;
 	private String name;
 	private String summary;
+	private String replaces;
 	@XmlElement(name="definition")
 	private List<MotifDefinition> definitions;
 	@XmlElement(name="reference")
@@ -54,5 +55,13 @@ public final class MotifInformation implements Serializable {
 	@Override
 	public String toString() {
 		return getName();
+	}
+
+	public String getReplaces() {
+		return replaces;
+	}
+
+	public void setReplaces(String replaces) {
+		this.replaces = replaces;
 	}
 }

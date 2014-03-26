@@ -133,4 +133,8 @@ public class Services {
 		rd.close();
 		return pssm;
 	}
+	
+	public static long getInitNumber( String param ) {
+		return Long.parseLong(FacesContext.getCurrentInstance().getExternalContext().getInitParameter(param));
+	}
 }

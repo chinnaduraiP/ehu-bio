@@ -45,6 +45,11 @@ public class DatabaseInformation implements Serializable {
 	
 	public void setPath(String path) {
 		this.path = path;
+		File file = new File(path);
+		if( file.exists() )
+			lastModified = file.lastModified();
+		else
+			lastModified = -1;
 	}
 	
 	public String getVersionFile() {
@@ -60,9 +65,9 @@ public class DatabaseInformation implements Serializable {
 		if( versionFile == null )
 			return version;
 		File v = new File(versionFile);
-		if( lastModified != v.lastModified() ) {
+		if( lastModifiedVersion != v.lastModified() ) {
 			reloadVersion();
-			lastModified = v.lastModified();
+			lastModifiedVersion = v.lastModified();
 		}
 		return version;
 	}
@@ -87,11 +92,21 @@ public class DatabaseInformation implements Serializable {
 		return getFullName();
 	}
 
+	public long getLastModified() {
+		return lastModified;
+	}
+	
+	public boolean exists() {
+		File file = new File(path);
+		return file.exists();
+	}
+
 	private static final long serialVersionUID = 1L;
 	private String name;
 	private String type;
 	private String path;
 	private String version;
 	private String versionFile;
+	private long lastModifiedVersion = -1;
 	private long lastModified = -1;
 }
