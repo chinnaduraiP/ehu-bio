@@ -60,7 +60,7 @@ var pack = d3.layout.pack()
     .value(function(d) { return d.size; })
 
 var vis = d3.select("#prebody").append("svg:svg")
-    //.attr("width", w)
+    .attr("width", w)
     .attr("height", h)
   .append("svg:g")
     .attr("transform", "translate(" + (w - r) / 2 + "," + (h - r) / 2 + ")");
@@ -115,7 +115,7 @@ function zoom(d, i) {
   d3.event.stopPropagation();
 }
 </script>
-			<h3>Top #{statisticsBean.topCount} proteins with COSMIC missense mutations for all Wregex motifs</h3><br/>
+			<h3>Top #{statisticsBean.topCount} proteins with COSMIC missense mutations for top Wregex motifs</h3><br/>
 			<p:dataList value="#{statisticsBean.displayTips}" var="tip" itemType="circle">
 				<f:facet name="header">Display considerations:</f:facet>
 				#{tip}

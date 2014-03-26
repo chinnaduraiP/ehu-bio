@@ -7,6 +7,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -33,7 +34,8 @@ import es.ehubio.wregex.model.MotifReference;
 
 @ManagedBean
 @ApplicationScoped
-public class DatabasesBean {
+public class DatabasesBean implements Serializable {
+	private static final long serialVersionUID = 1L;
 	private final static Logger logger = Logger.getLogger(DatabasesBean.class.getName());
 	private static final String WregexMotifsPath = "/resources/data/motifs.xml";
 	private static final String DatabasesPath = "/resources/data/databases.xml";
@@ -42,10 +44,13 @@ public class DatabasesBean {
 	private DatabaseConfiguration databaseConfiguration;
 	private List<MotifInformation> elmMotifs;
 	private List<MotifInformation> allMotifs;
+	private List<String> redundantMotifs;
+	private List<MotifInformation> nrMotifs;
 	private List<DatabaseInformation> targets;
 	private DatabaseInformation elm;
 	private DatabaseInformation cosmic;
 	private DatabaseInformation dbPtm;
+	private DatabaseInformation dbBubbles;
 	private Map<String,FastaDb> mapFasta;
 	private Map<String,Loci> mapCosmic;
 	private Map<String, ProteinPtms> mapDbPtm;
@@ -78,6 +83,10 @@ public class DatabasesBean {
 		Reader rd = new InputStreamReader(FacesContext.getCurrentInstance().getExternalContext().getResourceAsStream(WregexMotifsPath)); 		
 		motifConfiguration = MotifConfiguration.load(rd);
 		rd.close();
+		redundantMotifs = new ArrayList<>();
+		for( MotifInformation motifInformation : motifConfiguration.getMotifs() )
+			if( motifInformation.getReplaces() != null )
+				redundantMotifs.add(motifInformation.getReplaces());		
 		
 		// Databases
 		rd = new InputStreamReader(FacesContext.getCurrentInstance().getExternalContext().getResourceAsStream(DatabasesPath)); 		
@@ -99,6 +108,10 @@ public class DatabasesBean {
 			if( database.getType().equals("dbptm") ) {
 				dbPtm = database;
 				loadDbPtm();
+				continue;
+			}
+			if( database.getType().equals("bubbles") ) {
+				dbBubbles = database;
 				continue;
 			}
 			targets.add(database);
@@ -154,6 +167,19 @@ public class DatabasesBean {
 			allMotifs.addAll(getElmMotifs());
 		}
 		return allMotifs;
+	}
+	
+	public List<MotifInformation> getNrMotifs() {
+		File file = new File(elm.getPath());
+		if( file.lastModified() != lastModifiedElm || nrMotifs == null ) {
+			nrMotifs = new ArrayList<>();
+			nrMotifs.addAll(getWregexMotifs());
+			getElmMotifs();
+			for( MotifInformation motifInformation : elmMotifs )
+				if( !redundantMotifs.contains(motifInformation.getName()) )
+					nrMotifs.add(motifInformation);
+		}
+		return nrMotifs;
 	}
 	
 	public List<InputGroup> getFasta( String path ) throws IOException, InvalidSequenceException {		
@@ -272,5 +298,13 @@ public class DatabasesBean {
 
 	public boolean isInitialized() {
 		return initialized;
+	}
+
+	public DatabaseInformation getDbBubbles() {
+		return dbBubbles;
+	}
+
+	public void setDbBubbles(DatabaseInformation dbBubbles) {
+		this.dbBubbles = dbBubbles;
 	}	
 }
