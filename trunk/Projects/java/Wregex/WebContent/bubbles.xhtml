@@ -85,6 +85,30 @@ circle.child:hover {
   text-align:center;  
 }
 
+#tooltip .discretion{
+  color:#666;
+/*   text-transform:uppercase;*/
+  font-size: 11px;   
+  text-align:center;  
+  font-style:italic;
+}
+
+#tooltip .valuesContainer {
+  padding-top:7px;  
+}
+
+#tooltip .value {
+/*  position:absolute;*/
+  text-align:center;
+  right:10px;
+  top:28px;
+  font-size: 16px;
+/*  width:100px;*/
+  text-align:center;  
+  overflow:hidden;
+  font-weight:bold;
+}
+
 #tooltipContainer {
   position: absolute;
   bottom: 0;
@@ -151,6 +175,10 @@ d3.json("json.xhtml", function(data) {
           	.text(d.name);
           d3.select("#tooltip .description")
         	.text(d.description);
+          d3.select("#tooltip .discretion")
+    		.text(d.discretion);
+          d3.select("#tooltip .value")
+      		.text(d.result);
       })
       .on("mouseout",function(d) {          
           d3.select("#tooltip").style('display','none')}
@@ -197,6 +225,10 @@ function zoom(d, i) {
 		<div class="name"></div>
 		<div class="rule"></div>
 		<div class="description"></div>
+		<div class="discretion"></div>
+		<div class="valuesContainer">
+			<span class="value"></span>
+		</div>
 <!-- 		<div class="tail"></div> -->
 	</div>	
 </div>

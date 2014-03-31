@@ -29,6 +29,11 @@ public class NextprotParser implements HeaderParser {
 	public String getAccession() {
 		return accession;
 	}
+	
+	@Override
+	public String getDescription() {
+		return proteinName;
+	}
 
 	@Override
 	public String getProteinName() {

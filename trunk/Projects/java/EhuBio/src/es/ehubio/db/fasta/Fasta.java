@@ -26,6 +26,7 @@ public final class Fasta {
 	private final SequenceType type;
 	private final String entry;
 	private final String accession;
+	private final String description;
 	private final String proteinName;
 	private final String geneName;
 	
@@ -59,10 +60,12 @@ public final class Fasta {
 		this.entry = header.split("[ \t]")[0];
 		if( parser == null ) {
 			accession = null;
+			description = null;
 			proteinName = null;
 			geneName = null;
 		} else {
 			accession = parser.getAccession();
+			description = parser.getDescription();
 			proteinName = parser.getProteinName();
 			geneName = parser.getGeneName();
 		}
@@ -176,5 +179,9 @@ public final class Fasta {
 			pw.println(f.getSequence());
 		}
 		pw.flush();
+	}
+
+	public String getDescription() {
+		return description;
 	}
 }
