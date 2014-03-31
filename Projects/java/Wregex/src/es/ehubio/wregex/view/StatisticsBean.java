@@ -63,7 +63,7 @@ public class StatisticsBean {
 				loadBubbles();
 			} else {
 				searchHumanProteome();
-				createJson();				
+				createJson();
 				saveJson();
 				logger.info("Bubbles saved for future uses");
 			}
@@ -81,7 +81,7 @@ public class StatisticsBean {
 
 	private void searchHumanProteome() throws IOException, InvalidSequenceException, Exception {		
 		List<MotifInformation> allMotis = databases.getNrMotifs();
-		motifs = new BubbleChartData("");
+		motifs = new BubbleChartData();
 		BubbleChartData motif, child;
 		List<ResultGroupEx> resultGroups;
 		List<ResultEx> results;		
@@ -91,6 +91,7 @@ public class StatisticsBean {
 		int max = 2000;
 		int count;
 		int i = 0;
+		final String discretion = "COSMIC missense mutations in potencial motif candidates";
 		long tout = Services.getInitNumber("wregex.watchdogtimer")*1000;
 		for( MotifInformation motifInformation : allMotis ) {
 			logger.info(String.format(
@@ -108,7 +109,10 @@ public class StatisticsBean {
 			results = Services.expand(resultGroups, true);
 			Services.searchCosmic(databases.getMapCosmic(), results);
 			Collections.sort(results);
-			motif = new BubbleChartData(motifInformation.getName(),motifInformation.getSummary());			
+			motif = new BubbleChartData();
+			motif.setName(motifInformation.getName());
+			motif.setDescription(motifInformation.getSummary());
+			motif.setDiscretion(discretion);			
 			count = topCount;
 			for( ResultEx result : results ) {
 				if( result.getGene() == null )
@@ -119,7 +123,12 @@ public class StatisticsBean {
 						child.setSize(child.getSize()+result.getCosmicMissense());
 					continue;
 				}
-				child = new BubbleChartData(result.getGene(),result.getCosmicMissense());
+				child = new BubbleChartData();
+				child.setName(result.getGene());
+				child.setDescription(result.getFasta().getDescription());
+				child.setDiscretion(discretion);
+				child.setResult(""+result.getCosmicMissense());
+				child.setSize(result.getCosmicMissense());
 				if( child.getSize() <= 0 )
 					continue;
 				motif.addChild(child);
@@ -128,6 +137,7 @@ public class StatisticsBean {
 			}
 			if( motif.getChildren().isEmpty() )
 				continue;
+			motif.setResult(""+motif.getChildsSize());
 			motifs.addChild(motif);
 			if( --max <= 0 )
 				break;
@@ -136,15 +146,12 @@ public class StatisticsBean {
 	}
 	
 	private void createJson() {
-		BubbleChartData bubbles = new BubbleChartData("");
+		BubbleChartData bubbles = new BubbleChartData();
 		for( BubbleChartData motif : motifs.getChildren() ) {
 			if( motif.getTotalSize() < minMutations )
 				continue;
 			bubbles.addChild(motif);
-			for( BubbleChartData gene : motif.getChildren() ) {
-				gene.setDescription(String.format(
-					"%d COSMIC mutations in potential motif candidates for this gene",
-					gene.getSize()));
+			for( BubbleChartData gene : motif.getChildren() ) {				
 				if( gene.getSize() > maxMutations )
 					gene.setSize(maxMutations);
 			}

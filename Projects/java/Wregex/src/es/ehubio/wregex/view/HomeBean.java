@@ -53,6 +53,8 @@ public class HomeBean implements Serializable {
 		pages.add(page);
 		
 		news = new ArrayList<>();
+		news.add(new LatestNew("Mar 31, 2014", "Improved tooltips in bubble chart"));
+		news.add(new LatestNew("Mar 31, 2014", "Filtered predictions and duplicates in dbPTM"));
 		news.add(new LatestNew("Mar 26, 2014", "Included tooltips in bubble chart"));
 		news.add(new LatestNew("Mar 04, 2014", "First bubble chart support!"));
 		news.add(new LatestNew("Mar 03, 2014", "Included Wregex NLS motifs"));

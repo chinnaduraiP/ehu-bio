@@ -35,11 +35,20 @@ public class ProteinPtms {
 				protein.setId(entry.getId());
 				map.put(entry.getAccession(), protein);
 			}
-			if( protein.getPtms().keySet().contains(entry.getPosition()) )
-				protein.getPtms().get(entry.getPosition()).count++;
-			else {
+			// Filter predicted PTMs
+			if( entry.getResource().contains("HMM") )
+				continue;
+			ptm = protein.getPtms().get(entry.getPosition());
+			if( ptm != null ) {
+				// Filter duplicates
+				if( !ptm.types.contains(entry.getType()) ) {
+					ptm.types.add(entry.getType());
+					ptm.count++;
+				}
+			} else {
 				ptm = new Ptm();
 				ptm.position = entry.getPosition();
+				ptm.types.add(entry.getType());
 				ptm.count = 1;
 				protein.getPtms().put(ptm.position, ptm);
 			}

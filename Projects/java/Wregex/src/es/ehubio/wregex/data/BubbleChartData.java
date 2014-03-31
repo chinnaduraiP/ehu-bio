@@ -4,28 +4,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class BubbleChartData {
-	private String name;
-	private String description;
-	private int size;
+	private String name = "";	
+	private String description = "";
+	private String discretion = "";
+	private String result = "";
+	private int size = 0;
 	private List<BubbleChartData> children = new ArrayList<>();
-	
-	public BubbleChartData( String name, String description, int size ) {
-		this.name = name;
-		this.description = description;
-		this.size = size;
-	}
-	
-	public BubbleChartData( String name, String description ) {
-		this(name,description,0);
-	}
-	
-	public BubbleChartData( String name, int size ) {
-		this(name,"",size);
-	}
-	
-	public BubbleChartData( String name ) {
-		this(name, 0);
-	}
 	
 	public int getSize() {
 		return size;
@@ -85,7 +69,9 @@ public class BubbleChartData {
 		}
 		sb.append("{").append("\n")
 			.append("\"name\": \"").append(this.getName()).append("\",\n")
-			.append("\"description\": \"").append(this.getDescription()).append("\",\n");
+			.append("\"description\": \"").append(this.getDescription()).append("\",\n")
+			.append("\"discretion\": \"").append(this.getDiscretion()).append("\",\n")
+			.append("\"result\": \"").append(this.getResult()).append("\",\n");
 		if( this.getChildren() != null ) {
 			if( this.getChildren().size() > 0 ) {
 				sb.append("\"children\": [\n");				
@@ -108,5 +94,28 @@ public class BubbleChartData {
 
 	public void setDescription(String description) {
 		this.description = description;
+	}
+
+	public String getDiscretion() {
+		return discretion;
+	}
+
+	public void setDiscretion(String discretion) {
+		this.discretion = discretion;
+	}
+
+	public String getResult() {
+		return result;
+	}
+
+	public void setResult(String value) {
+		this.result = value;
+	}
+	
+	public int getChildsSize() {
+		int size = 0;
+		for( BubbleChartData child : children )
+			size += child.getSize();
+		return size;
 	}
 }

@@ -11,9 +11,16 @@ public class UniprotParser implements HeaderParser {
 		Matcher matcher = uniProtPattern.matcher(header);
 		if( !matcher.find() )
 			return false;
-		
 		accession = matcher.group(2);
 		name = matcher.group(3);
+		
+		if( descriptionPattern == null )
+			descriptionPattern = Pattern.compile("\\S+\\s(.+)\\sOS=");
+		matcher = descriptionPattern.matcher(header);
+		if( !matcher.find() )
+			description = "";
+		description = matcher.group(1);
+				
 		String[] fields = header.split("[ \\t]");
 		for( int i = 0; i < fields.length; i++ )
 			if( fields[i].contains("GN=") )
@@ -25,6 +32,11 @@ public class UniprotParser implements HeaderParser {
 	@Override
 	public String getAccession() {
 		return accession;
+	}
+	
+	@Override
+	public String getDescription() {
+		return description;
 	}
 
 	@Override
@@ -38,7 +50,9 @@ public class UniprotParser implements HeaderParser {
 	}
 
 	private static Pattern uniProtPattern;
+	private static Pattern descriptionPattern;
 	private String accession;
 	private String name;
+	private String description;
 	private String geneName;
 }
