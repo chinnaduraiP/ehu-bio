@@ -126,8 +126,9 @@ circle.child:hover {
   text-align:center;
 }
 </style>
-		</ui:define>
-		<ui:define name="content">
+</ui:define>
+<ui:define name="content">
+<h:panelGroup rendered="#{statisticsBean.initialized}">
     <script type="text/javascript" src="http://mbostock.github.io/d3/talk/20111116/d3/d3.js"></script>
     <script type="text/javascript" src="http://mbostock.github.io/d3/talk/20111116/d3/d3.layout.js"></script>
     <script type="text/javascript">
@@ -237,6 +238,10 @@ function zoom(d, i) {
 	<f:facet name="header">Display considerations:</f:facet>
 	#{tip}
 </p:dataList>
+</h:panelGroup>
+<h:panelGroup rendered="#{!statisticsBean.initialized}">
+Statistics are beeing updated, please try again in 15 minutes ...
+</h:panelGroup>
 </ui:define>		
 </ui:composition>
 </h:body>

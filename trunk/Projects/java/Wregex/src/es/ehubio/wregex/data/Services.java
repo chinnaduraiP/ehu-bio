@@ -7,8 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import javax.faces.context.FacesContext;
-
+import javax.faces.context.ExternalContext;
 import es.ehubio.cosmic.Loci;
 import es.ehubio.cosmic.Locus;
 import es.ehubio.db.Aminoacid;
@@ -21,6 +20,12 @@ import es.ehubio.wregex.ResultGroup;
 import es.ehubio.wregex.Wregex;
 
 public class Services {
+	private final ExternalContext context;
+	
+	public Services( ExternalContext context ) {
+		this.context = context;
+	}
+	
 	public static List<ResultGroupEx> search(
 			Wregex wregex, MotifInformation motif, List<InputGroup> inputGroups, boolean assayScores, long tout ) throws Exception {
 		List<ResultGroupEx> resultGroupsEx = new ArrayList<>();
@@ -47,7 +52,7 @@ public class Services {
 		return resultGroupsEx;
 	}
 	
-	public static List<ResultGroupEx> searchAll(
+	public List<ResultGroupEx> searchAll(
 			List<MotifInformation> motifs, List<InputGroup> inputGroups, long tout ) throws Exception {
 		List<ResultGroupEx> results = new ArrayList<>();
 		MotifDefinition def;
@@ -121,11 +126,11 @@ public class Services {
 		}
 	}
 	
-	public static Reader getResourceReader( String resource ) {
-		return new InputStreamReader(FacesContext.getCurrentInstance().getExternalContext().getResourceAsStream("/resources/"+resource));
+	public Reader getResourceReader( String resource ) {
+		return new InputStreamReader(context.getResourceAsStream("/resources/"+resource));
 	}
 	
-	public static Pssm getPssm( String name ) throws IOException, PssmBuilderException {
+	public Pssm getPssm( String name ) throws IOException, PssmBuilderException {
 		if( name == null )
 			return null;
 		Reader rd = getResourceReader("data/"+name);
@@ -134,7 +139,7 @@ public class Services {
 		return pssm;
 	}
 	
-	public static long getInitNumber( String param ) {
-		return Long.parseLong(FacesContext.getCurrentInstance().getExternalContext().getInitParameter(param));
+	public long getInitNumber( String param ) {
+		return Long.parseLong(context.getInitParameter(param));
 	}
 }

@@ -12,7 +12,8 @@
 			<meta name="description" content="Wregex search page. A novel approach for amino acid motif searching combining a regular expression with a Position-Specific Scoring Matrix (PSSM)."/>
 		</ui:define>
 		<ui:define name="content">
-			<h:form enctype="multipart/form-data" rendered="#{searchBean.initialized}">
+<!-- 			<h:form enctype="multipart/form-data" rendered="#{searchBean.initialized}"> -->
+			<h:form enctype="multipart/form-data">
 				<p:panelGrid columns="2" headerClass="cfg_header">
 					<f:facet name="header">Search configuration</f:facet>
 					<h:outputText value="Motif:"/>
@@ -101,14 +102,14 @@
 					<h:outputText value="#{searchBean.configError}" rendered="#{searchBean.configError != null}" style="color:red"/>
 					<p:commandButton value="Search!" actionListener="#{searchBean.search}" rendered="#{searchBean.configError == null}" ajax="false"/>
 					<h:outputText id="search" value="#{searchBean.searchError}" rendered="#{searchBean.searchError != null}" style="color:red"/>
-					<h:panelGroup rendered="#{searchBean.results != null}">
+					<h:panelGroup rendered="#{searchBean.results != null and searchBean.configError == null}">
 						<h:outputText value="#{searchBean.numberOfResults}"/>
 						<p:commandButton value="Download as CSV" rendered="#{not empty searchBean.results}" actionListener="#{searchBean.downloadCsv}" ajax="false"/>
 						<p:commandButton value="Download as ALN" rendered="#{not empty searchBean.results}" actionListener="#{searchBean.downloadAln}" ajax="false"/>
 					</h:panelGroup>
 				</p:panelGrid>
 				<br/>
-				<p:dataTable value="#{searchBean.results}" rowIndexVar="row" var="item" rendered="#{not empty searchBean.results and searchBean.configError == null}" scrollable="true" scrollHeight="300" liveScroll="true" scrollRows="40">
+				<p:dataTable value="#{searchBean.results}" rowIndexVar="row" var="item" rendered="#{searchBean.results != null and searchBean.configError == null}" scrollable="true" scrollHeight="300" liveScroll="true" scrollRows="40">
 					<f:facet name="header">Search results - live scroll (scroll and wait for more results)</f:facet>
 					<p:column width="50" style="text-align:center;">
 						<f:facet name="header">#</f:facet>
@@ -163,7 +164,7 @@
 					</p:column>
 				</p:dataTable>
 			</h:form>
-			<h:outputText value="Sorry, databases are beeing updated, please try again later" rendered="#{!searchBean.initialized}"/>
+<!-- 			<h:outputText value="Sorry, databases are beeing updated, please try again later" rendered="#{!searchBean.initialized}"/> -->
 		</ui:define>
 	</ui:composition>
 </h:body>
