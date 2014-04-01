@@ -15,6 +15,7 @@ import javax.faces.bean.ApplicationScoped;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.context.FacesContext;
+import javax.faces.event.ValueChangeEvent;
 
 import es.ehubio.db.fasta.Fasta.InvalidSequenceException;
 import es.ehubio.wregex.Pssm;
@@ -39,13 +40,12 @@ public class StatisticsBean {
 	private final int maxMutations = 800;
 	private final int minMutations = 100;
 	private BubbleChartData motifs;
-	private final List<String> displayTips;
+	private List<String> displayTips = new ArrayList<>();
 	private final Services services;
+	private String graph = "COSMIC";
+	private String title;
 	
-	public StatisticsBean() {
-		displayTips = new ArrayList<>();
-		displayTips.add(String.format("Bubble size has been limited to %d mutations", maxMutations));
-		displayTips.add(String.format("Motifs with less than %d mutations have been filtered", minMutations));
+	public StatisticsBean() {		
 		services = new Services(FacesContext.getCurrentInstance().getExternalContext());
 	}
 	
@@ -59,6 +59,31 @@ public class StatisticsBean {
 
 	@PostConstruct
 	public void init() {
+		loadCosmic();
+	}
+	
+	private void loadBubbles() throws IOException {
+		Scanner scanner = new Scanner(new File(databases.getDbBubbles().getPath())); 
+		jsonMotifs = scanner.useDelimiter("\\A").next();
+		scanner.close();
+	}
+	
+	public void onChangeGraph( ValueChangeEvent event ) {
+		String graph = event.getNewValue().toString();
+		if( graph.equals("COSMIC") )
+			loadCosmic();
+		else if ( graph.equals("dbPTM") )
+			loadDbPtm();
+	}
+	
+	private void loadCosmic() {
+		displayTips.clear();
+		displayTips.add(String.format("Bubble size has been limited to %d mutations", maxMutations));
+		displayTips.add(String.format("Motifs with less than %d mutations have been filtered", minMutations));
+		setTitle(String.format(
+			"Top %d proteins with COSMIC missense mutations for top Wregex motifs)",
+			topCount)
+		);
 		try {
 			DatabaseInformation bubbles = databases.getDbBubbles();
 			if( bubbles != null && bubbles.exists() ) {
@@ -72,12 +97,15 @@ public class StatisticsBean {
 			e.printStackTrace();
 		}
 	}
-	
-	private void loadBubbles() throws IOException {
-		Scanner scanner = new Scanner(new File(databases.getDbBubbles().getPath())); 
-		jsonMotifs = scanner.useDelimiter("\\A").next();
-		scanner.close();
-	}
+
+	private void loadDbPtm() {
+		displayTips.clear();
+		setTitle(String.format(
+			"Top %d proteins with dbPTM experimental PTMs for top Wregex motifs)",
+			topCount)
+		);
+		jsonMotifs = "{}";
+	}	
 
 	public String getJsonMotifs() {		
 		return jsonMotifs;
@@ -153,10 +181,9 @@ public class StatisticsBean {
 	private void addBubbles( MotifInformation motifInformation, List<ResultEx> results ) {
 		BubbleChartData motif = new BubbleChartData();
 		BubbleChartData child;
-		final String discretion = "COSMIC missense mutations in potencial motif candidates";
 		motif.setName(motifInformation.getName());
 		motif.setDescription(motifInformation.getSummary());
-		motif.setDiscretion(discretion);			
+		motif.setDiscretion("COSMIC missense mutations in potencial motif candidates");			
 		int count = topCount;
 		for( ResultEx result : results ) {
 			if( result.getGene() == null )
@@ -170,7 +197,10 @@ public class StatisticsBean {
 			child = new BubbleChartData();
 			child.setName(result.getGene());
 			child.setDescription(result.getFasta().getDescription());
-			child.setDiscretion(discretion);
+			child.setDiscretion(String.format(
+				"COSMIC missense mutations in potencial motif %s candidates",
+				motif.getName())
+			);
 			child.setResult(""+result.getCosmicMissense());
 			child.setSize(result.getCosmicMissense());
 			if( child.getSize() <= 0 )
@@ -212,6 +242,22 @@ public class StatisticsBean {
 		}
 	}
 	
+	public String getGraph() {
+		return graph;
+	}
+
+	public void setGraph(String graph) {
+		this.graph = graph;
+	}
+
+	public String getTitle() {
+		return title;
+	}
+
+	public void setTitle(String title) {
+		this.title = title;
+	}
+
 	private class Initializer extends Thread {		
 		@Override
 		public void run() {
