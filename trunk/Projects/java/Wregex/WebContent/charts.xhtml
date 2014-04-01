@@ -51,15 +51,18 @@ circle.child:hover {
   z-index: 1000;
   position: absolute;
   display: none;
-}
-
-#tooltip .tail {
-  position: absolute;
-  bottom: -8px;
-  left: 105px;
-  width: 40px;
-  height: 8px;
-  background: url(http://graphics8.nytimes.com/packages/images/newsgraphics/2012/0202-federal-budget/tail_white.png) 50% 0%;
+  width: 230px;
+  margin-top: 20px;
+  font-size: 12px;
+  line-height: 16px;
+  padding: 10px;
+  border-radius: 3px;
+  background: rgba(255,255,255,0.9);
+  color: #000;
+  box-shadow: 0 1px 5px rgba(0,0,0,0.4);
+  -moz-box-shadow: 0 1px 5px rgba(0,0,0,0.4);  
+  border:1px solid rgba(200,200,200,0.85);
+  text-align:center;
 }
 
 #tooltip .name {
@@ -81,13 +84,11 @@ circle.child:hover {
 #tooltip .description {
   text-align: left;
   font-size: 13px;
-/*  width:170px;*/
   text-align:center;  
 }
 
 #tooltip .discretion{
   color:#666;
-/*   text-transform:uppercase;*/
   font-size: 11px;   
   text-align:center;  
   font-style:italic;
@@ -98,41 +99,47 @@ circle.child:hover {
 }
 
 #tooltip .value {
-/*  position:absolute;*/
   text-align:center;
   right:10px;
   top:28px;
   font-size: 16px;
-/*  width:100px;*/
   text-align:center;  
   overflow:hidden;
   font-weight:bold;
 }
-
-#tooltipContainer {
-  position: absolute;
-  bottom: 0;
-  width: 230px;
-  left: -125px;
-  font-size: 12px;
-  line-height: 16px;
-  padding: 10px;
-  border-radius: 3px;
-  background: rgba(255,255,255,0.9);
-  color: #000;
-  box-shadow: 0 1px 5px rgba(0,0,0,0.4);
-  -moz-box-shadow: 0 1px 5px rgba(0,0,0,0.4);  
-  border:1px solid rgba(200,200,200,0.85);
-  text-align:center;
-}
 </style>
 </ui:define>
 <ui:define name="content">
-<h:panelGroup rendered="#{statisticsBean.initialized}">
-    <script type="text/javascript" src="http://mbostock.github.io/d3/talk/20111116/d3/d3.js"></script>
-    <script type="text/javascript" src="http://mbostock.github.io/d3/talk/20111116/d3/d3.layout.js"></script>
-    <script type="text/javascript">
-
+	<h:form>
+	<h:panelGroup rendered="#{!statisticsBean.initialized}">
+		Statistics are beeing updated, please try again in 15 minutes ...
+	</h:panelGroup>
+	<h:panelGroup rendered="#{statisticsBean.initialized}">
+		<div style="width:500px;margin-right:20px;float:left;">
+			<p:selectOneMenu value="#{statisticsBean.graph}" valueChangeListener="#{statisticsBean.onChangeGraph}">
+				<f:selectItem itemLabel="COSMIC missense mutations" itemValue="COSMIC" />
+				<f:selectItem itemLabel="dbPTM experimental PTMs" itemValue="dbPTM" />
+				<p:ajax update="@form"/>
+			</p:selectOneMenu>			
+			<h3>#{statisticsBean.title}</h3>
+			<p:dataList value="#{statisticsBean.displayTips}" var="tip" itemType="circle">
+				<f:facet name="header">Display considerations:</f:facet>
+				#{tip}
+			</p:dataList>
+			<div id="tooltip">
+				<div class="name"></div>
+				<div class="rule"></div>
+				<div class="description"></div>
+				<div class="discretion"></div>
+				<div class="valuesContainer">
+					<span class="value"></span>
+				</div>
+			</div>
+		</div>
+		<div id="graph" style="float:left;"/>		
+	    <script type="text/javascript" src="http://mbostock.github.io/d3/talk/20111116/d3/d3.js"></script>
+	    <script type="text/javascript" src="http://mbostock.github.io/d3/talk/20111116/d3/d3.layout.js"></script>
+	    <script type="text/javascript">
 var w = 610,
     h = 610,
     r = 600,
@@ -145,7 +152,8 @@ var pack = d3.layout.pack()
     .size([r, r])
     .value(function(d) { return d.size; })
 
-var vis = d3.select("#prebody").append("svg:svg")
+//var vis = d3.select("#prebody").append("svg:svg")
+var vis = d3.select("#graph").append("svg:svg")
     .attr("width", w)
     .attr("height", h)
   .append("svg:g")
@@ -169,8 +177,8 @@ d3.json("json.xhtml", function(data) {
           var xpos = Number(el.attr('cx'));
           var ypos = Number(el.attr('cy'))+100-d.r/2-10;
           d3.select("#tooltip")
-          	.style('top',ypos+"px")
-          	.style('left',xpos+"px")
+          	//.style('top',ypos+"px")
+          	//.style('left',xpos+"px")
           	.style('display', d.name.length == 0 ? 'none': 'block');
           d3.select("#tooltip .name")
           	.text(d.name);
@@ -220,28 +228,9 @@ function zoom(d, i) {
   node = d;
   d3.event.stopPropagation();
 }
-</script>
-<div id="tooltip">
-	<div id="tooltipContainer">
-		<div class="name"></div>
-		<div class="rule"></div>
-		<div class="description"></div>
-		<div class="discretion"></div>
-		<div class="valuesContainer">
-			<span class="value"></span>
-		</div>
-<!-- 		<div class="tail"></div> -->
-	</div>	
-</div>
-<h3>Top #{statisticsBean.topCount} proteins with COSMIC missense mutations for top Wregex motifs</h3>
-<p:dataList value="#{statisticsBean.displayTips}" var="tip" itemType="circle">
-	<f:facet name="header">Display considerations:</f:facet>
-	#{tip}
-</p:dataList>
-</h:panelGroup>
-<h:panelGroup rendered="#{!statisticsBean.initialized}">
-Statistics are beeing updated, please try again in 15 minutes ...
-</h:panelGroup>
+</script>		
+	</h:panelGroup>
+	</h:form>
 </ui:define>		
 </ui:composition>
 </h:body>
