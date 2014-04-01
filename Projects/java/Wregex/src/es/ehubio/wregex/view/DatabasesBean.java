@@ -15,7 +15,6 @@ import java.util.Map;
 import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
 
-import javax.annotation.PostConstruct;
 import javax.faces.bean.ApplicationScoped;
 import javax.faces.bean.ManagedBean;
 import javax.faces.context.FacesContext;
@@ -58,24 +57,16 @@ public class DatabasesBean implements Serializable {
 	private long lastModifiedElm;
 	private long lastModifiedDbPtm;
 	private String humanProteome;
-	private boolean initialized = false;
+	private boolean initialized = false;	
 	
 	private class FastaDb {
 		public long lastModified;
 		public List<InputGroup> entries;
 	}
 	
-	public DatabasesBean() {		
-	}
-	
-	@PostConstruct
-	public void init() {
-		try {
-			loadDatabases();
-			initialized = true;
-		} catch( Exception e ) {
-			e.printStackTrace();
-		}
+	public DatabasesBean() throws IOException, InvalidSequenceException {
+		loadDatabases();
+		initialized = true;
 	}
 
 	private void loadDatabases() throws IOException, InvalidSequenceException {
@@ -97,17 +88,17 @@ public class DatabasesBean implements Serializable {
 		for( DatabaseInformation database : databaseConfiguration.getDatabases() ) {
 			if( database.getType().equals("elm") ) {
 				elm = database;
-				loadElmMotifs();
+				refreshElm();
 				continue;
 			}
 			if( database.getType().equals("cosmic") ) {
 				cosmic = database;
-				loadCosmic();
+				//refreshCosmic();
 				continue;
 			}
 			if( database.getType().equals("dbptm") ) {
 				dbPtm = database;
-				loadDbPtm();
+				//refreshDbPtm();
 				continue;
 			}
 			if( database.getType().equals("bubbles") ) {
@@ -149,13 +140,7 @@ public class DatabasesBean implements Serializable {
 	}
 	
 	public List<MotifInformation> getElmMotifs() {
-		File file = new File(elm.getPath());
-		if( file.lastModified() != lastModifiedElm )
-			try {
-				loadElmMotifs();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+		refreshElm();	
 		return elmMotifs;
 	}
 	
@@ -213,28 +198,59 @@ public class DatabasesBean implements Serializable {
 		return dbPtm;
 	}
 	
-	public Map<String,Loci> getMapCosmic() {
-		File file = new File(cosmic.getPath());
-		if( file.lastModified() != lastModifiedCosmic ) {
-			try {
-				loadCosmic();				
-			} catch( Exception e ) {
-				e.printStackTrace();
-			}
-		}
+	public Map<String,Loci> getMapCosmic() throws ReloadException {
+		if( !isInitialized() || refreshCosmic() )
+			throw new ReloadException(cosmic.getFullName());
 		return mapCosmic;
 	}
 	
-	public Map<String, ProteinPtms> getMapDbPtm() {
-		File file = new File(dbPtm.getPath());
-		if( file.lastModified() != lastModifiedDbPtm ) {
-			try {
-				loadDbPtm();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
+	public Map<String, ProteinPtms> getMapDbPtm() throws ReloadException {
+		if( !isInitialized() || refreshDbPtm() )
+			throw new ReloadException(dbPtm.getFullName());
 		return mapDbPtm;
+	}	
+
+	public boolean isInitialized() {
+		return initialized;
+	}
+
+	public DatabaseInformation getDbBubbles() {
+		return dbBubbles;
+	}
+
+	public void setDbBubbles(DatabaseInformation dbBubbles) {
+		this.dbBubbles = dbBubbles;
+	}
+	
+	private boolean refreshElm() {		
+		try {
+			File file = new File(elm.getPath());
+			if( file.lastModified() == lastModifiedElm )
+				return false;
+			loadElmMotifs();
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		}
+		return true;
+	}	
+	
+	private boolean refreshCosmic() {
+		File file = new File(cosmic.getPath());
+		if( file.lastModified() == lastModifiedCosmic )
+			return false;
+		Initializer initializer = new Initializer(cosmic.getName());
+		initializer.start();
+		return true;
+	}
+	
+	private boolean refreshDbPtm() {
+		File file = new File(dbPtm.getPath());
+		if( file.lastModified() == lastModifiedDbPtm )
+			return false;
+		Initializer initializer = new Initializer(dbPtm.getName());
+		initializer.start();
+		return true;
 	}
 	
 	private void loadElmMotifs() throws IOException {
@@ -295,16 +311,39 @@ public class DatabasesBean implements Serializable {
 		lastModifiedDbPtm = new File(dbPtm.getPath()).lastModified();
 		logger.info("Loaded!");
 	}
-
-	public boolean isInitialized() {
-		return initialized;
+	
+	private class Initializer extends Thread {
+		private final String db;
+		
+		public Initializer( String db ) {
+			this.db = db;
+		}
+		
+		@Override
+		public void run() {
+			initialized = false;
+			try { 
+				if( db.equals(elm.getName()) )
+					loadElmMotifs();
+				else if( db.equals(cosmic.getName()) )
+					loadCosmic();
+				else if( db.equals(dbPtm.getName()) )
+					loadDbPtm();
+				initialized = true;
+			} catch( Exception e ) {
+				e.printStackTrace();
+			}
+		}				
 	}
-
-	public DatabaseInformation getDbBubbles() {
-		return dbBubbles;
+	
+	public static class ReloadException extends Exception {
+		private static final long serialVersionUID = 1L;
+		private static final String message = "beeing updated, please try again later";
+		public ReloadException() {
+			super("Databases are "+message);
+		}
+		public ReloadException( String db ) {
+			super(db+" database is "+message);
+		}
 	}
-
-	public void setDbBubbles(DatabaseInformation dbBubbles) {
-		this.dbBubbles = dbBubbles;
-	}	
 }

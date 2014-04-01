@@ -14,6 +14,7 @@ import javax.annotation.PostConstruct;
 import javax.faces.bean.ApplicationScoped;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
+import javax.faces.context.FacesContext;
 
 import es.ehubio.db.fasta.Fasta.InvalidSequenceException;
 import es.ehubio.wregex.Pssm;
@@ -39,11 +40,13 @@ public class StatisticsBean {
 	private final int minMutations = 100;
 	private BubbleChartData motifs;
 	private final List<String> displayTips;
+	private final Services services;
 	
 	public StatisticsBean() {
 		displayTips = new ArrayList<>();
 		displayTips.add(String.format("Bubble size has been limited to %d mutations", maxMutations));
-		displayTips.add(String.format("Motifs with less than %d mutations have been filtered", minMutations));	
+		displayTips.add(String.format("Motifs with less than %d mutations have been filtered", minMutations));
+		services = new Services(FacesContext.getCurrentInstance().getExternalContext());
 	}
 	
 	public DatabasesBean getDatabases() {
@@ -61,13 +64,10 @@ public class StatisticsBean {
 			if( bubbles != null && bubbles.exists() ) {
 				logger.info("Using cached bubbles");
 				loadBubbles();
+				initialized = true;
 			} else {
-				searchHumanProteome();
-				createJson();
-				saveJson();
-				logger.info("Bubbles saved for future uses");
-			}
-			initialized = true;
+				new Initializer().start();
+			}			
 		} catch( Exception e ) {
 			e.printStackTrace();
 		}
@@ -79,26 +79,47 @@ public class StatisticsBean {
 		scanner.close();
 	}
 
+	public String getJsonMotifs() {		
+		return jsonMotifs;
+	}
+
+	public boolean isInitialized() {
+		return initialized;
+	}
+
+	public int getTopCount() {
+		return topCount;
+	}
+
+	public int getMaxMutations() {
+		return maxMutations;
+	}
+
+	public int getMinMutations() {
+		return minMutations;
+	}
+	
+	public List<String> getDisplayTips() {
+		return displayTips;
+	}
+	
 	private void searchHumanProteome() throws IOException, InvalidSequenceException, Exception {		
 		List<MotifInformation> allMotis = databases.getNrMotifs();
 		motifs = new BubbleChartData();
-		BubbleChartData motif, child;
 		List<ResultGroupEx> resultGroups;
 		List<ResultEx> results;		
 		MotifDefinition def;
 		Pssm pssm;
 		Wregex wregex;
 		int max = 2000;
-		int count;
-		int i = 0;
-		final String discretion = "COSMIC missense mutations in potencial motif candidates";
-		long tout = Services.getInitNumber("wregex.watchdogtimer")*1000;
+		int i = 0;		
+		long tout = services.getInitNumber("wregex.watchdogtimer")*1000;
 		for( MotifInformation motifInformation : allMotis ) {
 			logger.info(String.format(
 				"Searching human proteome for %s motif (%d/%d) ...",
 				motifInformation.getName(), ++i, allMotis.size()));
 			def = motifInformation.getDefinitions().get(0);
-			pssm = Services.getPssm(def.getPssm());
+			pssm = services.getPssm(def.getPssm());
 			wregex = new Wregex(def.getRegex(), pssm);
 			try {
 				resultGroups = Services.search(wregex, motifInformation, databases.getHumanProteome(), false, tout);
@@ -107,42 +128,61 @@ public class StatisticsBean {
 				continue;
 			}
 			results = Services.expand(resultGroups, true);
-			Services.searchCosmic(databases.getMapCosmic(), results);
+			searchCosmic(results);
 			Collections.sort(results);
-			motif = new BubbleChartData();
-			motif.setName(motifInformation.getName());
-			motif.setDescription(motifInformation.getSummary());
-			motif.setDiscretion(discretion);			
-			count = topCount;
-			for( ResultEx result : results ) {
-				if( result.getGene() == null )
-					continue;
-				child = motif.getChild(result.getGene());
-				if( child != null ) {
-					if( result.getCosmicMissense() > 0 )
-						child.setSize(child.getSize()+result.getCosmicMissense());
-					continue;
-				}
-				child = new BubbleChartData();
-				child.setName(result.getGene());
-				child.setDescription(result.getFasta().getDescription());
-				child.setDiscretion(discretion);
-				child.setResult(""+result.getCosmicMissense());
-				child.setSize(result.getCosmicMissense());
-				if( child.getSize() <= 0 )
-					continue;
-				motif.addChild(child);
-				if( --count <= 0 )
-					break;
-			}
-			if( motif.getChildren().isEmpty() )
-				continue;
-			motif.setResult(""+motif.getChildsSize());
-			motifs.addChild(motif);
+			addBubbles(motifInformation, results);			
 			if( --max <= 0 )
 				break;
 		}						
 		logger.info("finished!");
+	}
+	
+	private void searchCosmic( List<ResultEx> results ) throws InterruptedException {
+		boolean retry;
+		do {
+			retry = false;
+			try {
+				Services.searchCosmic(databases.getMapCosmic(), results);
+			} catch( DatabasesBean.ReloadException e ) {
+				Thread.sleep(5000);
+				retry = true;
+			}
+		} while( retry );
+	}
+	
+	private void addBubbles( MotifInformation motifInformation, List<ResultEx> results ) {
+		BubbleChartData motif = new BubbleChartData();
+		BubbleChartData child;
+		final String discretion = "COSMIC missense mutations in potencial motif candidates";
+		motif.setName(motifInformation.getName());
+		motif.setDescription(motifInformation.getSummary());
+		motif.setDiscretion(discretion);			
+		int count = topCount;
+		for( ResultEx result : results ) {
+			if( result.getGene() == null )
+				continue;
+			child = motif.getChild(result.getGene());
+			if( child != null ) {
+				if( result.getCosmicMissense() > 0 )
+					child.setSize(child.getSize()+result.getCosmicMissense());
+				continue;
+			}
+			child = new BubbleChartData();
+			child.setName(result.getGene());
+			child.setDescription(result.getFasta().getDescription());
+			child.setDiscretion(discretion);
+			child.setResult(""+result.getCosmicMissense());
+			child.setSize(result.getCosmicMissense());
+			if( child.getSize() <= 0 )
+				continue;
+			motif.addChild(child);
+			if( --count <= 0 )
+				break;
+		}
+		if( motif.getChildren().isEmpty() )
+			return;
+		motif.setResult(""+motif.getChildsSize());
+		motifs.addChild(motif);
 	}
 	
 	private void createJson() {
@@ -171,28 +211,20 @@ public class StatisticsBean {
 			e.printStackTrace();
 		}
 	}
-
-	public String getJsonMotifs() {
-		return jsonMotifs;
-	}
-
-	public boolean isInitialized() {
-		return initialized;
-	}
-
-	public int getTopCount() {
-		return topCount;
-	}
-
-	public int getMaxMutations() {
-		return maxMutations;
-	}
-
-	public int getMinMutations() {
-		return minMutations;
-	}
 	
-	public List<String> getDisplayTips() {
-		return displayTips;
+	private class Initializer extends Thread {		
+		@Override
+		public void run() {
+			initialized = false;
+			try {
+				searchHumanProteome();
+				createJson();
+				saveJson();
+				logger.info("Bubbles saved for future uses");
+				initialized = true;
+			} catch( Exception e ) {
+				e.printStackTrace();
+			}
+		}
 	}
 }

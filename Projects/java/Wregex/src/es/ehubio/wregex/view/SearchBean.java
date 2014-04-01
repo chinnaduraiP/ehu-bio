@@ -36,6 +36,7 @@ import es.ehubio.wregex.data.MotifReference;
 import es.ehubio.wregex.data.ResultEx;
 import es.ehubio.wregex.data.ResultGroupEx;
 import es.ehubio.wregex.data.Services;
+import es.ehubio.wregex.view.DatabasesBean.ReloadException;
 
 @ManagedBean
 @SessionScoped
@@ -63,8 +64,10 @@ public class SearchBean implements Serializable {
 	private Pssm pssm = null;
 	@ManagedProperty(value="#{databasesBean}")
 	private DatabasesBean databases;
+	private final Services services;
 	
-	public SearchBean() {	 	
+	public SearchBean() {
+		services = new Services(FacesContext.getCurrentInstance().getExternalContext());
 	}
 	
 	public List<MotifInformation> getWregexMotifs() {
@@ -282,8 +285,8 @@ public class SearchBean implements Serializable {
 			return "A target must be selected";
 		if( inputGroups == null )
 			return "A fasta file with input sequences must be uploaded";
-		if( allMotifs && inputGroups.size() > Services.getInitNumber("wregex.allMotifs") )
-			return String.format("Sorry, when searching for all motifs the number of target sequences is limited to %d", Services.getInitNumber("wregex.allMotifs"));
+		if( allMotifs && inputGroups.size() > services.getInitNumber("wregex.allMotifs") )
+			return String.format("Sorry, when searching for all motifs the number of target sequences is limited to %d", services.getInitNumber("wregex.allMotifs"));
 		return null;
 	}
 	
@@ -310,29 +313,29 @@ public class SearchBean implements Serializable {
 	
 	private List<ResultGroupEx> singleSearch() throws NumberFormatException, Exception {
 		if( !custom && getPssm() != null )
-			pssm = Services.getPssm(getPssm());
+			pssm = services.getPssm(getPssm());
 		usingPssm = pssm == null ? false : true;
 		String regex = custom ? getCustomRegex() : getRegex();
 		Wregex wregex = new Wregex(regex, pssm);
 		updateAssayScores();
-		return Services.search(wregex, motifInformation, inputGroups, assayScores, Services.getInitNumber("wregex.watchdogtimer")*1000);
+		return Services.search(wregex, motifInformation, inputGroups, assayScores, services.getInitNumber("wregex.watchdogtimer")*1000);
 	}
 	
 	private List<ResultGroupEx> allSearch() throws Exception {
 		assayScores = false;
 		//long div = getWregexMotifs().size() + getElmMotifs().size();
 		//long tout = getInitNumber("wregex.watchdogtimer")*1000/div;
-		long tout = Services.getInitNumber("wregex.watchdogtimer")*1000;
-		List<ResultGroupEx> results = Services.searchAll(getAllMotifs(), inputGroups, tout);
+		long tout = services.getInitNumber("wregex.watchdogtimer")*1000;
+		List<ResultGroupEx> results = services.searchAll(getAllMotifs(), inputGroups, tout);
 		usingPssm = true;
 		return results;
 	}
 
-	private void searchCosmic() {
+	private void searchCosmic() throws ReloadException {
 		Services.searchCosmic(databases.getMapCosmic(), results);
 	}
 	
-	private void searchDbPtm() {
+	private void searchDbPtm() throws ReloadException {
 		Services.searchDbPtm(databases.getMapDbPtm(), results);
 	}
 
@@ -390,12 +393,14 @@ public class SearchBean implements Serializable {
 			}
 	}
 
-	public String getSearchError() {
+	public String getSearchError() {		
 		return searchError;
 	}
 
 	public List<ResultEx> getResults() {
-		return results;
+		if( searchError == null )			
+			return results;
+		return null;
 	}
 	
 	public String getNumberOfResults() {
