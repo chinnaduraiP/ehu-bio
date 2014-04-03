@@ -31,84 +31,95 @@ import es.ehubio.wregex.data.Services;
 @ManagedBean
 @ApplicationScoped
 public class StatisticsBean {
+	private final static String cosmicBubbles = "cosmicBubbles.json";
+	private final static String dbPtmBubbles = "dbPtmBubbles.json";
+	
+	private static final int maxBubbles = 1000;
+	private static final int topCount = 10;
+	private static final int maxMutations = 800;
+	private static final int minMutations = 100;
+	private static final int maxPTMs = 100;
+	private static final int minPTMs = 30;
+	
 	private final static Logger logger = Logger.getLogger(StatisticsBean.class.getName());
-	private String jsonMotifs;
+	
 	@ManagedProperty(value="#{databasesBean}")
 	private DatabasesBean databases;
-	private boolean initialized = false;
-	private final int topCount = 10;
-	private final int maxMutations = 800;
-	private final int minMutations = 100;
-	private BubbleChartData motifs;
-	private List<String> displayTips = new ArrayList<>();
 	private final Services services;
-	private String graph = "COSMIC";
+	
+	private String jsonCosmic, jsonDbPtm;	
+	private boolean initialized = false;	
+	private List<String> displayTips = new ArrayList<>();	
+	private String chart = "COSMIC";
 	private String title;
 	
 	public StatisticsBean() {		
 		services = new Services(FacesContext.getCurrentInstance().getExternalContext());
-	}
-	
-	public DatabasesBean getDatabases() {
-		return databases;
-	}
-
-	public void setDatabases(DatabasesBean databases) {
-		this.databases = databases;
-	}
+	}	
 
 	@PostConstruct
 	public void init() {
-		loadCosmic();
-	}
-	
-	private void loadBubbles() throws IOException {
-		Scanner scanner = new Scanner(new File(databases.getDbBubbles().getPath())); 
-		jsonMotifs = scanner.useDelimiter("\\A").next();
-		scanner.close();
-	}
-	
-	public void onChangeGraph( ValueChangeEvent event ) {
-		String graph = event.getNewValue().toString();
-		if( graph.equals("COSMIC") )
-			loadCosmic();
-		else if ( graph.equals("dbPTM") )
-			loadDbPtm();
-	}
-	
-	private void loadCosmic() {
-		displayTips.clear();
-		displayTips.add(String.format("Bubble size has been limited to %d mutations", maxMutations));
-		displayTips.add(String.format("Motifs with less than %d mutations have been filtered", minMutations));
-		setTitle(String.format(
-			"Top %d proteins with COSMIC missense mutations for top Wregex motifs)",
-			topCount)
-		);
-		try {
-			DatabaseInformation bubbles = databases.getDbBubbles();
-			if( bubbles != null && bubbles.exists() ) {
-				logger.info("Using cached bubbles");
-				loadBubbles();
-				initialized = true;
-			} else {
-				new Initializer().start();
-			}			
-		} catch( Exception e ) {
-			e.printStackTrace();
-		}
-	}
-
-	private void loadDbPtm() {
-		displayTips.clear();
-		setTitle(String.format(
-			"Top %d proteins with dbPTM experimental PTMs for top Wregex motifs)",
-			topCount)
-		);
-		jsonMotifs = "{}";
+		loadChart( chart );
 	}	
+	
+	private void loadChart( String chart ) {
+		boolean ok = false;
+		displayTips.clear();		
+		switch( chart ) {
+			case "COSMIC":
+				displayTips.add(String.format("Bubble size has been limited to %d mutations", maxMutations));
+				displayTips.add(String.format("Motifs with less than %d mutations have been filtered", minMutations));
+				setTitle(String.format(
+					"Top %d proteins with COSMIC missense mutations for top Wregex motifs)", topCount));
+				jsonCosmic = loadBubbles(cosmicBubbles);
+				ok = jsonCosmic != null;
+				break;
+			case "dbPTM":
+				displayTips.add(String.format("Bubble size has been limited to %d PTMs", maxPTMs));
+				displayTips.add(String.format("Motifs with less than %d PTMs have been filtered", minPTMs));
+				setTitle(String.format(
+					"Top %d proteins with dbPTM experimental PTMs for top Wregex motifs)", topCount));
+				jsonDbPtm = loadBubbles(dbPtmBubbles);
+				ok = jsonDbPtm != null;
+				break;
+		}
+		if( ok ) {
+			logger.info("Using cached bubbles");
+			initialized = true;
+		} else
+			new Initializer().start();
+	}
+	
+	private String loadBubbles(String bubbles) {
+		String result = null;
+		try {
+			Scanner scanner = new Scanner(new File(databases.getDbWregex().getPath(),bubbles)); 
+			result = scanner.useDelimiter("\\A").next();
+			scanner.close();
+		} catch( Exception e ) {}
+		return result;
+	}
+	
+	public void onChangeChart( ValueChangeEvent event ) {
+		loadChart( event.getNewValue().toString() );
+	}
 
-	public String getJsonMotifs() {		
-		return jsonMotifs;
+	public String getJsonCosmic() {		
+		return jsonCosmic;
+	}
+	
+	public String getJsonDbPtm() {
+		return jsonDbPtm;
+	}
+	
+	public String getJsonMotifs() {			
+		switch( chart ) {
+			case "COSMIC":			
+				return getJsonCosmic();
+			case "dbPTM":
+				return getJsonDbPtm();
+		}		
+		return "{}";
 	}
 
 	public boolean isInitialized() {
@@ -131,15 +142,16 @@ public class StatisticsBean {
 		return displayTips;
 	}
 	
-	private void searchHumanProteome() throws IOException, InvalidSequenceException, Exception {		
+	private void createJson() throws IOException, InvalidSequenceException, Exception {		
 		List<MotifInformation> allMotis = databases.getNrMotifs();
-		motifs = new BubbleChartData();
+		BubbleChartData dbPtmBubbles = new BubbleChartData();
+		BubbleChartData cosmicBubbles = new BubbleChartData();
 		List<ResultGroupEx> resultGroups;
 		List<ResultEx> results;		
 		MotifDefinition def;
 		Pssm pssm;
 		Wregex wregex;
-		int max = 2000;
+		int max = maxBubbles;
 		int i = 0;		
 		long tout = services.getInitNumber("wregex.watchdogtimer")*1000;
 		for( MotifInformation motifInformation : allMotis ) {
@@ -156,21 +168,32 @@ public class StatisticsBean {
 				continue;
 			}
 			results = Services.expand(resultGroups, true);
-			searchCosmic(results);
+			
+			searchDb("dbPTM", results);
 			Collections.sort(results);
-			addBubbles(motifInformation, results);			
+			addBubbles(dbPtmBubbles, "dbPTM", motifInformation, results);
+			
+			searchDb("COSMIC", results);
+			Collections.sort(results);
+			addBubbles(cosmicBubbles, "COSMIC", motifInformation, results);			
+			
 			if( --max <= 0 )
 				break;
-		}						
+		}
+		jsonCosmic = truncateJson(cosmicBubbles, minMutations, maxMutations);
+		jsonDbPtm = truncateJson(dbPtmBubbles, minPTMs, maxPTMs);
 		logger.info("finished!");
 	}
 	
-	private void searchCosmic( List<ResultEx> results ) throws InterruptedException {
+	private void searchDb( String db, List<ResultEx> results ) throws InterruptedException {
 		boolean retry;
 		do {
 			retry = false;
 			try {
-				Services.searchCosmic(databases.getMapCosmic(), results);
+				switch( db ) {
+					case "COSMIC": Services.searchCosmic(databases.getMapCosmic(), results); break;
+					case "dbPTM": Services.searchDbPtm(databases.getMapDbPtm(), results); break;
+				}				
 			} catch( DatabasesBean.ReloadException e ) {
 				Thread.sleep(5000);
 				retry = true;
@@ -178,76 +201,104 @@ public class StatisticsBean {
 		} while( retry );
 	}
 	
-	private void addBubbles( MotifInformation motifInformation, List<ResultEx> results ) {
-		BubbleChartData motif = new BubbleChartData();
-		BubbleChartData child;
+	private static void addBubbles(
+			BubbleChartData root, String chart, MotifInformation motifInformation, List<ResultEx> results ) {
+		
+		String discretion;
+		switch( chart ) {
+			case "COSMIC": discretion = "COSMIC missense mutations"; break;	
+			case "dbPTM": discretion = "dbPTM experimental PTMs"; break;
+			default: discretion = ""; break;
+		}
+		
+		BubbleChartData motif = new BubbleChartData();		
 		motif.setName(motifInformation.getName());
 		motif.setDescription(motifInformation.getSummary());
-		motif.setDiscretion("COSMIC missense mutations in potencial motif candidates");			
+		motif.setDiscretion(String.format("%s in potencial motif candidates",discretion));
+		
+		BubbleChartData child;
 		int count = topCount;
+		int size;
 		for( ResultEx result : results ) {
 			if( result.getGene() == null )
 				continue;
+			size = getSize(chart, result);
+			if( size <= 0 )
+				continue;
 			child = motif.getChild(result.getGene());
-			if( child != null ) {
-				if( result.getCosmicMissense() > 0 )
-					child.setSize(child.getSize()+result.getCosmicMissense());
+			if( child != null ) {				
+				child.setSize(child.getSize()+size);
 				continue;
 			}
 			child = new BubbleChartData();
 			child.setName(result.getGene());
 			child.setDescription(result.getFasta().getDescription());
-			child.setDiscretion(String.format(
-				"COSMIC missense mutations in potencial motif %s candidates",
-				motif.getName())
-			);
-			child.setResult(""+result.getCosmicMissense());
-			child.setSize(result.getCosmicMissense());
-			if( child.getSize() <= 0 )
-				continue;
+			child.setDiscretion(String.format("%s in potencial motif %s candidates", discretion, motif.getName()));
+			child.setSize(size);
 			motif.addChild(child);
 			if( --count <= 0 )
 				break;
 		}
-		if( motif.getChildren().isEmpty() )
-			return;
-		motif.setResult(""+motif.getChildsSize());
-		motifs.addChild(motif);
+		if( !motif.getChildren().isEmpty() ) {
+			motif.setResult(""+motif.getChildsSize());
+			root.addChild(motif);
+		}
 	}
 	
-	private void createJson() {
+	private static int getSize( String chart, ResultEx result ) {
+		switch( chart ) {
+			case "COSMIC": return result.getCosmicMissense();
+			case "dbPTM": return result.getDbPtms();
+		}
+		return 0;
+	}
+	
+	private static String truncateJson( BubbleChartData motifs, int minSize, int maxSize ) {
 		BubbleChartData bubbles = new BubbleChartData();
 		for( BubbleChartData motif : motifs.getChildren() ) {
-			if( motif.getTotalSize() < minMutations )
+			if( motif.getTotalSize() < minSize )
 				continue;
 			bubbles.addChild(motif);
-			for( BubbleChartData gene : motif.getChildren() ) {				
-				if( gene.getSize() > maxMutations )
-					gene.setSize(maxMutations);
+			for( BubbleChartData gene : motif.getChildren() ) {	
+				gene.setResult(""+gene.getSize());
+				if( gene.getSize() > maxSize )
+					gene.setSize(maxSize);
 			}
 		}
-		jsonMotifs = bubbles.toString(null);
+		return bubbles.toString(null);
 	}
 	
 	private void saveJson() {
-		DatabaseInformation db = databases.getDbBubbles();
+		DatabaseInformation db = databases.getDbWregex();
 		if( db == null )
 			return;
 		try {
-			PrintWriter pw = new PrintWriter(db.getPath());
-			pw.print(jsonMotifs);
+			PrintWriter pw = new PrintWriter(new File(db.getPath(),cosmicBubbles));
+			pw.print(jsonCosmic);
+			pw.close();
+			
+			pw = new PrintWriter(new File(db.getPath(),dbPtmBubbles));
+			pw.print(jsonDbPtm);
 			pw.close();
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
 	}
 	
-	public String getGraph() {
-		return graph;
+	public DatabasesBean getDatabases() {
+		return databases;
 	}
 
-	public void setGraph(String graph) {
-		this.graph = graph;
+	public void setDatabases(DatabasesBean databases) {
+		this.databases = databases;
+	}
+	
+	public String getChart() {
+		return chart;
+	}
+
+	public void setChart(String graph) {
+		this.chart = graph;
 	}
 
 	public String getTitle() {
@@ -256,14 +307,13 @@ public class StatisticsBean {
 
 	public void setTitle(String title) {
 		this.title = title;
-	}
+	}	
 
 	private class Initializer extends Thread {		
 		@Override
 		public void run() {
 			initialized = false;
 			try {
-				searchHumanProteome();
 				createJson();
 				saveJson();
 				logger.info("Bubbles saved for future uses");

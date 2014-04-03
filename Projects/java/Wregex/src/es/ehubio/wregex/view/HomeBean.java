@@ -53,6 +53,7 @@ public class HomeBean implements Serializable {
 		pages.add(page);
 		
 		news = new ArrayList<>();
+		news.add(new LatestNew("Apr 03, 2014", "Included PTM chart"));
 		news.add(new LatestNew("Apr 01, 2014", "Database and statistics initialization are moved to separate threads"));
 		news.add(new LatestNew("Mar 31, 2014", "Improved tooltips in bubble chart"));
 		news.add(new LatestNew("Mar 31, 2014", "Filtered predictions and duplicates in dbPTM"));
