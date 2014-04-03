@@ -23,9 +23,9 @@
         <version>3.0</version>
     </database>
     <database>
-        <name>Cached searchAll</name>
-        <type>bubbles</type>
-        <path>/media/data/Sequences/Wregex/searchAll.json</path>
+        <name>Wregex Cache</name>
+        <type>wregex</type>
+        <path>/media/data/Sequences/Wregex</path>
     </database>
     <database>
         <name>UniProtKB/Swiss-Prot Human Proteome</name>

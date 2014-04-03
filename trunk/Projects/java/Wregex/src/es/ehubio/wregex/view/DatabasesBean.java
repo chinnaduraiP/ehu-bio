@@ -49,7 +49,7 @@ public class DatabasesBean implements Serializable {
 	private DatabaseInformation elm;
 	private DatabaseInformation cosmic;
 	private DatabaseInformation dbPtm;
-	private DatabaseInformation dbBubbles;
+	private DatabaseInformation dbWregex;
 	private Map<String,FastaDb> mapFasta;
 	private Map<String,Loci> mapCosmic;
 	private Map<String, ProteinPtms> mapDbPtm;
@@ -101,8 +101,8 @@ public class DatabasesBean implements Serializable {
 				//refreshDbPtm();
 				continue;
 			}
-			if( database.getType().equals("bubbles") ) {
-				dbBubbles = database;
+			if( database.getType().equals("wregex") ) {
+				dbWregex = database;
 				continue;
 			}
 			targets.add(database);
@@ -198,6 +198,10 @@ public class DatabasesBean implements Serializable {
 		return dbPtm;
 	}
 	
+	public DatabaseInformation getDbWregex() {
+		return dbWregex;
+	}
+	
 	public Map<String,Loci> getMapCosmic() throws ReloadException {
 		if( !isInitialized() || refreshCosmic() )
 			throw new ReloadException(cosmic.getFullName());
@@ -212,15 +216,7 @@ public class DatabasesBean implements Serializable {
 
 	public boolean isInitialized() {
 		return initialized;
-	}
-
-	public DatabaseInformation getDbBubbles() {
-		return dbBubbles;
-	}
-
-	public void setDbBubbles(DatabaseInformation dbBubbles) {
-		this.dbBubbles = dbBubbles;
-	}
+	}	
 	
 	private boolean refreshElm() {		
 		try {
