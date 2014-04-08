@@ -14,20 +14,34 @@ import es.ehubio.wregex.data.PageSummary;
 @RequestScoped
 public class HomeBean implements Serializable {
 	private static final long serialVersionUID = 1L;
-	final List<PageSummary> pages;
-	final List<LatestNew> news;	
+	private final List<PageSummary> pages;
+	private List<PageSummary> firstPages = new ArrayList<>();
+	private PageSummary lastPage = null;
+	private final List<LatestNew> news;	
 
 	public HomeBean() {
 		pages = new ArrayList<>();
 		
 		PageSummary page = new PageSummary();
+		page.setName("Home");
+		page.setDescription( "The Wregex home page." );
+		page.setAction("home");
+		addPage(page);
+		
+		page = new PageSummary();
 		page.setName("Search");
 		page.setDescription(
 			"Search motifs in protein sequences provided as an input fasta file. " +
 			"The motif can be selected from a dropdown list or a custom motif can be provided by the user by " +
 			"entering a regular expression and an optional PSSM. This PSSM can be builded using the Training page." );
 		page.setAction("search");
-		pages.add(page);
+		addPage(page);
+		
+		page = new PageSummary();
+		page.setName("Charts");
+		page.setDescription( "Browse charts with more interesting Wregex motif candidates." );
+		page.setAction("charts");
+		addPage(page);
 		
 		page = new PageSummary();
 		page.setName("Training");
@@ -35,14 +49,14 @@ public class HomeBean implements Serializable {
 			"Build a custom PSSM by providing a regular expression and a set of training motifs. " +
 			"Please read first the user manual to get familiar with matching groups in Wregex regular expressions.");
 		page.setAction("training");
-		pages.add(page);
+		addPage(page);
 		
 		page = new PageSummary();
 		page.setName("Documentation");
 		page.setDescription(
 			"Here there is the user manual and a paper explaining the details of the Wregex algorithm." );
 		page.setAction("documentation");
-		pages.add(page);
+		addPage(page);
 		
 		page = new PageSummary();
 		page.setName("Downloads");
@@ -50,9 +64,10 @@ public class HomeBean implements Serializable {
 			"Wregex is free software and licensed under the GPL. In this page you can find a link to the source code " +
 			"and the binary redistributable." );
 		page.setAction("downloads");
-		pages.add(page);
+		addPage(page);
 		
 		news = new ArrayList<>();
+		news.add(new LatestNew("Apr 08, 2014", "Updated site template"));
 		news.add(new LatestNew("Apr 03, 2014", "Included PTM chart"));
 		news.add(new LatestNew("Apr 01, 2014", "Database and statistics initialization are moved to separate threads"));
 		news.add(new LatestNew("Mar 31, 2014", "Improved tooltips in bubble chart"));
@@ -72,6 +87,21 @@ public class HomeBean implements Serializable {
 	
 	public List<PageSummary> getPages() {
 		return pages;
+	}
+	
+	public List<PageSummary> getFirstPages() {
+		return firstPages;
+	}
+	
+	public PageSummary getLastPage() {
+		return lastPage;
+	}
+	
+	public void addPage( PageSummary page ) {
+		if( lastPage != null )
+			firstPages.add(lastPage);
+		lastPage = page;
+		pages.add(page);
 	}
 	
 	public List<LatestNew> getNews() {
