@@ -13,9 +13,7 @@
 		</ui:define>
 		<ui:define name="content">
 		<h:form>
-			<h3>Welcome to Wregex</h3><p:separator/>
-			
-			<p>Welcome to the <h:outputText value="#{homeBean.signature}"/> home page.</p>
+			<h3>Welcome to the <h:outputText value="#{homeBean.signature}"/> home page</h3><p:separator/>
 			
 			<p>We present a novel approach for amino acid motif searching termed Wregex (weighted regular expression),
 			which combines regular expressions with a Position-Specific Scoring Matrix (PSSM).</p>
@@ -23,7 +21,7 @@
 			<p>This website provides the following pages:
 			<p:dataTable value="#{homeBean.pages}" var="page">
 				<f:facet name="header">Wregex website pages</f:facet>
-				<p:column width="100">
+				<p:column width="130">
 					<f:facet name="header">Name</f:facet>
 					<h:commandLink value="#{page.name}" action="#{page.getAction()}">&nbsp;<h:graphicImage name="images/link.png" height="15"/></h:commandLink>
 				</p:column>
