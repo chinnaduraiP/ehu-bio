@@ -47,6 +47,10 @@ public partial class PreferencesDlg : Gtk.Dialog {
 		set { RankThCombo.Sensitive = value; }
 	}
 	
+	public bool DecoySensitive {
+		set { DecoyCombo.Sensitive = value; }
+	}
+	
 	public bool MultiRunSensitive {
 		set { MultirunCombo.Sensitive = value; }
 	}
@@ -69,6 +73,11 @@ public partial class PreferencesDlg : Gtk.Dialog {
 	public int RankTh {
 		get { return RankThCombo.Active; }
 		set { RankThCombo.Active = value; }
+	}
+	
+	public bool FilterDecoys {
+		get { return DecoyCombo.Active == 1; }
+		set { DecoyCombo.Active = value ? 1 : 0; }
 	}
 	
 	public int RunTh {

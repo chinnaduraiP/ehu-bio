@@ -30,14 +30,14 @@ using EhuBio.Proteomics.Hupo.mzIdentML1_1;
 
 namespace EhuBio.Proteomics.Inference {
 
-public class mzId1_1_1 : mzId1_1 {
-	public mzId1_1_1(Mapper.Software sw) : base(sw) {
+public class mzId1_2 : mzId1_1 {
+	public mzId1_2(Mapper.Software sw) : base(sw) {
 		m_Type = Mapper.SourceType.mzIdentML111;
 	}
 	
 	public override string ParserName {
 		get {
-			return "PSI-PI mzIdentML (v1.1.1)";
+			return "PSI-PI mzIdentML (v1.2)";
 		}
 	}
 	
