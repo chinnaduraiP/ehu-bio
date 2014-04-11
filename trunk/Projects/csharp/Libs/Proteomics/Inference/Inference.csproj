@@ -42,7 +42,7 @@
     <Compile Include="Parsers\mzId1_1.cs" />
     <Compile Include="PSM.cs" />
     <Compile Include="Spectrum.cs" />
-    <Compile Include="Parsers\mzId1_1_1.cs" />
+    <Compile Include="Parsers\mzId1_2.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Database\Ebi\Ebi.csproj">

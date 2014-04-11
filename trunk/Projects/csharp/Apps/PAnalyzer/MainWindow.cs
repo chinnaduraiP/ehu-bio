@@ -45,7 +45,7 @@ public partial class MainWindow : Gtk.Window {
 		Build();
 		
 		m_Software.Name      = "PAnalyzer";
-		m_Software.Version   = "1.1b8";
+		m_Software.Version   = "1.1b9";
 		m_Software.License   = "Released under the GNU General Public License";
 		m_Software.Copyright = "(c) 2010-2014 by UPV/EHU";
 		m_Software.Contact   = "gorka.prieto@ehu.es";
@@ -294,6 +294,7 @@ public partial class MainWindow : Gtk.Window {
 		m_dlgPrefs.PassTh = m_Mapper.RequirePassTh;
 		m_dlgPrefs.PassThSensitive = MzidPsm;
 		m_dlgPrefs.RankTh = m_Mapper.RankThreshold;
+		m_dlgPrefs.FilterDecoys = m_Mapper.FilterDecoys;
 		m_dlgPrefs.RankThSensitive = MzidPsm;
 		m_dlgPrefs.MultiRunSensitive = m_nFiles > 1;
 		m_dlgPrefs.Runs = m_nFiles;
@@ -313,6 +314,7 @@ public partial class MainWindow : Gtk.Window {
 		m_Mapper.SeqThreshold = m_dlgPrefs.SeqThreshold;
 		m_Mapper.RequirePassTh = m_dlgPrefs.PassTh;
 		m_Mapper.RankThreshold = m_dlgPrefs.RankTh;
+		m_Mapper.FilterDecoys = m_dlgPrefs.FilterDecoys;
 		m_Mapper.RunsThreshold = m_dlgPrefs.RunTh;
 		m_Mapper.Do();
 		DisplayData();

@@ -176,6 +176,7 @@ public class Peptide {
 		this.ID = ID;
 		this.Sequence = Seq;
 		Confidence = Peptide.ConfidenceType.Green;
+		Decoy = false;
 		Relation = Peptide.RelationType.NonDiscriminating;
 		Proteins = new List<Protein>();
 		Runs = new List<int>();
@@ -262,6 +263,8 @@ public class Peptide {
 	/// Peptide identification names used in mzIdentML v1.0
 	/// </summary>
 	public SortedList<string,string> Names;
+	
+	public bool Decoy;
 	
 	/// <summary>
 	/// Red-Yellow threshold

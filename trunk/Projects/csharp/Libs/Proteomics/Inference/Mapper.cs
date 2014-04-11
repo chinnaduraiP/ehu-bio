@@ -98,8 +98,8 @@ public abstract class Mapper {
 			switch( version ) {
 				case "1.1.0":
 					return new mzId1_1(sw);
-				case "1.1.1":
-					return new mzId1_1_1(sw);
+				case "1.2.0":
+					return new mzId1_2(sw);
 			}
 			throw new ApplicationException( "mzIdentML version '" + version + "' not supported" );
 		}
@@ -139,6 +139,7 @@ public abstract class Mapper {
 		SeqThreshold = Peptide.ConfidenceType.NoThreshold;
 		RequirePassTh = true;
 		RankThreshold = 0;
+		FilterDecoys = true;
 		RunsThreshold = 1;
 		m_InputFiles = new List<string>();
 	}
@@ -276,6 +277,7 @@ public abstract class Mapper {
 		else {
 			w.WriteLine( tr.Render(th.Render("SpectrumIdentificationItem passThreshold")+td.Render(RequirePassTh.ToString())) );
 			w.WriteLine( tr.Render(th.Render("SpectrumIdentificationItem rank threshold")+td.Render(RankThreshold.ToString())) );
+			w.WriteLine( tr.Render(th.Render("PeptideEvidence isDecoy")+td.Render(FilterDecoys?"Filter":"Ignore")) );
 			if( Type >= SourceType.mzIdentML110 && Type <= SourceType.mzIdentML111 ) {
 				if( SeqThreshold != Peptide.ConfidenceType.NoThreshold )
 					w.WriteLine( tr.Render(th.Render("ProteomeDiscoverer/SEQUEST xcorr PSM threshold")+td.Render(SeqThreshold.ToString())) );
@@ -418,7 +420,7 @@ public abstract class Mapper {
 			w.WriteLine( "</table><br/>" );
 			return;
 		}
-		int rows = 7;
+		int rows = 8;
 		if( Spectra.Count != 0 )
 			rows++;
 		w.Write( tr+th.Render((p.Peptides.Count*rows).ToString(),"Peptides") );
@@ -431,6 +433,7 @@ public abstract class Mapper {
 			w.Write( th.Render(rows.ToString(),f.ToString()) );
 			w.WriteLine( th.Render("<a name=\""+p.Accession+"__"+f.ID+"\"/>Confidence")+td.Render(f.Confidence.ToString())+tr );
 			tr.Hold = true;
+			w.WriteLine( tr.Render(th.Render("Decoy")+td.Render(f.Decoy.ToString())) );
 			w.Write( tr+th.Render("Runs")+td );
 			for( i = 0; i < f.Runs.Count-1; i++ )
 				w.Write( f.Runs[i].ToString() + ", " );
@@ -668,6 +671,8 @@ public abstract class Mapper {
 		if( f.Proteins.Count == 0 )
 			return false;
 		if( Spectra.Count != 0 && (f.Psm == null || f.Psm.Count == 0) )
+			return false;
+		if( FilterDecoys && f.Decoy )
 			return false;
 		if( Type == SourceType.Plgs && (int)f.Confidence < (int)PlgsThreshold )
 			return false;
@@ -936,6 +941,11 @@ public abstract class Mapper {
 	/// The mzIdentML rank threshold.
 	/// </summary>
 	public int RankThreshold;
+	
+	/// <summary>
+	/// Filter decoy peptides.
+	/// </summary>
+	public bool FilterDecoys;
 	
 	/// <summary>
 	/// The minimum number of runs required.
