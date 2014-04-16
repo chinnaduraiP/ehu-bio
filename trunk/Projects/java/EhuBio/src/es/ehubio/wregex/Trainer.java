@@ -20,12 +20,15 @@ public final class Trainer {
 		}
 	}
 	
-	private List<TrainingGroup> trainStep( List<InputGroup> inputGroups ) {
+	private List<TrainingGroup> trainStep( List<InputGroup> inputGroups, long tout ) {
 		List<ResultGroup> results;
 		TrainingGroup group;
 		trainingGroups = new ArrayList<>();
+		long wdt = System.currentTimeMillis() + tout;
 		for( InputGroup inputGroup : inputGroups ) {
 			results = wregex.searchGrouping(inputGroup.getFasta());
+			if( tout > 0 && System.currentTimeMillis() >= wdt )
+				return null;
 			for( InputMotif motif : inputGroup.getMotifs() ) {
 				motif.setMatches(0);
 				for( ResultGroup result : results ) {
@@ -57,9 +60,9 @@ public final class Trainer {
 		return trainingGroups;
 	}
 	
-	public List<TrainingGroup> train( List<InputGroup> inputGroups, boolean calculateScores ) {
-		List<TrainingGroup> result = trainStep(inputGroups);
-		if( !calculateScores )
+	public List<TrainingGroup> train( List<InputGroup> inputGroups, boolean calculateScores, long tout ) {
+		List<TrainingGroup> result = trainStep(inputGroups, tout);
+		if( !calculateScores || result == null )
 			return result;
 		try {
 			Pssm pssm = buildPssm(true);
@@ -69,7 +72,7 @@ public final class Trainer {
 		} catch (WregexException e) {
 			throw new RuntimeException(e);
 		}
-		return trainStep(inputGroups);
+		return trainStep(inputGroups, tout);
 	}
 	
 	public Pssm buildPssm( boolean doNormalization ) throws PssmBuilderException {

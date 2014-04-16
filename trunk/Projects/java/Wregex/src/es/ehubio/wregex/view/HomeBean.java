@@ -67,6 +67,7 @@ public class HomeBean implements Serializable {
 		addPage(page);
 		
 		news = new ArrayList<>();
+		news.add(new LatestNew("Apr 16, 2014", "Included watchdogtimer also in trainer"));
 		news.add(new LatestNew("Apr 08, 2014", "Updated site template"));
 		news.add(new LatestNew("Apr 03, 2014", "Included PTM chart"));
 		news.add(new LatestNew("Apr 01, 2014", "Database and statistics initialization are moved to separate threads"));
