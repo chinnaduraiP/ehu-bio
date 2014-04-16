@@ -39,7 +39,7 @@ public class HomeBean implements Serializable {
 		
 		page = new PageSummary();
 		page.setName("Charts");
-		page.setDescription( "Browse charts with more interesting Wregex motif candidates." );
+		page.setDescription( "Browse charts with most interesting Wregex motif candidates." );
 		page.setAction("charts");
 		addPage(page);
 		
@@ -67,7 +67,7 @@ public class HomeBean implements Serializable {
 		addPage(page);
 		
 		news = new ArrayList<>();
-		news.add(new LatestNew("Apr 16, 2014", "Included watchdogtimer also in trainer"));
+		news.add(new LatestNew("Apr 16, 2014", "Made more robust the training page to avoid denial of service to another users"));
 		news.add(new LatestNew("Apr 08, 2014", "Updated site template"));
 		news.add(new LatestNew("Apr 03, 2014", "Included PTM chart"));
 		news.add(new LatestNew("Apr 01, 2014", "Database and statistics initialization are moved to separate threads"));
@@ -84,6 +84,10 @@ public class HomeBean implements Serializable {
 		news.add(new LatestNew("Feb 11, 2014", "Included beta support for COSMIC database! Results are sorted by mutations when COSMIC is enabled"));
 		news.add(new LatestNew("Feb 10, 2014", "Included human proteome as a predefined target"));
 		news.add(new LatestNew("Jan 06, 2014", "Wregex v1.0 published in Bioinformatics"));
+		
+//		news.add(new LatestNew("Apr 16, 2014", "Included time constraints to avoid denial of service to other users"));
+//		news.add(new LatestNew("Feb 11, 2014", "Website documentation completed"));
+//		news.add(new LatestNew("Jan 06, 2014", "Wregex v1.0 published in Bioinformatics"));
 	}
 	
 	public List<PageSummary> getPages() {
@@ -110,7 +114,8 @@ public class HomeBean implements Serializable {
 	}
 	
 	public String getSignature() {
-		return "Wregex (v2.0-alfa)";
+		return "Wregex (v2.0-alpha3)";
+		//return "Wregex (v1.1)";
 	}
 	
 	public String getLastUpdated() {
