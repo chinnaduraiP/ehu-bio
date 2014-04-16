@@ -24,6 +24,7 @@ import es.ehubio.wregex.InputGroup;
 import es.ehubio.wregex.InputMotif;
 import es.ehubio.wregex.Pssm;
 import es.ehubio.wregex.PssmBuilder.PssmBuilderException;
+import es.ehubio.wregex.data.Services;
 import es.ehubio.wregex.Trainer;
 import es.ehubio.wregex.TrainingGroup;
 import es.ehubio.wregex.TrainingMotif;
@@ -40,8 +41,11 @@ public class TrainingBean implements Serializable {
 	private Trainer trainer = null;
 	private String inputFileName = null;
 	private int motifsMatched;
+	private final Services services;
+	private String trainingError = null;
 
 	public TrainingBean() {
+		services = new Services(FacesContext.getCurrentInstance().getExternalContext());
 	}
 
 	public List<InputMotif> getInputList() {		
@@ -133,10 +137,18 @@ public class TrainingBean implements Serializable {
 	public void refresh() {
 		motifsMatched = 0;
 		trainingList = new ArrayList<>();
+		trainingError = null;
 		if( inputList.isEmpty() || regex == null || regex.isEmpty() )
 			return;
 		trainer = new Trainer(regex);
-		List<TrainingGroup> groups = trainer.train(inputGroupList,false);
+		List<TrainingGroup> groups = trainer.train(
+			inputGroupList,
+			false,
+			services.getInitNumber("wregex.watchdogtimer")*1000);
+		if( groups == null ) {
+			trainingError = "Too intensive search, try a more strict regular expression or less input motifs";
+			return;
+		}
 		for( TrainingGroup group : groups )
 			trainingList.addAll(group);
 		for( InputMotif motif : inputList )
@@ -194,5 +206,13 @@ public class TrainingBean implements Serializable {
 		if( inputGroupList != null && inputFileName != null )
 			return inputFileName + ": " + inputGroupList.size() + " entries";
 		return null;
+	}
+
+	public String getTrainingError() {
+		return trainingError;
+	}
+
+	public void setTrainingError(String trainingError) {
+		this.trainingError = trainingError;
 	}
 }

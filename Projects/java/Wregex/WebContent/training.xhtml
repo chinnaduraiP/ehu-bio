@@ -27,16 +27,19 @@
 
 					<p:commandButton value="Refresh" actionListener="#{trainingBean.refresh}" ajax="false"/>
 					<h:outputText value="#{trainingBean.trainingSummary}"
-						rendered="#{trainingBean.trainingSummary != null}" />
+						rendered="#{trainingBean.trainingSummary != null and trainingBean.trainingError == null}" />
 					<h:outputText value="Define a regex matching any training motif"
-						rendered="#{trainingBean.trainingSummary == null}"
+						rendered="#{trainingBean.trainingError == null and trainingBean.trainingSummary == null}"
+						style="color:red" />
+					<h:outputText value="#{trainingBean.trainingError}"
+						rendered="#{trainingBean.trainingError != null}"
 						style="color:red" />
 
 					<p:commandButton value="Download PSSM" actionListener="#{trainingBean.downloadPssm}" ajax="false"/>
 				</p:panelGrid>
 				<p />
 				<p:dataTable value="#{trainingBean.trainingList}" var="item"
-					rendered="#{not empty trainingBean.trainingList}">
+					rendered="#{not empty trainingBean.trainingList and trainingBean.trainingError == null}">
 					<p:column>
 						<f:facet name="header">Valid</f:facet>
 						<h:graphicImage name="images/ok.png" rendered="#{item.valid}"/>

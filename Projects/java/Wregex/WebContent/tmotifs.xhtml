@@ -26,12 +26,14 @@
 					<h:panelGroup>
 					<p:commandButton value="Refresh" actionListener="#{trainingBean.refresh}" ajax="false"/>
 					<h:outputText value="#{trainingBean.uploadError}" rendered="#{trainingBean.uploadError != null}" style="color:red"/>
-					<h:outputText value="#{trainingBean.inputSummary}" rendered="#{trainingBean.inputSummary != null and trainingBean.uploadError == null}"/>
+					<h:outputText value="#{trainingBean.trainingError}" rendered="#{trainingBean.uploadError == null and trainingBean.trainingError != null}" style="color:red"/>
+					<h:outputText value="#{trainingBean.inputSummary}" rendered="#{trainingBean.inputSummary != null and trainingBean.uploadError == null and trainingBean.trainingError == null}"/>
 					</h:panelGroup>
 					<p:commandButton value="Download motifs" actionListener="#{trainingBean.downloadInputMotifs}" ajax="false"/>
 				</p:panelGrid>
+				<br/>
 				<p:dataTable value="#{trainingBean.inputList}" var="item"
-					rendered="#{not empty trainingBean.inputList}">
+					rendered="#{not empty trainingBean.inputList and trainingBean.trainingError == null}">
 					<f:facet name="header">Input motifs</f:facet>
 					<p:column>
 						<f:facet name="header">Entry</f:facet>
