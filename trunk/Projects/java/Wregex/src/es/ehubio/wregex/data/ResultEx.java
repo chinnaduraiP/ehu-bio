@@ -6,8 +6,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import es.ehubio.Utils;
 import es.ehubio.db.fasta.Fasta;
+import es.ehubio.io.CsvUtils;
 import es.ehubio.wregex.Result;
 
 public class ResultEx implements Comparable<ResultEx> {
@@ -151,7 +151,7 @@ public class ResultEx implements Comparable<ResultEx> {
 		if( assays ) { fields.add("Assay"); fields.add("Assay"); }
 		if( cosmic ) { fields.add("Gene"); fields.add("COSMIC:Missense"); }
 		if( dbPtm ) fields.add("dbPTM");
-		pw.println(Utils.getCsv(separator, fields.toArray()));
+		pw.println(CsvUtils.getCsv(separator, fields.toArray()));
 		for( ResultEx result : results ) {
 			fields.clear();			
 			fields.add(result.getName());
@@ -173,7 +173,7 @@ public class ResultEx implements Comparable<ResultEx> {
 			}
 			if( dbPtm )
 				fields.add(result.getDbPtmsAsString());
-			pw.println(Utils.getCsv(separator, fields.toArray()));
+			pw.println(CsvUtils.getCsv(separator, fields.toArray()));
 		}
 		pw.flush();
 	}

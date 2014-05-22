@@ -38,6 +38,10 @@ public partial class PreferencesDlg : Gtk.Dialog {
 	public bool SeqThSensitive {
 		set { SeqThCombo.Sensitive = value; }
 	}
+
+	public bool XTandemThSensitive {
+		set { XTandemEntry.Sensitive = value; }
+	}
 	
 	public bool PassThSensitive {
 		set { PassThCheck.Sensitive = value; }
@@ -54,6 +58,11 @@ public partial class PreferencesDlg : Gtk.Dialog {
 	public bool MultiRunSensitive {
 		set { MultirunCombo.Sensitive = value; }
 	}
+
+	public int LengthThreshold {
+		get { return LengthCombo.Active; }
+		set { LengthCombo.Active = value; }
+	}
 	
 	public Peptide.ConfidenceType PlgsThreshold {
 		get { return (Peptide.ConfidenceType)PlgsThCombo.Active; }
@@ -63,6 +72,11 @@ public partial class PreferencesDlg : Gtk.Dialog {
 	public Peptide.ConfidenceType SeqThreshold {
 		get { return (Peptide.ConfidenceType)SeqThCombo.Active; }
 		set { SeqThCombo.Active = (int)value; }
+	}
+
+	public double XTandemTh {
+		get { return double.Parse(XTandemEntry.Text); }
+		set { XTandemEntry.Text = value.ToString(); }
 	}
 	
 	public bool PassTh {

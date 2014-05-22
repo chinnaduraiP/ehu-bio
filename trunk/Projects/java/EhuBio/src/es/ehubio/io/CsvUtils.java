@@ -1,6 +1,6 @@
-package es.ehubio;
+package es.ehubio.io;
 
-public class Utils {
+public class CsvUtils {
 	public static String getCsv( char separator, Object... fields) {
 		StringBuilder builder = new StringBuilder();
 		int i = 0;

@@ -135,8 +135,11 @@ public abstract class Mapper {
 		m_Format.NumberDecimalSeparator = ".";
 		m_Run = 0;
 		m_Type = SourceType.Unknown;
+		LengthThreshold = 0;
 		PlgsThreshold = Peptide.ConfidenceType.NoThreshold;
 		SeqThreshold = Peptide.ConfidenceType.NoThreshold;
+		XTandemThreshold = 0.05;
+		XTandemAvailable = false;
 		RequirePassTh = true;
 		RankThreshold = 0;
 		FilterDecoys = true;
@@ -674,6 +677,8 @@ public abstract class Mapper {
 			return false;
 		if( FilterDecoys && f.Decoy )
 			return false;
+		if (f.Sequence.Length < LengthThreshold)
+			return false;
 		if( Type == SourceType.Plgs && (int)f.Confidence < (int)PlgsThreshold )
 			return false;
 		return true;
@@ -914,6 +919,11 @@ public abstract class Mapper {
 	/// The spectra.
 	/// </summary>
 	public List<Spectrum> Spectra;
+
+	/// <summary>
+	/// Peptide length threshold.
+	/// </summary>
+	public int LengthThreshold;
 	
 	/// <summary>
 	/// Threshold used in PLGS.
@@ -924,6 +934,16 @@ public abstract class Mapper {
 	/// Threshold used in PD/SEQUEST.
 	/// </summary>
 	public Peptide.ConfidenceType SeqThreshold;
+
+	/// <summary>
+	/// The X!Tandem e-value threshold.
+	/// </summary>
+	public double XTandemThreshold;
+
+	/// <summary>
+	/// Wether X!Tandem thresholds are available.
+	/// </summary>
+	public bool XTandemAvailable;
 	
 	/// <summary>
 	/// Returns the input file type.

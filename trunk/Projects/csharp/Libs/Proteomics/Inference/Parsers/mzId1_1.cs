@@ -58,13 +58,14 @@ public class mzId1_1 : Mapper {
 	protected override void Load( string mzid ) {
 		m_mzid = new mzidFile1_1();
 		m_mzid.Load( mzid );		
-		LoadScores();
+		LoadSeqScores();
+		LoadXtandemScores ();
 		SortedList<string,string> SortedAccession = LoadProteins();
 		SortedList<string,Peptide> SortedPeptides = LoadPeptides();
 		LoadRelations(SortedAccession, SortedPeptides);
 	}
 	
-	private void LoadScores() {
+	private void LoadSeqScores() {
 		m_GreenTh = new double[4];
 		m_YellowTh = new double[4];
 		ParamListType ParamList = m_mzid.Data.AnalysisProtocolCollection.SpectrumIdentificationProtocol[0].AdditionalSearchParams;
@@ -121,6 +122,20 @@ public class mzId1_1 : Mapper {
 			Notify( yellow );
 			Notify( green );
 			SeqThreshold = Peptide.ConfidenceType.Yellow;
+		}
+	}
+
+	private void LoadXtandemScores() {
+		AbstractParamType[] items = m_mzid.Data.DataCollection.AnalysisData.SpectrumIdentificationList[0].SpectrumIdentificationResult[0].SpectrumIdentificationItem[0].Items;
+		foreach( AbstractParamType param in items ) {
+			if( !(param is CVParamType) )
+				continue;
+			CVParamType cv = param as CVParamType;
+			switch( cv.accession ) {
+				case "MS:1001330":	// X!Tandem:expect
+					XTandemAvailable = true;
+					return;
+			}
 		}
 	}
 	
