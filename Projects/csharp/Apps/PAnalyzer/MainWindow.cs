@@ -84,6 +84,7 @@ public partial class MainWindow : Gtk.Window {
 		m_dlgPrefs = new PreferencesDlg();
 		m_dlgPrefs.PlgsThreshold = Peptide.ConfidenceType.Yellow;
 		m_dlgPrefs.SeqThreshold = Peptide.ConfidenceType.Yellow;
+		m_dlgPrefs.XTandemTh = 0.05;
 		m_dlgPrefs.PassTh = true;
 		m_dlgPrefs.RankTh = 0;
 		m_dlgPrefs.Runs = 1;
@@ -287,10 +288,13 @@ public partial class MainWindow : Gtk.Window {
 	
 	protected virtual void OnExecuteActionActivated( object sender, System.EventArgs e ) {
 		bool MzidPsm = m_Mapper.Type >= Mapper.SourceType.mzIdentML110 && m_Mapper.Type <= Mapper.SourceType.mzIdentML111;
+		m_dlgPrefs.LengthThreshold = m_Mapper.LengthThreshold;
 		m_dlgPrefs.PlgsThreshold = m_Mapper.PlgsThreshold;
 		m_dlgPrefs.PlgsThSensitive = m_Mapper.Type == Mapper.SourceType.Plgs && m_Mapper.PlgsThreshold != Peptide.ConfidenceType.NoThreshold;
 		m_dlgPrefs.SeqThreshold = m_Mapper.SeqThreshold;
 		m_dlgPrefs.SeqThSensitive = MzidPsm && m_Mapper.SeqThreshold != Peptide.ConfidenceType.NoThreshold;
+		m_dlgPrefs.XTandemTh = m_Mapper.XTandemThreshold;
+		m_dlgPrefs.XTandemThSensitive = m_Mapper.XTandemAvailable;
 		m_dlgPrefs.PassTh = m_Mapper.RequirePassTh;
 		m_dlgPrefs.PassThSensitive = MzidPsm;
 		m_dlgPrefs.RankTh = m_Mapper.RankThreshold;
@@ -309,9 +313,11 @@ public partial class MainWindow : Gtk.Window {
 				return;
 		}
 		State = MainWindow.States.EXECUTING;
-		
+
+		m_Mapper.LengthThreshold = m_dlgPrefs.LengthThreshold;
 		m_Mapper.PlgsThreshold = m_dlgPrefs.PlgsThreshold;
 		m_Mapper.SeqThreshold = m_dlgPrefs.SeqThreshold;
+		m_Mapper.XTandemThreshold = m_dlgPrefs.XTandemTh;
 		m_Mapper.RequirePassTh = m_dlgPrefs.PassTh;
 		m_Mapper.RankThreshold = m_dlgPrefs.RankTh;
 		m_Mapper.FilterDecoys = m_dlgPrefs.FilterDecoys;
