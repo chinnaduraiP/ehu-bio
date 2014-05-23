@@ -38,7 +38,7 @@ public abstract class Mapper {
 	/// <summary>
 	/// Supported input file types.
 	/// </summary>
-	public enum SourceType { Unknown, Plgs, mzIdentML100, mzIdentML110, mzIdentML111 };
+	public enum SourceType { Unknown, Plgs, mzIdentML100, mzIdentML110, mzIdentML120 };
 
 	/// <summary>
 	/// Counts
@@ -140,6 +140,8 @@ public abstract class Mapper {
 		SeqThreshold = Peptide.ConfidenceType.NoThreshold;
 		XTandemThreshold = 0.05;
 		XTandemAvailable = false;
+		MascotThreshold = 0.05;
+		MascotAvailable = false;
 		RequirePassTh = true;
 		RankThreshold = 0;
 		FilterDecoys = true;
@@ -281,7 +283,7 @@ public abstract class Mapper {
 			w.WriteLine( tr.Render(th.Render("SpectrumIdentificationItem passThreshold")+td.Render(RequirePassTh.ToString())) );
 			w.WriteLine( tr.Render(th.Render("SpectrumIdentificationItem rank threshold")+td.Render(RankThreshold.ToString())) );
 			w.WriteLine( tr.Render(th.Render("PeptideEvidence isDecoy")+td.Render(FilterDecoys?"Filter":"Ignore")) );
-			if( Type >= SourceType.mzIdentML110 && Type <= SourceType.mzIdentML111 ) {
+			if( Type >= SourceType.mzIdentML110 && Type <= SourceType.mzIdentML120 ) {
 				if( SeqThreshold != Peptide.ConfidenceType.NoThreshold )
 					w.WriteLine( tr.Render(th.Render("ProteomeDiscoverer/SEQUEST xcorr PSM threshold")+td.Render(SeqThreshold.ToString())) );
 			}
@@ -687,16 +689,20 @@ public abstract class Mapper {
 	private bool CheckPsm( PSM psm ) {
 		if( psm.Peptide == null )
 			return false;
-		return CheckPsm( psm.passThreshold, psm.Rank, psm.Confidence );
+		return CheckPsm( psm.passThreshold, psm.Rank, psm.Confidence, psm.Score, psm.ScoreType );
 	}
 	
-	protected bool CheckPsm( bool passThreshold, int rank, Peptide.ConfidenceType confidence ) {
+	protected bool CheckPsm( bool passThreshold, int rank, Peptide.ConfidenceType confidence, double score, string type ) {
 		if( RequirePassTh && !passThreshold )
 			return false;
 		if( RankThreshold != 0 && (rank == 0 || rank > RankThreshold) )
 			return false;		
-		if( Type >= SourceType.mzIdentML110 && Type <= SourceType.mzIdentML111 && (int)confidence < (int)SeqThreshold )
+		if( Type >= SourceType.mzIdentML110 && Type <= SourceType.mzIdentML120 && (int)confidence < (int)SeqThreshold )
 			return false;
+		if( type == "Mascot expectation value" && score > MascotThreshold )
+			return false;
+		if( type == "X!Tandem expect" && score > XTandemThreshold )
+			return false;				
 		return true;
 	}
 	
@@ -944,6 +950,16 @@ public abstract class Mapper {
 	/// Wether X!Tandem thresholds are available.
 	/// </summary>
 	public bool XTandemAvailable;
+	
+	/// <summary>
+	/// The Mascot expectaction score threshold.
+	/// </summary>
+	public double MascotThreshold;
+
+	/// <summary>
+	/// Wether Mascot thresholds are available.
+	/// </summary>
+	public bool MascotAvailable;
 	
 	/// <summary>
 	/// Returns the input file type.

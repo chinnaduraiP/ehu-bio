@@ -32,7 +32,7 @@ namespace EhuBio.Proteomics.Inference {
 
 public class mzId1_2 : mzId1_1 {
 	public mzId1_2(Mapper.Software sw) : base(sw) {
-		m_Type = Mapper.SourceType.mzIdentML111;
+		m_Type = Mapper.SourceType.mzIdentML120;
 	}
 	
 	public override string ParserName {

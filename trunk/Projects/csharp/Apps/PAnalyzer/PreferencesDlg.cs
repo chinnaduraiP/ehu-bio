@@ -38,6 +38,10 @@ public partial class PreferencesDlg : Gtk.Dialog {
 	public bool SeqThSensitive {
 		set { SeqThCombo.Sensitive = value; }
 	}
+	
+	public bool MascotThSensitive {
+		set { MascotEntry.Sensitive = value; }
+	}
 
 	public bool XTandemThSensitive {
 		set { XTandemEntry.Sensitive = value; }
@@ -73,11 +77,16 @@ public partial class PreferencesDlg : Gtk.Dialog {
 		get { return (Peptide.ConfidenceType)SeqThCombo.Active; }
 		set { SeqThCombo.Active = (int)value; }
 	}
+	
+	public double MascotTh {
+		get { return double.Parse(MascotEntry.Text); }
+		set { MascotEntry.Text = value.ToString(); }
+	}
 
 	public double XTandemTh {
 		get { return double.Parse(XTandemEntry.Text); }
 		set { XTandemEntry.Text = value.ToString(); }
-	}
+	}	
 	
 	public bool PassTh {
 		get { return PassThCheck.Active; }

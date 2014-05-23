@@ -14,7 +14,9 @@ public partial class PreferencesDlg
 	private global::Gtk.Label label6;
 	private global::Gtk.Label label7;
 	private global::Gtk.Label label8;
+	private global::Gtk.Label label9;
 	private global::Gtk.ComboBox LengthCombo;
+	private global::Gtk.Entry MascotEntry;
 	private global::Gtk.CheckButton PassThCheck;
 	private global::Gtk.ComboBox PlgsThCombo;
 	private global::Gtk.ComboBox RankThCombo;
@@ -56,7 +58,7 @@ public partial class PreferencesDlg
 		this.GtkAlignment2.Name = "GtkAlignment2";
 		this.GtkAlignment2.LeftPadding = ((uint)(12));
 		// Container child GtkAlignment2.Gtk.Container+ContainerChild
-		this.table1 = new global::Gtk.Table (((uint)(7)), ((uint)(2)), false);
+		this.table1 = new global::Gtk.Table (((uint)(8)), ((uint)(2)), false);
 		this.table1.Name = "table1";
 		this.table1.RowSpacing = ((uint)(6));
 		this.table1.ColumnSpacing = ((uint)(20));
@@ -69,8 +71,8 @@ public partial class PreferencesDlg
 		this.DecoyCombo.Active = 0;
 		this.table1.Add (this.DecoyCombo);
 		global::Gtk.Table.TableChild w2 = ((global::Gtk.Table.TableChild)(this.table1 [this.DecoyCombo]));
-		w2.TopAttach = ((uint)(6));
-		w2.BottomAttach = ((uint)(7));
+		w2.TopAttach = ((uint)(7));
+		w2.BottomAttach = ((uint)(8));
 		w2.LeftAttach = ((uint)(1));
 		w2.RightAttach = ((uint)(2));
 		w2.XOptions = ((global::Gtk.AttachOptions)(4));
@@ -104,8 +106,8 @@ public partial class PreferencesDlg
 		this.label4.LabelProp = global::Mono.Unix.Catalog.GetString ("mzIdentML SpectrumIdentificationItem passThreshold:");
 		this.table1.Add (this.label4);
 		global::Gtk.Table.TableChild w5 = ((global::Gtk.Table.TableChild)(this.table1 [this.label4]));
-		w5.TopAttach = ((uint)(4));
-		w5.BottomAttach = ((uint)(5));
+		w5.TopAttach = ((uint)(5));
+		w5.BottomAttach = ((uint)(6));
 		w5.XOptions = ((global::Gtk.AttachOptions)(4));
 		w5.YOptions = ((global::Gtk.AttachOptions)(4));
 		// Container child table1.Gtk.Table+TableChild
@@ -115,8 +117,8 @@ public partial class PreferencesDlg
 		this.label5.LabelProp = global::Mono.Unix.Catalog.GetString ("mzIdentML SpectrumIdentificationItem rank:");
 		this.table1.Add (this.label5);
 		global::Gtk.Table.TableChild w6 = ((global::Gtk.Table.TableChild)(this.table1 [this.label5]));
-		w6.TopAttach = ((uint)(5));
-		w6.BottomAttach = ((uint)(6));
+		w6.TopAttach = ((uint)(6));
+		w6.BottomAttach = ((uint)(7));
 		w6.XOptions = ((global::Gtk.AttachOptions)(4));
 		w6.YOptions = ((global::Gtk.AttachOptions)(4));
 		// Container child table1.Gtk.Table+TableChild
@@ -126,8 +128,8 @@ public partial class PreferencesDlg
 		this.label6.LabelProp = global::Mono.Unix.Catalog.GetString ("mzIdentML PeptideEvidence isDecoy:");
 		this.table1.Add (this.label6);
 		global::Gtk.Table.TableChild w7 = ((global::Gtk.Table.TableChild)(this.table1 [this.label6]));
-		w7.TopAttach = ((uint)(6));
-		w7.BottomAttach = ((uint)(7));
+		w7.TopAttach = ((uint)(7));
+		w7.BottomAttach = ((uint)(8));
 		w7.XOptions = ((global::Gtk.AttachOptions)(4));
 		w7.YOptions = ((global::Gtk.AttachOptions)(4));
 		// Container child table1.Gtk.Table+TableChild
@@ -137,8 +139,8 @@ public partial class PreferencesDlg
 		this.label7.LabelProp = global::Mono.Unix.Catalog.GetString ("X!Tandem e-value threshold:");
 		this.table1.Add (this.label7);
 		global::Gtk.Table.TableChild w8 = ((global::Gtk.Table.TableChild)(this.table1 [this.label7]));
-		w8.TopAttach = ((uint)(3));
-		w8.BottomAttach = ((uint)(4));
+		w8.TopAttach = ((uint)(4));
+		w8.BottomAttach = ((uint)(5));
 		w8.XOptions = ((global::Gtk.AttachOptions)(4));
 		w8.YOptions = ((global::Gtk.AttachOptions)(4));
 		// Container child table1.Gtk.Table+TableChild
@@ -150,6 +152,17 @@ public partial class PreferencesDlg
 		global::Gtk.Table.TableChild w9 = ((global::Gtk.Table.TableChild)(this.table1 [this.label8]));
 		w9.XOptions = ((global::Gtk.AttachOptions)(4));
 		w9.YOptions = ((global::Gtk.AttachOptions)(4));
+		// Container child table1.Gtk.Table+TableChild
+		this.label9 = new global::Gtk.Label ();
+		this.label9.Name = "label9";
+		this.label9.Xalign = 0F;
+		this.label9.LabelProp = global::Mono.Unix.Catalog.GetString ("Mascot e-value threshold:");
+		this.table1.Add (this.label9);
+		global::Gtk.Table.TableChild w10 = ((global::Gtk.Table.TableChild)(this.table1 [this.label9]));
+		w10.TopAttach = ((uint)(3));
+		w10.BottomAttach = ((uint)(4));
+		w10.XOptions = ((global::Gtk.AttachOptions)(4));
+		w10.YOptions = ((global::Gtk.AttachOptions)(4));
 		// Container child table1.Gtk.Table+TableChild
 		this.LengthCombo = global::Gtk.ComboBox.NewText ();
 		this.LengthCombo.AppendText (global::Mono.Unix.Catalog.GetString ("0"));
@@ -171,11 +184,25 @@ public partial class PreferencesDlg
 		this.LengthCombo.Name = "LengthCombo";
 		this.LengthCombo.Active = 0;
 		this.table1.Add (this.LengthCombo);
-		global::Gtk.Table.TableChild w10 = ((global::Gtk.Table.TableChild)(this.table1 [this.LengthCombo]));
-		w10.LeftAttach = ((uint)(1));
-		w10.RightAttach = ((uint)(2));
-		w10.XOptions = ((global::Gtk.AttachOptions)(4));
-		w10.YOptions = ((global::Gtk.AttachOptions)(4));
+		global::Gtk.Table.TableChild w11 = ((global::Gtk.Table.TableChild)(this.table1 [this.LengthCombo]));
+		w11.LeftAttach = ((uint)(1));
+		w11.RightAttach = ((uint)(2));
+		w11.XOptions = ((global::Gtk.AttachOptions)(4));
+		w11.YOptions = ((global::Gtk.AttachOptions)(4));
+		// Container child table1.Gtk.Table+TableChild
+		this.MascotEntry = new global::Gtk.Entry ();
+		this.MascotEntry.CanFocus = true;
+		this.MascotEntry.Name = "MascotEntry";
+		this.MascotEntry.IsEditable = true;
+		this.MascotEntry.InvisibleChar = '•';
+		this.table1.Add (this.MascotEntry);
+		global::Gtk.Table.TableChild w12 = ((global::Gtk.Table.TableChild)(this.table1 [this.MascotEntry]));
+		w12.TopAttach = ((uint)(3));
+		w12.BottomAttach = ((uint)(4));
+		w12.LeftAttach = ((uint)(1));
+		w12.RightAttach = ((uint)(2));
+		w12.XOptions = ((global::Gtk.AttachOptions)(4));
+		w12.YOptions = ((global::Gtk.AttachOptions)(4));
 		// Container child table1.Gtk.Table+TableChild
 		this.PassThCheck = new global::Gtk.CheckButton ();
 		this.PassThCheck.CanFocus = true;
@@ -184,13 +211,13 @@ public partial class PreferencesDlg
 		this.PassThCheck.DrawIndicator = true;
 		this.PassThCheck.UseUnderline = true;
 		this.table1.Add (this.PassThCheck);
-		global::Gtk.Table.TableChild w11 = ((global::Gtk.Table.TableChild)(this.table1 [this.PassThCheck]));
-		w11.TopAttach = ((uint)(4));
-		w11.BottomAttach = ((uint)(5));
-		w11.LeftAttach = ((uint)(1));
-		w11.RightAttach = ((uint)(2));
-		w11.XOptions = ((global::Gtk.AttachOptions)(4));
-		w11.YOptions = ((global::Gtk.AttachOptions)(4));
+		global::Gtk.Table.TableChild w13 = ((global::Gtk.Table.TableChild)(this.table1 [this.PassThCheck]));
+		w13.TopAttach = ((uint)(5));
+		w13.BottomAttach = ((uint)(6));
+		w13.LeftAttach = ((uint)(1));
+		w13.RightAttach = ((uint)(2));
+		w13.XOptions = ((global::Gtk.AttachOptions)(4));
+		w13.YOptions = ((global::Gtk.AttachOptions)(4));
 		// Container child table1.Gtk.Table+TableChild
 		this.PlgsThCombo = global::Gtk.ComboBox.NewText ();
 		this.PlgsThCombo.AppendText (global::Mono.Unix.Catalog.GetString ("Disabled"));
@@ -200,13 +227,13 @@ public partial class PreferencesDlg
 		this.PlgsThCombo.Name = "PlgsThCombo";
 		this.PlgsThCombo.Active = 0;
 		this.table1.Add (this.PlgsThCombo);
-		global::Gtk.Table.TableChild w12 = ((global::Gtk.Table.TableChild)(this.table1 [this.PlgsThCombo]));
-		w12.TopAttach = ((uint)(1));
-		w12.BottomAttach = ((uint)(2));
-		w12.LeftAttach = ((uint)(1));
-		w12.RightAttach = ((uint)(2));
-		w12.XOptions = ((global::Gtk.AttachOptions)(4));
-		w12.YOptions = ((global::Gtk.AttachOptions)(4));
+		global::Gtk.Table.TableChild w14 = ((global::Gtk.Table.TableChild)(this.table1 [this.PlgsThCombo]));
+		w14.TopAttach = ((uint)(1));
+		w14.BottomAttach = ((uint)(2));
+		w14.LeftAttach = ((uint)(1));
+		w14.RightAttach = ((uint)(2));
+		w14.XOptions = ((global::Gtk.AttachOptions)(4));
+		w14.YOptions = ((global::Gtk.AttachOptions)(4));
 		// Container child table1.Gtk.Table+TableChild
 		this.RankThCombo = global::Gtk.ComboBox.NewText ();
 		this.RankThCombo.AppendText (global::Mono.Unix.Catalog.GetString ("Disabled"));
@@ -217,13 +244,13 @@ public partial class PreferencesDlg
 		this.RankThCombo.Name = "RankThCombo";
 		this.RankThCombo.Active = 0;
 		this.table1.Add (this.RankThCombo);
-		global::Gtk.Table.TableChild w13 = ((global::Gtk.Table.TableChild)(this.table1 [this.RankThCombo]));
-		w13.TopAttach = ((uint)(5));
-		w13.BottomAttach = ((uint)(6));
-		w13.LeftAttach = ((uint)(1));
-		w13.RightAttach = ((uint)(2));
-		w13.XOptions = ((global::Gtk.AttachOptions)(4));
-		w13.YOptions = ((global::Gtk.AttachOptions)(4));
+		global::Gtk.Table.TableChild w15 = ((global::Gtk.Table.TableChild)(this.table1 [this.RankThCombo]));
+		w15.TopAttach = ((uint)(6));
+		w15.BottomAttach = ((uint)(7));
+		w15.LeftAttach = ((uint)(1));
+		w15.RightAttach = ((uint)(2));
+		w15.XOptions = ((global::Gtk.AttachOptions)(4));
+		w15.YOptions = ((global::Gtk.AttachOptions)(4));
 		// Container child table1.Gtk.Table+TableChild
 		this.SeqThCombo = global::Gtk.ComboBox.NewText ();
 		this.SeqThCombo.AppendText (global::Mono.Unix.Catalog.GetString ("Disabled"));
@@ -233,13 +260,13 @@ public partial class PreferencesDlg
 		this.SeqThCombo.Name = "SeqThCombo";
 		this.SeqThCombo.Active = 0;
 		this.table1.Add (this.SeqThCombo);
-		global::Gtk.Table.TableChild w14 = ((global::Gtk.Table.TableChild)(this.table1 [this.SeqThCombo]));
-		w14.TopAttach = ((uint)(2));
-		w14.BottomAttach = ((uint)(3));
-		w14.LeftAttach = ((uint)(1));
-		w14.RightAttach = ((uint)(2));
-		w14.XOptions = ((global::Gtk.AttachOptions)(4));
-		w14.YOptions = ((global::Gtk.AttachOptions)(4));
+		global::Gtk.Table.TableChild w16 = ((global::Gtk.Table.TableChild)(this.table1 [this.SeqThCombo]));
+		w16.TopAttach = ((uint)(2));
+		w16.BottomAttach = ((uint)(3));
+		w16.LeftAttach = ((uint)(1));
+		w16.RightAttach = ((uint)(2));
+		w16.XOptions = ((global::Gtk.AttachOptions)(4));
+		w16.YOptions = ((global::Gtk.AttachOptions)(4));
 		// Container child table1.Gtk.Table+TableChild
 		this.XTandemEntry = new global::Gtk.Entry ();
 		this.XTandemEntry.CanFocus = true;
@@ -247,27 +274,27 @@ public partial class PreferencesDlg
 		this.XTandemEntry.IsEditable = true;
 		this.XTandemEntry.InvisibleChar = '•';
 		this.table1.Add (this.XTandemEntry);
-		global::Gtk.Table.TableChild w15 = ((global::Gtk.Table.TableChild)(this.table1 [this.XTandemEntry]));
-		w15.TopAttach = ((uint)(3));
-		w15.BottomAttach = ((uint)(4));
-		w15.LeftAttach = ((uint)(1));
-		w15.RightAttach = ((uint)(2));
-		w15.XOptions = ((global::Gtk.AttachOptions)(4));
-		w15.YOptions = ((global::Gtk.AttachOptions)(4));
+		global::Gtk.Table.TableChild w17 = ((global::Gtk.Table.TableChild)(this.table1 [this.XTandemEntry]));
+		w17.TopAttach = ((uint)(4));
+		w17.BottomAttach = ((uint)(5));
+		w17.LeftAttach = ((uint)(1));
+		w17.RightAttach = ((uint)(2));
+		w17.XOptions = ((global::Gtk.AttachOptions)(4));
+		w17.YOptions = ((global::Gtk.AttachOptions)(4));
 		this.GtkAlignment2.Add (this.table1);
 		this.frame1.Add (this.GtkAlignment2);
 		this.GtkLabel2 = new global::Gtk.Label ();
 		this.GtkLabel2.WidthRequest = 400;
-		this.GtkLabel2.HeightRequest = 30;
+		this.GtkLabel2.HeightRequest = 44;
 		this.GtkLabel2.Name = "GtkLabel2";
 		this.GtkLabel2.LabelProp = global::Mono.Unix.Catalog.GetString ("<b>PSSM/Peptide score thresholds</b>");
 		this.GtkLabel2.UseMarkup = true;
 		this.frame1.LabelWidget = this.GtkLabel2;
 		this.vbox2.Add (this.frame1);
-		global::Gtk.Box.BoxChild w18 = ((global::Gtk.Box.BoxChild)(this.vbox2 [this.frame1]));
-		w18.Position = 0;
-		w18.Expand = false;
-		w18.Fill = false;
+		global::Gtk.Box.BoxChild w20 = ((global::Gtk.Box.BoxChild)(this.vbox2 [this.frame1]));
+		w20.Position = 0;
+		w20.Expand = false;
+		w20.Fill = false;
 		// Container child vbox2.Gtk.Box+BoxChild
 		this.frame2 = new global::Gtk.Frame ();
 		this.frame2.Name = "frame2";
@@ -289,43 +316,43 @@ public partial class PreferencesDlg
 		this.label2.Xalign = 0F;
 		this.label2.LabelProp = global::Mono.Unix.Catalog.GetString ("Multi-run peptide threshold:");
 		this.table2.Add (this.label2);
-		global::Gtk.Table.TableChild w19 = ((global::Gtk.Table.TableChild)(this.table2 [this.label2]));
-		w19.XOptions = ((global::Gtk.AttachOptions)(4));
-		w19.YOptions = ((global::Gtk.AttachOptions)(4));
+		global::Gtk.Table.TableChild w21 = ((global::Gtk.Table.TableChild)(this.table2 [this.label2]));
+		w21.XOptions = ((global::Gtk.AttachOptions)(4));
+		w21.YOptions = ((global::Gtk.AttachOptions)(4));
 		// Container child table2.Gtk.Table+TableChild
 		this.MultirunCombo = global::Gtk.ComboBox.NewText ();
 		this.MultirunCombo.Name = "MultirunCombo";
 		this.table2.Add (this.MultirunCombo);
-		global::Gtk.Table.TableChild w20 = ((global::Gtk.Table.TableChild)(this.table2 [this.MultirunCombo]));
-		w20.LeftAttach = ((uint)(1));
-		w20.RightAttach = ((uint)(2));
-		w20.XOptions = ((global::Gtk.AttachOptions)(4));
-		w20.YOptions = ((global::Gtk.AttachOptions)(4));
+		global::Gtk.Table.TableChild w22 = ((global::Gtk.Table.TableChild)(this.table2 [this.MultirunCombo]));
+		w22.LeftAttach = ((uint)(1));
+		w22.RightAttach = ((uint)(2));
+		w22.XOptions = ((global::Gtk.AttachOptions)(4));
+		w22.YOptions = ((global::Gtk.AttachOptions)(4));
 		this.GtkAlignment3.Add (this.table2);
 		this.frame2.Add (this.GtkAlignment3);
 		this.GtkLabel4 = new global::Gtk.Label ();
 		this.GtkLabel4.WidthRequest = 400;
-		this.GtkLabel4.HeightRequest = 30;
+		this.GtkLabel4.HeightRequest = 44;
 		this.GtkLabel4.Name = "GtkLabel4";
 		this.GtkLabel4.LabelProp = global::Mono.Unix.Catalog.GetString ("<b>Multi-run options</b>");
 		this.GtkLabel4.UseMarkup = true;
 		this.frame2.LabelWidget = this.GtkLabel4;
 		this.vbox2.Add (this.frame2);
-		global::Gtk.Box.BoxChild w23 = ((global::Gtk.Box.BoxChild)(this.vbox2 [this.frame2]));
-		w23.Position = 1;
-		w23.Expand = false;
-		w23.Fill = false;
+		global::Gtk.Box.BoxChild w25 = ((global::Gtk.Box.BoxChild)(this.vbox2 [this.frame2]));
+		w25.Position = 1;
+		w25.Expand = false;
+		w25.Fill = false;
 		w1.Add (this.vbox2);
-		global::Gtk.Box.BoxChild w24 = ((global::Gtk.Box.BoxChild)(w1 [this.vbox2]));
-		w24.Position = 0;
-		w24.Expand = false;
-		w24.Fill = false;
+		global::Gtk.Box.BoxChild w26 = ((global::Gtk.Box.BoxChild)(w1 [this.vbox2]));
+		w26.Position = 0;
+		w26.Expand = false;
+		w26.Fill = false;
 		// Internal child PreferencesDlg.ActionArea
-		global::Gtk.HButtonBox w25 = this.ActionArea;
-		w25.Name = "dialog1_ActionArea";
-		w25.Spacing = 10;
-		w25.BorderWidth = ((uint)(5));
-		w25.LayoutStyle = ((global::Gtk.ButtonBoxStyle)(4));
+		global::Gtk.HButtonBox w27 = this.ActionArea;
+		w27.Name = "dialog1_ActionArea";
+		w27.Spacing = 10;
+		w27.BorderWidth = ((uint)(5));
+		w27.LayoutStyle = ((global::Gtk.ButtonBoxStyle)(4));
 		// Container child dialog1_ActionArea.Gtk.ButtonBox+ButtonBoxChild
 		this.buttonCancel = new global::Gtk.Button ();
 		this.buttonCancel.CanDefault = true;
@@ -335,9 +362,9 @@ public partial class PreferencesDlg
 		this.buttonCancel.UseUnderline = true;
 		this.buttonCancel.Label = "gtk-execute";
 		this.AddActionWidget (this.buttonCancel, 0);
-		global::Gtk.ButtonBox.ButtonBoxChild w26 = ((global::Gtk.ButtonBox.ButtonBoxChild)(w25 [this.buttonCancel]));
-		w26.Expand = false;
-		w26.Fill = false;
+		global::Gtk.ButtonBox.ButtonBoxChild w28 = ((global::Gtk.ButtonBox.ButtonBoxChild)(w27 [this.buttonCancel]));
+		w28.Expand = false;
+		w28.Fill = false;
 		// Container child dialog1_ActionArea.Gtk.ButtonBox+ButtonBoxChild
 		this.button5 = new global::Gtk.Button ();
 		this.button5.CanFocus = true;
@@ -346,10 +373,10 @@ public partial class PreferencesDlg
 		this.button5.UseUnderline = true;
 		this.button5.Label = "gtk-cancel";
 		this.AddActionWidget (this.button5, -6);
-		global::Gtk.ButtonBox.ButtonBoxChild w27 = ((global::Gtk.ButtonBox.ButtonBoxChild)(w25 [this.button5]));
-		w27.Position = 1;
-		w27.Expand = false;
-		w27.Fill = false;
+		global::Gtk.ButtonBox.ButtonBoxChild w29 = ((global::Gtk.ButtonBox.ButtonBoxChild)(w27 [this.button5]));
+		w29.Position = 1;
+		w29.Expand = false;
+		w29.Fill = false;
 		if ((this.Child != null)) {
 			this.Child.ShowAll ();
 		}
