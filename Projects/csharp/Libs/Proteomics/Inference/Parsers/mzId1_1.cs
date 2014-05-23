@@ -59,7 +59,7 @@ public class mzId1_1 : Mapper {
 		m_mzid = new mzidFile1_1();
 		m_mzid.Load( mzid );		
 		LoadSeqScores();
-		LoadXtandemScores ();
+		CheckOtherScores();
 		SortedList<string,string> SortedAccession = LoadProteins();
 		SortedList<string,Peptide> SortedPeptides = LoadPeptides();
 		LoadRelations(SortedAccession, SortedPeptides);
@@ -125,7 +125,7 @@ public class mzId1_1 : Mapper {
 		}
 	}
 
-	private void LoadXtandemScores() {
+	private void CheckOtherScores() {
 		AbstractParamType[] items = m_mzid.Data.DataCollection.AnalysisData.SpectrumIdentificationList[0].SpectrumIdentificationResult[0].SpectrumIdentificationItem[0].Items;
 		foreach( AbstractParamType param in items ) {
 			if( !(param is CVParamType) )
@@ -134,7 +134,10 @@ public class mzId1_1 : Mapper {
 			switch( cv.accession ) {
 				case "MS:1001330":	// X!Tandem:expect
 					XTandemAvailable = true;
-					return;
+					break;
+				case "MS:1001172":	// mascot:expectation value
+					MascotAvailable = true;
+					break;
 			}
 		}
 	}
@@ -209,6 +212,7 @@ public class mzId1_1 : Mapper {
 			spectrum.Psm = new List<PSM>();
 			Spectra.Add(spectrum);
 			foreach( SpectrumIdentificationItemType item in idres.SpectrumIdentificationItem ) {
+				//Console.Out.WriteLine(item.id);
 				GetPsmScore( item, out score, out type, out confidence );
 				PSM psm = new PSM();
 				psm.ID = PsmID++;
@@ -220,8 +224,11 @@ public class mzId1_1 : Mapper {
 				psm.Confidence = confidence;
 				psm.passThreshold = item.passThreshold;
 				psm.Spectrum = spectrum;
-				spectrum.Psm.Add(psm);				
+				spectrum.Psm.Add(psm);
+				if( item.PeptideEvidenceRef == null )
+					continue;
 				foreach( PeptideEvidenceRefType evref in item.PeptideEvidenceRef ) {
+					//Console.Out.WriteLine(evref.peptideEvidence_ref);
 					PeptideEvidenceType evidence = SortedEvidences[evref.peptideEvidence_ref];
 					Peptide pep = SortedPeptides[evidence.peptide_ref];
 					if( pep.Sequence == null || pep.Sequence.Length == 0 ) { // ProCon 0.9.348 bug
@@ -257,7 +264,7 @@ public class mzId1_1 : Mapper {
 			m_mzid.Data.DataCollection.AnalysisData.SpectrumIdentificationList[0].SpectrumIdentificationResult ) {
 			foreach( SpectrumIdentificationItemType item in idres.SpectrumIdentificationItem ) {
 				GetPsmScore( item, out score, out type, out confidence );
-				item.passThreshold = CheckPsm(item.passThreshold,item.rank,confidence);
+				item.passThreshold = CheckPsm(item.passThreshold,item.rank,confidence,score,type);
 			}
 		}
 	}
@@ -284,9 +291,13 @@ public class mzId1_1 : Mapper {
 				else
 					confidence = Peptide.ConfidenceType.Red;
 				break;
-			} else if( cv.accession == "MS:1001171" ) {
+			} else if( cv.accession == "MS:1001172" ) {
 				score = double.Parse(cv.value, m_Format);
-				type = "Mascot Score";
+				type = "Mascot expectation value";
+				break;
+			} else if( cv.accession == "MS:1001330" ) {
+				score = double.Parse( cv.value, m_Format );
+				type = "X!Tandem expect";
 				break;
 			}
 		}
@@ -375,6 +386,8 @@ public class mzId1_1 : Mapper {
 		#endregion
 		
 		#region Protein detection protocol
+		if( m_mzid.Data.AnalysisCollection.ProteinDetection == null || m_mzid.Data.AnalysisProtocolCollection.ProteinDetectionProtocol == null )
+			return;
 		m_mzid.Data.AnalysisCollection.ProteinDetection.proteinDetectionList_ref = "PDL_PAnalyzer";
 		m_mzid.Data.AnalysisCollection.ProteinDetection.proteinDetectionProtocol_ref = "PDP_PAnalyzer";
 		m_mzid.Data.AnalysisProtocolCollection.ProteinDetectionProtocol.analysisSoftware_ref = sw.id;
@@ -412,6 +425,8 @@ public class mzId1_1 : Mapper {
 		Notify( "Saved to " + fpath );
 	}
 	
+	
+	// TODO: Support empty PDH in input mzid
 	protected virtual List<ProteinAmbiguityGroupType> BuildProteinDetectionList() {
 		int gid = 1;
 		SortedList<string,ProteinDetectionHypothesisType> list = new SortedList<string, ProteinDetectionHypothesisType>();

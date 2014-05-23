@@ -45,7 +45,7 @@ public partial class MainWindow : Gtk.Window {
 		Build();
 		
 		m_Software.Name      = "PAnalyzer";
-		m_Software.Version   = "1.1b9";
+		m_Software.Version   = "1.1b10";
 		m_Software.License   = "Released under the GNU General Public License";
 		m_Software.Copyright = "(c) 2010-2014 by UPV/EHU";
 		m_Software.Contact   = "gorka.prieto@ehu.es";
@@ -287,12 +287,14 @@ public partial class MainWindow : Gtk.Window {
 	}
 	
 	protected virtual void OnExecuteActionActivated( object sender, System.EventArgs e ) {
-		bool MzidPsm = m_Mapper.Type >= Mapper.SourceType.mzIdentML110 && m_Mapper.Type <= Mapper.SourceType.mzIdentML111;
+		bool MzidPsm = m_Mapper.Type >= Mapper.SourceType.mzIdentML110 && m_Mapper.Type <= Mapper.SourceType.mzIdentML120;
 		m_dlgPrefs.LengthThreshold = m_Mapper.LengthThreshold;
 		m_dlgPrefs.PlgsThreshold = m_Mapper.PlgsThreshold;
 		m_dlgPrefs.PlgsThSensitive = m_Mapper.Type == Mapper.SourceType.Plgs && m_Mapper.PlgsThreshold != Peptide.ConfidenceType.NoThreshold;
 		m_dlgPrefs.SeqThreshold = m_Mapper.SeqThreshold;
 		m_dlgPrefs.SeqThSensitive = MzidPsm && m_Mapper.SeqThreshold != Peptide.ConfidenceType.NoThreshold;
+		m_dlgPrefs.MascotTh = m_Mapper.MascotThreshold;
+		m_dlgPrefs.MascotThSensitive = m_Mapper.MascotAvailable;
 		m_dlgPrefs.XTandemTh = m_Mapper.XTandemThreshold;
 		m_dlgPrefs.XTandemThSensitive = m_Mapper.XTandemAvailable;
 		m_dlgPrefs.PassTh = m_Mapper.RequirePassTh;
@@ -317,6 +319,7 @@ public partial class MainWindow : Gtk.Window {
 		m_Mapper.LengthThreshold = m_dlgPrefs.LengthThreshold;
 		m_Mapper.PlgsThreshold = m_dlgPrefs.PlgsThreshold;
 		m_Mapper.SeqThreshold = m_dlgPrefs.SeqThreshold;
+		m_Mapper.MascotThreshold = m_dlgPrefs.MascotTh;
 		m_Mapper.XTandemThreshold = m_dlgPrefs.XTandemTh;
 		m_Mapper.RequirePassTh = m_dlgPrefs.PassTh;
 		m_Mapper.RankThreshold = m_dlgPrefs.RankTh;
