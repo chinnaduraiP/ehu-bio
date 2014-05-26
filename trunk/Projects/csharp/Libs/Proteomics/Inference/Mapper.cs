@@ -197,7 +197,7 @@ public abstract class Mapper {
 	/// </summary>
 	public void SaveCSV( string fpath, string sep ) {
 		TextWriter w = new StreamWriter( fpath );
-		w.WriteLine( "ID"+sep+"Entry"+sep+"Accession"+sep+"Evidence"+sep+"Group"+sep+"Description"+sep+"Peptides"+sep+"Sequence" );
+		w.WriteLine( "ID"+sep+"Entry"+sep+"Accession"+sep+"Evidence"+sep+"Group"+sep+"Description"+sep+"Peptides"+sep+"Sequence"+sep+"PTMs" );
 		foreach( Protein p in Proteins ) {
 			if( p.Subset.Count == 0 )
 				SaveCSVEntry( w, p, "", sep );
@@ -213,7 +213,26 @@ public abstract class Mapper {
 		w.Write( p.ID + sep + p.Entry + sep + p.Accession + sep + p.Evidence.ToString() + sep + grp + sep + p.Desc + sep );
 		foreach( Peptide f in p.Peptides )
 			w.Write(f.ToString() + ' ');
-		w.WriteLine( sep + p.Sequence );
+		w.Write( sep + p.Sequence + sep );
+		String ptm;
+		foreach( Peptide peptide in p.Peptides ) {
+			ptm = GetPtmCsv(peptide);
+			if( ptm.Length != 0 )
+				w.Write(ptm+" ");
+		}
+		w.WriteLine();
+	}
+	
+	private String GetPtmCsv (Peptide peptide) {
+		String result = "";
+		List<PTM> ptms = new List<PTM>();
+		foreach( List<PTM> variant in peptide.Variants )
+			foreach( PTM ptm in variant )
+				if( !ptms.Contains(ptm) ) {
+					ptms.Add(ptm);
+					result += peptide.ToString()+"/"+ptm.ToString()+" ";
+				}
+		return result;
 	}
 	
 	#region HTML output
