@@ -1,4 +1,4 @@
-package es.ehubio.hgvs;
+package es.ehubio.org.hgvs;
 
 import es.ehubio.db.Aminoacid;
 

@@ -1,4 +1,4 @@
-package es.ehubio.hgvs;
+package es.ehubio.org.hgvs;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

@@ -1,4 +1,4 @@
-package es.ehubio.cosmic;
+package es.ehubio.db.cosmic;
 
 // See -> http://cancer.sanger.ac.uk/cancergenome/projects/cosmic/download
 public class Entry {

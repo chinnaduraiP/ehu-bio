@@ -1,13 +1,13 @@
-package es.ehubio.cosmic;
+package es.ehubio.db.cosmic;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import es.ehubio.hgvs.Hgvs;
-import es.ehubio.hgvs.ProteinMutation;
-import es.ehubio.cosmic.Locus;
+import es.ehubio.org.hgvs.Hgvs;
+import es.ehubio.org.hgvs.ProteinMutation;
+import es.ehubio.db.cosmic.Locus;
 
 public class Loci {
 	private Map<Integer,Locus> loci = new HashMap<>();

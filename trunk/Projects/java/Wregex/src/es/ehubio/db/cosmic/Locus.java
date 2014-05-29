@@ -1,4 +1,4 @@
-package es.ehubio.cosmic;
+package es.ehubio.db.cosmic;
 
 import es.ehubio.db.Aminoacid;
 
