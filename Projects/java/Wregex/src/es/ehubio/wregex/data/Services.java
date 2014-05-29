@@ -8,9 +8,10 @@ import java.util.List;
 import java.util.Map;
 
 import javax.faces.context.ExternalContext;
-import es.ehubio.cosmic.Loci;
-import es.ehubio.cosmic.Locus;
+
 import es.ehubio.db.Aminoacid;
+import es.ehubio.db.cosmic.Loci;
+import es.ehubio.db.cosmic.Locus;
 import es.ehubio.dbptm.ProteinPtms;
 import es.ehubio.dbptm.Ptm;
 import es.ehubio.wregex.InputGroup;

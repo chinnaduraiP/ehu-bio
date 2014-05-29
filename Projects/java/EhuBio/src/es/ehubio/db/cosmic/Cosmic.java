@@ -1,4 +1,4 @@
-package es.ehubio.cosmic;
+package es.ehubio.db.cosmic;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;

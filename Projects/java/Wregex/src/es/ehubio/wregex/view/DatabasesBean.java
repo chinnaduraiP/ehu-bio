@@ -19,7 +19,7 @@ import javax.faces.bean.ApplicationScoped;
 import javax.faces.bean.ManagedBean;
 import javax.faces.context.FacesContext;
 
-import es.ehubio.cosmic.Loci;
+import es.ehubio.db.cosmic.Loci;
 import es.ehubio.db.fasta.Fasta.InvalidSequenceException;
 import es.ehubio.dbptm.ProteinPtms;
 import es.ehubio.io.UnixCfgReader;
