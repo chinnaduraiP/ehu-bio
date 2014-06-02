@@ -47,6 +47,24 @@ public final class Fasta {
 		}
 	}
 	
+	public Fasta( String accession, String description, String sequence, SequenceType type ) {
+		StringBuilder header = new StringBuilder();
+		if( accession != null ) {
+			header.append(accession);
+			header.append(' ');
+		}
+		if( description != null )
+			header.append(description);
+		this.header = header.toString();
+		this.sequence = sequence;
+		this.type = type;
+		this.accession = accession;
+		this.entry = accession;
+		this.description = description;
+		proteinName = null;
+		geneName = null;
+	}
+	
 	public Fasta( String header, String sequence, SequenceType type ) throws InvalidSequenceException {
 		this(header, guessParser(header), sequence, type);
 	}
@@ -71,7 +89,7 @@ public final class Fasta {
 		}
 	}
 	
-	private static HeaderParser guessParser( String header ) {
+	public static HeaderParser guessParser( String header ) {
 		HeaderParser parser = new UniprotParser();
 		if( parser.parse(header) )
 			return parser;
