@@ -14,7 +14,8 @@ public class Peptide {
 	private boolean decoy = false;
 	private Set<Ptm> ptms = new HashSet<>();
 	private Confidence confidence;
-	private Set<Protein> proteins = new HashSet<>();	
+	private Set<Protein> proteins = new HashSet<>();
+	private Set<Psm> psms = new HashSet<>();
 	
 	public Peptide() {
 		id = idCount++;
@@ -68,13 +69,28 @@ public class Peptide {
 		return false;
 	}
 	
+	public Set<Psm> getPsms() {
+		return psms;
+	}
+
+	public boolean addPsm(Psm psm) {
+		if( psms.add(psm) ) {
+			if( psm.getPeptide() != this )
+				psm.linkPeptide(this);
+			return true;
+		}
+		return false;
+	}
+	
 	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder(getSequence());
-		if( getConfidence() == Confidence.DISCRIMINATING )
+		if( getConfidence() == null )
+			builder.append('?');
+		else if( getConfidence() == Confidence.DISCRIMINATING )
 			builder.append('*');
 		else if( getConfidence() == Confidence.NON_DISCRIMINATING )
 			builder.append("**");
 		return builder.toString();
-	}
+	}	
 }
