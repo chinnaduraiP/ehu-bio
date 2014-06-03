@@ -27,7 +27,7 @@ Results are saved to a CSV file (useful for processing using a spreadsheet) and 
 
 If a single mzIdentML file is used as input, a mzIdentML output is also generated.
 
-If you want to convert a mzIdentML v1.1.0 input to a mzIdentML v1.2.0 output, just edit the version attribute in the input mzid and let PAnalyzer do the rest.
+If you want to convert a mzIdentML v1.1.0 input to a mzIdentML v1.2.0 output, just use a text editor to change the version attribute in the input mzid file and let PAnalyzer do the rest.
 
 = Installation =
 
