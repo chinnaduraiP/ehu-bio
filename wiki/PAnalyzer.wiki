@@ -25,7 +25,7 @@ Multirun analysis is also supported and peptides are filtered if they are not pr
 
 Results are saved to a CSV file (useful for processing using a spreadsheet) and an HTML report is also generated for allowing an easy browse.
 
-If a single mzIdentML file is used as input, an mzIdentML output is also generated.
+If a single mzIdentML file is used as input, a mzIdentML output is also generated.
 
 If you want to convert a mzIdentML v1.1.0 input to a mzIdentML v1.2.0 output, just edit the version attribute in the input mzid and let PAnalyzer do the rest.
 
