@@ -3,8 +3,6 @@ package es.ehubio.proteomics;
 import java.util.HashSet;
 import java.util.Set;
 
-import es.ehubio.Util;
-
 public class Psm {
 	public enum ScoreType {
 		OTHER("Other"),		
@@ -129,20 +127,6 @@ public class Psm {
 
 	public void linkPeptide(Peptide peptide) {
 		this.peptide = peptide;
+		peptide.addPsm(this);
 	}
-	
-	@Override
-	public boolean equals(Object obj) {
-		 if( obj == null )
-			 return false;
-		 if( !getClass().isInstance(obj) )
-			 return false;
-		 Psm psm = (Psm)obj;
-		 return Util.compare(getSpectrum(), psm.getSpectrum()) && Util.compare(getPeptide(), psm.getPeptide());
-	}
-	
-	@Override
-	public int hashCode() {
-		return Util.hashCode(spectrum, peptide);
-	}	
 }

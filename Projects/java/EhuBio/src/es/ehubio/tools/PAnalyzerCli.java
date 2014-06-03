@@ -1,6 +1,7 @@
 package es.ehubio.tools;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -160,14 +161,16 @@ public final class PAnalyzerCli implements Command.Interface {
 		int ambigous = 0;
 		for( ProteinGroup group : pAnalyzer.getGroups() ) {			
 			switch (group.getConfidence()) {
-				case CONCLUSIVE:
-					//System.out.println(group.firstProtein().getAccession());
+				case CONCLUSIVE:					
 					conclusive++;
 					break;
 				case NON_CONCLUSIVE:
+					//System.out.println(group.firstProtein().getAccession());
 					nonconclusive++;
 					break;
 				case INDISTINGUISABLE_GROUP:
+					/*for( Protein protein : group.getProteins() )
+						System.out.println(protein.getAccession());*/
 					indistinguishable++;
 					break;
 				case AMBIGUOUS_GROUP:
@@ -175,8 +178,10 @@ public final class PAnalyzerCli implements Command.Interface {
 					break;
 			}
 		}
+		List<String> monitor = Arrays.asList("Q9BYX7","P0CG39","P0CG38");
 		for( Protein protein : pAnalyzer.getProteins() )
-			if( protein.getAccession().equals("P22626") ) {
+			if( monitor.contains(protein.getAccession()) ) {
+				System.out.println(protein.getAccession()+"-"+protein.getConfidence());
 				for( Peptide peptide : protein.getPeptides() ) {
 					System.out.print(peptide.toString()+": ");
 					for( Protein protein2 : peptide.getProteins() )

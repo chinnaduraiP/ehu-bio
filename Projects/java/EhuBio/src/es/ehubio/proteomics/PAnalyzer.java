@@ -26,9 +26,9 @@ public class PAnalyzer {
 		groups.clear();
 		for( Spectrum spectrum : spectra ) {
 			for( Psm psm : spectrum.getPsms() ) {
-				psms.add(psm);
 				if( psm.getPeptide() == null )
 					continue;
+				psms.add(psm);
 				peptides.add(psm.getPeptide());
 				for( Protein protein : psm.getPeptide().getProteins() )
 					proteins.add(protein);
@@ -79,8 +79,6 @@ public class PAnalyzer {
 	private void classifyPeptides() {
 		// 1. Locate unique peptides
 		for( Peptide peptide : peptides ) {
-			if( peptide.getSequence().equals("TLETVPLER") )
-				System.out.println("aquí");
 			if( peptide.getProteins().size() == 1 ) {
 				peptide.setConfidence(Peptide.Confidence.UNIQUE);
 				peptide.getProteins().iterator().next().setConfidence(Protein.Confidence.CONCLUSIVE);
@@ -119,8 +117,6 @@ public class PAnalyzer {
 	private void classifyProteins() {
 		// 1. Locate non-conclusive proteins
 		for( Protein protein : proteins ) {
-			if( protein.getAccession().equals("P22626") )
-				System.out.println("aquí");
 			protein.setGroup(null);
 			if( protein.getConfidence() == Protein.Confidence.CONCLUSIVE )
 				continue;
@@ -139,11 +135,7 @@ public class PAnalyzer {
 				continue;
 			ProteinGroup group = new ProteinGroup();
 			groups.add(group);
-			protein.setGroup(group);
-			for( Peptide peptide : protein.getPeptides() )
-				if( peptide.getConfidence() == Peptide.Confidence.DISCRIMINATING )
-					for( Protein protein2 : peptide.getProteins() )
-						protein2.setGroup(group);
+			buildGroup(group, protein);
 		}
 		
 		// 3. Indistinguishable
@@ -152,6 +144,18 @@ public class PAnalyzer {
 				if( isIndistinguishable(group) )
 					for( Protein protein : group.getProteins() )
 						protein.setConfidence(Protein.Confidence.INDISTINGUISABLE_GROUP);
+	}
+	
+	private void buildGroup( ProteinGroup group, Protein protein ) {
+		if( group.getProteins().contains(protein) )
+			return;
+		group.addProtein(protein);
+		for( Peptide peptide : protein.getPeptides() ) {
+			if( peptide.getConfidence() != Peptide.Confidence.DISCRIMINATING )
+				continue;
+			for( Protein protein2 : peptide.getProteins() )
+				buildGroup(group, protein2);
+		}
 	}
 	
 	private boolean isIndistinguishable( ProteinGroup group ) {
