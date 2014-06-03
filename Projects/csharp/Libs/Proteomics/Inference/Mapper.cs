@@ -803,7 +803,7 @@ public abstract class Mapper {
 		
 		// Filtered and Undistinguisable
 		foreach( Protein p in proteins )
-			if( p.Subset.Count > 0 ) {
+			if( p.Subset.Count > 1 ) {
 				if( IsIndistinguisable(p) ) {
 					p.Evidence = Protein.EvidenceType.Indistinguishable;
 					foreach( Protein p2 in p.Subset )
@@ -845,14 +845,25 @@ public abstract class Mapper {
 	}
 	
 	private bool IsIndistinguisable( Protein g ) {
-		foreach( Peptide f in g.Subset[0].Peptides ) {
+		List<Peptide> discriminating = new List<Peptide>();
+		foreach( Protein prot in g.Subset )
+			foreach( Peptide pep in prot.Peptides )
+				if( pep.Relation == Peptide.RelationType.Discriminating )
+					discriminating.Add(pep);
+		foreach( Protein prot in g.Subset )
+			foreach( Peptide pep in discriminating )
+				if( !prot.Peptides.Contains(pep) )
+					return false;
+		return true;
+	
+		/*foreach( Peptide f in g.Subset[0].Peptides ) {
 			if( f.Relation != Peptide.RelationType.Discriminating )
 				continue;
 			foreach( Protein p in g.Subset )
 				if( !p.HasPeptide(f) )
 					return false;
 		}
-		return true;
+		return true;*/
 	}
 	
 	private void DoStats() {
