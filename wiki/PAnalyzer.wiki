@@ -13,7 +13,7 @@ URL: http://www.biomedcentral.com/1471-2105/13/288
 
 == Description ==
 
-PAnalyzer uses as input protein identification files in mzIdentML (v1.0.0 and v1.1.0) or Waters PLGS formats and re-arranges the proteins into evidence categories according to their shared peptides.
+PAnalyzer uses as input protein identification files in mzIdentML (v1.0.0, v1.1.0 and v1.2.0) or Waters PLGS formats and re-arranges the proteins into evidence categories according to their shared peptides.
 
 Protein evidence categories considered are: conclusive, non-conclusive, ambiguous group and indistinguishable proteins.
 
