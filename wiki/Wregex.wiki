@@ -5,7 +5,7 @@
 
 == Original article ==
 
-Prieto G, Fullaondo A, Rodriguez J A: *Prediction of nuclear export signals using weighted regular expressions (Wregex).* _Bioinformatics_ 2012.
+Prieto G, Fullaondo A, Rodriguez J A: *Prediction of nuclear export signals using weighted regular expressions (Wregex).*  _Bioinformatics_ (2014) 30 (9): 1220-1227.
 
 DOI: 10.1093/bioinformatics/btu016
 
