@@ -1,7 +1,0 @@
-<root>
-  <facet id="jpt.jaxb">
-    <node name="classgen">
-      <attribute name="package" value="es.ehubio.proteomics.psi.mzid11"/>
-    </node>
-  </facet>
-</root>
