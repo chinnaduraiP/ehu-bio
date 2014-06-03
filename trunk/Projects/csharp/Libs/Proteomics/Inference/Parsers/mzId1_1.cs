@@ -234,9 +234,10 @@ public class mzId1_1 : Mapper {
 					if( pep.Sequence == null || pep.Sequence.Length == 0 ) { // ProCon 0.9.348 bug
 						//Notify( "Skiped peptide with empty sequence: " + pep.DBRef );
 						continue;
-					}
+					}					
 					pep.Decoy = evidence.isDecoy;
 					psm.Peptide = pep;
+					//pep.Psm.Add(psm);
 					Protein prot = m_SortedProteins[SortedAccession[evidence.dBSequence_ref]];
 					if( pep.Proteins.Contains(prot) )
 						continue;
