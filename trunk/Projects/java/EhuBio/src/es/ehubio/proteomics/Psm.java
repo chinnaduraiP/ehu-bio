@@ -7,6 +7,7 @@ public class Psm {
 	public enum ScoreType {
 		OTHER("Other"),		
 		MASCOT_EVALUE("Mascot expectation value"),
+		MASCOT_SCORE("Mascot score"),
 		SEQUEST_XCORR("SEQUEST Confidence XCorr"),
 		XTANDEM_EVALUE("X!Tandem expect");
 		
@@ -105,8 +106,8 @@ public class Psm {
 		return null;
 	}
 	
-	public void setScores(Set<Score> scores) {
-		this.scores = scores;
+	public void addScore(Score score) {
+		this.scores.add(score);
 	}
 	
 	public Spectrum getSpectrum() {
