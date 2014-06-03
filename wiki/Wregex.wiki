@@ -9,7 +9,7 @@ Prieto G, Fullaondo A, Rodriguez J A: *Prediction of nuclear export signals usin
 
 DOI: 10.1093/bioinformatics/btu016
 
-URL: http://bioinformatics.oxfordjournals.org/content/early/2014/01/09/bioinformatics.btu016.abstract
+URL: http://bioinformatics.oxfordjournals.org/content/30/9/1220
 
 == Summary ==
 
