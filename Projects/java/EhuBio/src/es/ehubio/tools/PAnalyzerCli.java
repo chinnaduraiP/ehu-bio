@@ -1,12 +1,17 @@
 package es.ehubio.tools;
 
-import java.util.Set;
+import java.util.Arrays;
+import java.util.List;
 import java.util.logging.Logger;
 
+import es.ehubio.proteomics.Extractor;
+import es.ehubio.proteomics.MsMsData;
 import es.ehubio.proteomics.Mzid;
 import es.ehubio.proteomics.PAnalyzer;
+import es.ehubio.proteomics.Peptide;
+import es.ehubio.proteomics.Protein;
 import es.ehubio.proteomics.ProteinGroup;
-import es.ehubio.proteomics.Spectrum;
+import es.ehubio.proteomics.Psm;
 
 public final class PAnalyzerCli implements Command.Interface {
 	private final Logger logger = Logger.getLogger(PAnalyzerCli.class.getName());
@@ -29,13 +34,23 @@ public final class PAnalyzerCli implements Command.Interface {
 	@Override
 	public void run(String[] args) throws Exception {
 		Mzid mzid = new Mzid();
-		Set<Spectrum> data = mzid.load(args[0]);
+		MsMsData data = mzid.load(args[0]);
+		logger.info(String.format("Loaded: %d proteins, %d peptides, %d psms, %d spectra", data.getProteins().size(), data.getPeptides().size(), data.getPsms().size(), data.getSpectra().size() ));
+		
+		// Filter		
+		logger.info("Filtering data ...");
+		Extractor extractor = new Extractor();
+		extractor.setData(data);
+		Extractor.Filter filter = new Extractor.Filter();
+		filter.setPsmScore(Psm.ScoreType.MASCOT_EVALUE, 0.05, false);
+		filter.setMinPeptideLength(7);
+		extractor.filterData(filter);
+		logger.info(String.format("Filter: %d proteins, %d peptides, %d psms, %d spectra", data.getProteins().size(), data.getPeptides().size(), data.getPsms().size(), data.getSpectra().size() ));
 		
 		// PAnalyzer
 		logger.info("Running PAnalyzer ...");
 		PAnalyzer pAnalyzer = new PAnalyzer();
-		pAnalyzer.setSpectra(data);
-		pAnalyzer.buildGroups();
+		pAnalyzer.run(data);
 		logger.info("done!");
 		
 		// Stats
@@ -45,7 +60,8 @@ public final class PAnalyzerCli implements Command.Interface {
 		int ambigous = 0;
 		for( ProteinGroup group : pAnalyzer.getGroups() ) {			
 			switch (group.getConfidence()) {
-				case CONCLUSIVE:					
+				case CONCLUSIVE:
+					//System.out.println(group.firstProtein().getAccession());
 					conclusive++;
 					break;
 				case NON_CONCLUSIVE:
@@ -62,7 +78,7 @@ public final class PAnalyzerCli implements Command.Interface {
 					break;
 			}
 		}
-		/*List<String> monitor = Arrays.asList("Q9BYX7","P0CG39","P0CG38");
+		List<String> monitor = Arrays.asList("?????");
 		for( Protein protein : pAnalyzer.getProteins() )
 			if( monitor.contains(protein.getAccession()) ) {
 				System.out.println(protein.getAccession()+"-"+protein.getConfidence());
@@ -73,9 +89,9 @@ public final class PAnalyzerCli implements Command.Interface {
 					System.out.println();
 				}
 				System.out.println();
-			}*/
-		System.out.println(String.format("Groups: %d", pAnalyzer.getGroups().size()));
-		System.out.println(String.format("Conclusive: %d, Non-Conclusive: %d, Indistiguishable: %d, Ambigous: %d",conclusive,nonconclusive,indistinguishable,ambigous));		
+			}
+		logger.info(String.format("Groups: %d", pAnalyzer.getGroups().size()));
+		logger.info(String.format("Conclusive: %d, Non-Conclusive: %d, Indistiguishable: %d, Ambigous: %d",conclusive,nonconclusive,indistinguishable,ambigous));		
 	}
 
 }

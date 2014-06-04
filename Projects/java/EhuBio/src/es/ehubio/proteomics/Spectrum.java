@@ -44,11 +44,6 @@ public class Spectrum {
 		return psms.add(psm);
 	}
 	
-	public boolean removePsm( Psm psm ) {
-		psm.linkSpectrum(null);
-		return psms.remove(psm);
-	}
-	
 	@Override
 	public String toString() {
 		return String.format("%s@%s", getFileId(), getFileName());

@@ -3,12 +3,9 @@ package es.ehubio.proteomics;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.text.NumberFormat;
-import java.text.ParseException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -38,19 +35,19 @@ public final class Mzid {
 	private Map<String,Peptide> mapPeptides = new HashMap<>();
 	private Map<String,Peptide> mapRelations = new HashMap<>();
 	private Set<Spectrum> spectra = new HashSet<>();
-	private static final NumberFormat numberFormat = NumberFormat.getInstance(Locale.US);
+	private MsMsData data;
 	
-	public Set<Spectrum> load( String path ) throws IOException, JAXBException {
+	public MsMsData load( String path ) throws IOException, JAXBException {
 		logger.info(String.format("Loading '%s' ...", path));
 		InputStream input = new FileInputStream(path);
 		if( path.endsWith(".gz") )
 			input = new GZIPInputStream(input);
 		load(input);
 		input.close();
-		return spectra;
+		return data;
 	}
 	
-	public Set<Spectrum> load( InputStream input ) throws JAXBException {
+	public MsMsData load( InputStream input ) throws JAXBException {
 		logger.info("Parsing XML ...");
 		JAXBContext jaxbContext = JAXBContext.newInstance(MzIdentML.class);
 		Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
@@ -60,7 +57,9 @@ public final class Mzid {
 		loadRelations();
 		loadSpectra();
 		logger.info("finished!");
-		return spectra;
+		data = new MsMsData();
+		data.loadFromSpectra(spectra);
+		return data;
 	}
 	
 	private void loadProteins() {
@@ -150,6 +149,7 @@ public final class Mzid {
 	}
 	
 	private void loadScores( Psm psm, SpectrumIdentificationItemType sii ) {
+		psm.addScore(new Psm.Score(Psm.ScoreType.MZID_PASS_THRESHOLD,sii.isPassThreshold()?1.0:0.0));
 		for( AbstractParamType param : sii.getCvParamsAndUserParams() ) {
 			if( !CVParamType.class.isInstance(param) )
 				continue;
@@ -163,12 +163,7 @@ public final class Mzid {
 			}
 			if( type == null )
 				continue;
-			try {
-				double score = numberFormat.parse(cv.getValue()).doubleValue();
-				psm.addScore(new Psm.Score(type, cv.getName(), score));
-			} catch (ParseException e) {
-				logger.warning(String.format("Error parsing PSM score: %s", cv.getAccession()));
-			}
+			psm.addScore(new Psm.Score(type, cv.getName(), Double.parseDouble(cv.getValue())));
 		}
 	}
 	
