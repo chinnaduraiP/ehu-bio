@@ -4,62 +4,23 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class PAnalyzer {
-	private Set<Spectrum> spectra = new HashSet<>();
-	private Set<Psm> psms = new HashSet<>();
-	private Set<Peptide> peptides = new HashSet<>();
-	private Set<Protein> proteins = new HashSet<>();
+	private MsMsData data;
 	private Set<ProteinGroup> groups = new HashSet<>();
 	
 	public Set<Spectrum> getSpectra() {
-		return spectra;
-	}
-	
-	/**
-	 * Feeds PAnalyzer using spectra information.
-	 * @see #setPeptides(Set)
-	 */
-	public void setSpectra(Set<Spectrum> spectra) {
-		this.spectra = spectra;
-		psms.clear();
-		peptides.clear();
-		proteins.clear();
-		groups.clear();
-		for( Spectrum spectrum : spectra ) {
-			for( Psm psm : spectrum.getPsms() ) {
-				if( psm.getPeptide() == null )
-					continue;
-				psms.add(psm);
-				peptides.add(psm.getPeptide());
-				for( Protein protein : psm.getPeptide().getProteins() )
-					proteins.add(protein);
-			}
-		}
+		return data.getSpectra();
 	}
 	
 	public Set<Psm> getPsms() {
-		return psms;
+		return data.getPsms();
 	}
 	
 	public Set<Peptide> getPeptides() {
-		return peptides;
-	}
-	
-	/**
-	 * Feeds PAnalyzer without considering spectra.
-	 * @see #setSpectra(Set)
-	 */
-	public void setPeptides(Set<Peptide> peptides) {		
-		spectra.clear();
-		psms.clear();
-		this.peptides = peptides;
-		proteins.clear();
-		for( Peptide peptide : peptides )
-			proteins.addAll(peptide.getProteins());
-		groups.clear();
+		return data.getPeptides();
 	}
 	
 	public Set<Protein> getProteins() {
-		return proteins;
+		return data.getProteins();
 	}
 	
 	public Set<ProteinGroup> getGroups() {
@@ -70,7 +31,9 @@ public class PAnalyzer {
 	 * Executes PAnalyzer algorithm.
 	 * @see <a href="http://www.biomedcentral.com/1471-2105/13/288">original paper</a>
 	 */
-	public Set<ProteinGroup> buildGroups() {
+	public Set<ProteinGroup> run( MsMsData data ) {
+		groups.clear();
+		this.data = data;
 		classifyPeptides();
 		classifyProteins();
 		return groups;
@@ -78,7 +41,7 @@ public class PAnalyzer {
 
 	private void classifyPeptides() {
 		// 1. Locate unique peptides
-		for( Peptide peptide : peptides ) {
+		for( Peptide peptide : getPeptides() ) {
 			if( peptide.getProteins().size() == 1 ) {
 				peptide.setConfidence(Peptide.Confidence.UNIQUE);
 				peptide.getProteins().iterator().next().setConfidence(Protein.Confidence.CONCLUSIVE);
@@ -87,14 +50,14 @@ public class PAnalyzer {
 		}
 		
 		// 2. Locate non-discriminating peptides (first round)
-		for( Protein protein : proteins )
+		for( Protein protein : getProteins() )
 			if( protein.getConfidence() == Protein.Confidence.CONCLUSIVE )
 				for( Peptide peptide : protein.getPeptides() )
 					if( peptide.getConfidence() != Peptide.Confidence.UNIQUE )
 						peptide.setConfidence(Peptide.Confidence.NON_DISCRIMINATING);
 		
 		// 3. Locate non-discriminating peptides (second round)
-		for( Peptide peptide : peptides ) {
+		for( Peptide peptide : getPeptides() ) {
 			if( peptide.getConfidence() != Peptide.Confidence.DISCRIMINATING )
 				continue;
 			for( Peptide peptide2 : peptide.getProteins().iterator().next().getPeptides() ) {
@@ -116,7 +79,7 @@ public class PAnalyzer {
 	
 	private void classifyProteins() {
 		// 1. Locate non-conclusive proteins
-		for( Protein protein : proteins ) {
+		for( Protein protein : getProteins() ) {
 			protein.setGroup(null);
 			if( protein.getConfidence() == Protein.Confidence.CONCLUSIVE )
 				continue;
@@ -130,7 +93,7 @@ public class PAnalyzer {
 		
 		// 2. Group proteins
 		groups.clear();
-		for( Protein protein : proteins ) {
+		for( Protein protein : getProteins() ) {
 			if( protein.getGroup() != null )
 				continue;
 			ProteinGroup group = new ProteinGroup();

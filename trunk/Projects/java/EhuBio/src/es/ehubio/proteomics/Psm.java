@@ -9,7 +9,8 @@ public class Psm {
 		MASCOT_EVALUE("Mascot expectation value"),
 		MASCOT_SCORE("Mascot score"),
 		SEQUEST_XCORR("SEQUEST Confidence XCorr"),
-		XTANDEM_EVALUE("X!Tandem expect");
+		XTANDEM_EVALUE("X!Tandem expect"),
+		MZID_PASS_THRESHOLD("mzIdentML SpectrumIdentificationItem passThreshold attribute");
 		
 		public final String name;
 		
@@ -115,11 +116,11 @@ public class Psm {
 	}
 	
 	public void linkSpectrum(Spectrum spectrum) {
-		if( this.spectrum != null )
-			this.spectrum.removePsm(this);
+		/*if( this.spectrum != null )
+			this.spectrum.getPsms().remove(this);*/
 		this.spectrum = spectrum;
 		if( spectrum != null )
-			spectrum.addPsm(this);
+			this.spectrum.addPsm(this);
 	}
 	
 	public Peptide getPeptide() {
@@ -127,7 +128,10 @@ public class Psm {
 	}
 
 	public void linkPeptide(Peptide peptide) {
+		/*if( this.peptide != null )
+			this.peptide.getPsms().remove(this);*/
 		this.peptide = peptide;
-		peptide.addPsm(this);
+		if( peptide != null )
+			peptide.addPsm(this);
 	}
 }
