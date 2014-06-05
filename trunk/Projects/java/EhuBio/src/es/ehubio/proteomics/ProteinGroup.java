@@ -4,7 +4,13 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class ProteinGroup {
+	private static int idCount = 1;
+	private final int id;
 	private Set<Protein> proteins = new HashSet<>();
+	
+	public ProteinGroup() {
+		id = idCount++;
+	}
 
 	public Set<Protein> getProteins() {
 		return proteins;
@@ -30,5 +36,9 @@ public class ProteinGroup {
 	
 	public Protein.Confidence getConfidence() {
 		return firstProtein().getConfidence();
+	}
+
+	public int getId() {
+		return id;
 	}
 }
