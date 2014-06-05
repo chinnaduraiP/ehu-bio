@@ -18,17 +18,17 @@ public final class PAnalyzerCli implements Command.Interface {
 
 	@Override
 	public String getUsage() {
-		return "</path/file.mzid>";
+		return "</path/input.mzid> </path/output.mzid>";
 	}
 
 	@Override
 	public int getMinArgs() {
-		return 1;
+		return 2;
 	}
 
 	@Override
 	public int getMaxArgs() {
-		return 1;
+		return 2;
 	}	
 
 	@Override
@@ -91,7 +91,10 @@ public final class PAnalyzerCli implements Command.Interface {
 				System.out.println();
 			}
 		logger.info(String.format("Groups: %d", pAnalyzer.getGroups().size()));
-		logger.info(String.format("Conclusive: %d, Non-Conclusive: %d, Indistiguishable: %d, Ambigous: %d",conclusive,nonconclusive,indistinguishable,ambigous));		
+		logger.info(String.format("Conclusive: %d, Non-Conclusive: %d, Indistiguishable: %d, Ambigous: %d",conclusive,nonconclusive,indistinguishable,ambigous));
+		
+		mzid.save(args[1]);
+		logger.info("finished!!");
 	}
 
 }
