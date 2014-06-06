@@ -2,7 +2,10 @@ package es.ehubio.proteomics;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import es.ehubio.proteomics.psi.mzid11.CVParamType;
 import es.ehubio.proteomics.psi.mzid11.UserParamType;
 
 
@@ -64,6 +67,25 @@ public final class Extractor {
 		this.data = data;
 	}
 	
+	public void markDecoys( String decoyRegex ) {
+		for( Peptide peptide : data.getPeptides() )
+			peptide.setDecoy(false);
+		
+		Pattern pattern = Pattern.compile(decoyRegex);
+		for( Protein protein : data.getProteins() ) {
+			Matcher matcher = pattern.matcher(protein.getAccession());
+			if( !matcher.find() )
+				continue;
+			for( Peptide peptide : protein.getPeptides() )
+				peptide.setDecoy(true);
+		}
+		
+		UserParamType param = new UserParamType();
+		param.setName("EhuBio:Decoy regex");
+		param.setValue(decoyRegex);
+		data.addAnalysisParam(param);
+	}
+	
 	public void filterData( Filter filter ) {
 		if( data == null || filter == null )
 			return;
@@ -72,7 +94,7 @@ public final class Extractor {
 		for( Peptide peptide : data.getPeptides() )
 			if( peptide.getPsms().isEmpty()
 				|| peptide.getSequence().length() < filter.minPeptideLength
-				|| (filter.isFilterDecoyPeptides() && peptide.isDecoy()) )
+				|| (filter.isFilterDecoyPeptides() && Boolean.TRUE.equals(peptide.getDecoy()) ) )
 				unlinkPeptide(peptide);
 		
 		// Filter psms
@@ -108,24 +130,38 @@ public final class Extractor {
 	}
 	
 	private void updateMetaData( Filter filter ) {
-		UserParamType param = null;
+		UserParamType userParam = null;
+		CVParamType cvParam = null;
 		
 		if( filter.getMinPeptideLength() > 0 ) {
-			param = new UserParamType();
-			param.setName("EhuBio:Minimum peptide length");
-			param.setValue(""+filter.getMinPeptideLength());
-			data.addAnalysisParam(param);
+			userParam = new UserParamType();
+			userParam.setName("EhuBio:Minimum peptide length");
+			userParam.setValue(""+filter.getMinPeptideLength());
+			data.addAnalysisParam(userParam);
 		}
+		
 		if( filter.getPsmScoreThreshold() != null ) {
-			param = new UserParamType();
-			param.setName("EhuBio:PSM score type");
-			param.setValue(filter.getPsmScoreType().getName());
-			data.addAnalysisParam(param);
-			param = new UserParamType();
-			param.setName("EhuBio:PSM score threshold");
-			param.setValue(filter.getPsmScoreThreshold().toString());
-			data.addAnalysisParam(param);
+			userParam = new UserParamType();
+			userParam.setName("EhuBio:PSM score type");
+			userParam.setValue(filter.getPsmScoreType().getName());
+			data.addAnalysisParam(userParam);
+			userParam = new UserParamType();
+			userParam.setName("EhuBio:PSM score threshold");
+			userParam.setValue(filter.getPsmScoreThreshold().toString());
+			data.addAnalysisParam(userParam);
 		}
+		
+		userParam = new UserParamType();
+		userParam.setName("EhuBio:All PSMs pass the search engine threshold");
+		userParam.setValue(filter.isMzidPassThreshold()+"");
+		data.addAnalysisParam(userParam);
+
+		cvParam = new CVParamType();
+		cvParam.setAccession("MS:1001194");
+		cvParam.setCvRef("PSI-MS");
+		cvParam.setName("quality estimation with decoy database");
+		cvParam.setValue(""+filter.isFilterDecoyPeptides());
+		data.addAnalysisParam(cvParam);
 	}
 
 	private static void unlinkProtein(Protein protein) {

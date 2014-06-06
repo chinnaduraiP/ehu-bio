@@ -34,9 +34,9 @@ public final class PAnalyzerCli implements Command.Interface {
 	@Override
 	public void run(String[] args) throws Exception {
 		Mzid mzid = new Mzid();
-		MsMsData data = mzid.load(args[0]);
-		data.clearMetaData();
-		logger.info(String.format("Loaded: %d proteins, %d peptides, %d psms, %d spectra", data.getProteins().size(), data.getPeptides().size(), data.getPsms().size(), data.getSpectra().size() ));
+		MsMsData data = mzid.load(args[0],"decoy");
+		//data.clearMetaData();
+		logger.info(String.format("Loaded: %d groups, %d proteins, %d peptides, %d psms, %d spectra", data.getGroups().size(), data.getProteins().size(), data.getPeptides().size(), data.getPsms().size(), data.getSpectra().size() ));
 		
 		// Filter		
 		logger.info("Filtering data ...");
@@ -46,7 +46,7 @@ public final class PAnalyzerCli implements Command.Interface {
 		filter.setPsmScore(Psm.ScoreType.MASCOT_EVALUE, 0.05, false);
 		filter.setMinPeptideLength(7);
 		extractor.filterData(filter);
-		logger.info(String.format("Filter: %d proteins, %d peptides, %d psms, %d spectra", data.getProteins().size(), data.getPeptides().size(), data.getPsms().size(), data.getSpectra().size() ));
+		logger.info(String.format("Filter: %d groups, %d proteins, %d peptides, %d psms, %d spectra", data.getGroups().size(), data.getProteins().size(), data.getPeptides().size(), data.getPsms().size(), data.getSpectra().size() ));
 		
 		// PAnalyzer
 		logger.info("Running PAnalyzer ...");
@@ -59,7 +59,7 @@ public final class PAnalyzerCli implements Command.Interface {
 		int nonconclusive = 0;
 		int indistinguishable = 0;
 		int ambigous = 0;
-		for( ProteinGroup group : pAnalyzer.getGroups() ) {			
+		for( ProteinGroup group : data.getGroups() ) {			
 			switch (group.getConfidence()) {
 				case CONCLUSIVE:
 					//System.out.println(group.firstProtein().getAccession());
@@ -79,8 +79,8 @@ public final class PAnalyzerCli implements Command.Interface {
 					break;
 			}
 		}
-		List<String> monitor = Arrays.asList("?????");
-		for( Protein protein : pAnalyzer.getProteins() )
+		List<String> monitor = Arrays.asList("?????","decoy-6421");
+		for( Protein protein : data.getProteins() )
 			if( monitor.contains(protein.getAccession()) ) {
 				System.out.println(protein.getAccession()+"-"+protein.getConfidence());
 				for( Peptide peptide : protein.getPeptides() ) {
@@ -91,7 +91,7 @@ public final class PAnalyzerCli implements Command.Interface {
 				}
 				System.out.println();
 			}
-		logger.info(String.format("Groups: %d", pAnalyzer.getGroups().size()));
+		logger.info(String.format("Groups: %d, Minimum: %d", data.getGroups().size(), conclusive+indistinguishable+ambigous));
 		logger.info(String.format("Conclusive: %d, Non-Conclusive: %d, Indistiguishable: %d, Ambigous: %d",conclusive,nonconclusive,indistinguishable,ambigous));
 		
 		mzid.save(args[1]);

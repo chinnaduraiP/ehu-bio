@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -46,44 +48,54 @@ import es.ehubio.proteomics.psi.mzid11.SpectrumIdentificationItemRefType;
 import es.ehubio.proteomics.psi.mzid11.SpectrumIdentificationItemType;
 import es.ehubio.proteomics.psi.mzid11.SpectrumIdentificationListType;
 import es.ehubio.proteomics.psi.mzid11.SpectrumIdentificationResultType;
+import es.ehubio.proteomics.psi.mzid11.UserParamType;
 
 public final class Mzid {
 	private final Logger logger = Logger.getLogger(Mzid.class.getName());
 	private MzIdentML mzid;
 	private Map<String,Protein> mapProteins = new HashMap<>();
 	private Map<String,Peptide> mapPeptides = new HashMap<>();
-	private Map<String,Peptide> mapRelations = new HashMap<>();
 	private Map<String,PeptideEvidenceType> mapEvidences = new HashMap<>();
+	private Map<String,Peptide> mapEvidencePeptide = new HashMap<>();
+	private Map<String,PeptideEvidenceType> mapProteinPeptideEvidence = new HashMap<>();
 	private Map<Psm,SpectrumIdentificationItemType> mapSii = new HashMap<>();
 	private Set<Spectrum> spectra = new HashSet<>();
 	private MsMsData data;	
 	private ProteinDetectionListType proteinDetectionList;
 	
-	public MsMsData load( String path ) throws IOException, JAXBException {
+	public MsMsData load( String path, String decoyRegex ) throws IOException, JAXBException {
 		logger.info(String.format("Loading '%s' ...", path));
 		InputStream input = new FileInputStream(path);
 		if( path.endsWith(".gz") )
 			input = new GZIPInputStream(input);
-		load(input);
+		load(input, decoyRegex);
 		input.close();
 		return data;
 	}
 	
-	public MsMsData load( InputStream input ) throws JAXBException {
+	public MsMsData load( InputStream input, String decoyRegex ) throws JAXBException {
 		logger.info("Parsing XML ...");
 		JAXBContext jaxbContext = JAXBContext.newInstance(MzIdentML.class);
 		Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
-		mzid = (MzIdentML)unmarshaller.unmarshal(input);		
+		mzid = (MzIdentML)unmarshaller.unmarshal(input);
+		data = new MsMsData();
 		loadProteins();
+		if( decoyRegex != null ) {
+			markDecoys(decoyRegex);
+			UserParamType param = new UserParamType();
+			param.setName("EhuBio:Decoy regex");
+			param.setValue(decoyRegex);
+			data.addAnalysisParam(param);
+		}
 		loadPeptides();
 		loadRelations();
-		loadSpectra();
-		logger.info("finished!");
-		data = new MsMsData();
+		loadGroups();
+		loadSpectra();		
+		logger.info("finished!");		
 		data.loadFromSpectra(spectra);
 		return data;
-	}
-	
+	}		
+
 	public void save( String path ) throws IOException, JAXBException {
 		logger.info(String.format("Saving '%s' ...", path));
 		OutputStream output = new FileOutputStream(path);
@@ -132,6 +144,17 @@ public final class Mzid {
 		}
 	}
 	
+	private void markDecoys(String decoyRegex) {
+		Pattern pattern = Pattern.compile(decoyRegex);
+		for( PeptideEvidenceType peptideEvidence : mzid.getSequenceCollection().getPeptideEvidences() ) {
+			peptideEvidence.setIsDecoy(false);
+			Protein protein = mapProteins.get(peptideEvidence.getDBSequenceRef());
+			Matcher matcher = pattern.matcher(protein.getAccession());
+			if( matcher.find() )
+				peptideEvidence.setIsDecoy(true);			
+		}
+	}
+	
 	private void loadPeptides() {
 		logger.info("Building peptides ...");
 		mapPeptides.clear();
@@ -158,15 +181,32 @@ public final class Mzid {
 	
 	private void loadRelations() {
 		logger.info("Building protein-peptide map ...");
-		mapRelations.clear();
-		mapEvidences.clear();
+		mapEvidencePeptide.clear();
+		mapProteinPeptideEvidence.clear();
 		for( PeptideEvidenceType peptideEvidence : mzid.getSequenceCollection().getPeptideEvidences() ) {
+			mapEvidences.put(peptideEvidence.getId(), peptideEvidence);
 			Peptide peptide = mapPeptides.get(peptideEvidence.getPeptideRef());
 			Protein protein = mapProteins.get(peptideEvidence.getDBSequenceRef());
 			protein.addPeptide(peptide);
-			peptide.setDecoy(peptideEvidence.isIsDecoy());
-			mapRelations.put(peptideEvidence.getId(), peptide);
-			mapEvidences.put(protein.getAccession()+peptide.getSequence(),peptideEvidence);
+			if( peptideEvidence.isIsDecoy() )
+				peptide.setDecoy(true);
+			mapEvidencePeptide.put(peptideEvidence.getId(), peptide);
+			mapProteinPeptideEvidence.put(protein.getAccession()+peptide.getSequence(),peptideEvidence);
+		}
+	}
+	
+	private void loadGroups() {
+		logger.info("Building protein groups ...");
+		for( ProteinAmbiguityGroupType pag : mzid.getDataCollection().getAnalysisData().getProteinDetectionList().getProteinAmbiguityGroups() ) {
+			ProteinGroup group = new ProteinGroup();
+			for( ProteinDetectionHypothesisType pdh : pag.getProteinDetectionHypothesises() ) {
+				if( pdh.getPeptideHypothesises().isEmpty() )
+					continue;
+				PeptideHypothesisType ph = pdh.getPeptideHypothesises().get(0);
+				PeptideEvidenceType peptideEvidence = mapEvidences.get(ph.getPeptideEvidenceRef());
+				Protein protein = mapProteins.get(peptideEvidence.getDBSequenceRef());
+				protein.setGroup(group);
+			}
 		}
 	}
 
@@ -189,7 +229,7 @@ public final class Mzid {
 					if( sii.getPeptideEvidenceReves() == null )
 						continue;
 					for( PeptideEvidenceRefType peptideEvidenceRefType : sii.getPeptideEvidenceReves() ) {
-						Peptide peptide = mapRelations.get(peptideEvidenceRefType.getPeptideEvidenceRef());
+						Peptide peptide = mapEvidencePeptide.get(peptideEvidenceRefType.getPeptideEvidenceRef());
 						if( peptide != null ) {
 							psm.linkPeptide(peptide);
 							break;
@@ -340,7 +380,10 @@ public final class Mzid {
 
 	private PeptideHypothesisType buildPh(Protein protein, Peptide peptide) {
 		PeptideHypothesisType ph = new PeptideHypothesisType();
-		ph.setPeptideEvidenceRef(mapEvidences.get(protein.getAccession()+peptide.getSequence()).getId());
+		PeptideEvidenceType peptideEvidence = mapProteinPeptideEvidence.get(protein.getAccession()+peptide.getSequence());
+		if( peptide.getDecoy() != null )
+			peptideEvidence.setIsDecoy(peptide.getDecoy());
+		ph.setPeptideEvidenceRef(peptideEvidence.getId());
 		for( Psm psm : peptide.getPsms() ) {
 			SpectrumIdentificationItemRefType siiRef = new SpectrumIdentificationItemRefType();
 			siiRef.setSpectrumIdentificationItemRef(mapSii.get(psm).getId());
