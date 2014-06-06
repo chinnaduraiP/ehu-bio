@@ -35,6 +35,7 @@ public final class PAnalyzerCli implements Command.Interface {
 	public void run(String[] args) throws Exception {
 		Mzid mzid = new Mzid();
 		MsMsData data = mzid.load(args[0]);
+		data.clearMetaData();
 		logger.info(String.format("Loaded: %d proteins, %d peptides, %d psms, %d spectra", data.getProteins().size(), data.getPeptides().size(), data.getPsms().size(), data.getSpectra().size() ));
 		
 		// Filter		

@@ -44,6 +44,7 @@ import es.ehubio.proteomics.psi.mzid11.ProteinDetectionProtocolType;
 import es.ehubio.proteomics.psi.mzid11.ProteinDetectionType;
 import es.ehubio.proteomics.psi.mzid11.SpectrumIdentificationItemRefType;
 import es.ehubio.proteomics.psi.mzid11.SpectrumIdentificationItemType;
+import es.ehubio.proteomics.psi.mzid11.SpectrumIdentificationListType;
 import es.ehubio.proteomics.psi.mzid11.SpectrumIdentificationResultType;
 
 public final class Mzid {
@@ -98,7 +99,7 @@ public final class Mzid {
 		updateAuthor();
 		updateSoftware();
 		updateProteinDetectionList();
-		updateProteinDetectionProtocol();	
+		updateProteinDetectionProtocol();
 		updateReferences();
 		
 		logger.info("Serializing to XML ...");
@@ -172,30 +173,31 @@ public final class Mzid {
 	private void loadSpectra() {
 		logger.info("Building spectra ...");
 		spectra.clear();
-		for( SpectrumIdentificationResultType sir : mzid.getDataCollection().getAnalysisData().getSpectrumIdentificationLists().get(0).getSpectrumIdentificationResults() ) {
-			Spectrum spectrum = new Spectrum();			
-			spectrum.setFileName(sir.getSpectraDataRef());
-			spectrum.setFileId(sir.getSpectrumID());
-			for( SpectrumIdentificationItemType sii : sir.getSpectrumIdentificationItems() ) {
-				Psm psm = new Psm();
-				psm.linkSpectrum(spectrum);
-				psm.setCharge(sii.getChargeState());
-				psm.setMz(sii.getExperimentalMassToCharge());
-				psm.setRank(sii.getRank());
-				loadScores(psm, sii);
-				mapSii.put(psm, sii);
-				if( sii.getPeptideEvidenceReves() == null )
-					continue;
-				for( PeptideEvidenceRefType peptideEvidenceRefType : sii.getPeptideEvidenceReves() ) {
-					Peptide peptide = mapRelations.get(peptideEvidenceRefType.getPeptideEvidenceRef());
-					if( peptide != null ) {
-						psm.linkPeptide(peptide);
-						break;
+		for( SpectrumIdentificationListType sil : mzid.getDataCollection().getAnalysisData().getSpectrumIdentificationLists() )
+			for( SpectrumIdentificationResultType sir : sil.getSpectrumIdentificationResults() ) {
+				Spectrum spectrum = new Spectrum();			
+				spectrum.setFileName(sir.getSpectraDataRef());
+				spectrum.setFileId(sir.getSpectrumID());
+				for( SpectrumIdentificationItemType sii : sir.getSpectrumIdentificationItems() ) {
+					Psm psm = new Psm();
+					psm.linkSpectrum(spectrum);
+					psm.setCharge(sii.getChargeState());
+					psm.setMz(sii.getExperimentalMassToCharge());
+					psm.setRank(sii.getRank());
+					loadScores(psm, sii);
+					mapSii.put(psm, sii);
+					if( sii.getPeptideEvidenceReves() == null )
+						continue;
+					for( PeptideEvidenceRefType peptideEvidenceRefType : sii.getPeptideEvidenceReves() ) {
+						Peptide peptide = mapRelations.get(peptideEvidenceRefType.getPeptideEvidenceRef());
+						if( peptide != null ) {
+							psm.linkPeptide(peptide);
+							break;
+						}
 					}
 				}
+				spectra.add(spectrum);
 			}
-			spectra.add(spectrum);
-		}
 	}
 	
 	private void loadScores( Psm psm, SpectrumIdentificationItemType sii ) {
@@ -354,17 +356,39 @@ public final class Mzid {
 		ProteinDetectionProtocolType proteinDetectionProtocol = new ProteinDetectionProtocolType();
 		proteinDetectionProtocol.setId("PDP_EhuBio");
 		proteinDetectionProtocol.setAnalysisSoftwareRef(data.getSoftware().getId());
-		// TODO: Add PAnalyzer params
+		proteinDetectionProtocol.setAnalysisParams(data.getAnalysisParams());
+		if( data.getThresholds() == null ) {
+			CVParamType cv = new CVParamType();
+			cv.setAccession("MS:1001494");
+			cv.setName("no threshold");
+			cv.setCvRef("PSI-MS");
+			data.addThreshold(cv);
+		}
+		proteinDetectionProtocol.setThreshold(data.getThresholds());
 		mzid.getAnalysisProtocolCollection().setProteinDetectionProtocol(proteinDetectionProtocol);;
 		
 		ProteinDetectionType proteinDetection = new ProteinDetectionType();
 		proteinDetection.setId("PD_EhuBio");
 		proteinDetection.setProteinDetectionListRef(proteinDetectionList.getId());
 		proteinDetection.setProteinDetectionProtocolRef(proteinDetectionProtocol.getId());
-		InputSpectrumIdentificationsType inputSpectrumIdentifications = new InputSpectrumIdentificationsType();
-		inputSpectrumIdentifications.setSpectrumIdentificationListRef(mzid.getAnalysisCollection().getSpectrumIdentifications().get(0).getId());
-		proteinDetection.getInputSpectrumIdentifications().add(inputSpectrumIdentifications);
+		for( SpectrumIdentificationListType sil : mzid.getDataCollection().getAnalysisData().getSpectrumIdentificationLists() ) {
+			correctSprectrumIdentificationList(sil);
+			InputSpectrumIdentificationsType inputSpectrumIdentifications = new InputSpectrumIdentificationsType();
+			inputSpectrumIdentifications.setSpectrumIdentificationListRef(sil.getId());
+			proteinDetection.getInputSpectrumIdentifications().add(inputSpectrumIdentifications);			
+		}
 		mzid.getAnalysisCollection().setProteinDetection(proteinDetection);
+	}
+	
+	private void correctSprectrumIdentificationList( SpectrumIdentificationListType sil ) {
+		Set<SpectrumIdentificationItemType> remove = new HashSet<>();
+		for( SpectrumIdentificationResultType sir : sil.getSpectrumIdentificationResults() ) {
+			remove.clear();
+			for( SpectrumIdentificationItemType sii : sir.getSpectrumIdentificationItems() )
+				if( sii.getPeptideEvidenceReves().isEmpty() )
+					remove.add(sii);
+			sir.getSpectrumIdentificationItems().removeAll(remove);
+		}
 	}
 
 	private void updateSoftware() {
@@ -381,7 +405,7 @@ public final class Mzid {
 			mzid.getAnalysisSoftwareList().getAnalysisSoftwares().remove(remove);
 		mzid.getAnalysisSoftwareList().getAnalysisSoftwares().add(data.getSoftware());
 	}
-
+    
 	private void updateAuthor() {
 		if( data.getAuthor() == null )
 			return;
