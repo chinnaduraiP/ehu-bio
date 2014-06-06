@@ -11,7 +11,7 @@ public class Peptide {
 	private static int idCount = 1;
 	private final int id;
 	private String sequence;
-	private boolean decoy = false;
+	private Boolean decoy;
 	private Set<Ptm> ptms = new HashSet<>();
 	private Confidence confidence;
 	private Set<Protein> proteins = new HashSet<>();
@@ -33,11 +33,11 @@ public class Peptide {
 		this.sequence = sequence;
 	}
 	
-	public boolean isDecoy() {
+	public Boolean getDecoy() {
 		return decoy;
 	}
 
-	public void setDecoy(boolean decoy) {
+	public void setDecoy(Boolean decoy) {
 		this.decoy = decoy;
 	}
 	
@@ -92,5 +92,5 @@ public class Peptide {
 		else if( getConfidence() == Confidence.NON_DISCRIMINATING )
 			builder.append("**");
 		return builder.toString();
-	}	
+	}
 }

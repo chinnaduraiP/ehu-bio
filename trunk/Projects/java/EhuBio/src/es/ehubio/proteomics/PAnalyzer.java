@@ -20,26 +20,6 @@ public class PAnalyzer {
 	private static final String URL = "https://code.google.com/p/ehu-bio/wiki/PAnalyzer";
 	private static final String CUSTOMIZATIONS = "No customizations";	
 	
-	public Set<Spectrum> getSpectra() {
-		return data.getSpectra();
-	}
-	
-	public Set<Psm> getPsms() {
-		return data.getPsms();
-	}
-	
-	public Set<Peptide> getPeptides() {
-		return data.getPeptides();
-	}
-	
-	public Set<Protein> getProteins() {
-		return data.getProteins();
-	}
-	
-	public Set<ProteinGroup> getGroups() {
-		return data.getGroups();
-	}
-	
 	/**
 	 * Executes PAnalyzer algorithm.
 	 * @see <a href="http://www.biomedcentral.com/1471-2105/13/288">original paper</a>
@@ -54,7 +34,7 @@ public class PAnalyzer {
 
 	private void classifyPeptides() {
 		// 1. Locate unique peptides
-		for( Peptide peptide : getPeptides() ) {
+		for( Peptide peptide : data.getPeptides() ) {
 			if( peptide.getProteins().size() == 1 ) {
 				peptide.setConfidence(Peptide.Confidence.UNIQUE);
 				peptide.getProteins().iterator().next().setConfidence(Protein.Confidence.CONCLUSIVE);
@@ -63,14 +43,14 @@ public class PAnalyzer {
 		}
 		
 		// 2. Locate non-discriminating peptides (first round)
-		for( Protein protein : getProteins() )
+		for( Protein protein : data.getProteins() )
 			if( protein.getConfidence() == Protein.Confidence.CONCLUSIVE )
 				for( Peptide peptide : protein.getPeptides() )
 					if( peptide.getConfidence() != Peptide.Confidence.UNIQUE )
 						peptide.setConfidence(Peptide.Confidence.NON_DISCRIMINATING);
 		
 		// 3. Locate non-discriminating peptides (second round)
-		for( Peptide peptide : getPeptides() ) {
+		for( Peptide peptide : data.getPeptides() ) {
 			if( peptide.getConfidence() != Peptide.Confidence.DISCRIMINATING )
 				continue;
 			for( Peptide peptide2 : peptide.getProteins().iterator().next().getPeptides() ) {
@@ -92,7 +72,7 @@ public class PAnalyzer {
 	
 	private void classifyProteins() {
 		// 1. Locate non-conclusive proteins
-		for( Protein protein : getProteins() ) {
+		for( Protein protein : data.getProteins() ) {
 			protein.setGroup(null);
 			if( protein.getConfidence() == Protein.Confidence.CONCLUSIVE )
 				continue;
@@ -106,7 +86,7 @@ public class PAnalyzer {
 		
 		// 2. Group proteins
 		data.getGroups().clear();
-		for( Protein protein : getProteins() ) {
+		for( Protein protein : data.getProteins() ) {
 			if( protein.getGroup() != null )
 				continue;
 			ProteinGroup group = new ProteinGroup();
