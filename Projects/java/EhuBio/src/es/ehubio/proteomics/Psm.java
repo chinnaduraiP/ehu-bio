@@ -12,10 +12,14 @@ public class Psm {
 		XTANDEM_EVALUE("X!Tandem expect"),
 		MZID_PASS_THRESHOLD("mzIdentML SpectrumIdentificationItem passThreshold attribute");
 		
-		public final String name;
+		private final String name;
 		
 		private ScoreType( String name ) {
 			this.name = name;
+		}
+		
+		public String getName() {
+			return name;
 		}
 	}
 	

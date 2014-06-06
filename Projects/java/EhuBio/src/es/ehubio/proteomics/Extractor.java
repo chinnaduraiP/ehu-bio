@@ -3,6 +3,8 @@ package es.ehubio.proteomics;
 import java.util.HashSet;
 import java.util.Set;
 
+import es.ehubio.proteomics.psi.mzid11.UserParamType;
+
 
 public final class Extractor {
 	public static class Filter {
@@ -65,13 +67,15 @@ public final class Extractor {
 	public void filterData( Filter filter ) {
 		if( data == null || filter == null )
 			return;
-		
+
+		// Filter peptides
 		for( Peptide peptide : data.getPeptides() )
 			if( peptide.getPsms().isEmpty()
 				|| peptide.getSequence().length() < filter.minPeptideLength
 				|| (filter.isFilterDecoyPeptides() && peptide.isDecoy()) )
 				unlinkPeptide(peptide);
 		
+		// Filter psms
 		for( Psm psm : data.getPsms() ) {
 			if( psm.getPeptide() == null ) {
 				unlinkPsm(psm);
@@ -99,19 +103,76 @@ public final class Extractor {
 			if( !spectrum.getPsms().isEmpty() )
 				spectra.add(spectrum);
 		data.loadFromSpectra(spectra);
+		
+		updateMetaData( filter );
+	}
+	
+	private void updateMetaData( Filter filter ) {
+		UserParamType param = null;
+		
+		if( filter.getMinPeptideLength() > 0 ) {
+			param = new UserParamType();
+			param.setName("EhuBio:Minimum peptide length");
+			param.setValue(""+filter.getMinPeptideLength());
+			data.addAnalysisParam(param);
+		}
+		if( filter.getPsmScoreThreshold() != null ) {
+			param = new UserParamType();
+			param.setName("EhuBio:PSM score type");
+			param.setValue(filter.getPsmScoreType().getName());
+			data.addAnalysisParam(param);
+			param = new UserParamType();
+			param.setName("EhuBio:PSM score threshold");
+			param.setValue(filter.getPsmScoreThreshold().toString());
+			data.addAnalysisParam(param);
+		}
+	}
+
+	private static void unlinkProtein(Protein protein) {
+		Set<Peptide> peptides = new HashSet<>();
+		peptides.addAll(protein.getPeptides());
+		protein.getPeptides().clear();
+		for( Peptide peptide : peptides ) {
+			peptide.getProteins().remove(protein);
+			if( peptide.getProteins().isEmpty() )
+				unlinkPeptide(peptide);
+		}
+		
+		if( protein.getGroup() != null ) {
+			protein.getGroup().getProteins().remove(protein);
+			protein.setGroup(null);
+		}
 	}
 	
 	private static void unlinkPeptide( Peptide peptide ) {
-		for( Psm psm : peptide.getPsms() )
-			psm.linkPeptide(null);
-		for( Protein protein : peptide.getProteins() )
+		Set<Psm> psms = new HashSet<>();
+		psms.addAll(peptide.getPsms());
+		peptide.getPsms().clear();
+		for( Psm psm : psms )
+			unlinkPsm(psm);		
+		
+		Set<Protein> proteins = new HashSet<>();
+		proteins.addAll(peptide.getProteins());
+		peptide.getProteins().clear();
+		for( Protein protein : proteins ) {
 			protein.getPeptides().remove(peptide);
-	}
-	
+			if( protein.getPeptides().isEmpty() )
+				unlinkProtein(protein);
+		}		
+	}	
+
 	private static void unlinkPsm( Psm psm ) {
-		if( psm.getSpectrum() != null )
-			psm.getSpectrum().getPsms().remove(psm);
-		if( psm.getPeptide() != null )
-			psm.getPeptide().getPsms().remove(psm);
+		Spectrum spectrum = psm.getSpectrum(); 
+		if( spectrum != null ) {
+			psm.linkSpectrum(null);
+			spectrum.getPsms().remove(psm);
+		}
+		Peptide peptide = psm.getPeptide(); 
+		if( peptide != null ) {
+			psm.linkPeptide(null);
+			peptide.getPsms().remove(psm);
+			if( peptide.getPsms().isEmpty() )
+				unlinkPeptide(peptide);
+		}
 	}
 }

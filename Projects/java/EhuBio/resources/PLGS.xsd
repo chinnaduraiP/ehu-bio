@@ -181,8 +181,5 @@
       <xsd:attribute name="ID" type="xsd:normalizedString" use="required"/>
       <xsd:attribute name="TIME_CALCULATED" type="xsd:int" use="required"/>
     </xsd:complexType>
-    <xsd:attribute name="ENTRIES_SEARCHED" type="xsd:int" use="required"/>
-    <xsd:attribute name="ID" type="xsd:normalizedString" use="required"/>
-    <xsd:attribute name="TIME_CALCULATED" type="xsd:int" use="required"/>
   </xsd:element>
 </xsd:schema>

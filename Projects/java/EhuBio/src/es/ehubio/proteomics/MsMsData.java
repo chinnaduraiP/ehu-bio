@@ -3,9 +3,11 @@ package es.ehubio.proteomics;
 import java.util.HashSet;
 import java.util.Set;
 
+import es.ehubio.proteomics.psi.mzid11.AbstractParamType;
 import es.ehubio.proteomics.psi.mzid11.AnalysisSoftwareType;
 import es.ehubio.proteomics.psi.mzid11.BibliographicReferenceType;
 import es.ehubio.proteomics.psi.mzid11.OrganizationType;
+import es.ehubio.proteomics.psi.mzid11.ParamListType;
 import es.ehubio.proteomics.psi.mzid11.PersonType;
 
 public class MsMsData {
@@ -18,7 +20,9 @@ public class MsMsData {
 	private OrganizationType organization;
 	private PersonType author;
 	private AnalysisSoftwareType software;
-	private BibliographicReferenceType publication;	
+	private BibliographicReferenceType publication;
+	private ParamListType analysisParams;
+	private ParamListType thresholds;
 
 	public Set<Spectrum> getSpectra() {
 		return spectra;
@@ -45,11 +49,11 @@ public class MsMsData {
 		psms.clear();
 		peptides.clear();
 		proteins.clear();
-		for( Spectrum spectrum : spectra ) {
-			for( Psm psm : spectrum.getPsms() ) {
+		for( Spectrum spectrum : spectra )			
+			for( Psm psm : spectrum.getPsms() ) {				
+				psms.add(psm);
 				if( psm.getPeptide() == null )
 					continue;
-				psms.add(psm);
 				peptides.add(psm.getPeptide());
 				for( Protein protein : psm.getPeptide().getProteins() ) {
 					proteins.add(protein);
@@ -57,7 +61,15 @@ public class MsMsData {
 						groups.add(protein.getGroup());
 				}
 			}
-		}
+	}
+	
+	public void clearMetaData() {
+		organization = null;
+		author = null;
+		software = null;
+		publication = null;
+		analysisParams = null;
+		thresholds = null;
 	}
 	
 	public OrganizationType getOrganization() {
@@ -90,5 +102,25 @@ public class MsMsData {
 
 	public void setPublication(BibliographicReferenceType publication) {
 		this.publication = publication;
+	}
+	
+	public void addAnalysisParam(AbstractParamType param) {
+		if( analysisParams == null )
+			analysisParams = new ParamListType();
+		analysisParams.getCvParamsAndUserParams().add(param);
+	}
+	
+	public ParamListType getAnalysisParams() {
+		return analysisParams;
+	}
+	
+	public void addThreshold(AbstractParamType param) {
+		if( thresholds == null )
+			thresholds = new ParamListType();
+		thresholds.getCvParamsAndUserParams().add(param);
+	}
+	
+	public ParamListType getThresholds() {
+		return thresholds;
 	}
 }
