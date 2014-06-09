@@ -50,6 +50,9 @@ import es.ehubio.proteomics.psi.mzid11.SpectrumIdentificationListType;
 import es.ehubio.proteomics.psi.mzid11.SpectrumIdentificationResultType;
 import es.ehubio.proteomics.psi.mzid11.UserParamType;
 
+/**
+ * Proxy class for managing MS/MS information in an mzid file.
+ */
 public final class Mzid {
 	private final Logger logger = Logger.getLogger(Mzid.class.getName());
 	private MzIdentML mzid;

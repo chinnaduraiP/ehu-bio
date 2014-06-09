@@ -3,6 +3,12 @@ package es.ehubio.proteomics;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * Peptide-Spectrum Match in a MS/MS proteomics experiment.
+ * 
+ * @author gorka
+ *
+ */
 public class Psm {
 	public enum ScoreType {
 		OTHER("Other"),		
@@ -137,5 +143,11 @@ public class Psm {
 		this.peptide = peptide;
 		if( peptide != null )
 			peptide.addPsm(this);
+	}
+	
+	public Boolean getDecoy() {
+		if( peptide == null )
+			return null;
+		return peptide.getDecoy();
 	}
 }

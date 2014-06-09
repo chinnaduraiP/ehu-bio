@@ -10,6 +10,13 @@ import es.ehubio.proteomics.psi.mzid11.OrganizationType;
 import es.ehubio.proteomics.psi.mzid11.ParamListType;
 import es.ehubio.proteomics.psi.mzid11.PersonType;
 
+/**
+ * Mutable class for storing and processing data associated with
+ * a MS/MS proteomics experiment.
+ * 
+ * @author gorka
+ *
+ */
 public class MsMsData {
 	private Set<Spectrum> spectra = new HashSet<>();
 	private Set<Psm> psms = new HashSet<>();

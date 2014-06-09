@@ -3,6 +3,12 @@ package es.ehubio.proteomics;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * Protein in a MS/MS proteomics experiment with PAnalyzer confidence category.
+ * 
+ * @author gorka
+ *
+ */
 public class Protein {
 	public enum Confidence {
 		CONCLUSIVE, NON_CONCLUSIVE, AMBIGUOUS_GROUP, INDISTINGUISABLE_GROUP 
@@ -88,5 +94,18 @@ public class Protein {
 		this.group = group;
 		if( group != null )
 			group.addProtein(this);
+	}
+	
+	public Boolean getDecoy() {
+		if( getPeptides().isEmpty() )
+			return null;
+		
+		boolean nullDecoy = false;
+		for( Peptide peptide : getPeptides() )
+			if( Boolean.FALSE.equals(peptide.getDecoy()) )
+				return false;
+			else if( peptide.getDecoy() == null )
+				nullDecoy = true;
+		return nullDecoy ? null : true;
 	}
 }
