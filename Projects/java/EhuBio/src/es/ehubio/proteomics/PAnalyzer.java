@@ -13,6 +13,12 @@ import es.ehubio.proteomics.psi.mzid11.ParamType;
 import es.ehubio.proteomics.psi.mzid11.PersonType;
 import es.ehubio.proteomics.psi.mzid11.RoleType;
 
+/**
+ * Class for managing inference ambiguities in MS/MS proteomics.
+ * 
+ * @author gorka
+ *
+ */
 public class PAnalyzer {
 	private MsMsData data;
 	private static final String VERSION = "2.0b1";

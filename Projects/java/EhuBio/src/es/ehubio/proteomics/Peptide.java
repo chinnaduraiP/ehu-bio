@@ -3,6 +3,14 @@ package es.ehubio.proteomics;
 import java.util.HashSet;
 import java.util.Set;
 
+import es.ehubio.proteomics.Psm.ScoreType;
+
+/**
+ * Peptide in a MS/MS proteomics experiment with PAnalyzer confidence category.
+ * 
+ * @author gorka
+ *
+ */
 public class Peptide {
 	public enum Confidence {
 		UNIQUE, DISCRIMINATING, NON_DISCRIMINATING
@@ -72,6 +80,19 @@ public class Peptide {
 	public Set<Psm> getPsms() {
 		return psms;
 	}
+	
+	public Psm getBestPsm( ScoreType type ) {		
+		Psm bestPsm = null;
+		for( Psm psm : getPsms() ) {
+			Double score = psm.getScoreByType(type);
+			if( score == null )
+				continue;
+			if( bestPsm != null && score <= bestPsm.getScoreByType(type) )
+				continue;
+			bestPsm = psm;				
+		}
+		return bestPsm;
+	}
 
 	public boolean addPsm(Psm psm) {
 		if( psms.add(psm) ) {
@@ -92,5 +113,5 @@ public class Peptide {
 		else if( getConfidence() == Confidence.NON_DISCRIMINATING )
 			builder.append("**");
 		return builder.toString();
-	}
+	}	
 }

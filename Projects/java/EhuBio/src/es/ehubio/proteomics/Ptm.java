@@ -1,6 +1,11 @@
 package es.ehubio.proteomics;
 
-
+/**
+ * Post-Translational Mofidication in a MS/MS proteomics experiment.
+ * 
+ * @author gorka
+ *
+ */
 public class Ptm {	
 	private String aminoacid;
 	private Integer position;

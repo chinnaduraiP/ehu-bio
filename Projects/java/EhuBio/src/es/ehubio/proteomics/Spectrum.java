@@ -3,6 +3,12 @@ package es.ehubio.proteomics;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * Basic spectral information in a MS/MS proteomics experiment.
+ * 
+ * @author gorka
+ *
+ */
 public class Spectrum {
 	private static int idCount = 1;
 	private final int id;

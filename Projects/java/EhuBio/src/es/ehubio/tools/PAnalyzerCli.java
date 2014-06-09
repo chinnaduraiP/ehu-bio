@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import es.ehubio.proteomics.Extractor;
+import es.ehubio.proteomics.Filter;
 import es.ehubio.proteomics.MsMsData;
 import es.ehubio.proteomics.Mzid;
 import es.ehubio.proteomics.PAnalyzer;
@@ -40,12 +41,12 @@ public final class PAnalyzerCli implements Command.Interface {
 		
 		// Filter		
 		logger.info("Filtering data ...");
-		Extractor extractor = new Extractor();
-		extractor.setData(data);
-		Extractor.Filter filter = new Extractor.Filter();
+		Filter filter = new Filter();
 		filter.setPsmScore(Psm.ScoreType.MASCOT_EVALUE, 0.05, false);
 		filter.setMinPeptideLength(7);
-		extractor.filterData(filter);
+		filter.setFilterDecoyPeptides(false);
+		filter.setMzidPassThreshold(false);
+		filter.run(data);
 		logger.info(String.format("Filter: %d groups, %d proteins, %d peptides, %d psms, %d spectra", data.getGroups().size(), data.getProteins().size(), data.getPeptides().size(), data.getPsms().size(), data.getSpectra().size() ));
 		
 		// PAnalyzer
@@ -79,7 +80,7 @@ public final class PAnalyzerCli implements Command.Interface {
 					break;
 			}
 		}
-		List<String> monitor = Arrays.asList("?????","decoy-6421");
+		List<String> monitor = Arrays.asList("?????");
 		for( Protein protein : data.getProteins() )
 			if( monitor.contains(protein.getAccession()) ) {
 				System.out.println(protein.getAccession()+"-"+protein.getConfidence());
@@ -94,8 +95,16 @@ public final class PAnalyzerCli implements Command.Interface {
 		logger.info(String.format("Groups: %d, Minimum: %d", data.getGroups().size(), conclusive+indistinguishable+ambigous));
 		logger.info(String.format("Conclusive: %d, Non-Conclusive: %d, Indistiguishable: %d, Ambigous: %d",conclusive,nonconclusive,indistinguishable,ambigous));
 		
-		mzid.save(args[1]);
+		logger.info("Running Extractor ...");
+		Extractor extractor = new Extractor();
+		extractor.setData(data);
+		//extractor.setCountDecoy(true);
+		logger.info(String.format("PSM FDR: %s", extractor.getPsmFdr()));
+		logger.info(String.format("Peptide FDR: %s", extractor.getPeptideFdr()));
+		logger.info(String.format("Protein FDR: %s", extractor.getProteinFdr()));
+		logger.info(String.format("Group FDR: %s", extractor.getGroupFdr()));
+		
+		//mzid.save(args[1]);
 		logger.info("finished!!");
 	}
-
 }
