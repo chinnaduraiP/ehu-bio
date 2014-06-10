@@ -3,6 +3,7 @@ package es.ehubio.proteomics;
 import java.util.HashSet;
 import java.util.Set;
 
+import es.ehubio.proteomics.Psm.Score;
 import es.ehubio.proteomics.Psm.ScoreType;
 
 /**
@@ -11,7 +12,7 @@ import es.ehubio.proteomics.Psm.ScoreType;
  * @author gorka
  *
  */
-public class Peptide {
+public class Peptide implements Decoyable {
 	public enum Confidence {
 		UNIQUE, DISCRIMINATING, NON_DISCRIMINATING
 	}
@@ -40,13 +41,19 @@ public class Peptide {
 	public void setSequence(String sequence) {
 		this.sequence = sequence;
 	}
-	
+
+	@Override
 	public Boolean getDecoy() {
 		return decoy;
 	}
-
+	
 	public void setDecoy(Boolean decoy) {
 		this.decoy = decoy;
+	}
+	
+	@Override
+	public boolean skip() {
+		return false;
 	}
 	
 	public boolean addPtm( Ptm ptm ) {
@@ -84,15 +91,23 @@ public class Peptide {
 	public Psm getBestPsm( ScoreType type ) {		
 		Psm bestPsm = null;
 		for( Psm psm : getPsms() ) {
-			Double score = psm.getScoreByType(type);
+			Psm.Score score = psm.getScoreByType(type);
 			if( score == null )
 				continue;
-			if( bestPsm != null && score <= bestPsm.getScoreByType(type) )
+			if( bestPsm != null && bestPsm.getScoreByType(type).compare(score.getValue()) >= 0 )
 				continue;
 			bestPsm = psm;				
 		}
 		return bestPsm;
 	}
+	
+	@Override
+	public Score getScoreByType(ScoreType type) {
+		Psm bestPsm = getBestPsm(type);
+		if( bestPsm == null )
+			return null;
+		return bestPsm.getScoreByType(type);
+	}	
 
 	public boolean addPsm(Psm psm) {
 		if( psms.add(psm) ) {
@@ -113,5 +128,5 @@ public class Peptide {
 		else if( getConfidence() == Confidence.NON_DISCRIMINATING )
 			builder.append("**");
 		return builder.toString();
-	}	
+	}
 }

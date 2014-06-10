@@ -1,8 +1,5 @@
-package es.ehubio.proteomics;
+package es.ehubio.proteomics.io;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.HashMap;
@@ -13,17 +10,21 @@ import java.util.Set;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
 
 import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
 import es.ehubio.db.fasta.Fasta;
 import es.ehubio.db.fasta.HeaderParser;
+import es.ehubio.proteomics.MsMsData;
+import es.ehubio.proteomics.Peptide;
+import es.ehubio.proteomics.Protein;
 import es.ehubio.proteomics.Protein.Confidence;
+import es.ehubio.proteomics.ProteinGroup;
+import es.ehubio.proteomics.Psm;
+import es.ehubio.proteomics.Ptm;
+import es.ehubio.proteomics.Spectrum;
 import es.ehubio.proteomics.psi.mzid11.AbstractContactType;
 import es.ehubio.proteomics.psi.mzid11.AbstractParamType;
 import es.ehubio.proteomics.psi.mzid11.AnalysisSoftwareType;
@@ -53,7 +54,7 @@ import es.ehubio.proteomics.psi.mzid11.UserParamType;
 /**
  * Proxy class for managing MS/MS information in an mzid file.
  */
-public final class Mzid {
+public final class Mzid extends MsMsFile {
 	private final Logger logger = Logger.getLogger(Mzid.class.getName());
 	private MzIdentML mzid;
 	private Map<String,Protein> mapProteins = new HashMap<>();
@@ -62,21 +63,11 @@ public final class Mzid {
 	private Map<String,Peptide> mapEvidencePeptide = new HashMap<>();
 	private Map<String,PeptideEvidenceType> mapProteinPeptideEvidence = new HashMap<>();
 	private Map<Psm,SpectrumIdentificationItemType> mapSii = new HashMap<>();
-	private Set<Spectrum> spectra = new HashSet<>();
 	private MsMsData data;	
 	private ProteinDetectionListType proteinDetectionList;
 	
-	public MsMsData load( String path, String decoyRegex ) throws IOException, JAXBException {
-		logger.info(String.format("Loading '%s' ...", path));
-		InputStream input = new FileInputStream(path);
-		if( path.endsWith(".gz") )
-			input = new GZIPInputStream(input);
-		load(input, decoyRegex);
-		input.close();
-		return data;
-	}
-	
-	public MsMsData load( InputStream input, String decoyRegex ) throws JAXBException {
+	@Override
+	public MsMsData load( InputStream input, String decoyRegex ) throws Exception {
 		logger.info("Parsing XML ...");
 		JAXBContext jaxbContext = JAXBContext.newInstance(MzIdentML.class);
 		Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
@@ -95,20 +86,11 @@ public final class Mzid {
 		loadGroups();
 		loadSpectra();		
 		logger.info("finished!");		
-		data.loadFromSpectra(spectra);
 		return data;
 	}		
-
-	public void save( String path ) throws IOException, JAXBException {
-		logger.info(String.format("Saving '%s' ...", path));
-		OutputStream output = new FileOutputStream(path);
-		if( path.endsWith(".gz") )
-			output = new GZIPOutputStream(output);
-		save(output);
-		output.close();
-	}
 	
-	public void save( OutputStream output ) throws JAXBException {
+	@Override
+	public void save( OutputStream output ) throws Exception {
 		logger.info("Updating mzid data ...");
 		updateOrganization();
 		updateAuthor();
@@ -215,7 +197,7 @@ public final class Mzid {
 
 	private void loadSpectra() {
 		logger.info("Building spectra ...");
-		spectra.clear();
+		Set<Spectrum> spectra = new HashSet<>();
 		for( SpectrumIdentificationListType sil : mzid.getDataCollection().getAnalysisData().getSpectrumIdentificationLists() )
 			for( SpectrumIdentificationResultType sir : sil.getSpectrumIdentificationResults() ) {
 				Spectrum spectrum = new Spectrum();			
@@ -241,6 +223,7 @@ public final class Mzid {
 				}
 				spectra.add(spectrum);
 			}
+		data.loadFromSpectra(spectra);
 	}
 	
 	private void loadScores( Psm psm, SpectrumIdentificationItemType sii ) {
