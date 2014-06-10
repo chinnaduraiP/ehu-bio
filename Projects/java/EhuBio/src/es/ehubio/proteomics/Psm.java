@@ -9,23 +9,31 @@ import java.util.Set;
  * @author gorka
  *
  */
-public class Psm {
+public class Psm implements Decoyable {
 	public enum ScoreType {
-		OTHER("Other"),		
-		MASCOT_EVALUE("Mascot expectation value"),
-		MASCOT_SCORE("Mascot score"),
-		SEQUEST_XCORR("SEQUEST Confidence XCorr"),
-		XTANDEM_EVALUE("X!Tandem expect"),
-		MZID_PASS_THRESHOLD("mzIdentML SpectrumIdentificationItem passThreshold attribute");
+		LARGER("Other, larger values are better", true),
+		SMALLER("Other, smaller values are better", false),
+		MASCOT_EVALUE("Mascot expectation value",false),
+		MASCOT_SCORE("Mascot score",true),
+		SEQUEST_XCORR("SEQUEST Confidence XCorr",true),
+		XTANDEM_EVALUE("X!Tandem expect",false),
+		PROPHET_PROBABILITY("PeptideProphet probability score",true),
+		MZID_PASS_THRESHOLD("mzIdentML SpectrumIdentificationItem passThreshold attribute",true);
 		
 		private final String name;
+		private final boolean largerBetter;
 		
-		private ScoreType( String name ) {
+		private ScoreType( String name, boolean largerBetter ) {
 			this.name = name;
+			this.largerBetter = largerBetter;
 		}
 		
 		public String getName() {
 			return name;
+		}
+
+		public boolean isLargerBetter() {
+			return largerBetter;
 		}
 	}
 	
@@ -56,6 +64,14 @@ public class Psm {
 		
 		public double getValue() {
 			return value;
+		}
+		
+		public int compare( double value2 ) {
+			if( type.isLargerBetter() )
+				value2 = value-value2;
+			else
+				value2 = value2-value;
+			return (int)Math.signum(value2);
 		}
 	}
 	
@@ -103,17 +119,18 @@ public class Psm {
 		return scores;
 	}
 	
-	public Double getScoreByType( ScoreType type ) {
+	@Override
+	public Score getScoreByType( ScoreType type ) {
 		for( Score score : scores )
 			if( score.type == type )
-				return score.value;
+				return score;
 		return null;
 	}
 	
-	public Double getScoreByName( String name ) {
+	public Score getScoreByName( String name ) {
 		for( Score score : scores )
 			if( score.name == name )
-				return score.value;
+				return score;
 		return null;
 	}
 	
@@ -145,9 +162,15 @@ public class Psm {
 			peptide.addPsm(this);
 	}
 	
+	@Override
 	public Boolean getDecoy() {
 		if( peptide == null )
 			return null;
 		return peptide.getDecoy();
+	}
+	
+	@Override
+	public boolean skip() {
+		return false;
 	}
 }

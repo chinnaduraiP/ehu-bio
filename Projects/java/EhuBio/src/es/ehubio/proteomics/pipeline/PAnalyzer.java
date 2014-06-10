@@ -1,8 +1,12 @@
-package es.ehubio.proteomics;
+package es.ehubio.proteomics.pipeline;
 
 import java.util.HashSet;
 import java.util.Set;
 
+import es.ehubio.proteomics.MsMsData;
+import es.ehubio.proteomics.Peptide;
+import es.ehubio.proteomics.Protein;
+import es.ehubio.proteomics.ProteinGroup;
 import es.ehubio.proteomics.psi.mzid11.AffiliationType;
 import es.ehubio.proteomics.psi.mzid11.AnalysisSoftwareType;
 import es.ehubio.proteomics.psi.mzid11.BibliographicReferenceType;

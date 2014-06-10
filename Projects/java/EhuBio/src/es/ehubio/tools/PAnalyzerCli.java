@@ -4,18 +4,19 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
 
-import es.ehubio.proteomics.Extractor;
-import es.ehubio.proteomics.Filter;
 import es.ehubio.proteomics.MsMsData;
-import es.ehubio.proteomics.Mzid;
-import es.ehubio.proteomics.PAnalyzer;
 import es.ehubio.proteomics.Peptide;
 import es.ehubio.proteomics.Protein;
 import es.ehubio.proteomics.ProteinGroup;
 import es.ehubio.proteomics.Psm;
+import es.ehubio.proteomics.io.MayuCsv;
+import es.ehubio.proteomics.io.MsMsFile;
+import es.ehubio.proteomics.pipeline.Validator;
+import es.ehubio.proteomics.pipeline.Filter;
+import es.ehubio.proteomics.pipeline.PAnalyzer;
 
 public final class PAnalyzerCli implements Command.Interface {
-	private final Logger logger = Logger.getLogger(PAnalyzerCli.class.getName());
+	private static final Logger logger = Logger.getLogger(PAnalyzerCli.class.getName());
 
 	@Override
 	public String getUsage() {
@@ -34,16 +35,17 @@ public final class PAnalyzerCli implements Command.Interface {
 
 	@Override
 	public void run(String[] args) throws Exception {
-		Mzid mzid = new Mzid();
-		MsMsData data = mzid.load(args[0],"decoy");
-		//data.clearMetaData();
+		MsMsFile file = new MayuCsv();//Mzid();
+		MsMsData data = file.load(args[0],"rev_");//"decoy");
 		logger.info(String.format("Loaded: %d groups, %d proteins, %d peptides, %d psms, %d spectra", data.getGroups().size(), data.getProteins().size(), data.getPeptides().size(), data.getPsms().size(), data.getSpectra().size() ));
 		
 		// Filter		
 		logger.info("Filtering data ...");
 		Filter filter = new Filter();
-		filter.setPsmScore(Psm.ScoreType.MASCOT_EVALUE, 0.05, false);
-		filter.setMinPeptideLength(7);
+		//filter.setPsmScoreThreshold(new Psm.Score(Psm.ScoreType.MASCOT_EVALUE, 0.05));
+		//filter.setPsmScoreThreshold(new Psm.Score(Psm.ScoreType.PROPHET_PROBABILITY, 0.7142));
+		filter.setPsmScoreThreshold(new Psm.Score(Psm.ScoreType.PROPHET_PROBABILITY, 0.96));
+		//filter.setMinPeptideLength(7);
 		filter.setFilterDecoyPeptides(false);
 		filter.setMzidPassThreshold(false);
 		filter.run(data);
@@ -96,15 +98,17 @@ public final class PAnalyzerCli implements Command.Interface {
 		logger.info(String.format("Conclusive: %d, Non-Conclusive: %d, Indistiguishable: %d, Ambigous: %d",conclusive,nonconclusive,indistinguishable,ambigous));
 		
 		logger.info("Running Extractor ...");
-		Extractor extractor = new Extractor();
-		extractor.setData(data);
-		//extractor.setCountDecoy(true);
-		logger.info(String.format("PSM FDR: %s", extractor.getPsmFdr()));
-		logger.info(String.format("Peptide FDR: %s", extractor.getPeptideFdr()));
-		logger.info(String.format("Protein FDR: %s", extractor.getProteinFdr()));
-		logger.info(String.format("Group FDR: %s", extractor.getGroupFdr()));
+		Validator validator = new Validator();
+		validator.setData(data);
+		//validator.setCountDecoy(true);
+		logger.info(String.format("PSM FDR: %s", validator.getPsmFdr().getRatio()));
+		logger.info(String.format("Peptide FDR: %s", validator.getPeptideFdr().getRatio()));
+		logger.info(String.format("Protein FDR: %s", validator.getProteinFdr().getRatio()));
+		logger.info(String.format("Group FDR: %s", validator.getGroupFdr().getRatio()));
+		double fdr = 0.01;
+		logger.info(String.format("PSM threshold for FDR=%s -> %s",fdr,validator.getProteinFdrThreshold(Psm.ScoreType.PROPHET_PROBABILITY, fdr)));
 		
-		//mzid.save(args[1]);
+		//file.save(args[1]);
 		logger.info("finished!!");
 	}
 }

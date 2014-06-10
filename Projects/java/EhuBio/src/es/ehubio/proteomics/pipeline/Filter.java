@@ -1,35 +1,28 @@
-package es.ehubio.proteomics;
+package es.ehubio.proteomics.pipeline;
 
 import java.util.HashSet;
 import java.util.Set;
 
+import es.ehubio.proteomics.MsMsData;
+import es.ehubio.proteomics.Peptide;
+import es.ehubio.proteomics.Protein;
+import es.ehubio.proteomics.Psm;
+import es.ehubio.proteomics.Spectrum;
 import es.ehubio.proteomics.psi.mzid11.CVParamType;
 import es.ehubio.proteomics.psi.mzid11.UserParamType;
 
 public class Filter {
-	private Psm.ScoreType psmScoreType;
-	private Double psmScoreThreshold;
-	private boolean psmLargerScoreBetter = true;
+	private Psm.Score psmScoreThreshold;
 	private boolean mzidPassThreshold = true;
 	private int minPeptideLength = 0;
 	private boolean filterDecoyPeptides = true;		
 	
-	public Psm.ScoreType getPsmScoreType() {
-		return psmScoreType;
-	}
-	
-	public Double getPsmScoreThreshold() {
+	public Psm.Score getPsmScoreThreshold() {
 		return psmScoreThreshold;
 	}
 	
-	public boolean isPsmLargerScoreBetter() {
-		return psmLargerScoreBetter;
-	}
-	
-	public void setPsmScore( Psm.ScoreType psmScoreType, double psmScoreThreshold, boolean psmLargerScoreBetter) {
-		this.psmScoreType = psmScoreType;
+	public void setPsmScoreThreshold( Psm.Score psmScoreThreshold ) {
 		this.psmScoreThreshold = psmScoreThreshold;
-		this.psmLargerScoreBetter = psmLargerScoreBetter;
 	}
 	
 	public int getMinPeptideLength() {
@@ -74,20 +67,17 @@ public class Filter {
 				continue;
 			}
 			if( isMzidPassThreshold() ) {
-				Double score = psm.getScoreByType(Psm.ScoreType.MZID_PASS_THRESHOLD);
-				if( score != null && score < 0.5 ) {
+				Psm.Score score = psm.getScoreByType(Psm.ScoreType.MZID_PASS_THRESHOLD);
+				if( score != null && score.getValue() < 0.5 ) {
 					unlinkPsm(psm);
 					continue;
 				}
 			}
-			if( getPsmScoreType() == null || getPsmScoreThreshold() == null)
+			if( getPsmScoreThreshold() == null )
 				continue;
-			Double score = psm.getScoreByType(getPsmScoreType());
-			if( score == null ||
-				(isPsmLargerScoreBetter() && score < getPsmScoreThreshold()) ||
-				(!isPsmLargerScoreBetter() && score > getPsmScoreThreshold()) ) {
+			Psm.Score score = psm.getScoreByType(getPsmScoreThreshold().getType());
+			if( score == null || getPsmScoreThreshold().compare(score.getValue()) > 0 )
 				unlinkPsm(psm);
-			}
 		}
 		
 		Set<Spectrum> spectra = new HashSet<>();
@@ -113,7 +103,7 @@ public class Filter {
 		if( getPsmScoreThreshold() != null ) {
 			userParam = new UserParamType();
 			userParam.setName("EhuBio:PSM score type");
-			userParam.setValue(getPsmScoreType().getName());
+			userParam.setValue(getPsmScoreThreshold().getName());
 			data.addAnalysisParam(userParam);
 			userParam = new UserParamType();
 			userParam.setName("EhuBio:PSM score threshold");
