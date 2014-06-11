@@ -129,4 +129,20 @@ public class Peptide implements Decoyable {
 			builder.append("**");
 		return builder.toString();
 	}
+	
+	public String getMassSequence() {
+		StringBuilder str = new StringBuilder();
+		for( int i = 0; i < sequence.length(); i++ ) {
+			str.append(sequence.charAt(i));
+			for( Ptm ptm : getPtms() ) {
+				if( ptm.getPosition() == null || ptm.getPosition()-1 != i )
+					continue;
+				if( ptm.getMassDelta() == null )
+					str.append("(?)");
+				else
+					str.append(String.format("(+%.2f)", ptm.getMassDelta()));
+			}
+		}		
+		return str.toString();
+	}
 }

@@ -13,9 +13,9 @@ import es.ehubio.proteomics.psi.mzid11.UserParamType;
 
 public class Filter {
 	private Psm.Score psmScoreThreshold;
-	private boolean mzidPassThreshold = true;
+	private boolean mzidPassThreshold = false;
 	private int minPeptideLength = 0;
-	private boolean filterDecoyPeptides = true;		
+	private boolean filterDecoyPeptides = false;		
 	
 	public Psm.Score getPsmScoreThreshold() {
 		return psmScoreThreshold;

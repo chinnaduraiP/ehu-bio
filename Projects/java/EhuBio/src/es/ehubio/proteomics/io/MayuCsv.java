@@ -46,9 +46,9 @@ public class MayuCsv extends MsMsFile {
 					if( mod.isEmpty() )
 						continue;
 					Ptm ptm = new Ptm();
-					String[] subfields = mod.split("=");
-					ptm.setName(subfields[1]);
+					String[] subfields = mod.split("=");					
 					ptm.setPosition(Integer.parseInt(subfields[0]));
+					ptm.setMassDelta(Double.parseDouble(subfields[1]));
 					peptide.addPtm(ptm);
 				}				
 			}

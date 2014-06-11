@@ -154,6 +154,7 @@ public final class Mzid extends MsMsFile {
 					builder.append(residue);
 				ptm.setAminoacid(builder.toString());
 				ptm.setPosition(modificationType.getLocation());
+				ptm.setMassDelta(modificationType.getMonoisotopicMassDelta());
 				for( CVParamType param : modificationType.getCvParams() )
 					if( param.getCvRef().equalsIgnoreCase("UNIMOD") ) {
 						ptm.setName(param.getName());
@@ -208,7 +209,7 @@ public final class Mzid extends MsMsFile {
 					psm.linkSpectrum(spectrum);
 					psm.setCharge(sii.getChargeState());
 					psm.setMz(sii.getExperimentalMassToCharge());
-					psm.setRank(sii.getRank());
+					psm.setRank(sii.getRank());					
 					loadScores(psm, sii);
 					mapSii.put(psm, sii);
 					if( sii.getPeptideEvidenceReves() == null )
