@@ -10,6 +10,7 @@ public class Ptm {
 	private String aminoacid;
 	private Integer position;
 	private String name;
+	private Double massDelta;
 	
 	public String getAminoacid() {
 		return aminoacid;
@@ -33,6 +34,14 @@ public class Ptm {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+	
+	public Double getMassDelta() {
+		return massDelta;
+	}
+
+	public void setMassDelta(Double massDelta) {
+		this.massDelta = massDelta;
 	}
 	
 	@Override

@@ -9,11 +9,11 @@ import es.ehubio.proteomics.Peptide;
 import es.ehubio.proteomics.Protein;
 import es.ehubio.proteomics.ProteinGroup;
 import es.ehubio.proteomics.Psm;
-import es.ehubio.proteomics.io.MayuCsv;
 import es.ehubio.proteomics.io.MsMsFile;
-import es.ehubio.proteomics.pipeline.Validator;
+import es.ehubio.proteomics.io.Mzid;
 import es.ehubio.proteomics.pipeline.Filter;
 import es.ehubio.proteomics.pipeline.PAnalyzer;
+import es.ehubio.proteomics.pipeline.Validator;
 
 public final class PAnalyzerCli implements Command.Interface {
 	private static final Logger logger = Logger.getLogger(PAnalyzerCli.class.getName());
@@ -35,19 +35,22 @@ public final class PAnalyzerCli implements Command.Interface {
 
 	@Override
 	public void run(String[] args) throws Exception {
-		MsMsFile file = new MayuCsv();//Mzid();
-		MsMsData data = file.load(args[0],"rev_");//"decoy");
+		//MsMsFile file = new MayuCsv();
+		//MsMsData data = file.load(args[0],"rev_");
+		MsMsFile file = new Mzid();		
+		MsMsData data = file.load(args[0],"decoy");
 		logger.info(String.format("Loaded: %d groups, %d proteins, %d peptides, %d psms, %d spectra", data.getGroups().size(), data.getProteins().size(), data.getPeptides().size(), data.getPsms().size(), data.getSpectra().size() ));
 		
 		// Filter		
 		logger.info("Filtering data ...");
 		Filter filter = new Filter();
-		//filter.setPsmScoreThreshold(new Psm.Score(Psm.ScoreType.MASCOT_EVALUE, 0.05));
-		//filter.setPsmScoreThreshold(new Psm.Score(Psm.ScoreType.PROPHET_PROBABILITY, 0.7142));
-		filter.setPsmScoreThreshold(new Psm.Score(Psm.ScoreType.PROPHET_PROBABILITY, 0.96));
+		//filter.setPsmScoreThreshold(new Psm.Score(Psm.ScoreType.MASCOT_EVALUE, 0.007));
+		//filter.setPsmScoreThreshold(new Psm.Score(Psm.ScoreType.MASCOT_SCORE, 32.21));
+		//filter.setPsmScoreThreshold(new Psm.Score(Psm.ScoreType.MASCOT_SCORE, 27.29));
+		//filter.setPsmScoreThreshold(new Psm.Score(Psm.ScoreType.PROPHET_PROBABILITY, 0.96));
 		//filter.setMinPeptideLength(7);
-		filter.setFilterDecoyPeptides(false);
-		filter.setMzidPassThreshold(false);
+		//filter.setFilterDecoyPeptides(true);
+		//filter.setMzidPassThreshold(true);
 		filter.run(data);
 		logger.info(String.format("Filter: %d groups, %d proteins, %d peptides, %d psms, %d spectra", data.getGroups().size(), data.getProteins().size(), data.getPeptides().size(), data.getPsms().size(), data.getSpectra().size() ));
 		
@@ -82,6 +85,8 @@ public final class PAnalyzerCli implements Command.Interface {
 					break;
 			}
 		}
+		
+		// Print protein details
 		List<String> monitor = Arrays.asList("?????");
 		for( Protein protein : data.getProteins() )
 			if( monitor.contains(protein.getAccession()) ) {
@@ -94,6 +99,11 @@ public final class PAnalyzerCli implements Command.Interface {
 				}
 				System.out.println();
 			}
+		
+		// Dump PSMs
+		for( Psm psm : data.getPsms() )
+			System.out.println(String.format("%s:%s:%s", psm.getPeptide().getMassSequence(), psm.getMz(), psm.getScoreByType(Psm.ScoreType.MASCOT_SCORE).getValue()));
+		
 		logger.info(String.format("Groups: %d, Minimum: %d", data.getGroups().size(), conclusive+indistinguishable+ambigous));
 		logger.info(String.format("Conclusive: %d, Non-Conclusive: %d, Indistiguishable: %d, Ambigous: %d",conclusive,nonconclusive,indistinguishable,ambigous));
 		
@@ -106,7 +116,9 @@ public final class PAnalyzerCli implements Command.Interface {
 		logger.info(String.format("Protein FDR: %s", validator.getProteinFdr().getRatio()));
 		logger.info(String.format("Group FDR: %s", validator.getGroupFdr().getRatio()));
 		double fdr = 0.01;
-		logger.info(String.format("PSM threshold for FDR=%s -> %s",fdr,validator.getProteinFdrThreshold(Psm.ScoreType.PROPHET_PROBABILITY, fdr)));
+		//logger.info(String.format("PSM threshold for FDR=%s -> %s",fdr,validator.getPsmFdrThreshold(Psm.ScoreType.PROPHET_PROBABILITY, fdr)));
+		logger.info(String.format("PSM threshold for FDR=%s -> %s",fdr,validator.getGroupFdrThreshold(Psm.ScoreType.MASCOT_SCORE, fdr)));
+		//logger.info(String.format("PSM threshold for FDR=%s -> %s",fdr,validator.getPsmFdrThreshold(Psm.ScoreType.MASCOT_EVALUE, fdr)));
 		
 		//file.save(args[1]);
 		logger.info("finished!!");
