@@ -78,7 +78,8 @@ public class Psm implements Decoyable {
 	private static int idCount = 1;
 	private final int id;
 	private int charge;
-	private double mz;
+	private Double calcMz;
+	private double expMz;
 	private Integer rank;
 	private Set<Score> scores = new HashSet<>();
 	private Spectrum spectrum;
@@ -100,11 +101,26 @@ public class Psm implements Decoyable {
 		this.charge = charge;
 	}
 	
-	public double getMz() {
-		return mz;
+	public Double getCalcMz() {
+		return calcMz;
 	}
-	public void setMz(double mz) {
-		this.mz = mz;
+
+	public void setCalcMz(Double calcMz) {
+		this.calcMz = calcMz;
+	}
+
+	public double getExpMz() {
+		return expMz;
+	}
+
+	public void setExpMz(double expMz) {
+		this.expMz = expMz;
+	}
+	
+	public Double getPpm() {
+		if( getCalcMz() == null )
+			return null;
+		return Math.abs((getExpMz()-getCalcMz())/getCalcMz()*1000000);
 	}
 	
 	public Integer getRank() {
@@ -172,5 +188,5 @@ public class Psm implements Decoyable {
 	@Override
 	public boolean skip() {
 		return false;
-	}
+	}	
 }

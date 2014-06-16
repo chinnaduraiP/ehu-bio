@@ -15,7 +15,9 @@ public class Filter {
 	private Psm.Score psmScoreThreshold;
 	private boolean mzidPassThreshold = false;
 	private int minPeptideLength = 0;
-	private boolean filterDecoyPeptides = false;		
+	private boolean filterDecoyPeptides = false;
+	private int rankTreshold = 0;
+	private Double ppmThreshold;
 	
 	public Psm.Score getPsmScoreThreshold() {
 		return psmScoreThreshold;
@@ -49,6 +51,22 @@ public class Filter {
 		this.mzidPassThreshold = mzidPassThreshold;
 	}
 	
+	public int getRankTreshold() {
+		return rankTreshold;
+	}
+
+	public void setRankTreshold(int rankTreshold) {
+		this.rankTreshold = rankTreshold;
+	}
+	
+	public Double getPpmThreshold() {
+		return ppmThreshold;
+	}
+
+	public void setPpmThreshold(Double ppmThreshold) {
+		this.ppmThreshold = ppmThreshold;
+	}
+	
 	public void run( MsMsData data ) {
 		if( data == null )
 			return;
@@ -63,6 +81,14 @@ public class Filter {
 		// Filter psms
 		for( Psm psm : data.getPsms() ) {
 			if( psm.getPeptide() == null ) {
+				unlinkPsm(psm);
+				continue;
+			}
+			if( getRankTreshold() > 0 && (psm.getRank() == null || psm.getRank() > getRankTreshold()) ) {
+				unlinkPsm(psm);
+				continue;
+			}
+			if( getPpmThreshold() != null && (psm.getPpm() == null || psm.getPpm() > getPpmThreshold()) ) {
 				unlinkPsm(psm);
 				continue;
 			}

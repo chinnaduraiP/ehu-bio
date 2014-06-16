@@ -44,6 +44,8 @@ public final class PAnalyzerCli implements Command.Interface {
 		// Filter		
 		logger.info("Filtering data ...");
 		Filter filter = new Filter();
+		//filter.setRankTreshold(1);
+		//filter.setPpmThreshold(5.0);
 		//filter.setPsmScoreThreshold(new Psm.Score(Psm.ScoreType.MASCOT_EVALUE, 0.007));
 		//filter.setPsmScoreThreshold(new Psm.Score(Psm.ScoreType.MASCOT_SCORE, 32.21));
 		//filter.setPsmScoreThreshold(new Psm.Score(Psm.ScoreType.MASCOT_SCORE, 27.29));
@@ -101,8 +103,8 @@ public final class PAnalyzerCli implements Command.Interface {
 			}
 		
 		// Dump PSMs
-		for( Psm psm : data.getPsms() )
-			System.out.println(String.format("%s:%s:%s", psm.getPeptide().getMassSequence(), psm.getMz(), psm.getScoreByType(Psm.ScoreType.MASCOT_SCORE).getValue()));
+		/*for( Psm psm : data.getPsms() )
+			System.out.println(String.format("%s:%s:%s", psm.getPeptide().getMassSequence(), psm.getMz(), psm.getScoreByType(Psm.ScoreType.MASCOT_SCORE).getValue()));*/
 		
 		logger.info(String.format("Groups: %d, Minimum: %d", data.getGroups().size(), conclusive+indistinguishable+ambigous));
 		logger.info(String.format("Conclusive: %d, Non-Conclusive: %d, Indistiguishable: %d, Ambigous: %d",conclusive,nonconclusive,indistinguishable,ambigous));
