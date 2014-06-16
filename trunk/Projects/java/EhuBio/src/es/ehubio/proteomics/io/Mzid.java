@@ -208,7 +208,8 @@ public final class Mzid extends MsMsFile {
 					Psm psm = new Psm();
 					psm.linkSpectrum(spectrum);
 					psm.setCharge(sii.getChargeState());
-					psm.setMz(sii.getExperimentalMassToCharge());
+					psm.setExpMz(sii.getExperimentalMassToCharge());
+					psm.setCalcMz(sii.getCalculatedMassToCharge());
 					psm.setRank(sii.getRank());					
 					loadScores(psm, sii);
 					mapSii.put(psm, sii);
