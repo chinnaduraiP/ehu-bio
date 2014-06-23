@@ -1,14 +1,10 @@
 package es.ehubio.tools;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.logging.Logger;
 
 import es.ehubio.proteomics.MsMsData;
-import es.ehubio.proteomics.Peptide;
-import es.ehubio.proteomics.Protein;
-import es.ehubio.proteomics.ProteinGroup;
-import es.ehubio.proteomics.Psm;
+import es.ehubio.proteomics.Score;
+import es.ehubio.proteomics.ScoreType;
 import es.ehubio.proteomics.io.MsMsFile;
 import es.ehubio.proteomics.io.Mzid;
 import es.ehubio.proteomics.pipeline.Filter;
@@ -35,61 +31,47 @@ public final class PAnalyzerCli implements Command.Interface {
 
 	@Override
 	public void run(String[] args) throws Exception {
-		//MsMsFile file = new MayuCsv();
-		//MsMsData data = file.load(args[0],"rev_");
 		MsMsFile file = new Mzid();		
 		MsMsData data = file.load(args[0],"decoy");
 		logger.info(String.format("Loaded: %d groups, %d proteins, %d peptides, %d psms, %d spectra", data.getGroups().size(), data.getProteins().size(), data.getPeptides().size(), data.getPsms().size(), data.getSpectra().size() ));
-		
-		// Filter		
-		logger.info("Filtering data ...");
-		Filter filter = new Filter();
-		//filter.setRankTreshold(1);
-		//filter.setPpmThreshold(5.0);
-		//filter.setPsmScoreThreshold(new Psm.Score(Psm.ScoreType.MASCOT_EVALUE, 0.007));
-		//filter.setPsmScoreThreshold(new Psm.Score(Psm.ScoreType.MASCOT_SCORE, 32.21));
-		//filter.setPsmScoreThreshold(new Psm.Score(Psm.ScoreType.MASCOT_SCORE, 27.29));
-		//filter.setPsmScoreThreshold(new Psm.Score(Psm.ScoreType.PROPHET_PROBABILITY, 0.96));
-		//filter.setMinPeptideLength(7);
-		//filter.setFilterDecoyPeptides(true);
-		//filter.setMzidPassThreshold(true);
-		filter.run(data);
-		logger.info(String.format("Filter: %d groups, %d proteins, %d peptides, %d psms, %d spectra", data.getGroups().size(), data.getProteins().size(), data.getPeptides().size(), data.getPsms().size(), data.getSpectra().size() ));
 		
 		// PAnalyzer
 		logger.info("Running PAnalyzer ...");
 		PAnalyzer pAnalyzer = new PAnalyzer();
 		pAnalyzer.run(data);
-		logger.info("done!");
+		PAnalyzer.Counts counts = pAnalyzer.getCounts();
+		logger.info(counts.toString());
 		
-		// Stats
-		int conclusive = 0;
-		int nonconclusive = 0;
-		int indistinguishable = 0;
-		int ambigous = 0;
-		for( ProteinGroup group : data.getGroups() ) {			
-			switch (group.getConfidence()) {
-				case CONCLUSIVE:
-					//System.out.println(group.firstProtein().getAccession());
-					conclusive++;
-					break;
-				case NON_CONCLUSIVE:
-					//System.out.println(group.firstProtein().getAccession());
-					nonconclusive++;
-					break;
-				case INDISTINGUISABLE_GROUP:
-					/*for( Protein protein : group.getProteins() )
-						System.out.println(protein.getAccession());*/
-					indistinguishable++;
-					break;
-				case AMBIGUOUS_GROUP:
-					ambigous++;
-					break;
-			}
-		}
+		// Filter		
+		logger.info("Filtering data ...");
+		Filter filter = new Filter();
+		//filter.setRankTreshold(1);
+		filter.setPpmThreshold(10.0);
+		//Score score = new Score(ScoreType.XTANDEM_EVALUE,0.33);
+		Score score = new Score(ScoreType.XTANDEM_EVALUE,56);
+		//Score score = new Score(ScoreType.XTANDEM_HYPERSCORE,20.3);
+		//Score score = new Score(ScoreType.XTANDEM_HYPERSCORE,9.4);
+		filter.setPsmScoreThreshold(score);
+		filter.setMinPeptideLength(7);
+		//filter.setFilterDecoyPeptides(true);
+		//filter.setMzidPassThreshold(true);
+		//Score score = new Score(ScoreType.XTANDEM_EVALUE,0.1);
+		//filter.setPeptideScoreThreshold(score);
+		//Score score = new Score(ScoreType.XTANDEM_EVALUE,0.041);
+		//filter.setProteinScoreThreshold(score);
+		//Score score = new Score(ScoreType.XTANDEM_EVALUE,0.046);
+		//filter.setGroupScoreThreshold(score);
+		filter.run(data);
+		logger.info(String.format("Filter: %d groups, %d proteins, %d peptides, %d psms, %d spectra", data.getGroups().size(), data.getProteins().size(), data.getPeptides().size(), data.getPsms().size(), data.getSpectra().size() ));
 		
-		// Print protein details
-		List<String> monitor = Arrays.asList("?????");
+		// PAnalyzer
+		logger.info("Running PAnalyzer again ...");
+		pAnalyzer.run(data);
+		counts = pAnalyzer.getCounts();
+		logger.info(counts.toString());
+		
+		// Dump Proteins
+		/*List<String> monitor = Arrays.asList("?????");
 		for( Protein protein : data.getProteins() )
 			if( monitor.contains(protein.getAccession()) ) {
 				System.out.println(protein.getAccession()+"-"+protein.getConfidence());
@@ -100,27 +82,21 @@ public final class PAnalyzerCli implements Command.Interface {
 					System.out.println();
 				}
 				System.out.println();
-			}
+			}*/
 		
 		// Dump PSMs
 		/*for( Psm psm : data.getPsms() )
 			System.out.println(String.format("%s:%s:%s", psm.getPeptide().getMassSequence(), psm.getMz(), psm.getScoreByType(Psm.ScoreType.MASCOT_SCORE).getValue()));*/
-		
-		logger.info(String.format("Groups: %d, Minimum: %d", data.getGroups().size(), conclusive+indistinguishable+ambigous));
-		logger.info(String.format("Conclusive: %d, Non-Conclusive: %d, Indistiguishable: %d, Ambigous: %d",conclusive,nonconclusive,indistinguishable,ambigous));
-		
-		logger.info("Running Extractor ...");
+
+		logger.info("Running Validator ...");
 		Validator validator = new Validator();
 		validator.setData(data);
 		//validator.setCountDecoy(true);
-		logger.info(String.format("PSM FDR: %s", validator.getPsmFdr().getRatio()));
-		logger.info(String.format("Peptide FDR: %s", validator.getPeptideFdr().getRatio()));
-		logger.info(String.format("Protein FDR: %s", validator.getProteinFdr().getRatio()));
-		logger.info(String.format("Group FDR: %s", validator.getGroupFdr().getRatio()));
+		logger.info(String.format("FDR -> PSM: %s, Peptide: %s, Protein: %s, Group: %s",
+			validator.getPsmFdr().getRatio(), validator.getPeptideFdr().getRatio(), validator.getProteinFdr().getRatio(), validator.getGroupFdr().getRatio()));
 		double fdr = 0.01;
-		//logger.info(String.format("PSM threshold for FDR=%s -> %s",fdr,validator.getPsmFdrThreshold(Psm.ScoreType.PROPHET_PROBABILITY, fdr)));
-		logger.info(String.format("PSM threshold for FDR=%s -> %s",fdr,validator.getGroupFdrThreshold(Psm.ScoreType.MASCOT_SCORE, fdr)));
-		//logger.info(String.format("PSM threshold for FDR=%s -> %s",fdr,validator.getPsmFdrThreshold(Psm.ScoreType.MASCOT_EVALUE, fdr)));
+		logger.info(String.format("Thresholds for FDR=%s -> PSM: %s, Peptide: %s, Protein: %s, Group: %s",
+			fdr,validator.getPsmFdrThreshold(score.getType(), fdr),validator.getPeptideFdrThreshold(score.getType(), fdr),validator.getProteinFdrThreshold(score.getType(), fdr),validator.getGroupFdrThreshold(score.getType(), fdr)));
 		
 		//file.save(args[1]);
 		logger.info("finished!!");

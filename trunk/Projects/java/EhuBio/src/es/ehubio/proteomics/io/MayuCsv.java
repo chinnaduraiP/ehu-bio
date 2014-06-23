@@ -14,6 +14,8 @@ import es.ehubio.proteomics.Peptide;
 import es.ehubio.proteomics.Protein;
 import es.ehubio.proteomics.Psm;
 import es.ehubio.proteomics.Ptm;
+import es.ehubio.proteomics.Score;
+import es.ehubio.proteomics.ScoreType;
 import es.ehubio.proteomics.Spectrum;
 
 public class MayuCsv extends MsMsFile {
@@ -34,8 +36,8 @@ public class MayuCsv extends MsMsFile {
 			spectra.add(spectrum);
 			Psm psm = new Psm();
 			psm.linkSpectrum(spectrum);
-			psm.addScore(new Psm.Score(Psm.ScoreType.PROPHET_PROBABILITY,Double.parseDouble(fields[4])));
-			String peptideId = fields[1];//+fields[3];
+			psm.addScore(new Score(ScoreType.PROPHET_PROBABILITY,Double.parseDouble(fields[4])));
+			String peptideId = fields[1]+fields[3];
 			Peptide peptide = mapPeptide.get(peptideId);
 			if( peptide == null ) {
 				peptide = new Peptide();

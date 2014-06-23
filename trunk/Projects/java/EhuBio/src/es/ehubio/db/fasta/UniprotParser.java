@@ -19,7 +19,8 @@ public class UniprotParser implements HeaderParser {
 		matcher = descriptionPattern.matcher(header);
 		if( !matcher.find() )
 			description = "";
-		description = matcher.group(1);
+		else
+			description = matcher.group(1);
 				
 		String[] fields = header.split("[ \\t]");
 		for( int i = 0; i < fields.length; i++ )

@@ -24,6 +24,59 @@ import es.ehubio.proteomics.psi.mzid11.RoleType;
  *
  */
 public class PAnalyzer {
+	public static class Counts {		
+		private final int conclusive;
+		private final int nonConclusive;
+		private final int ambiguous;
+		private final int ambiguousGroups;
+		private final int indistinguishable;
+		private final int indistinguishableGroups;
+		private final int maximum;
+		private final int minimum;
+		private final String str;
+		
+		public Counts( int conclusive, int indistinguishable, int indistinguishableGroups, int ambiguous, int ambiguousGroups, int nonConclusive ) {
+			this.conclusive = conclusive;			
+			this.ambiguous = ambiguous;
+			this.ambiguousGroups = ambiguousGroups;
+			this.indistinguishable = indistinguishable;
+			this.indistinguishableGroups = indistinguishableGroups;
+			this.nonConclusive = nonConclusive;
+			maximum = conclusive+nonConclusive+indistinguishable+ambiguous;
+			minimum = conclusive+indistinguishableGroups+ambiguousGroups;
+			str = String.format("Protein count=%s (%s) -> %s conclusive, %s indinstuinguisable groups (%s), %s ambiguous groups (%s), non-conclusive (%s)",
+				minimum, maximum, conclusive, indistinguishableGroups, indistinguishable, ambiguousGroups, ambiguous, nonConclusive);
+		}
+		public int getConclusive() {
+			return conclusive;
+		}
+		public int getNonConclusive() {
+			return nonConclusive;
+		}
+		public int getAmbiguous() {
+			return ambiguous;
+		}
+		public int getAmbiguousGroups() {
+			return ambiguousGroups;
+		}
+		public int getIndistinguishable() {
+			return indistinguishable;
+		}
+		public int getIndistinguishableGroups() {
+			return indistinguishableGroups;
+		}
+		public int getMaximum() {
+			return maximum;
+		}
+		public int getMinimum() {
+			return minimum;
+		}
+		@Override
+		public String toString() {
+			return str;
+		}
+	}
+	
 	private MsMsData data;
 	private static final String VERSION = "2.0b1";
 	private static final String NAME = "PAnalyzer";
@@ -40,7 +93,25 @@ public class PAnalyzer {
 		classifyPeptides();
 		classifyProteins();
 		updateMetadata();
-	}		
+	}
+	
+	public Counts getCounts() {
+		int conclusive = 0;
+		int indistinguishable = 0;
+		int indistinguishableGroups = 0;
+		int ambiguous = 0;
+		int ambiguousGroups = 0;
+		int nonConclusive = 0;
+		for( ProteinGroup group : data.getGroups() ) {
+			switch (group.getConfidence()) {
+				case CONCLUSIVE: conclusive++; break;
+				case NON_CONCLUSIVE: nonConclusive++; break;
+				case INDISTINGUISABLE_GROUP: indistinguishableGroups++; indistinguishable += group.size(); break;
+				case AMBIGUOUS_GROUP: ambiguousGroups++; ambiguous += group.size(); break;
+			}
+		}
+		return new Counts(conclusive, indistinguishable, indistinguishableGroups, ambiguous, ambiguousGroups, nonConclusive);
+	}
 
 	private void classifyPeptides() {
 		// 1. Locate unique peptides

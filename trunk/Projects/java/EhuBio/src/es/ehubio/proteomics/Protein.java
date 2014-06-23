@@ -3,16 +3,13 @@ package es.ehubio.proteomics;
 import java.util.HashSet;
 import java.util.Set;
 
-import es.ehubio.proteomics.Psm.Score;
-import es.ehubio.proteomics.Psm.ScoreType;
-
 /**
  * Protein in a MS/MS proteomics experiment with PAnalyzer confidence category.
  * 
  * @author gorka
  *
  */
-public class Protein implements Decoyable {
+public class Protein extends DecoyBase {
 	public enum Confidence {
 		CONCLUSIVE, NON_CONCLUSIVE, AMBIGUOUS_GROUP, INDISTINGUISABLE_GROUP 
 	}
@@ -25,7 +22,7 @@ public class Protein implements Decoyable {
 	private String accession;
 	private String sequence;
 	private String name;
-	private String description;	
+	private String description;
 
 	public Protein() {
 		id = idCount++;
@@ -114,14 +111,15 @@ public class Protein implements Decoyable {
 	}
 	
 	@Override
-	public boolean skip() {
-		return false;
+	public void setDecoy(Boolean decoy) {
+		for( Peptide peptide : getPeptides() )
+			peptide.setDecoy(decoy);
 	}
 	
-	public Peptide getBestPeptide( Psm.ScoreType type ) {		
+	public Peptide getBestPeptide( ScoreType type ) {		
 		Peptide best = null;
 		for( Peptide peptide : getPeptides() ) {
-			Psm.Score score = peptide.getScoreByType(type);
+			Score score = peptide.getScoreByType(type);
 			if( score == null )
 				continue;
 			if( best != null && best.getScoreByType(type).compare(score.getValue()) >= 0 )
@@ -133,6 +131,10 @@ public class Protein implements Decoyable {
 
 	@Override
 	public Score getScoreByType(ScoreType type) {
+		Score score = super.getScoreByType(type);
+		if( score != null )
+			return score;
+		
 		Peptide best = getBestPeptide(type);
 		if( best == null )
 			return null;
