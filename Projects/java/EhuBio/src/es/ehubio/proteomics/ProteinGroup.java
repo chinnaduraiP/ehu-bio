@@ -4,8 +4,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import es.ehubio.proteomics.Protein.Confidence;
-import es.ehubio.proteomics.Psm.Score;
-import es.ehubio.proteomics.Psm.ScoreType;
 
 /**
  * Ambiguity group of proteins in a MS/MS proteomics experiment.
@@ -13,7 +11,7 @@ import es.ehubio.proteomics.Psm.ScoreType;
  * @author gorka
  *
  */
-public class ProteinGroup implements Decoyable {
+public class ProteinGroup extends DecoyBase {
 	private static int idCount = 1;
 	private final int id;
 	private Set<Protein> proteins = new HashSet<>();
@@ -61,15 +59,22 @@ public class ProteinGroup implements Decoyable {
 				nullDecoy = true;
 		return nullDecoy ? null : true;
 	}
+	
+	
+	@Override
+	public void setDecoy(Boolean decoy) {
+		for( Protein protein : getProteins() )
+			protein.setDecoy(decoy);
+	}
 
 	public int getId() {
 		return id;
 	}
 	
-	public Protein getBestProtein( Psm.ScoreType type ) {		
+	public Protein getBestProtein( ScoreType type ) {		
 		Protein best = null;
 		for( Protein protein : getProteins() ) {
-			Psm.Score score = protein.getScoreByType(type);
+			Score score = protein.getScoreByType(type);
 			if( score == null )
 				continue;
 			if( best != null && best.getScoreByType(type).compare(score.getValue()) >= 0 )
@@ -81,14 +86,18 @@ public class ProteinGroup implements Decoyable {
 
 	@Override
 	public Score getScoreByType(ScoreType type) {
+		Score score = super.getScoreByType(type);
+		if( score != null )
+			return score;
+		
 		Protein best = getBestProtein(type);
 		if( best == null )
 			return null;
 		return best.getScoreByType(type);
 	}
-
+	
 	@Override
-	public boolean skip() {
+	public boolean skipFdr() {
 		return getConfidence() == Confidence.NON_CONCLUSIVE;
 	}
 }

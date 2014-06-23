@@ -3,16 +3,13 @@ package es.ehubio.proteomics;
 import java.util.HashSet;
 import java.util.Set;
 
-import es.ehubio.proteomics.Psm.Score;
-import es.ehubio.proteomics.Psm.ScoreType;
-
 /**
  * Peptide in a MS/MS proteomics experiment with PAnalyzer confidence category.
  * 
  * @author gorka
  *
  */
-public class Peptide implements Decoyable {
+public class Peptide extends DecoyBase {
 	public enum Confidence {
 		UNIQUE, DISCRIMINATING, NON_DISCRIMINATING
 	}
@@ -20,7 +17,6 @@ public class Peptide implements Decoyable {
 	private static int idCount = 1;
 	private final int id;
 	private String sequence;
-	private Boolean decoy;
 	private Set<Ptm> ptms = new HashSet<>();
 	private Confidence confidence;
 	private Set<Protein> proteins = new HashSet<>();
@@ -42,20 +38,6 @@ public class Peptide implements Decoyable {
 		this.sequence = sequence;
 	}
 
-	@Override
-	public Boolean getDecoy() {
-		return decoy;
-	}
-	
-	public void setDecoy(Boolean decoy) {
-		this.decoy = decoy;
-	}
-	
-	@Override
-	public boolean skip() {
-		return false;
-	}
-	
 	public boolean addPtm( Ptm ptm ) {
 		return ptms.add(ptm);
 	}
@@ -91,7 +73,7 @@ public class Peptide implements Decoyable {
 	public Psm getBestPsm( ScoreType type ) {		
 		Psm bestPsm = null;
 		for( Psm psm : getPsms() ) {
-			Psm.Score score = psm.getScoreByType(type);
+			Score score = psm.getScoreByType(type);
 			if( score == null )
 				continue;
 			if( bestPsm != null && bestPsm.getScoreByType(type).compare(score.getValue()) >= 0 )
@@ -103,12 +85,16 @@ public class Peptide implements Decoyable {
 	
 	@Override
 	public Score getScoreByType(ScoreType type) {
+		Score score = super.getScoreByType(type);
+		if( score != null )
+			return score;
+		
 		Psm bestPsm = getBestPsm(type);
 		if( bestPsm == null )
 			return null;
 		return bestPsm.getScoreByType(type);
-	}	
-
+	}
+	
 	public boolean addPsm(Psm psm) {
 		if( psms.add(psm) ) {
 			if( psm.getPeptide() != this )
@@ -144,5 +130,5 @@ public class Peptide implements Decoyable {
 			}
 		}		
 		return str.toString();
-	}
+	}	
 }

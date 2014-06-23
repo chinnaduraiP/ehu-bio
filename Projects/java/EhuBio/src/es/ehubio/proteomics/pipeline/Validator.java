@@ -9,7 +9,8 @@ import java.util.logging.Logger;
 
 import es.ehubio.proteomics.Decoyable;
 import es.ehubio.proteomics.MsMsData;
-import es.ehubio.proteomics.Psm;
+import es.ehubio.proteomics.Score;
+import es.ehubio.proteomics.ScoreType;
 
 /**
  * Class for validating information about a proteomics experiment.
@@ -58,31 +59,33 @@ public final class Validator {
 		this.countDecoy = countDecoy;
 	}
 	
-	public double getPsmFdrThreshold( Psm.ScoreType type, double threshold ) {
+	public double getPsmFdrThreshold( ScoreType type, double threshold ) {
 		return getFdrThreshold(data.getPsms(), type, threshold);
 	}
 	
-	public double getPeptideFdrThreshold( Psm.ScoreType type, double threshold ) {
+	public double getPeptideFdrThreshold( ScoreType type, double threshold ) {
 		return getFdrThreshold(data.getPeptides(), type, threshold);
 	}
 	
-	public double getProteinFdrThreshold( Psm.ScoreType type, double threshold ) {
+	public double getProteinFdrThreshold( ScoreType type, double threshold ) {
 		return getFdrThreshold(data.getProteins(), type, threshold);
 	}
 	
-	public double getGroupFdrThreshold( Psm.ScoreType type, double threshold ) {
+	public double getGroupFdrThreshold( ScoreType type, double threshold ) {
 		return getFdrThreshold(data.getGroups(), type, threshold);
 	}
 	
-	private double getFdrThreshold( Set<? extends Decoyable> set, Psm.ScoreType type, double threshold ) {
+	private double getFdrThreshold( Set<? extends Decoyable> set, ScoreType type, double threshold ) {
 		if( set.isEmpty() )
 			return 0.0;
 		
+		logger.info("Calculating score threshold ...");
+		
 		List<Decoyable> list = new ArrayList<>(set);
-		logger.info("Sorting PSMs ...");
+		//logger.info("Sorting scores ...");
 		Collections.sort(list, new Comparator<Decoyable>() {
-			private Psm.ScoreType type;
-			public Comparator<Decoyable> setType(Psm.ScoreType type) {
+			private ScoreType type;
+			public Comparator<Decoyable> setType(ScoreType type) {
 				this.type = type;
 				return this;
 			}
@@ -92,16 +95,16 @@ public final class Validator {
 			}
 		}.setType(type));
 		
-		logger.info("Calculating score threshold ...");
+		//logger.info("Calculating score threshold ...");
 		FdrResult orig = getSetFdr(set);
 		int decoy = orig.getDecoy();
 		int target = orig.getTarget();
 		double fdr = orig.getRatio();		
-		Psm.Score score = list.get(0).getScoreByType(type);
+		Score score = list.get(0).getScoreByType(type);
 		int offset = 0;
 		while( fdr > threshold && offset < list.size() ) {
 			Decoyable next;
-			Psm.Score nextScore;
+			Score nextScore;
 			do {
 				next = list.get(offset);
 				nextScore = next.getScoreByType(type);
@@ -115,7 +118,7 @@ public final class Validator {
 			fdr = getFdr(decoy, target);
 			//System.out.println(String.format("Score=%s,  FDR=%s",score.getValue(),fdr));			
 		}
-		logger.info("done!");
+		//logger.info("done!");
 		return score.getValue();
 	}
 	
@@ -139,7 +142,7 @@ public final class Validator {
 		int decoy = 0;
 		int target = 0;
 		for( Decoyable item : set ) {
-			if( item.skip() )
+			if( item.skipFdr() )
 				continue;
 			if( Boolean.TRUE.equals(item.getDecoy()) )
 				decoy++;

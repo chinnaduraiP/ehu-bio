@@ -24,6 +24,8 @@ import es.ehubio.proteomics.Protein.Confidence;
 import es.ehubio.proteomics.ProteinGroup;
 import es.ehubio.proteomics.Psm;
 import es.ehubio.proteomics.Ptm;
+import es.ehubio.proteomics.Score;
+import es.ehubio.proteomics.ScoreType;
 import es.ehubio.proteomics.Spectrum;
 import es.ehubio.proteomics.psi.mzid11.AbstractContactType;
 import es.ehubio.proteomics.psi.mzid11.AbstractParamType;
@@ -72,6 +74,8 @@ public final class Mzid extends MsMsFile {
 		JAXBContext jaxbContext = JAXBContext.newInstance(MzIdentML.class);
 		Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
 		mzid = (MzIdentML)unmarshaller.unmarshal(input);
+		
+		logger.info("Building model ...");
 		data = new MsMsData();
 		loadProteins();
 		if( decoyRegex != null ) {
@@ -85,7 +89,7 @@ public final class Mzid extends MsMsFile {
 		loadRelations();
 		loadGroups();
 		loadSpectra();		
-		logger.info("finished!");		
+		//logger.info("finished!");		
 		return data;
 	}		
 	
@@ -104,11 +108,11 @@ public final class Mzid extends MsMsFile {
 		Marshaller marshaller = jaxbContext.createMarshaller();
 		marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
 		marshaller.marshal(mzid, output);
-		logger.info("finished!");
+		//logger.info("finished!");
 	}	
 
 	private void loadProteins() {
-		logger.info("Building proteins ...");
+		//logger.info("Building proteins ...");
 		mapProteins.clear();
 		for( DBSequenceType dbSequence : mzid.getSequenceCollection().getDBSequences() ) {			
 			Protein protein = new Protein();
@@ -141,7 +145,7 @@ public final class Mzid extends MsMsFile {
 	}
 	
 	private void loadPeptides() {
-		logger.info("Building peptides ...");
+		//logger.info("Building peptides ...");
 		mapPeptides.clear();
 		for( PeptideType peptideType : mzid.getSequenceCollection().getPeptides() ) {
 			Peptide peptide = new Peptide();
@@ -166,7 +170,7 @@ public final class Mzid extends MsMsFile {
 	}
 	
 	private void loadRelations() {
-		logger.info("Building protein-peptide map ...");
+		//logger.info("Building protein-peptide map ...");
 		mapEvidencePeptide.clear();
 		mapProteinPeptideEvidence.clear();
 		for( PeptideEvidenceType peptideEvidence : mzid.getSequenceCollection().getPeptideEvidences() ) {
@@ -182,7 +186,7 @@ public final class Mzid extends MsMsFile {
 	}
 	
 	private void loadGroups() {
-		logger.info("Building protein groups ...");
+		//logger.info("Building protein groups ...");
 		for( ProteinAmbiguityGroupType pag : mzid.getDataCollection().getAnalysisData().getProteinDetectionList().getProteinAmbiguityGroups() ) {
 			ProteinGroup group = new ProteinGroup();
 			for( ProteinDetectionHypothesisType pdh : pag.getProteinDetectionHypothesises() ) {
@@ -197,7 +201,7 @@ public final class Mzid extends MsMsFile {
 	}
 
 	private void loadSpectra() {
-		logger.info("Building spectra ...");
+		//logger.info("Building spectra ...");
 		Set<Spectrum> spectra = new HashSet<>();
 		for( SpectrumIdentificationListType sil : mzid.getDataCollection().getAnalysisData().getSpectrumIdentificationLists() )
 			for( SpectrumIdentificationResultType sir : sil.getSpectrumIdentificationResults() ) {
@@ -229,21 +233,22 @@ public final class Mzid extends MsMsFile {
 	}
 	
 	private void loadScores( Psm psm, SpectrumIdentificationItemType sii ) {
-		psm.addScore(new Psm.Score(Psm.ScoreType.MZID_PASS_THRESHOLD,sii.isPassThreshold()?1.0:0.0));
+		psm.addScore(new Score(ScoreType.MZID_PASS_THRESHOLD,sii.isPassThreshold()?1.0:0.0));
 		for( AbstractParamType param : sii.getCvParamsAndUserParams() ) {
 			if( !CVParamType.class.isInstance(param) )
 				continue;
-			Psm.ScoreType type = null;
+			ScoreType type = null;
 			CVParamType cv = (CVParamType)param;
 			switch( cv.getAccession() ) {
-				case "MS:1001155": type = Psm.ScoreType.SEQUEST_XCORR; break;
-				case "MS:1001172": type = Psm.ScoreType.MASCOT_EVALUE; break;
-				case "MS:1001171": type = Psm.ScoreType.MASCOT_SCORE; break;
-				case "MS:1001330": type = Psm.ScoreType.XTANDEM_EVALUE; break;
+				case "MS:1001155": type = ScoreType.SEQUEST_XCORR; break;
+				case "MS:1001172": type = ScoreType.MASCOT_EVALUE; break;
+				case "MS:1001171": type = ScoreType.MASCOT_SCORE; break;
+				case "MS:1001330": type = ScoreType.XTANDEM_EVALUE; break;
+				case "MS:1001331": type = ScoreType.XTANDEM_HYPERSCORE; break;
 			}
 			if( type == null )
 				continue;
-			psm.addScore(new Psm.Score(type, cv.getName(), Double.parseDouble(cv.getValue())));
+			psm.addScore(new Score(type, cv.getName(), Double.parseDouble(cv.getValue())));
 		}
 	}	
 	

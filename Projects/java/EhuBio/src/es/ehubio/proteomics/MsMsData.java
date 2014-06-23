@@ -56,6 +56,7 @@ public class MsMsData {
 		psms.clear();
 		peptides.clear();
 		proteins.clear();
+		groups.clear();
 		for( Spectrum spectrum : spectra )			
 			for( Psm psm : spectrum.getPsms() ) {				
 				psms.add(psm);
