@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Logger;
 
 import es.ehubio.proteomics.Decoyable;
 import es.ehubio.proteomics.MsMsData;
@@ -43,11 +42,11 @@ public final class Validator {
 		}		
 	}
 	
-	private static final Logger logger = Logger.getLogger(Validator.class.getName());
-	private MsMsData data;	
+	//private static final Logger logger = Logger.getLogger(Validator.class.getName());
+	private final MsMsData data;	
 	private boolean countDecoy = false;
 	
-	public void setData( MsMsData data ) {
+	public Validator( MsMsData data ) {
 		this.data = data;
 	}
 	
@@ -73,13 +72,13 @@ public final class Validator {
 	
 	public double getGroupFdrThreshold( ScoreType type, double threshold ) {
 		return getFdrThreshold(data.getGroups(), type, threshold);
-	}
+	}	
 	
 	private double getFdrThreshold( Set<? extends Decoyable> set, ScoreType type, double threshold ) {
 		if( set.isEmpty() )
 			return 0.0;
 		
-		logger.info("Calculating score threshold ...");
+		//logger.info("Calculating score threshold ...");
 		
 		List<Decoyable> list = new ArrayList<>(set);
 		//logger.info("Sorting scores ...");

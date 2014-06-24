@@ -2,6 +2,7 @@ package es.ehubio.proteomics.pipeline;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import es.ehubio.proteomics.MsMsData;
 import es.ehubio.proteomics.Peptide;
@@ -15,6 +16,7 @@ import es.ehubio.proteomics.psi.mzid11.CVParamType;
 import es.ehubio.proteomics.psi.mzid11.UserParamType;
 
 public class Filter {
+	private final static Logger logger = Logger.getLogger(Filter.class.getName());
 	private Score psmScoreThreshold;
 	private Score peptideScoreThreshold;
 	private Score proteinScoreThreshold;
@@ -24,6 +26,11 @@ public class Filter {
 	private boolean filterDecoyPeptides = false;
 	private int rankTreshold = 0;
 	private Double ppmThreshold;
+	private final MsMsData data;
+	
+	public Filter( MsMsData data ) {
+		this.data = data;
+	}
 	
 	public Score getPsmScoreThreshold() {
 		return psmScoreThreshold;
@@ -97,14 +104,11 @@ public class Filter {
 		this.ppmThreshold = ppmThreshold;
 	}
 	
-	public void run( MsMsData data ) {
-		if( data == null )
-			return;
-		
-		filterGroups( data );
-		filterProteins( data );
-		filterPeptides( data );		
-		filterPsms( data );
+	public void run() {
+		filterGroups();
+		filterProteins();
+		filterPeptides();		
+		filterPsms();
 		
 		Set<Spectrum> spectra = new HashSet<>();
 		for( Spectrum spectrum : data.getSpectra() )
@@ -112,10 +116,35 @@ public class Filter {
 				spectra.add(spectrum);
 		data.loadFromSpectra(spectra);
 		
-		updateMetaData( data );
+		updateMetaData();
 	}
 	
-	private void filterPsms(MsMsData data) {
+	public double runGroupFdrThreshold( ScoreType type, double fdr) {		
+		PAnalyzer pAnalyzer = new PAnalyzer(data);				
+		pAnalyzer.run();
+		run();
+		pAnalyzer.run();
+		
+		Validator validator = new Validator(data);
+		double prev = validator.getGroupFdrThreshold(type, fdr);
+		double tmp = prev;
+		
+		Score score = new Score(type, prev);
+		setGroupScoreThreshold(score);
+		int i = 1;
+		do {
+			prev = tmp;
+			run();
+			pAnalyzer.run();
+			tmp = validator.getGroupFdrThreshold(type, fdr);
+			score.setValue(tmp);
+			logger.info(String.format("Iteration: %s -> prev=%s, new=%s", i++, prev, tmp));
+		} while( tmp != prev );
+		
+		return prev;
+	}
+	
+	private void filterPsms() {
 		for( Psm psm : data.getPsms() ) {
 			if( psm.getPeptide() == null ) {
 				unlinkPsm(psm);
@@ -144,7 +173,7 @@ public class Filter {
 		}
 	}
 
-	private void filterPeptides(MsMsData data) {
+	private void filterPeptides() {
 		for( Peptide peptide : data.getPeptides() ) {
 			if( peptide.getPsms().isEmpty() ) {
 				unlinkPeptide(peptide);
@@ -166,7 +195,7 @@ public class Filter {
 		}				
 	}
 
-	private void filterProteins(MsMsData data) {
+	private void filterProteins() {
 		if( getProteinScoreThreshold() != null )
 			for( Protein protein : data.getProteins() ) {
 				Score score = protein.getScoreByType(getProteinScoreThreshold().getType());
@@ -175,7 +204,7 @@ public class Filter {
 			}
 	}
 
-	private void filterGroups( MsMsData data ) {
+	private void filterGroups() {
 		if( getGroupScoreThreshold() != null )
 			for( ProteinGroup group : data.getGroups() ) {
 				Score score = group.getScoreByType(getGroupScoreThreshold().getType());
@@ -184,11 +213,11 @@ public class Filter {
 			}
 	}
 
-	private void updateMetaData( MsMsData data ) {
-		updatePsmMetaData( data );
-		updatePeptideMetaData( data );
-		updateProteinMetaData( data );
-		updateGroupMetaData( data );
+	private void updateMetaData() {
+		updatePsmMetaData();
+		updatePeptideMetaData();
+		updateProteinMetaData();
+		updateGroupMetaData();
 
 		CVParamType cvParam = new CVParamType();
 		cvParam.setAccession("MS:1001194");
@@ -198,7 +227,7 @@ public class Filter {
 		data.addAnalysisParam(cvParam);
 	}
 
-	private void updatePsmMetaData(MsMsData data) {
+	private void updatePsmMetaData() {
 		UserParamType userParam = null;
 		
 		if( getPsmScoreThreshold() != null ) {
@@ -230,7 +259,7 @@ public class Filter {
 		data.addAnalysisParam(userParam);
 	}
 	
-	private void updatePeptideMetaData(MsMsData data) {
+	private void updatePeptideMetaData() {
 		UserParamType userParam = null;
 		
 		if( getMinPeptideLength() > 0 ) {
@@ -251,7 +280,7 @@ public class Filter {
 		}
 	}
 	
-	private void updateProteinMetaData(MsMsData data) {
+	private void updateProteinMetaData() {
 		UserParamType userParam = null;
 		
 		if( getProteinScoreThreshold() != null ) {
@@ -266,7 +295,7 @@ public class Filter {
 		}
 	}
 	
-	private void updateGroupMetaData(MsMsData data) {
+	private void updateGroupMetaData() {
 		UserParamType userParam = null;
 		
 		if( getGroupScoreThreshold() != null ) {
