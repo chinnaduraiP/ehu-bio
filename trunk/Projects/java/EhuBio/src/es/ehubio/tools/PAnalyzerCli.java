@@ -3,7 +3,6 @@ package es.ehubio.tools;
 import java.util.logging.Logger;
 
 import es.ehubio.proteomics.MsMsData;
-import es.ehubio.proteomics.Score;
 import es.ehubio.proteomics.ScoreType;
 import es.ehubio.proteomics.io.MsMsFile;
 import es.ehubio.proteomics.io.Mzid;
@@ -13,6 +12,10 @@ import es.ehubio.proteomics.pipeline.Validator;
 
 public final class PAnalyzerCli implements Command.Interface {
 	private static final Logger logger = Logger.getLogger(PAnalyzerCli.class.getName());
+	private MsMsData data;
+	private MsMsFile file;
+	private final ScoreType scoreType = ScoreType.XTANDEM_EVALUE;
+	private final double fdr = 0.01;
 
 	@Override
 	public String getUsage() {
@@ -31,24 +34,28 @@ public final class PAnalyzerCli implements Command.Interface {
 
 	@Override
 	public void run(String[] args) throws Exception {
-		MsMsFile file = new Mzid();		
-		MsMsData data = file.load(args[0],"decoy");
-		logger.info(String.format("Loaded: %d groups, %d proteins, %d peptides, %d psms, %d spectra", data.getGroups().size(), data.getProteins().size(), data.getPeptides().size(), data.getPsms().size(), data.getSpectra().size() ));
-		
+		load(args[0],"decoy");
+		filter();		
+		//dump();
+		validate();
+		//save(args[1]);
+	}	
+	
+	private void filter() {
 		// PAnalyzer
 		logger.info("Running PAnalyzer ...");
 		PAnalyzer pAnalyzer = new PAnalyzer(data);
 		pAnalyzer.run();
 		PAnalyzer.Counts counts = pAnalyzer.getCounts();
 		logger.info(counts.toString());
-		
+
 		// Filter		
 		logger.info("Filtering data ...");
 		Filter filter = new Filter(data);
 		//filter.setRankTreshold(1);
 		//filter.setPpmThreshold(10.0);
 		//Score score = new Score(ScoreType.XTANDEM_EVALUE,0.33);
-		Score score = new Score(ScoreType.XTANDEM_EVALUE,56);
+		//Score score = new Score(ScoreType.XTANDEM_EVALUE,56);
 		//Score score = new Score(ScoreType.XTANDEM_HYPERSCORE,20.3);
 		//Score score = new Score(ScoreType.XTANDEM_HYPERSCORE,9.4);
 		//filter.setPsmScoreThreshold(score);
@@ -62,14 +69,37 @@ public final class PAnalyzerCli implements Command.Interface {
 		//Score score = new Score(ScoreType.XTANDEM_EVALUE,0.046);
 		//filter.setGroupScoreThreshold(score);
 		filter.run();
+		//filter.runGroupFdrThreshold(scoreType, fdr);
 		logger.info(String.format("Filter: %d groups, %d proteins, %d peptides, %d psms, %d spectra", data.getGroups().size(), data.getProteins().size(), data.getPeptides().size(), data.getPsms().size(), data.getSpectra().size() ));
-		
+
 		// PAnalyzer
 		logger.info("Running PAnalyzer again ...");
 		pAnalyzer.run();
 		counts = pAnalyzer.getCounts();
 		logger.info(counts.toString());
-		
+	}	
+	
+	private void validate() {
+		logger.info("Running Validator ...");
+		Validator validator = new Validator(data);
+		//validator.setCountDecoy(true);
+		logger.info(String.format("FDR -> PSM: %s, Peptide: %s, Protein: %s, Group: %s",
+			validator.getPsmFdr().getRatio(), validator.getPeptideFdr().getRatio(), validator.getProteinFdr().getRatio(), validator.getGroupFdr().getRatio()));
+		logger.info(String.format("Thresholds for FDR=%s -> PSM: %s, Peptide: %s, Protein: %s, Group: %s",
+			fdr,validator.getPsmFdrThreshold(scoreType, fdr),validator.getPeptideFdrThreshold(scoreType, fdr),validator.getProteinFdrThreshold(scoreType, fdr),validator.getGroupFdrThreshold(scoreType, fdr)));
+	}
+	
+	private void load( String path, String decoy ) throws Exception {
+		file = new Mzid();		
+		data = file.load(path,decoy);
+		logger.info(String.format("Loaded: %d groups, %d proteins, %d peptides, %d psms, %d spectra", data.getGroups().size(), data.getProteins().size(), data.getPeptides().size(), data.getPsms().size(), data.getSpectra().size() ));
+	}
+	
+	/*private void save( String path ) throws Exception {
+		file.save(path);
+	}*/
+	
+	//private void dump() {
 		// Dump Proteins
 		/*List<String> monitor = Arrays.asList("?????");
 		for( Protein protein : data.getProteins() )
@@ -83,22 +113,9 @@ public final class PAnalyzerCli implements Command.Interface {
 				}
 				System.out.println();
 			}*/
-		
+
 		// Dump PSMs
 		/*for( Psm psm : data.getPsms() )
 			System.out.println(String.format("%s:%s:%s", psm.getPeptide().getMassSequence(), psm.getMz(), psm.getScoreByType(Psm.ScoreType.MASCOT_SCORE).getValue()));*/
-
-		logger.info("Running Validator ...");
-		Validator validator = new Validator(data);
-		//validator.setCountDecoy(true);
-		logger.info(String.format("FDR -> PSM: %s, Peptide: %s, Protein: %s, Group: %s",
-			validator.getPsmFdr().getRatio(), validator.getPeptideFdr().getRatio(), validator.getProteinFdr().getRatio(), validator.getGroupFdr().getRatio()));
-		double fdr = 0.01;
-		logger.info(String.format("Thresholds for FDR=%s -> PSM: %s, Peptide: %s, Protein: %s, Group: %s",
-			fdr,validator.getPsmFdrThreshold(score.getType(), fdr),validator.getPeptideFdrThreshold(score.getType(), fdr),validator.getProteinFdrThreshold(score.getType(), fdr),validator.getGroupFdrThreshold(score.getType(), fdr)));
-		logger.info(String.format("Recursive group threshold for FDR=%s -> %s",fdr,filter.runGroupFdrThreshold(score.getType(), fdr)));
-		
-		//file.save(args[1]);
-		logger.info("finished!!");
-	}
+	//}
 }
