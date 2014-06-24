@@ -15,6 +15,7 @@ public final class PAnalyzerCli implements Command.Interface {
 	private MsMsData data;
 	private MsMsFile file;
 	private final ScoreType scoreType = ScoreType.XTANDEM_EVALUE;
+	//private final ScoreType scoreType = ScoreType.XTANDEM_HYPERSCORE;
 	private final double fdr = 0.01;
 
 	@Override
@@ -39,6 +40,7 @@ public final class PAnalyzerCli implements Command.Interface {
 		//dump();
 		validate();
 		//save(args[1]);
+		logger.info("finished!");
 	}	
 	
 	private void filter() {
@@ -53,11 +55,11 @@ public final class PAnalyzerCli implements Command.Interface {
 		logger.info("Filtering data ...");
 		Filter filter = new Filter(data);
 		//filter.setRankTreshold(1);
-		//filter.setPpmThreshold(10.0);
+		filter.setPpmThreshold(10.0);
 		//Score score = new Score(ScoreType.XTANDEM_EVALUE,0.33);
-		//Score score = new Score(ScoreType.XTANDEM_EVALUE,56);
+		//Score score = new Score(ScoreType.XTANDEM_EVALUE,29);
 		//Score score = new Score(ScoreType.XTANDEM_HYPERSCORE,20.3);
-		//Score score = new Score(ScoreType.XTANDEM_HYPERSCORE,9.4);
+		//Score score = new Score(ScoreType.XTANDEM_HYPERSCORE,9.5);
 		//filter.setPsmScoreThreshold(score);
 		filter.setMinPeptideLength(7);
 		//filter.setFilterDecoyPeptides(true);

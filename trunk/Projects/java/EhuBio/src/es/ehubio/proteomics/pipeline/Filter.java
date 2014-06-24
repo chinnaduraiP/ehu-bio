@@ -27,7 +27,7 @@ public class Filter {
 	private int rankTreshold = 0;
 	private Double ppmThreshold;
 	private final MsMsData data;
-	private final static int MAXITER=10;
+	private final static int MAXITER=15;
 	
 	public Filter( MsMsData data ) {
 		this.data = data;
@@ -127,25 +127,25 @@ public class Filter {
 		pAnalyzer.run();
 		
 		Validator validator = new Validator(data);
-		double prev = validator.getGroupFdrThreshold(type, fdr);
-		double tmp = prev;
+		double prevThreshold = validator.getGroupFdrThreshold(type, fdr);
+		double newThreshold = prevThreshold;
 		
-		Score score = new Score(type, prev);
+		Score score = new Score(type, prevThreshold);
 		setGroupScoreThreshold(score);
 		int i = 0;
 		do {
-			prev = tmp;
+			prevThreshold = newThreshold;
 			run();
 			pAnalyzer.run();
-			tmp = validator.getGroupFdrThreshold(type, fdr);
-			score.setValue(tmp);
-			logger.info(String.format("Iteration: %s -> prev=%s, new=%s", ++i, prev, tmp));
-		} while( tmp != prev && i < MAXITER );
+			newThreshold = validator.getGroupFdrThreshold(type, fdr);
+			score.setValue(newThreshold);
+			logger.info(String.format("Iteration: %s -> prev=%s, new=%s", ++i, prevThreshold, newThreshold));
+		} while( type.compare(newThreshold, prevThreshold) > 0 && i < MAXITER );
 		
-		if( tmp != prev )
+		if( type.compare(newThreshold, prevThreshold) > 0 )
 			logger.warning("Maximum number of iterations reached!");
 		
-		return prev;
+		return prevThreshold;
 	}
 	
 	private void filterPsms() {

@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import es.ehubio.proteomics.Decoyable;
 import es.ehubio.proteomics.MsMsData;
@@ -42,7 +43,7 @@ public final class Validator {
 		}		
 	}
 	
-	//private static final Logger logger = Logger.getLogger(Validator.class.getName());
+	private static final Logger logger = Logger.getLogger(Validator.class.getName());
 	private final MsMsData data;	
 	private boolean countDecoy = false;
 	
@@ -98,27 +99,29 @@ public final class Validator {
 		FdrResult orig = getSetFdr(set);
 		int decoy = orig.getDecoy();
 		int target = orig.getTarget();
-		double fdr = orig.getRatio();		
-		Score score = list.get(0).getScoreByType(type);
+		double fdr = orig.getRatio();
 		int offset = 0;
-		while( fdr > threshold && offset < list.size() ) {
-			Decoyable next;
+		Decoyable item = list.get(offset);
+		Score oldScore = item.getScoreByType(type);		
+		while( fdr > threshold && offset < list.size()-1 ) {			
 			Score nextScore;
-			do {
-				next = list.get(offset);
-				nextScore = next.getScoreByType(type);
-				if( Boolean.TRUE.equals(next.getDecoy()) )
+			do {	// items with the same score
+				if( Boolean.TRUE.equals(item.getDecoy()) )
 					decoy--;
 				else
 					target--;
 				offset++;
-			} while( offset < list.size() && score.compare(nextScore.getValue()) == 0 );
-			score = nextScore;
+				item = list.get(offset);
+				nextScore = item.getScoreByType(type);
+			} while( offset < list.size()-1 && oldScore.compare(nextScore.getValue()) == 0 );
+			oldScore = nextScore;
 			fdr = getFdr(decoy, target);
 			//System.out.println(String.format("Score=%s,  FDR=%s",score.getValue(),fdr));			
 		}
+		if( fdr > threshold )
+			logger.warning("Desired FDR cannot be reached");
 		//logger.info("done!");
-		return score.getValue();
+		return oldScore.getValue();
 	}
 	
 	public FdrResult getPsmFdr() {
