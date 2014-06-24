@@ -44,7 +44,7 @@ public class PAnalyzer {
 			this.nonConclusive = nonConclusive;
 			maximum = conclusive+nonConclusive+indistinguishable+ambiguous;
 			minimum = conclusive+indistinguishableGroups+ambiguousGroups;
-			str = String.format("Protein count=%s (%s) -> %s conclusive, %s indinstuinguisable groups (%s), %s ambiguous groups (%s), non-conclusive (%s)",
+			str = String.format("Protein count=%s (%s) -> %s conclusive, %s indistinguishable groups (%s), %s ambiguous groups (%s), non-conclusive (%s)",
 				minimum, maximum, conclusive, indistinguishableGroups, indistinguishable, ambiguousGroups, ambiguous, nonConclusive);
 		}
 		public int getConclusive() {
@@ -77,18 +77,21 @@ public class PAnalyzer {
 		}
 	}
 	
-	private MsMsData data;
+	private final MsMsData data;
 	private static final String VERSION = "2.0b1";
 	private static final String NAME = "PAnalyzer";
 	private static final String URL = "https://code.google.com/p/ehu-bio/wiki/PAnalyzer";
-	private static final String CUSTOMIZATIONS = "No customizations";	
+	private static final String CUSTOMIZATIONS = "No customizations";
+	
+	public PAnalyzer( MsMsData data ) {
+		this.data = data;
+	}
 	
 	/**
 	 * Executes PAnalyzer algorithm.
 	 * @see <a href="http://www.biomedcentral.com/1471-2105/13/288">original paper</a>
 	 */
-	public void run( MsMsData data ) {
-		this.data = data;
+	public void run() {
 		data.getGroups().clear();		
 		classifyPeptides();
 		classifyProteins();

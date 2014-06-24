@@ -37,21 +37,21 @@ public final class PAnalyzerCli implements Command.Interface {
 		
 		// PAnalyzer
 		logger.info("Running PAnalyzer ...");
-		PAnalyzer pAnalyzer = new PAnalyzer();
-		pAnalyzer.run(data);
+		PAnalyzer pAnalyzer = new PAnalyzer(data);
+		pAnalyzer.run();
 		PAnalyzer.Counts counts = pAnalyzer.getCounts();
 		logger.info(counts.toString());
 		
 		// Filter		
 		logger.info("Filtering data ...");
-		Filter filter = new Filter();
+		Filter filter = new Filter(data);
 		//filter.setRankTreshold(1);
-		filter.setPpmThreshold(10.0);
+		//filter.setPpmThreshold(10.0);
 		//Score score = new Score(ScoreType.XTANDEM_EVALUE,0.33);
 		Score score = new Score(ScoreType.XTANDEM_EVALUE,56);
 		//Score score = new Score(ScoreType.XTANDEM_HYPERSCORE,20.3);
 		//Score score = new Score(ScoreType.XTANDEM_HYPERSCORE,9.4);
-		filter.setPsmScoreThreshold(score);
+		//filter.setPsmScoreThreshold(score);
 		filter.setMinPeptideLength(7);
 		//filter.setFilterDecoyPeptides(true);
 		//filter.setMzidPassThreshold(true);
@@ -61,12 +61,12 @@ public final class PAnalyzerCli implements Command.Interface {
 		//filter.setProteinScoreThreshold(score);
 		//Score score = new Score(ScoreType.XTANDEM_EVALUE,0.046);
 		//filter.setGroupScoreThreshold(score);
-		filter.run(data);
+		filter.run();
 		logger.info(String.format("Filter: %d groups, %d proteins, %d peptides, %d psms, %d spectra", data.getGroups().size(), data.getProteins().size(), data.getPeptides().size(), data.getPsms().size(), data.getSpectra().size() ));
 		
 		// PAnalyzer
 		logger.info("Running PAnalyzer again ...");
-		pAnalyzer.run(data);
+		pAnalyzer.run();
 		counts = pAnalyzer.getCounts();
 		logger.info(counts.toString());
 		
@@ -89,14 +89,14 @@ public final class PAnalyzerCli implements Command.Interface {
 			System.out.println(String.format("%s:%s:%s", psm.getPeptide().getMassSequence(), psm.getMz(), psm.getScoreByType(Psm.ScoreType.MASCOT_SCORE).getValue()));*/
 
 		logger.info("Running Validator ...");
-		Validator validator = new Validator();
-		validator.setData(data);
+		Validator validator = new Validator(data);
 		//validator.setCountDecoy(true);
 		logger.info(String.format("FDR -> PSM: %s, Peptide: %s, Protein: %s, Group: %s",
 			validator.getPsmFdr().getRatio(), validator.getPeptideFdr().getRatio(), validator.getProteinFdr().getRatio(), validator.getGroupFdr().getRatio()));
 		double fdr = 0.01;
 		logger.info(String.format("Thresholds for FDR=%s -> PSM: %s, Peptide: %s, Protein: %s, Group: %s",
 			fdr,validator.getPsmFdrThreshold(score.getType(), fdr),validator.getPeptideFdrThreshold(score.getType(), fdr),validator.getProteinFdrThreshold(score.getType(), fdr),validator.getGroupFdrThreshold(score.getType(), fdr)));
+		logger.info(String.format("Recursive group threshold for FDR=%s -> %s",fdr,filter.runGroupFdrThreshold(score.getType(), fdr)));
 		
 		//file.save(args[1]);
 		logger.info("finished!!");
