@@ -27,6 +27,7 @@ public class Filter {
 	private int rankTreshold = 0;
 	private Double ppmThreshold;
 	private final MsMsData data;
+	private final static int MAXITER=10;
 	
 	public Filter( MsMsData data ) {
 		this.data = data;
@@ -131,15 +132,18 @@ public class Filter {
 		
 		Score score = new Score(type, prev);
 		setGroupScoreThreshold(score);
-		int i = 1;
+		int i = 0;
 		do {
 			prev = tmp;
 			run();
 			pAnalyzer.run();
 			tmp = validator.getGroupFdrThreshold(type, fdr);
 			score.setValue(tmp);
-			logger.info(String.format("Iteration: %s -> prev=%s, new=%s", i++, prev, tmp));
-		} while( tmp != prev );
+			logger.info(String.format("Iteration: %s -> prev=%s, new=%s", ++i, prev, tmp));
+		} while( tmp != prev && i < MAXITER );
+		
+		if( tmp != prev )
+			logger.warning("Maximum number of iterations reached!");
 		
 		return prev;
 	}
