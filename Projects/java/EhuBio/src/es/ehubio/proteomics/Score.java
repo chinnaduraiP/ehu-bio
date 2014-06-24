@@ -42,10 +42,6 @@ public class Score {
 	}
 	
 	public int compare( double value2 ) {
-		if( type.isLargerBetter() )
-			value2 = value-value2;
-		else
-			value2 = value2-value;
-		return (int)Math.signum(value2);
+		return type.compare(value, value2);
 	}
 }

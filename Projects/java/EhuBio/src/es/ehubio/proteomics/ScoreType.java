@@ -26,4 +26,12 @@ public enum ScoreType {
 	public boolean isLargerBetter() {
 		return largerBetter;
 	}
+	
+	public int compare( double v1, double v2 ) {
+		if( isLargerBetter() )
+			v2 = v1-v2;
+		else
+			v2 = v2-v1;
+		return (int)Math.signum(v2);
+	}
 }
