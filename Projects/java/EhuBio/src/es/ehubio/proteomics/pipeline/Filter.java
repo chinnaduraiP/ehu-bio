@@ -23,7 +23,7 @@ public class Filter {
 	private Score groupScoreThreshold;
 	private boolean mzidPassThreshold = false;
 	private int minPeptideLength = 0;
-	private boolean filterDecoyPeptides = false;
+	private Boolean filterDecoyPeptides;
 	private int rankTreshold = 0;
 	private Double ppmThreshold;
 	private final MsMsData data;
@@ -74,7 +74,7 @@ public class Filter {
 	}
 
 	public boolean isFilterDecoyPeptides() {
-		return filterDecoyPeptides;
+		return filterDecoyPeptides == null ? false : filterDecoyPeptides;
 	}
 
 	public void setFilterDecoyPeptides(boolean filterDecoyPeptides) {
@@ -120,18 +120,44 @@ public class Filter {
 		updateMetaData();
 	}
 	
-	public double runGroupFdrThreshold( ScoreType type, double fdr) {		
+	public double runPsmFdrThreshold( ScoreType type, double fdr) {
+		// Initial filter
+		setFilterDecoyPeptides(false);
+		run();
+		logCounts("Filter");
+		
+		// FDR filter
+		Validator validator = new Validator(data);
+		double th = validator.getPsmFdrThreshold(type, fdr);
+		Score score = new Score(type, th);
+		setPsmScoreThreshold(score);
+		run();
+		logCounts(String.format("PSM FDR=%s (%s th=%s)", validator.getPsmFdr().getRatio(), type.getName(), th));
+		
+		// Decoy removal
+		setFilterDecoyPeptides(true);
+		run();
+		logCounts("Decoy removal");
+		
+		return th;
+	}	
+	
+	public double runGroupFdrThreshold( ScoreType type, double fdr) {
+		// Initial filter and update groups using PAnalyzer
 		PAnalyzer pAnalyzer = new PAnalyzer(data);				
 		pAnalyzer.run();
+		setFilterDecoyPeptides(false);
 		run();
 		pAnalyzer.run();
 		
+		// FDR Initialization
 		Validator validator = new Validator(data);
-		double prevThreshold = validator.getGroupFdrThreshold(type, fdr);
-		double newThreshold = prevThreshold;
-		
-		Score score = new Score(type, prevThreshold);
+		double prevThreshold;
+		double newThreshold = validator.getGroupFdrThreshold(type, fdr);		
+		Score score = new Score(type, newThreshold);
 		setGroupScoreThreshold(score);
+		
+		// Iteration
 		int i = 0;
 		do {
 			prevThreshold = newThreshold;
@@ -142,10 +168,19 @@ public class Filter {
 			logger.info(String.format("Iteration: %s -> prev=%s, new=%s", ++i, prevThreshold, newThreshold));
 		} while( type.compare(newThreshold, prevThreshold) > 0 && i < MAXITER );
 		
+		// Decoy removal
+		setFilterDecoyPeptides(true);
+		run();
+		pAnalyzer.run();
+		
 		if( type.compare(newThreshold, prevThreshold) > 0 )
 			logger.warning("Maximum number of iterations reached!");
 		
 		return prevThreshold;
+	}
+	
+	private void logCounts( String title ) {
+		logger.info(String.format("%s: %s", title, data.toString()));
 	}
 	
 	private void filterPsms() {
@@ -227,8 +262,8 @@ public class Filter {
 		cvParam.setAccession("MS:1001194");
 		cvParam.setCvRef("PSI-MS");
 		cvParam.setName("quality estimation with decoy database");
-		cvParam.setValue(""+isFilterDecoyPeptides());
-		data.addAnalysisParam(cvParam);
+		cvParam.setValue(""+(filterDecoyPeptides!=null));
+		data.setAnalysisParam(cvParam);
 	}
 
 	private void updatePsmMetaData() {
@@ -236,31 +271,31 @@ public class Filter {
 		
 		if( getPsmScoreThreshold() != null ) {
 			userParam = new UserParamType();
-			userParam.setName("EhuBio:PSM score type");
+			userParam.setName("PAnalyzer:PSM score type");
 			userParam.setValue(getPsmScoreThreshold().getName());
-			data.addAnalysisParam(userParam);
+			data.setAnalysisParam(userParam);
 			userParam = new UserParamType();
-			userParam.setName("EhuBio:PSM score threshold");
+			userParam.setName("PAnalyzer:PSM score threshold");
 			userParam.setValue(getPsmScoreThreshold().getValue()+"");
-			data.addAnalysisParam(userParam);
+			data.setAnalysisParam(userParam);
 		}
 		if( getRankTreshold() > 0 ) {
 			userParam = new UserParamType();
-			userParam.setName("EhuBio:PSM rank threshold");
+			userParam.setName("PAnalyzer:PSM rank threshold");
 			userParam.setValue(getRankTreshold()+"");
-			data.addAnalysisParam(userParam);
+			data.setAnalysisParam(userParam);
 		}
 		if( getPpmThreshold() != null ) {
 			userParam = new UserParamType();
-			userParam.setName("EhuBio:PSM ppm threshold");
+			userParam.setName("PAnalyzer:PSM ppm threshold");
 			userParam.setValue(getPpmThreshold()+"");
-			data.addAnalysisParam(userParam);
+			data.setAnalysisParam(userParam);
 		}
 		
 		userParam = new UserParamType();
-		userParam.setName("EhuBio:Using search engine PSM threshold");
+		userParam.setName("PAnalyzer:Using search engine PSM threshold");
 		userParam.setValue(isMzidPassThreshold()+"");
-		data.addAnalysisParam(userParam);
+		data.setAnalysisParam(userParam);
 	}
 	
 	private void updatePeptideMetaData() {
@@ -268,19 +303,25 @@ public class Filter {
 		
 		if( getMinPeptideLength() > 0 ) {
 			userParam = new UserParamType();
-			userParam.setName("EhuBio:Minimum peptide length");
+			userParam.setName("PAnalyzer:Minimum peptide length");
 			userParam.setValue(""+getMinPeptideLength());
-			data.addAnalysisParam(userParam);
+			data.setAnalysisParam(userParam);
 		}
 		if( getPeptideScoreThreshold() != null ) {
 			userParam = new UserParamType();
-			userParam.setName("EhuBio:Peptide score type");
+			userParam.setName("PAnalyzer:Peptide score type");
 			userParam.setValue(getPeptideScoreThreshold().getName());
-			data.addAnalysisParam(userParam);
+			data.setAnalysisParam(userParam);
 			userParam = new UserParamType();
-			userParam.setName("EhuBio:Peptide score threshold");
+			userParam.setName("PAnalyzer:Peptide score threshold");
 			userParam.setValue(getPeptideScoreThreshold().getValue()+"");
-			data.addAnalysisParam(userParam);
+			data.setAnalysisParam(userParam);
+		}
+		if( filterDecoyPeptides != null ) {
+			userParam = new UserParamType();
+			userParam.setName("PAnalyzer:Decoys removed");
+			userParam.setValue(isFilterDecoyPeptides()+"");
+			data.setAnalysisParam(userParam);
 		}
 	}
 	
@@ -289,13 +330,13 @@ public class Filter {
 		
 		if( getProteinScoreThreshold() != null ) {
 			userParam = new UserParamType();
-			userParam.setName("EhuBio:Protein score type");
+			userParam.setName("PAnalyzer:Protein score type");
 			userParam.setValue(getProteinScoreThreshold().getName());
-			data.addAnalysisParam(userParam);
+			data.setAnalysisParam(userParam);
 			userParam = new UserParamType();
-			userParam.setName("EhuBio:Protein score threshold");
+			userParam.setName("PAnalyzer:Protein score threshold");
 			userParam.setValue(getProteinScoreThreshold().getValue()+"");
-			data.addAnalysisParam(userParam);
+			data.setAnalysisParam(userParam);
 		}
 	}
 	
@@ -304,13 +345,13 @@ public class Filter {
 		
 		if( getGroupScoreThreshold() != null ) {
 			userParam = new UserParamType();
-			userParam.setName("EhuBio:Protein group score type");
+			userParam.setName("PAnalyzer:Protein group score type");
 			userParam.setValue(getGroupScoreThreshold().getName());
-			data.addAnalysisParam(userParam);
+			data.setAnalysisParam(userParam);
 			userParam = new UserParamType();
-			userParam.setName("EhuBio:Protein group score threshold");
+			userParam.setName("PAnalyzer:Protein group score threshold");
 			userParam.setValue(getGroupScoreThreshold().getValue()+"");
-			data.addAnalysisParam(userParam);
+			data.setAnalysisParam(userParam);
 		}
 	}
 

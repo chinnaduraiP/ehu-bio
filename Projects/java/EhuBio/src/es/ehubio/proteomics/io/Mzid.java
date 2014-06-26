@@ -7,7 +7,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -57,7 +56,7 @@ import es.ehubio.proteomics.psi.mzid11.UserParamType;
  * Proxy class for managing MS/MS information in an mzid file.
  */
 public final class Mzid extends MsMsFile {
-	private final Logger logger = Logger.getLogger(Mzid.class.getName());
+	//private final Logger logger = Logger.getLogger(Mzid.class.getName());
 	private MzIdentML mzid;
 	private Map<String,Protein> mapProteins = new HashMap<>();
 	private Map<String,Peptide> mapPeptides = new HashMap<>();
@@ -70,20 +69,20 @@ public final class Mzid extends MsMsFile {
 	
 	@Override
 	public MsMsData load( InputStream input, String decoyRegex ) throws Exception {
-		logger.info("Parsing XML ...");
+		//logger.info("Parsing XML ...");
 		JAXBContext jaxbContext = JAXBContext.newInstance(MzIdentML.class);
 		Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
 		mzid = (MzIdentML)unmarshaller.unmarshal(input);
 		
-		logger.info("Building model ...");
+		//logger.info("Building model ...");
 		data = new MsMsData();
 		loadProteins();
 		if( decoyRegex != null ) {
 			markDecoys(decoyRegex);
 			UserParamType param = new UserParamType();
-			param.setName("EhuBio:Decoy regex");
+			param.setName("PAnalyzer:Decoy regex");
 			param.setValue(decoyRegex);
-			data.addAnalysisParam(param);
+			data.setAnalysisParam(param);
 		}
 		loadPeptides();
 		loadRelations();
@@ -95,7 +94,7 @@ public final class Mzid extends MsMsFile {
 	
 	@Override
 	public void save( OutputStream output ) throws Exception {
-		logger.info("Updating mzid data ...");
+		//logger.info("Updating mzid data ...");
 		updateOrganization();
 		updateAuthor();
 		updateSoftware();
@@ -103,7 +102,7 @@ public final class Mzid extends MsMsFile {
 		updateProteinDetectionProtocol();
 		updateReferences();
 		
-		logger.info("Serializing to XML ...");
+		//logger.info("Serializing to XML ...");
 		JAXBContext jaxbContext = JAXBContext.newInstance(MzIdentML.class);
 		Marshaller marshaller = jaxbContext.createMarshaller();
 		marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
@@ -398,7 +397,7 @@ public final class Mzid extends MsMsFile {
 			cv.setAccession("MS:1001494");
 			cv.setName("no threshold");
 			cv.setCvRef("PSI-MS");
-			data.addThreshold(cv);
+			data.setThreshold(cv);
 		}
 		proteinDetectionProtocol.setThreshold(data.getThresholds());
 		mzid.getAnalysisProtocolCollection().setProteinDetectionProtocol(proteinDetectionProtocol);;

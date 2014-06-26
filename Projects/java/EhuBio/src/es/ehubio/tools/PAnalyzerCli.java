@@ -8,7 +8,6 @@ import es.ehubio.proteomics.io.MsMsFile;
 import es.ehubio.proteomics.io.Mzid;
 import es.ehubio.proteomics.pipeline.Filter;
 import es.ehubio.proteomics.pipeline.PAnalyzer;
-import es.ehubio.proteomics.pipeline.Validator;
 
 public final class PAnalyzerCli implements Command.Interface {
 	private static final Logger logger = Logger.getLogger(PAnalyzerCli.class.getName());
@@ -38,8 +37,8 @@ public final class PAnalyzerCli implements Command.Interface {
 		load(args[0],"decoy");
 		filter();		
 		//dump();
-		validate();
-		//save(args[1]);
+		//validate();
+		save(args[1]);
 		logger.info("finished!");
 	}	
 	
@@ -55,7 +54,7 @@ public final class PAnalyzerCli implements Command.Interface {
 		logger.info("Filtering data ...");
 		Filter filter = new Filter(data);
 		//filter.setRankTreshold(1);
-		filter.setPpmThreshold(10.0);
+		//filter.setPpmThreshold(10.0);
 		//Score score = new Score(ScoreType.XTANDEM_EVALUE,0.33);
 		//Score score = new Score(ScoreType.XTANDEM_EVALUE,29);
 		//Score score = new Score(ScoreType.XTANDEM_HYPERSCORE,20.3);
@@ -70,9 +69,10 @@ public final class PAnalyzerCli implements Command.Interface {
 		//filter.setProteinScoreThreshold(score);
 		//Score score = new Score(ScoreType.XTANDEM_EVALUE,0.046);
 		//filter.setGroupScoreThreshold(score);
-		filter.run();
+		
+		//filter.run();
+		filter.runPsmFdrThreshold(scoreType, fdr);
 		//filter.runGroupFdrThreshold(scoreType, fdr);
-		logger.info(String.format("Filter: %d groups, %d proteins, %d peptides, %d psms, %d spectra", data.getGroups().size(), data.getProteins().size(), data.getPeptides().size(), data.getPsms().size(), data.getSpectra().size() ));
 
 		// PAnalyzer
 		logger.info("Running PAnalyzer again ...");
@@ -81,7 +81,7 @@ public final class PAnalyzerCli implements Command.Interface {
 		logger.info(counts.toString());
 	}	
 	
-	private void validate() {
+	/*private void validate() {
 		logger.info("Running Validator ...");
 		Validator validator = new Validator(data);
 		//validator.setCountDecoy(true);
@@ -89,17 +89,17 @@ public final class PAnalyzerCli implements Command.Interface {
 			validator.getPsmFdr().getRatio(), validator.getPeptideFdr().getRatio(), validator.getProteinFdr().getRatio(), validator.getGroupFdr().getRatio()));
 		logger.info(String.format("Thresholds for FDR=%s -> PSM: %s, Peptide: %s, Protein: %s, Group: %s",
 			fdr,validator.getPsmFdrThreshold(scoreType, fdr),validator.getPeptideFdrThreshold(scoreType, fdr),validator.getProteinFdrThreshold(scoreType, fdr),validator.getGroupFdrThreshold(scoreType, fdr)));
-	}
+	}*/
 	
 	private void load( String path, String decoy ) throws Exception {
 		file = new Mzid();		
 		data = file.load(path,decoy);
-		logger.info(String.format("Loaded: %d groups, %d proteins, %d peptides, %d psms, %d spectra", data.getGroups().size(), data.getProteins().size(), data.getPeptides().size(), data.getPsms().size(), data.getSpectra().size() ));
+		logger.info(String.format("Loaded: %s", data.toString()));
 	}
 	
-	/*private void save( String path ) throws Exception {
+	private void save( String path ) throws Exception {
 		file.save(path);
-	}*/
+	}
 	
 	//private void dump() {
 		// Dump Proteins
