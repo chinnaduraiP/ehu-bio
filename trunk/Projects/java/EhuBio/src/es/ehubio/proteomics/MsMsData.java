@@ -1,6 +1,7 @@
 package es.ehubio.proteomics;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import es.ehubio.proteomics.psi.mzid11.AbstractParamType;
@@ -112,23 +113,41 @@ public class MsMsData {
 		this.publication = publication;
 	}
 	
-	public void addAnalysisParam(AbstractParamType param) {
+	public void setAnalysisParam(AbstractParamType param) {
 		if( analysisParams == null )
 			analysisParams = new ParamListType();
-		analysisParams.getCvParamsAndUserParams().add(param);
+		setParam(analysisParams.getCvParamsAndUserParams(), param);
 	}
 	
 	public ParamListType getAnalysisParams() {
 		return analysisParams;
 	}
 	
-	public void addThreshold(AbstractParamType param) {
+	public void setThreshold(AbstractParamType param) {
 		if( thresholds == null )
 			thresholds = new ParamListType();
-		thresholds.getCvParamsAndUserParams().add(param);
+		setParam(thresholds.getCvParamsAndUserParams(), param);
 	}
 	
 	public ParamListType getThresholds() {
 		return thresholds;
+	}
+	
+	@Override
+	public String toString() {
+		return String.format("%d groups, %d proteins, %d peptides, %d psms, %d spectra",
+			getGroups().size(), getProteins().size(), getPeptides().size(), getPsms().size(), getSpectra().size());
+	}
+	
+	private void setParam(List<AbstractParamType> list, AbstractParamType param) {
+		AbstractParamType remove = null;
+		for( AbstractParamType item : list )
+			if( item.getName().equals(param.getName()) ) {
+				remove = item;
+				break;
+			}
+		if( remove != null )
+			list.remove(remove);
+		list.add(param);
 	}
 }
