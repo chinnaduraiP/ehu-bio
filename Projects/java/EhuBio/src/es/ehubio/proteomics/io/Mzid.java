@@ -59,6 +59,7 @@ public final class Mzid extends MsMsFile {
 	//private final Logger logger = Logger.getLogger(Mzid.class.getName());
 	private MzIdentML mzid;
 	private Map<String,Protein> mapProteins = new HashMap<>();
+	private Map<Protein,String> mapSequences = new HashMap<>();
 	private Map<String,Peptide> mapPeptides = new HashMap<>();
 	private Map<String,PeptideEvidenceType> mapEvidences = new HashMap<>();
 	private Map<String,Peptide> mapEvidencePeptide = new HashMap<>();
@@ -113,9 +114,11 @@ public final class Mzid extends MsMsFile {
 	private void loadProteins() {
 		//logger.info("Building proteins ...");
 		mapProteins.clear();
+		mapSequences.clear();
 		for( DBSequenceType dbSequence : mzid.getSequenceCollection().getDBSequences() ) {			
 			Protein protein = new Protein();
 			mapProteins.put(dbSequence.getId(), protein);
+			mapSequences.put(protein, dbSequence.getId());
 			protein.setAccession(dbSequence.getAccession());
 			HeaderParser header = Fasta.guessParser(dbSequence.getAccession());
 			if( header != null ) {
@@ -331,6 +334,7 @@ public final class Mzid extends MsMsFile {
 		ProteinDetectionHypothesisType pdh = new ProteinDetectionHypothesisType();
 		pdh.setId(String.format("PDH_%s", protein.getAccession()));
 		pdh.setPassThreshold(true);
+		pdh.setDBSequenceRef(mapSequences.get(protein));
 		CVParamType cvEvidence = new CVParamType();
 		CVParamType cvLeading = new CVParamType();
 		cvEvidence.setCvRef("PSI-MS");
