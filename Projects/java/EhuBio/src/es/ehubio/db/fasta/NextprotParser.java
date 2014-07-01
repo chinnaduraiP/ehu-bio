@@ -12,6 +12,7 @@ public class NextprotParser implements HeaderParser {
 		if( !matcher.find() )
 			return false;
 		
+		this.header = header;
 		accession = matcher.group(1);
 		if( headerPattern == null )
 			headerPattern = Pattern.compile("\\\\(\\S+)=([^\\\\]+)");
@@ -44,10 +45,16 @@ public class NextprotParser implements HeaderParser {
 	public String getGeneName() {
 		return geneName;
 	}
+	
+	@Override
+	public String getHeader() {
+		return header;
+	}
 
 	private static Pattern neXtProtPattern;
 	private static Pattern headerPattern;
 	private String accession;
 	private String proteinName;
 	private String geneName;
+	private String header;	
 }

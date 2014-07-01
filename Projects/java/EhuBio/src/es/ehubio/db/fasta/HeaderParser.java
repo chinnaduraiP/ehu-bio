@@ -6,4 +6,5 @@ public interface HeaderParser {
 	public String getDescription();
 	public String getProteinName();
 	public String getGeneName();
+	public String getHeader();
 }

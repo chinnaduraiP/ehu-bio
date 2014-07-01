@@ -90,6 +90,8 @@ public final class Fasta {
 	}
 	
 	public static HeaderParser guessParser( String header ) {
+		if( header == null )
+			return null;
 		HeaderParser parser = new UniprotParser();
 		if( parser.parse(header) )
 			return parser;

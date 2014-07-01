@@ -11,6 +11,7 @@ public class UniprotParser implements HeaderParser {
 		Matcher matcher = uniProtPattern.matcher(header);
 		if( !matcher.find() )
 			return false;
+		this.header = header;
 		accession = matcher.group(2);
 		name = matcher.group(3);
 		
@@ -49,6 +50,11 @@ public class UniprotParser implements HeaderParser {
 	public String getGeneName() {
 		return geneName;
 	}
+	
+	@Override
+	public String getHeader() {		
+		return header;
+	}
 
 	private static Pattern uniProtPattern;
 	private static Pattern descriptionPattern;
@@ -56,4 +62,5 @@ public class UniprotParser implements HeaderParser {
 	private String name;
 	private String description;
 	private String geneName;
+	private String header;	
 }

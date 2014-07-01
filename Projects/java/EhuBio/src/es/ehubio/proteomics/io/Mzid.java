@@ -59,12 +59,13 @@ public final class Mzid extends MsMsFile {
 	//private final Logger logger = Logger.getLogger(Mzid.class.getName());
 	private MzIdentML mzid;
 	private Map<String,Protein> mapProteins = new HashMap<>();
-	private Map<Protein,String> mapSequences = new HashMap<>();
+	private Map<Protein,String> mapSequences = new HashMap<>();	
 	private Map<String,Peptide> mapPeptides = new HashMap<>();
 	private Map<String,PeptideEvidenceType> mapEvidences = new HashMap<>();
 	private Map<String,Peptide> mapEvidencePeptide = new HashMap<>();
 	private Map<String,PeptideEvidenceType> mapProteinPeptideEvidence = new HashMap<>();
 	private Map<Psm,SpectrumIdentificationItemType> mapSii = new HashMap<>();
+	private Map<SpectrumIdentificationItemType,Psm> mapPsm = new HashMap<>();
 	private MsMsData data;	
 	private ProteinDetectionListType proteinDetectionList;
 	
@@ -115,24 +116,53 @@ public final class Mzid extends MsMsFile {
 		//logger.info("Building proteins ...");
 		mapProteins.clear();
 		mapSequences.clear();
-		for( DBSequenceType dbSequence : mzid.getSequenceCollection().getDBSequences() ) {			
-			Protein protein = new Protein();
-			mapProteins.put(dbSequence.getId(), protein);
-			mapSequences.put(protein, dbSequence.getId());
+		Map<String,String> mapSequenceIds = new HashMap<>();
+		for( DBSequenceType dbSequence : mzid.getSequenceCollection().getDBSequences() ) {
+			// Protein details in mzid
+			Protein protein = new Protein();									
 			protein.setAccession(dbSequence.getAccession());
-			HeaderParser header = Fasta.guessParser(dbSequence.getAccession());
-			if( header != null ) {
-				protein.setAccession(header.getAccession());
-				protein.setName(header.getProteinName());
-				protein.setDescription(header.getDescription());
-			}
 			if( dbSequence.getName() != null )
 				protein.setName(dbSequence.getName());
 			CVParamType cv = getCVParam("MS:1001088", dbSequence.getCvParamsAndUserParams());
 			if( cv != null )
 				protein.setDescription(cv.getValue());
-			protein.setSequence(dbSequence.getSeq());			
+			protein.setSequence(dbSequence.getSeq());
+			
+			// Replace protein details if fasta header is present
+			HeaderParser header = Fasta.guessParser(dbSequence.getName());
+			if( header != null ) {
+				protein.setAccession(header.getAccession());				
+				protein.setName(header.getProteinName());				
+				protein.setDescription(header.getHeader());
+				
+				dbSequence.setAccession(header.getAccession());
+				mapSequenceIds.put(dbSequence.getId(), header.getAccession());
+				dbSequence.setId(header.getAccession());
+				dbSequence.setName(header.getProteinName());
+				if( cv == null ) {
+					cv = new CVParamType();
+					cv.setAccession("MS:1001088");
+					cv.setName("protein description");
+					cv.setCvRef("PSI-MS");
+					dbSequence.getCvParamsAndUserParams().add(cv);
+				}
+				//cv.setValue(header.getDescription());
+				cv.setValue(header.getHeader());
+			} else
+				mapSequenceIds.put(dbSequence.getId(), dbSequence.getId());
+			
+			mapProteins.put(dbSequence.getId(), protein);
+			mapSequences.put(protein, dbSequence.getId());
 		}
+		
+		// Update IDs
+		for( PeptideEvidenceType peptideEvidence : mzid.getSequenceCollection().getPeptideEvidences() )
+			peptideEvidence.setDBSequenceRef(mapSequenceIds.get(peptideEvidence.getDBSequenceRef()));
+		if( mzid.getDataCollection().getAnalysisData().getProteinDetectionList() != null )
+			for( ProteinAmbiguityGroupType pag : mzid.getDataCollection().getAnalysisData().getProteinDetectionList().getProteinAmbiguityGroups() )
+				for( ProteinDetectionHypothesisType pdh : pag.getProteinDetectionHypothesises() )
+					if( pdh.getDBSequenceRef() != null )
+						pdh.setDBSequenceRef(mapSequenceIds.get(pdh.getDBSequenceRef()));
 	}
 	
 	private void markDecoys(String decoyRegex) {
@@ -205,6 +235,8 @@ public final class Mzid extends MsMsFile {
 	private void loadSpectra() {
 		//logger.info("Building spectra ...");
 		Set<Spectrum> spectra = new HashSet<>();
+		mapSii.clear();
+		mapPsm.clear();
 		for( SpectrumIdentificationListType sil : mzid.getDataCollection().getAnalysisData().getSpectrumIdentificationLists() )
 			for( SpectrumIdentificationResultType sir : sil.getSpectrumIdentificationResults() ) {
 				Spectrum spectrum = new Spectrum();			
@@ -219,6 +251,7 @@ public final class Mzid extends MsMsFile {
 					psm.setRank(sii.getRank());					
 					loadScores(psm, sii);
 					mapSii.put(psm, sii);
+					mapPsm.put(sii, psm);
 					if( sii.getPeptideEvidenceReves() == null )
 						continue;
 					for( PeptideEvidenceRefType peptideEvidenceRefType : sii.getPeptideEvidenceReves() ) {
@@ -305,17 +338,21 @@ public final class Mzid extends MsMsFile {
 			pagCount++;
 			ProteinAmbiguityGroupType pag = new ProteinAmbiguityGroupType();
 			pag.setId(String.format("PAG_%d", group.getId()));
+			pag.setName(group.buildName());
 			pag.getCvParamsAndUserParams().add(cvThreshold);
 			for( Protein protein : group.getProteins() ) {		
 				pag.getProteinDetectionHypothesises().add(buildPdh(protein));
-				// Include non-conclusive proteins (redundantly) 
+				// Include non-conclusive proteins (redundantly)
+				Set<Protein> nonConclusive = new HashSet<>();
 				for( Peptide peptide : protein.getPeptides() ) {
 					if( peptide.getConfidence() != Peptide.Confidence.NON_DISCRIMINATING )
-						continue;
+						continue;					
 					for( Protein protein2 : peptide.getProteins() )
 						if( protein2.getConfidence() == Protein.Confidence.NON_CONCLUSIVE )
-							pag.getProteinDetectionHypothesises().add(buildPdh(protein2));
+							nonConclusive.add(protein2);					
 				}
+				for( Protein protein2 : nonConclusive )
+					pag.getProteinDetectionHypothesises().add(buildPdh(protein2));
 			}
 			proteinDetectionList.getProteinAmbiguityGroups().add(pag);
 		}
