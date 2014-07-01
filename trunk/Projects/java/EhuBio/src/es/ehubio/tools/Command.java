@@ -21,7 +21,7 @@ public class Command {
 		try {
 			Interface cmd = (Interface)Class.forName("es.ehubio.tools."+args[0]).newInstance();
 			int nargs = args.length-1;
-			if( nargs < cmd.getMinArgs() || nargs > cmd.getMaxArgs() ) {
+			if( nargs < cmd.getMinArgs() || (cmd.getMaxArgs() >= 0 && nargs > cmd.getMaxArgs()) ) {
 				System.out.println( "Usage:\n\tCommand "+args[0]+" "+cmd.getUsage() );
 				return;
 			}

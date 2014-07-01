@@ -3,6 +3,7 @@ package es.ehubio.proteomics;
 import java.util.HashSet;
 import java.util.Set;
 
+import es.ehubio.Util;
 import es.ehubio.proteomics.Protein.Confidence;
 
 /**
@@ -99,5 +100,12 @@ public class ProteinGroup extends DecoyBase {
 	@Override
 	public boolean skipFdr() {
 		return getConfidence() == Confidence.NON_CONCLUSIVE;
+	}
+	
+	public String buildName() {
+		Set<String> names = new HashSet<>();
+		for( Protein protein : getProteins() )
+			names.add(protein.getAccession());
+		return Util.mergeStrings(names);
 	}
 }
