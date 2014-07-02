@@ -21,7 +21,7 @@ public class Filter {
 	private Score peptideScoreThreshold;
 	private Score proteinScoreThreshold;
 	private Score groupScoreThreshold;
-	private boolean mzidPassThreshold = false;
+	private boolean passThreshold = false;
 	private int minPeptideLength = 0;
 	private Boolean filterDecoyPeptides;
 	private int rankTreshold = 0;
@@ -81,12 +81,12 @@ public class Filter {
 		this.filterDecoyPeptides = filterDecoyPeptides;
 	}
 
-	public boolean isMzidPassThreshold() {
-		return mzidPassThreshold;
+	public boolean isPassThreshold() {
+		return passThreshold;
 	}
 
-	public void setMzidPassThreshold(boolean mzidPassThreshold) {
-		this.mzidPassThreshold = mzidPassThreshold;
+	public void setPassThreshold(boolean mzidPassThreshold) {
+		this.passThreshold = mzidPassThreshold;
 	}
 	
 	public int getRankTreshold() {
@@ -138,6 +138,13 @@ public class Filter {
 		setFilterDecoyPeptides(true);
 		run();
 		logCounts("Decoy removal");
+		
+		CVParamType cv = new CVParamType();
+		cv.setAccession("MS:1002260");
+		cv.setCvRef("PSI-MS");
+		cv.setName("PSM:FDR threshold");
+		cv.setValue(String.format("%s",fdr));
+		data.setThreshold(cv);
 		
 		return th;
 	}	
@@ -197,12 +204,9 @@ public class Filter {
 				unlinkPsm(psm);
 				continue;
 			}
-			if( isMzidPassThreshold() ) {
-				Score score = psm.getScoreByType(ScoreType.MZID_PASS_THRESHOLD);
-				if( score != null && score.getValue() < 0.5 ) {
-					unlinkPsm(psm);
-					continue;
-				}
+			if( isPassThreshold() && !psm.isPassThreshold() ) {
+				unlinkPsm(psm);
+				continue;
 			}
 			if( getPsmScoreThreshold() == null )
 				continue;
@@ -226,6 +230,10 @@ public class Filter {
 				unlinkPeptide(peptide);
 				continue;
 			}
+			if( isPassThreshold() && !peptide.isPassThreshold() ) {
+				unlinkPeptide(peptide);
+				continue;
+			}
 			if( getPeptideScoreThreshold() == null )
 				continue;
 			Score score = peptide.getScoreByType(getPeptideScoreThreshold().getType());
@@ -235,21 +243,31 @@ public class Filter {
 	}
 
 	private void filterProteins() {
-		if( getProteinScoreThreshold() != null )
-			for( Protein protein : data.getProteins() ) {
-				Score score = protein.getScoreByType(getProteinScoreThreshold().getType());
-				if( score == null || getProteinScoreThreshold().compare(score.getValue()) > 0 )
-					unlinkProtein(protein);
+		for( Protein protein : data.getProteins() ) {
+			if( isPassThreshold() && !protein.isPassThreshold() ) {
+				unlinkProtein(protein);
+				continue;
 			}
+			if( getProteinScoreThreshold() == null )
+				continue;
+			Score score = protein.getScoreByType(getProteinScoreThreshold().getType());
+			if( score == null || getProteinScoreThreshold().compare(score.getValue()) > 0 )
+				unlinkProtein(protein);
+		}
 	}
 
-	private void filterGroups() {
-		if( getGroupScoreThreshold() != null )
-			for( ProteinGroup group : data.getGroups() ) {
-				Score score = group.getScoreByType(getGroupScoreThreshold().getType());
-				if( score == null || getGroupScoreThreshold().compare(score.getValue()) > 0 )
-					unlinkGroup(group);
+	private void filterGroups() {		
+		for( ProteinGroup group : data.getGroups() ) {
+			if( isPassThreshold() && !group.isPassThreshold() ) {
+				unlinkGroup(group);
+				continue;
 			}
+			if( getGroupScoreThreshold() == null )
+				continue;
+			Score score = group.getScoreByType(getGroupScoreThreshold().getType());
+			if( score == null || getGroupScoreThreshold().compare(score.getValue()) > 0 )
+				unlinkGroup(group);
+		}
 	}
 
 	private void updateMetaData() {
@@ -294,7 +312,7 @@ public class Filter {
 		
 		userParam = new UserParamType();
 		userParam.setName("PAnalyzer:Using search engine PSM threshold");
-		userParam.setValue(isMzidPassThreshold()+"");
+		userParam.setValue(isPassThreshold()+"");
 		data.setAnalysisParam(userParam);
 	}
 	
@@ -356,6 +374,7 @@ public class Filter {
 	}
 
 	private static void unlinkGroup( ProteinGroup group ) {
+		group.setPassThreshold(false);
 		Set<Protein> proteins = new HashSet<>(group.getProteins());
 		for( Protein protein : proteins )
 			if( protein.getGroup() == group )
@@ -363,6 +382,7 @@ public class Filter {
 	}
 
 	private static void unlinkProtein(Protein protein) {
+		protein.setPassThreshold(false);
 		Set<Peptide> peptides = new HashSet<>(protein.getPeptides());
 		protein.getPeptides().clear();
 		for( Peptide peptide : peptides ) {
@@ -378,6 +398,7 @@ public class Filter {
 	}
 	
 	private static void unlinkPeptide( Peptide peptide ) {
+		peptide.setPassThreshold(false);
 		Set<Psm> psms = new HashSet<>(peptide.getPsms());
 		peptide.getPsms().clear();
 		for( Psm psm : psms )
@@ -393,6 +414,7 @@ public class Filter {
 	}	
 
 	private static void unlinkPsm( Psm psm ) {
+		psm.setPassThreshold(false);
 		Spectrum spectrum = psm.getSpectrum(); 
 		if( spectrum != null ) {
 			psm.linkSpectrum(null);
