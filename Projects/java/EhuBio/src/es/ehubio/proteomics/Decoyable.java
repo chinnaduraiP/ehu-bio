@@ -36,6 +36,18 @@ public interface Decoyable {
 	
 	/**
 	 * 
+	 * @param passThreshold true if passes the FDR threshold, false if not 
+	 */
+	void setPassThreshold(boolean passThreshold);
+	
+	/**
+	 * 
+	 * @return true if passes the FDR threshold, false if not
+	 */
+	boolean isPassThreshold();
+	
+	/**
+	 * 
 	 * @return true to skip this object from FDR calculation
 	 */
 	boolean skipFdr();

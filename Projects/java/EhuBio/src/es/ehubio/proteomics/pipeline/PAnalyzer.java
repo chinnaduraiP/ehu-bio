@@ -78,7 +78,7 @@ public class PAnalyzer {
 	}
 	
 	private final MsMsData data;
-	private static final String VERSION = "2.0b1";
+	private static final String VERSION = "2.0a1";
 	private static final String NAME = "PAnalyzer";
 	private static final String URL = "https://code.google.com/p/ehu-bio/wiki/PAnalyzer";
 	private static final String CUSTOMIZATIONS = "No customizations";

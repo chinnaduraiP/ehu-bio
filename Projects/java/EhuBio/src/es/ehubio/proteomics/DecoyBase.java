@@ -6,6 +6,7 @@ import java.util.Set;
 public abstract class DecoyBase implements Decoyable {
 	private Boolean decoy = null;
 	private Set<Score> scores = new HashSet<>();
+	private boolean passThreshold = true;
 
 	@Override
 	public boolean addScore(Score score) {
@@ -44,5 +45,15 @@ public abstract class DecoyBase implements Decoyable {
 	@Override
 	public void setDecoy(Boolean decoy) {
 		this.decoy = decoy;
+	}
+	
+	@Override
+	public void setPassThreshold(boolean passThreshold) {
+		this.passThreshold = passThreshold;
+	}
+	
+	@Override
+	public boolean isPassThreshold() {
+		return passThreshold;
 	}
 }

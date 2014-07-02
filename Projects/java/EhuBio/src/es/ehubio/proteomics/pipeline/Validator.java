@@ -51,10 +51,62 @@ public final class Validator {
 		this.data = data;
 	}
 	
+	/*public void addDecoyScores( ScoreType type) {
+		addPsmDecoyScores(type);
+	}
+	
+	private void addPsmDecoyScores( ScoreType type) {
+		List<Psm> list = new ArrayList<>(data.getPsms());
+		sort(list,type);
+		
+		// Traverse from better to worse
+		int decoy = 0;
+		int target = 0;
+		Map<Double,Double> mapFdr = new HashMap<>();
+		for( int i = list.size()-1; i >= 0; i-- ) {
+			Psm psm = list.get(i);
+			if( Boolean.TRUE.equals(psm.getDecoy()) )
+				decoy++;
+			else
+				target++;
+			mapFdr.put(psm.getScoreByType(type).getValue(), getFdr(decoy,target));
+		}
+		
+		// Traverse from worse to better
+		Map<Double,Double> mapQValue = new HashMap<>();
+		double min = mapFdr.get(list.get(0).getScoreByType(type).getValue());
+		for( int i = 0; i < list.size(); i++ ) {
+			Double score = list.get(i).getScoreByType(type).getValue();
+			Double fdr = mapFdr.get(score);
+			if( fdr < min )
+				min = fdr;
+			mapQValue.put(score, min);
+		}
+		
+		// Interpolate q-values
+		int i = list.size()-1;
+		double x0 = list.get(i).getScoreByType(type).getValue();
+		double y0 = mapQValue.get(x0);
+		while( i > 0 ) {
+			int j = i;
+			double y1;
+			do {
+				j--;
+				y1 = mapQValue.get(list.get(j).getScoreByType(type).getValue());  
+			} while( j > 0 && y1 == y0 );
+			double ;
+		}
+	}*/
+	
 	public boolean isCountDecoy() {
 		return countDecoy;
 	}
 
+	/**
+	 * If true uses FDR=2*D/(T+D), else FDR=D/T
+	 * 
+	 * @param countDecoy
+	 */
 	public void setCountDecoy(boolean countDecoy) {
 		this.countDecoy = countDecoy;
 	}
@@ -79,21 +131,8 @@ public final class Validator {
 		if( set.isEmpty() )
 			return 0.0;
 		
-		//logger.info("Calculating score threshold ...");
-		
-		List<Decoyable> list = new ArrayList<>(set);
-		//logger.info("Sorting scores ...");
-		Collections.sort(list, new Comparator<Decoyable>() {
-			private ScoreType type;
-			public Comparator<Decoyable> setType(ScoreType type) {
-				this.type = type;
-				return this;
-			}
-			@Override
-			public int compare(Decoyable o1, Decoyable o2) {
-				return o1.getScoreByType(type).compare(o2.getScoreByType(type).getValue());
-			}
-		}.setType(type));
+		List<Decoyable> list = new ArrayList<>(set);		
+		sort(list, type);
 		
 		//logger.info("Calculating score threshold ...");
 		FdrResult orig = getSetFdr(set);
@@ -122,6 +161,21 @@ public final class Validator {
 			logger.warning("Desired FDR cannot be reached");
 		//logger.info("done!");
 		return oldScore.getValue();
+	}
+	
+	private void sort( List<? extends Decoyable> list, ScoreType type ) {
+		//logger.info("Sorting scores ...");
+		Collections.sort(list, new Comparator<Decoyable>() {
+			private ScoreType type;
+			public Comparator<Decoyable> setType(ScoreType type) {
+				this.type = type;
+				return this;
+			}
+			@Override
+			public int compare(Decoyable o1, Decoyable o2) {
+				return o1.getScoreByType(type).compare(o2.getScoreByType(type).getValue());
+			}
+		}.setType(type));
 	}
 	
 	public FdrResult getPsmFdr() {

@@ -4,11 +4,14 @@ public enum ScoreType {
 	LARGER("Other, larger values are better", true),
 	SMALLER("Other, smaller values are better",false),
 	MASCOT_EVALUE("Mascot expectation value",false),
-	MASCOT_SCORE("Mascot score",true),
-	SEQUEST_XCORR("SEQUEST Confidence XCorr",true),
+	MASCOT_SCORE("Mascot ion score",true),
+	SEQUEST_XCORR("SEQUEST XCorr",true),
 	XTANDEM_EVALUE("X!Tandem expect",false),
 	XTANDEM_HYPERSCORE("X!Tandem hyperscore",true),
 	PROPHET_PROBABILITY("PeptideProphet probability score",true),
+	LOCAL_FDR("PSM local FDR", false),
+	Q_VALUE("PSM q-value", false),
+	FDR_SCORE("FDR score", false),
 	MZID_PASS_THRESHOLD("mzIdentML SpectrumIdentificationItem passThreshold attribute",true);
 	
 	private final String name;

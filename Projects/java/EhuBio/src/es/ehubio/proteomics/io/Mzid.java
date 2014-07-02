@@ -102,6 +102,7 @@ public final class Mzid extends MsMsFile {
 		updateSoftware();
 		updateProteinDetectionList();
 		updateProteinDetectionProtocol();
+		updateSpectrumIdentificationLists();
 		updateReferences();
 		
 		//logger.info("Serializing to XML ...");
@@ -110,7 +111,7 @@ public final class Mzid extends MsMsFile {
 		marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
 		marshaller.marshal(mzid, output);
 		//logger.info("finished!");
-	}	
+	}		
 
 	private void loadProteins() {
 		//logger.info("Building proteins ...");
@@ -248,7 +249,8 @@ public final class Mzid extends MsMsFile {
 					psm.setCharge(sii.getChargeState());
 					psm.setExpMz(sii.getExperimentalMassToCharge());
 					psm.setCalcMz(sii.getCalculatedMassToCharge());
-					psm.setRank(sii.getRank());					
+					psm.setRank(sii.getRank());
+					psm.setPassThreshold(sii.isPassThreshold());
 					loadScores(psm, sii);
 					mapSii.put(psm, sii);
 					mapPsm.put(sii, psm);
@@ -268,7 +270,7 @@ public final class Mzid extends MsMsFile {
 	}
 	
 	private void loadScores( Psm psm, SpectrumIdentificationItemType sii ) {
-		psm.addScore(new Score(ScoreType.MZID_PASS_THRESHOLD,sii.isPassThreshold()?1.0:0.0));
+		//psm.addScore(new Score(ScoreType.MZID_PASS_THRESHOLD,sii.isPassThreshold()?1.0:0.0));
 		for( AbstractParamType param : sii.getCvParamsAndUserParams() ) {
 			if( !CVParamType.class.isInstance(param) )
 				continue;
@@ -448,7 +450,6 @@ public final class Mzid extends MsMsFile {
 		proteinDetection.setProteinDetectionListRef(proteinDetectionList.getId());
 		proteinDetection.setProteinDetectionProtocolRef(proteinDetectionProtocol.getId());
 		for( SpectrumIdentificationListType sil : mzid.getDataCollection().getAnalysisData().getSpectrumIdentificationLists() ) {
-			correctSprectrumIdentificationList(sil);
 			InputSpectrumIdentificationsType inputSpectrumIdentifications = new InputSpectrumIdentificationsType();
 			inputSpectrumIdentifications.setSpectrumIdentificationListRef(sil.getId());
 			proteinDetection.getInputSpectrumIdentifications().add(inputSpectrumIdentifications);			
@@ -456,13 +457,20 @@ public final class Mzid extends MsMsFile {
 		mzid.getAnalysisCollection().setProteinDetection(proteinDetection);
 	}
 	
-	private void correctSprectrumIdentificationList( SpectrumIdentificationListType sil ) {
+	private void updateSpectrumIdentificationLists() {
+		for( SpectrumIdentificationListType sil : mzid.getDataCollection().getAnalysisData().getSpectrumIdentificationLists() )
+			updateSprectrumIdentificationList(sil);			
+	}
+	
+	private void updateSprectrumIdentificationList( SpectrumIdentificationListType sil ) {
 		Set<SpectrumIdentificationItemType> remove = new HashSet<>();
 		for( SpectrumIdentificationResultType sir : sil.getSpectrumIdentificationResults() ) {
 			remove.clear();
 			for( SpectrumIdentificationItemType sii : sir.getSpectrumIdentificationItems() )
 				if( sii.getPeptideEvidenceReves().isEmpty() )
 					remove.add(sii);
+				else
+					sii.setPassThreshold(mapPsm.get(sii).isPassThreshold());
 			sir.getSpectrumIdentificationItems().removeAll(remove);
 		}
 	}
