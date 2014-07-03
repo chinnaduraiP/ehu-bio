@@ -68,6 +68,7 @@ public final class Mzid extends MsMsFile {
 	private Map<SpectrumIdentificationItemType,Psm> mapPsm = new HashMap<>();
 	private MsMsData data;	
 	private ProteinDetectionListType proteinDetectionList;
+	private static final String PSIMS = "PSI-MS";	// PSI-MS id hardcoded for the momment
 	
 	@Override
 	public MsMsData load( InputStream input, String decoyRegex ) throws Exception {
@@ -144,7 +145,7 @@ public final class Mzid extends MsMsFile {
 					cv = new CVParamType();
 					cv.setAccession("MS:1001088");
 					cv.setName("protein description");
-					cv.setCvRef("PSI-MS");
+					cv.setCvRef(PSIMS);
 					dbSequence.getCvParamsAndUserParams().add(cv);
 				}
 				//cv.setValue(header.getDescription());
@@ -270,22 +271,16 @@ public final class Mzid extends MsMsFile {
 	}
 	
 	private void loadScores( Psm psm, SpectrumIdentificationItemType sii ) {
-		//psm.addScore(new Score(ScoreType.MZID_PASS_THRESHOLD,sii.isPassThreshold()?1.0:0.0));
 		for( AbstractParamType param : sii.getCvParamsAndUserParams() ) {
+			ScoreType type;
 			if( !CVParamType.class.isInstance(param) )
-				continue;
-			ScoreType type = null;
-			CVParamType cv = (CVParamType)param;
-			switch( cv.getAccession() ) {
-				case "MS:1001155": type = ScoreType.SEQUEST_XCORR; break;
-				case "MS:1001172": type = ScoreType.MASCOT_EVALUE; break;
-				case "MS:1001171": type = ScoreType.MASCOT_SCORE; break;
-				case "MS:1001330": type = ScoreType.XTANDEM_EVALUE; break;
-				case "MS:1001331": type = ScoreType.XTANDEM_HYPERSCORE; break;
+				type = ScoreType.getByName(param.getName());
+			else {
+				CVParamType cv = (CVParamType)param;
+				type = ScoreType.getByAccession(cv.getAccession());
 			}
-			if( type == null )
-				continue;
-			psm.addScore(new Score(type, cv.getName(), Double.parseDouble(cv.getValue())));
+			if( type != null )				
+				psm.addScore(new Score(type, param.getName(), Double.parseDouble(param.getValue())));
 		}
 	}	
 	
@@ -296,6 +291,17 @@ public final class Mzid extends MsMsFile {
 			CVParamType cv = (CVParamType)param;
 			if( cv.getAccession().equalsIgnoreCase(accession) )
 				return cv;
+		}
+		return null;
+	}
+	
+	private UserParamType getUserParam( String name, List<AbstractParamType> params ) {
+		for( AbstractParamType param : params ) {
+			if( !UserParamType.class.isInstance(param) )
+				continue;
+			UserParamType up = (UserParamType)param;
+			if( up.getName().equalsIgnoreCase(name) )
+				return up;
 		}
 		return null;
 	}
@@ -330,7 +336,7 @@ public final class Mzid extends MsMsFile {
 		CVParamType cvThreshold = new CVParamType();
 		cvThreshold.setAccession("MS:1002415");
 		cvThreshold.setName("protein group passes threshold");
-		cvThreshold.setCvRef("PSI-MS");
+		cvThreshold.setCvRef(PSIMS);
 		cvThreshold.setValue("true");
 		
 		int pagCount = 0;
@@ -362,7 +368,7 @@ public final class Mzid extends MsMsFile {
 		CVParamType cvCount = new CVParamType();
 		cvCount.setAccession("MS:1002404");
 		cvCount.setName("count of identified proteins");
-		cvCount.setCvRef("PSI-MS");
+		cvCount.setCvRef(PSIMS);
 		cvCount.setValue(""+pagCount);
 		proteinDetectionList.getCvParamsAndUserParams().add(cvCount);
 		
@@ -376,8 +382,8 @@ public final class Mzid extends MsMsFile {
 		pdh.setDBSequenceRef(mapSequences.get(protein));
 		CVParamType cvEvidence = new CVParamType();
 		CVParamType cvLeading = new CVParamType();
-		cvEvidence.setCvRef("PSI-MS");
-		cvLeading.setCvRef("PSI-MS");
+		cvEvidence.setCvRef(PSIMS);
+		cvLeading.setCvRef(PSIMS);
 		switch( protein.getConfidence() ) {			
 			case CONCLUSIVE:
 				cvEvidence.setAccession("MS:1002213");
@@ -439,7 +445,7 @@ public final class Mzid extends MsMsFile {
 			CVParamType cv = new CVParamType();
 			cv.setAccession("MS:1001494");
 			cv.setName("no threshold");
-			cv.setCvRef("PSI-MS");
+			cv.setCvRef(PSIMS);
 			data.setThreshold(cv);
 		}
 		proteinDetectionProtocol.setThreshold(data.getThresholds());
@@ -470,8 +476,35 @@ public final class Mzid extends MsMsFile {
 				if( sii.getPeptideEvidenceReves().isEmpty() )
 					remove.add(sii);
 				else
-					sii.setPassThreshold(mapPsm.get(sii).isPassThreshold());
+					updateScores(sii);
 			sir.getSpectrumIdentificationItems().removeAll(remove);
+		}
+	}
+	
+	private void updateScores( SpectrumIdentificationItemType sii ) {
+		Psm psm = mapPsm.get(sii);
+		sii.setPassThreshold(psm.isPassThreshold());
+		for( Score score : psm.getScores() ) {
+			if( score.getType().getAccession() != null ) {
+				CVParamType cv = getCVParam(score.getType().getAccession(), sii.getCvParamsAndUserParams());
+				if( cv == null ) {					
+					cv = new CVParamType();
+					cv.setAccession(score.getType().getAccession());
+					cv.setName(score.getType().getName());
+					cv.setCvRef(PSIMS);
+					sii.getCvParamsAndUserParams().add(cv);
+				}
+				cv.setValue(String.format("%s", score.getValue()));
+			} else {
+				UserParamType up = getUserParam(score.getType().getName(), sii.getCvParamsAndUserParams());
+				if( up == null ) {
+					up = new UserParamType();
+					up.setName(score.getType().getName());
+					up.setType("xsd:double");
+					sii.getCvParamsAndUserParams().add(up);
+				}
+				up.setValue(String.format("%s", score.getValue()));
+			}
 		}
 	}
 
