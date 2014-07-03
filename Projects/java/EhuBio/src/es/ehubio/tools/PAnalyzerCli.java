@@ -8,6 +8,7 @@ import es.ehubio.proteomics.io.MsMsFile;
 import es.ehubio.proteomics.io.Mzid;
 import es.ehubio.proteomics.pipeline.Filter;
 import es.ehubio.proteomics.pipeline.PAnalyzer;
+import es.ehubio.proteomics.pipeline.Validator;
 
 public final class PAnalyzerCli implements Command.Interface {
 	private static final Logger logger = Logger.getLogger(PAnalyzerCli.class.getName());
@@ -37,7 +38,7 @@ public final class PAnalyzerCli implements Command.Interface {
 		load(args[0],"decoy");
 		filter();		
 		//dump();
-		//validate();
+		validate();
 		save(args[1]);
 		logger.info("finished!");
 	}	
@@ -70,8 +71,8 @@ public final class PAnalyzerCli implements Command.Interface {
 		//Score score = new Score(ScoreType.XTANDEM_EVALUE,0.046);
 		//filter.setGroupScoreThreshold(score);
 		
-		//filter.run();
-		filter.runPsmFdrThreshold(scoreType, fdr);
+		filter.run();
+		//filter.runPsmFdrThreshold(scoreType, fdr);
 		//filter.runGroupFdrThreshold(scoreType, fdr);
 
 		// PAnalyzer
@@ -81,15 +82,15 @@ public final class PAnalyzerCli implements Command.Interface {
 		logger.info(counts.toString());
 	}	
 	
-	/*private void validate() {
+	private void validate() {
 		logger.info("Running Validator ...");
 		Validator validator = new Validator(data);
-		//validator.setCountDecoy(true);
+		validator.addDecoyScores(scoreType);
 		logger.info(String.format("FDR -> PSM: %s, Peptide: %s, Protein: %s, Group: %s",
 			validator.getPsmFdr().getRatio(), validator.getPeptideFdr().getRatio(), validator.getProteinFdr().getRatio(), validator.getGroupFdr().getRatio()));
 		logger.info(String.format("Thresholds for FDR=%s -> PSM: %s, Peptide: %s, Protein: %s, Group: %s",
 			fdr,validator.getPsmFdrThreshold(scoreType, fdr),validator.getPeptideFdrThreshold(scoreType, fdr),validator.getProteinFdrThreshold(scoreType, fdr),validator.getGroupFdrThreshold(scoreType, fdr)));
-	}*/
+	}
 	
 	private void load( String path, String decoy ) throws Exception {
 		file = new Mzid();		

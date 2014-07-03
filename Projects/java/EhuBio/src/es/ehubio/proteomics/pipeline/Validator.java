@@ -3,12 +3,15 @@ package es.ehubio.proteomics.pipeline;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
 import es.ehubio.proteomics.Decoyable;
 import es.ehubio.proteomics.MsMsData;
+import es.ehubio.proteomics.Psm;
 import es.ehubio.proteomics.Score;
 import es.ehubio.proteomics.ScoreType;
 
@@ -51,7 +54,7 @@ public final class Validator {
 		this.data = data;
 	}
 	
-	/*public void addDecoyScores( ScoreType type) {
+	public void addDecoyScores( ScoreType type) {
 		addPsmDecoyScores(type);
 	}
 	
@@ -59,7 +62,7 @@ public final class Validator {
 		List<Psm> list = new ArrayList<>(data.getPsms());
 		sort(list,type);
 		
-		// Traverse from better to worse
+		// Traverse from best to worst
 		int decoy = 0;
 		int target = 0;
 		Map<Double,Double> mapFdr = new HashMap<>();
@@ -72,7 +75,7 @@ public final class Validator {
 			mapFdr.put(psm.getScoreByType(type).getValue(), getFdr(decoy,target));
 		}
 		
-		// Traverse from worse to better
+		// Traverse from worst to best
 		Map<Double,Double> mapQValue = new HashMap<>();
 		double min = mapFdr.get(list.get(0).getScoreByType(type).getValue());
 		for( int i = 0; i < list.size(); i++ ) {
@@ -83,20 +86,34 @@ public final class Validator {
 			mapQValue.put(score, min);
 		}
 		
-		// Interpolate q-values
+		// Interpolate q-values from best to worst
 		int i = list.size()-1;
 		double x0 = list.get(i).getScoreByType(type).getValue();
 		double y0 = mapQValue.get(x0);
+		Map<Double,Double> mapFValue = new HashMap<>();
 		while( i > 0 ) {
 			int j = i;
-			double y1;
+			double y1, x1;
 			do {
 				j--;
-				y1 = mapQValue.get(list.get(j).getScoreByType(type).getValue());  
+				x1 = list.get(j).getScoreByType(type).getValue();
+				y1 = mapQValue.get(x1);  
 			} while( j > 0 && y1 == y0 );
-			double ;
+			double m = (y1-y0)/(x1-x0);
+			for( int k = j; k <= i; k++ ) {
+				double x = list.get(k).getScoreByType(type).getValue();
+				mapFValue.put(x, (x-x0)*m+y0);
+			}
+			i=j;
 		}
-	}*/
+		
+		// Assign scores
+		for( Psm psm : data.getPsms() ) {
+			psm.setScore(new Score(ScoreType.PSM_LOCAL_FDR,mapFdr.get(psm.getScoreByType(type).getValue())));
+			psm.setScore(new Score(ScoreType.PSM_Q_VALUE,mapQValue.get(psm.getScoreByType(type).getValue())));
+			psm.setScore(new Score(ScoreType.PSM_FDR_SCORE,mapFValue.get(psm.getScoreByType(type).getValue())));
+		}
+	}
 	
 	public boolean isCountDecoy() {
 		return countDecoy;

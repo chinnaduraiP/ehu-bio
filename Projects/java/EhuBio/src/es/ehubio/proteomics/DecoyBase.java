@@ -31,6 +31,10 @@ public abstract class DecoyBase implements Decoyable {
 				return score;
 		return null;
 	}
+	
+	public Set<Score> getScores() {
+		return scores;
+	}
 
 	@Override
 	public boolean skipFdr() {
