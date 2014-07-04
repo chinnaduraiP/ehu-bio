@@ -46,6 +46,30 @@ public final class Validator {
 		}		
 	}
 	
+	private class ScoreGroup {
+		private double fdr;
+		private double qValue;
+		private double fdrScore;
+		public double getFdr() {
+			return fdr;
+		}
+		public void setFdr(double fdr) {
+			this.fdr = fdr;
+		}
+		public double getqValue() {
+			return qValue;
+		}
+		public void setqValue(double qValue) {
+			this.qValue = qValue;
+		}
+		public double getFdrScore() {
+			return fdrScore;
+		}
+		public void setFdrScore(double fdrScore) {
+			this.fdrScore = fdrScore;
+		}
+	}
+	
 	private static final Logger logger = Logger.getLogger(Validator.class.getName());
 	private final MsMsData data;	
 	private boolean countDecoy = false;
@@ -61,57 +85,61 @@ public final class Validator {
 	private void addPsmDecoyScores( ScoreType type) {
 		List<Psm> list = new ArrayList<>(data.getPsms());
 		sort(list,type);
+		Map<Double,ScoreGroup> mapScores = new HashMap<>();
 		
-		// Traverse from best to worst
+		// Traverse from best to worst to calculate local FDRs
 		int decoy = 0;
 		int target = 0;
-		Map<Double,Double> mapFdr = new HashMap<>();
 		for( int i = list.size()-1; i >= 0; i-- ) {
 			Psm psm = list.get(i);
 			if( Boolean.TRUE.equals(psm.getDecoy()) )
 				decoy++;
 			else
 				target++;
-			mapFdr.put(psm.getScoreByType(type).getValue(), getFdr(decoy,target));
+			ScoreGroup scoreGroup = new ScoreGroup();
+			scoreGroup.setFdr(getFdr(decoy,target));
+			mapScores.put(psm.getScoreByType(type).getValue(), scoreGroup);
 		}
 		
-		// Traverse from worst to best
-		Map<Double,Double> mapQValue = new HashMap<>();
-		double min = mapFdr.get(list.get(0).getScoreByType(type).getValue());
+		// Traverse from worst to best to calculate q-values
+		double min = mapScores.get(list.get(0).getScoreByType(type).getValue()).getFdr();
 		for( int i = 0; i < list.size(); i++ ) {
-			Double score = list.get(i).getScoreByType(type).getValue();
-			Double fdr = mapFdr.get(score);
+			ScoreGroup scoreGroup = mapScores.get(list.get(i).getScoreByType(type).getValue());
+			double fdr = scoreGroup.getFdr();
 			if( fdr < min )
 				min = fdr;
-			mapQValue.put(score, min);
+			scoreGroup.setqValue(min);
 		}
 		
-		// Interpolate q-values from best to worst
-		int i = list.size()-1;
-		double x0 = list.get(i).getScoreByType(type).getValue();
-		double y0 = mapQValue.get(x0);
-		Map<Double,Double> mapFValue = new HashMap<>();
+		// Interpolate q-values from best to worst to calculate FDRScores
+		int j, i = list.size()-1;
+		double x1 = list.get(i).getScoreByType(type).getValue();
+		double y1 = mapScores.get(x1).getqValue();
+		double x0, y0, x, m;
 		while( i > 0 ) {
-			int j = i;
-			double y1, x1;
+			x0 = x1;
+			y0 = y1;
+			j = i;
 			do {
 				j--;
 				x1 = list.get(j).getScoreByType(type).getValue();
-				y1 = mapQValue.get(x1);  
+				y1 = mapScores.get(x1).getqValue();  
 			} while( j > 0 && y1 == y0 );
-			double m = (y1-y0)/(x1-x0);
+			m = (y1-y0)/(x1-x0);
 			for( int k = j; k <= i; k++ ) {
-				double x = list.get(k).getScoreByType(type).getValue();
-				mapFValue.put(x, (x-x0)*m+y0);
+				x = list.get(k).getScoreByType(type).getValue();
+				mapScores.get(x).setFdrScore((x-x0)*m+y0);
 			}
 			i=j;
 		}
 		
 		// Assign scores
 		for( Psm psm : data.getPsms() ) {
-			psm.setScore(new Score(ScoreType.PSM_LOCAL_FDR,mapFdr.get(psm.getScoreByType(type).getValue())));
-			psm.setScore(new Score(ScoreType.PSM_Q_VALUE,mapQValue.get(psm.getScoreByType(type).getValue())));
-			psm.setScore(new Score(ScoreType.PSM_FDR_SCORE,mapFValue.get(psm.getScoreByType(type).getValue())));
+			ScoreGroup scoreGroup = mapScores.get(psm.getScoreByType(type).getValue());
+			psm.setScore(new Score(ScoreType.PSM_LOCAL_FDR,scoreGroup.getFdr()));
+			psm.setScore(new Score(ScoreType.PSM_Q_VALUE,scoreGroup.getqValue()));
+			psm.setScore(new Score(ScoreType.PSM_FDR_SCORE,scoreGroup.getFdrScore()));
+			System.out.println(String.format("%s,%s,%s,%s",psm.getScoreByType(type).getValue(),scoreGroup.getFdr(),scoreGroup.getqValue(),scoreGroup.getFdrScore()));
 		}
 	}
 	
