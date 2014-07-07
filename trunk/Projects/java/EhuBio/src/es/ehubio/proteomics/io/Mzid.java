@@ -16,6 +16,7 @@ import javax.xml.bind.Unmarshaller;
 
 import es.ehubio.db.fasta.Fasta;
 import es.ehubio.db.fasta.HeaderParser;
+import es.ehubio.proteomics.DecoyBase;
 import es.ehubio.proteomics.MsMsData;
 import es.ehubio.proteomics.Peptide;
 import es.ehubio.proteomics.Protein;
@@ -362,6 +363,7 @@ public final class Mzid extends MsMsFile {
 				for( Protein protein2 : nonConclusive )
 					pag.getProteinDetectionHypothesises().add(buildPdh(protein2));
 			}
+			updateScores(group, pag.getCvParamsAndUserParams());
 			proteinDetectionList.getProteinAmbiguityGroups().add(pag);
 		}
 		
@@ -414,6 +416,7 @@ public final class Mzid extends MsMsFile {
 			pdh.getCvParamsAndUserParams().add(cvEvidence);
 			pdh.getCvParamsAndUserParams().add(cvLeading);
 		}
+		updateScores(protein, pdh.getCvParamsAndUserParams());
 		for( Peptide peptide : protein.getPeptides() )
 			pdh.getPeptideHypothesises().add(buildPh(protein,peptide));
 		return pdh;
@@ -475,33 +478,34 @@ public final class Mzid extends MsMsFile {
 			for( SpectrumIdentificationItemType sii : sir.getSpectrumIdentificationItems() )
 				if( sii.getPeptideEvidenceReves().isEmpty() )
 					remove.add(sii);
-				else
-					updateScores(sii);
+				else {
+					Psm psm = mapPsm.get(sii);
+					sii.setPassThreshold(psm.isPassThreshold());
+					updateScores(psm, sii.getCvParamsAndUserParams());
+				}
 			sir.getSpectrumIdentificationItems().removeAll(remove);
 		}
 	}
 	
-	private void updateScores( SpectrumIdentificationItemType sii ) {
-		Psm psm = mapPsm.get(sii);
-		sii.setPassThreshold(psm.isPassThreshold());
-		for( Score score : psm.getScores() ) {
+	private void updateScores( DecoyBase item, List<AbstractParamType> list ) {
+		for( Score score : item.getScores() ) {
 			if( score.getType().getAccession() != null ) {
-				CVParamType cv = getCVParam(score.getType().getAccession(), sii.getCvParamsAndUserParams());
+				CVParamType cv = getCVParam(score.getType().getAccession(), list);
 				if( cv == null ) {					
 					cv = new CVParamType();
 					cv.setAccession(score.getType().getAccession());
 					cv.setName(score.getType().getName());
 					cv.setCvRef(PSIMS);
-					sii.getCvParamsAndUserParams().add(cv);
+					list.add(cv);
 				}
 				cv.setValue(String.format("%s", score.getValue()));
 			} else {
-				UserParamType up = getUserParam(score.getType().getName(), sii.getCvParamsAndUserParams());
+				UserParamType up = getUserParam(score.getType().getName(), list);
 				if( up == null ) {
 					up = new UserParamType();
 					up.setName(score.getType().getName());
 					up.setType("xsd:double");
-					sii.getCvParamsAndUserParams().add(up);
+					list.add(up);
 				}
 				up.setValue(String.format("%s", score.getValue()));
 			}

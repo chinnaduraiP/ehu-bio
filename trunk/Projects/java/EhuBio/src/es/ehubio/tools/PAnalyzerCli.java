@@ -36,20 +36,23 @@ public final class PAnalyzerCli implements Command.Interface {
 	@Override
 	public void run(String[] args) throws Exception {
 		load(args[0],"decoy");
-		filter();		
+		process();
 		//dump();
-		validate();
 		save(args[1]);
 		logger.info("finished!");
 	}	
 	
-	private void filter() {
+	private void process() {
 		// PAnalyzer
 		logger.info("Running PAnalyzer ...");
 		PAnalyzer pAnalyzer = new PAnalyzer(data);
 		pAnalyzer.run();
 		PAnalyzer.Counts counts = pAnalyzer.getCounts();
 		logger.info(counts.toString());
+		
+		// Validator
+		Validator validator = new Validator(data);
+		validator.addPsmDecoyScores(scoreType);
 
 		// Filter		
 		logger.info("Filtering data ...");
@@ -61,6 +64,7 @@ public final class PAnalyzerCli implements Command.Interface {
 		//Score score = new Score(ScoreType.XTANDEM_HYPERSCORE,20.3);
 		//Score score = new Score(ScoreType.XTANDEM_HYPERSCORE,9.5);
 		//filter.setPsmScoreThreshold(score);
+		filter.setOnlyBestPsmPerPrecursor(scoreType);
 		filter.setMinPeptideLength(7);
 		//filter.setFilterDecoyPeptides(true);
 		//filter.setMzidPassThreshold(true);
@@ -69,23 +73,20 @@ public final class PAnalyzerCli implements Command.Interface {
 		//Score score = new Score(ScoreType.XTANDEM_EVALUE,0.041);
 		//filter.setProteinScoreThreshold(score);
 		//Score score = new Score(ScoreType.XTANDEM_EVALUE,0.046);
-		//filter.setGroupScoreThreshold(score);
-		
+		//filter.setGroupScoreThreshold(score);		
 		filter.run();
 		//filter.runPsmFdrThreshold(scoreType, fdr);
 		//filter.runGroupFdrThreshold(scoreType, fdr);
+		logger.info(String.format("Filter: %s", data.toString()));
 
 		// PAnalyzer
 		logger.info("Running PAnalyzer again ...");
 		pAnalyzer.run();
 		counts = pAnalyzer.getCounts();
 		logger.info(counts.toString());
-	}	
-	
-	private void validate() {
-		logger.info("Running Validator ...");
-		Validator validator = new Validator(data);
-		validator.addDecoyScores(scoreType);
+		
+		// Validator
+		validator.addProbabilities();
 		logger.info(String.format("FDR -> PSM: %s, Peptide: %s, Protein: %s, Group: %s",
 			validator.getPsmFdr().getRatio(), validator.getPeptideFdr().getRatio(), validator.getProteinFdr().getRatio(), validator.getGroupFdr().getRatio()));
 		logger.info(String.format("Thresholds for FDR=%s -> PSM: %s, Peptide: %s, Protein: %s, Group: %s",
