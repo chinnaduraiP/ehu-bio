@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -11,6 +12,9 @@ import java.util.logging.Logger;
 
 import es.ehubio.proteomics.Decoyable;
 import es.ehubio.proteomics.MsMsData;
+import es.ehubio.proteomics.Peptide;
+import es.ehubio.proteomics.Protein;
+import es.ehubio.proteomics.ProteinGroup;
 import es.ehubio.proteomics.Psm;
 import es.ehubio.proteomics.Score;
 import es.ehubio.proteomics.ScoreType;
@@ -47,6 +51,7 @@ public final class Validator {
 	}
 	
 	private class ScoreGroup {
+		private double pValue;
 		private double fdr;
 		private double qValue;
 		private double fdrScore;
@@ -68,6 +73,12 @@ public final class Validator {
 		public void setFdrScore(double fdrScore) {
 			this.fdrScore = fdrScore;
 		}
+		public double getpValue() {
+			return pValue;
+		}
+		public void setpValue(double pValue) {
+			this.pValue = pValue;
+		}
 	}
 	
 	private static final Logger logger = Logger.getLogger(Validator.class.getName());
@@ -77,17 +88,19 @@ public final class Validator {
 	public Validator( MsMsData data ) {
 		this.data = data;
 	}
-	
-	public void addDecoyScores( ScoreType type) {
-		addPsmDecoyScores(type);
-	}
-	
-	private void addPsmDecoyScores( ScoreType type) {
+
+	public void addPsmDecoyScores( ScoreType type ) {
 		List<Psm> list = new ArrayList<>(data.getPsms());
 		sort(list,type);
 		Map<Double,ScoreGroup> mapScores = new HashMap<>();
 		
-		// Traverse from best to worst to calculate local FDRs
+		// Count total decoy number (for p-values)
+		int totalDecoys = 0;
+		for( Psm psm : data.getPsms() )
+			if( Boolean.TRUE.equals(psm.getDecoy()) )
+				totalDecoys++;
+		
+		// Traverse from best to worst to calculate local FDRs and p-values
 		int decoy = 0;
 		int target = 0;
 		for( int i = list.size()-1; i >= 0; i-- ) {
@@ -98,6 +111,7 @@ public final class Validator {
 				target++;
 			ScoreGroup scoreGroup = new ScoreGroup();
 			scoreGroup.setFdr(getFdr(decoy,target));
+			scoreGroup.setpValue(((double)decoy)/totalDecoys);
 			mapScores.put(psm.getScoreByType(type).getValue(), scoreGroup);
 		}
 		
@@ -136,10 +150,47 @@ public final class Validator {
 		// Assign scores
 		for( Psm psm : data.getPsms() ) {
 			ScoreGroup scoreGroup = mapScores.get(psm.getScoreByType(type).getValue());
+			psm.setScore(new Score(ScoreType.PSM_P_VALUE, scoreGroup.getpValue()));
 			psm.setScore(new Score(ScoreType.PSM_LOCAL_FDR,scoreGroup.getFdr()));
 			psm.setScore(new Score(ScoreType.PSM_Q_VALUE,scoreGroup.getqValue()));
 			psm.setScore(new Score(ScoreType.PSM_FDR_SCORE,scoreGroup.getFdrScore()));
-			System.out.println(String.format("%s,%s,%s,%s",psm.getScoreByType(type).getValue(),scoreGroup.getFdr(),scoreGroup.getqValue(),scoreGroup.getFdrScore()));
+			//System.out.println(String.format("%s,%s,%s,%s,%s",psm.getScoreByType(type).getValue(),scoreGroup.getpValue(),scoreGroup.getFdr(),scoreGroup.getqValue(),scoreGroup.getFdrScore()));
+		}
+	}
+	
+	public void addProbabilities() {
+		double p;
+		
+		// Peptide-level
+		for( Peptide peptide : data.getPeptides() ) {
+			p = 1;
+			for( Psm psm : peptide.getPsms() )
+				p *= psm.getScoreByType(ScoreType.PSM_P_VALUE).getValue();
+			peptide.setScore(new Score(ScoreType.PEPTIDE_P_VALUE, p));
+		}
+		
+		// Protein-level
+		for( Protein protein : data.getProteins() ) {
+			p = 1;
+			for( Peptide peptide : protein.getPeptides() )
+				p *= peptide.getScoreByType(ScoreType.PEPTIDE_P_VALUE).getValue();
+			protein.setScore(new Score(ScoreType.PROTEIN_P_VALUE, p));
+		}
+		
+		// Protein group-level
+		Set<Peptide> peptides = new HashSet<>();
+		for( ProteinGroup group : data.getGroups() ) {
+			if( group.getConfidence() == Protein.Confidence.NON_CONCLUSIVE )
+				continue;
+			peptides.clear();
+			p = 1;			
+			for( Protein protein : group.getProteins() )
+				for( Peptide peptide : protein.getPeptides() )
+					if( peptide.getConfidence() != Peptide.Confidence.NON_DISCRIMINATING )
+						peptides.add(peptide);
+			for( Peptide peptide : peptides )
+				p *= peptide.getScoreByType(ScoreType.PEPTIDE_P_VALUE).getValue();
+			group.setScore(new Score(ScoreType.GROUP_P_VALUE, p));
 		}
 	}
 	

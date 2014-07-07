@@ -1,6 +1,8 @@
 package es.ehubio.proteomics.pipeline;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -16,7 +18,7 @@ import es.ehubio.proteomics.psi.mzid11.CVParamType;
 import es.ehubio.proteomics.psi.mzid11.UserParamType;
 
 public class Filter {
-	private final static Logger logger = Logger.getLogger(Filter.class.getName());
+	private final static Logger logger = Logger.getLogger(Filter.class.getName());	
 	private Score psmScoreThreshold;
 	private Score peptideScoreThreshold;
 	private Score proteinScoreThreshold;
@@ -28,6 +30,7 @@ public class Filter {
 	private Double ppmThreshold;
 	private final MsMsData data;
 	private final static int MAXITER=15;
+	private ScoreType onlyBestPsmPerPrecursor;
 	
 	public Filter( MsMsData data ) {
 		this.data = data;
@@ -103,6 +106,14 @@ public class Filter {
 
 	public void setPpmThreshold(Double ppmThreshold) {
 		this.ppmThreshold = ppmThreshold;
+	}
+	
+	public boolean isOnlyBestPsmPerPrecursor() {
+		return onlyBestPsmPerPrecursor != null;
+	}
+
+	public void setOnlyBestPsmPerPrecursor(ScoreType scoreType) {
+		this.onlyBestPsmPerPrecursor = scoreType;
 	}
 	
 	public void run() {
@@ -191,6 +202,9 @@ public class Filter {
 	}
 	
 	private void filterPsms() {
+		if( isOnlyBestPsmPerPrecursor() )
+			filterPsmsByPrecursor();
+		
 		for( Psm psm : data.getPsms() ) {
 			if( psm.getPeptide() == null ) {
 				unlinkPsm(psm);
@@ -213,6 +227,27 @@ public class Filter {
 			Score score = psm.getScoreByType(getPsmScoreThreshold().getType());
 			if( score == null || getPsmScoreThreshold().compare(score.getValue()) > 0 )
 				unlinkPsm(psm);
+		}
+	}
+
+	private void filterPsmsByPrecursor() {
+		Map<Integer,Double> map = new HashMap<>();
+		Map<Integer,Psm> bests = new HashMap<>();
+		Double prev, cur;
+		for( Peptide peptide : data.getPeptides() ) {
+			map.clear();
+			bests.clear();
+			for( Psm psm : peptide.getPsms() ) {
+				prev = map.get(psm.getCharge());
+				cur = psm.getScoreByType(onlyBestPsmPerPrecursor).getValue();
+				if( prev == null || onlyBestPsmPerPrecursor.compare(cur,prev) > 0 ) {
+					map.put(psm.getCharge(), cur);
+					bests.put(psm.getCharge(), psm);
+				}
+			}
+			for( Psm psm : peptide.getPsms().toArray(new Psm[0]) )
+				if( !psm.equals(bests.get(psm.getCharge())) )
+					unlinkPsm(psm);
 		}
 	}
 
@@ -309,9 +344,15 @@ public class Filter {
 			userParam.setValue(getPpmThreshold()+"");
 			data.setAnalysisParam(userParam);
 		}
+		if( isOnlyBestPsmPerPrecursor() ) {
+			userParam = new UserParamType();
+			userParam.setName("PAnalyzer:Only best psm per precursor");
+			userParam.setValue(""+isOnlyBestPsmPerPrecursor());
+			data.setAnalysisParam(userParam);
+		}
 		
 		userParam = new UserParamType();
-		userParam.setName("PAnalyzer:Using search engine PSM threshold");
+		userParam.setName("PAnalyzer:Using original file PSM threshold");
 		userParam.setValue(isPassThreshold()+"");
 		data.setAnalysisParam(userParam);
 	}
@@ -375,17 +416,14 @@ public class Filter {
 
 	private static void unlinkGroup( ProteinGroup group ) {
 		group.setPassThreshold(false);
-		Set<Protein> proteins = new HashSet<>(group.getProteins());
-		for( Protein protein : proteins )
+		for( Protein protein : group.getProteins().toArray(new Protein[0]) )
 			if( protein.getGroup() == group )
 				unlinkProtein(protein);
 	}
 
 	private static void unlinkProtein(Protein protein) {
 		protein.setPassThreshold(false);
-		Set<Peptide> peptides = new HashSet<>(protein.getPeptides());
-		protein.getPeptides().clear();
-		for( Peptide peptide : peptides ) {
+		for( Peptide peptide : protein.getPeptides().toArray(new Peptide[0]) ) {
 			peptide.getProteins().remove(protein);
 			if( peptide.getProteins().isEmpty() )
 				unlinkPeptide(peptide);
@@ -399,14 +437,10 @@ public class Filter {
 	
 	private static void unlinkPeptide( Peptide peptide ) {
 		peptide.setPassThreshold(false);
-		Set<Psm> psms = new HashSet<>(peptide.getPsms());
-		peptide.getPsms().clear();
-		for( Psm psm : psms )
+		for( Psm psm : peptide.getPsms().toArray(new Psm[0]) )
 			unlinkPsm(psm);		
 		
-		Set<Protein> proteins = new HashSet<>(peptide.getProteins());
-		peptide.getProteins().clear();
-		for( Protein protein : proteins ) {
+		for( Protein protein : peptide.getProteins().toArray(new Protein[0]) ) {
 			protein.getPeptides().remove(peptide);
 			if( protein.getPeptides().isEmpty() )
 				unlinkProtein(protein);
