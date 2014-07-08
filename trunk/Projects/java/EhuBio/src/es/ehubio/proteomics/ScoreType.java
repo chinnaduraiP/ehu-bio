@@ -23,9 +23,11 @@ public enum ScoreType {
 	PROTEIN_P_VALUE("MS:1001871","protein-level p-value","Estimation of the p-value for proteins",false),
 	PROTEIN_LOCAL_FDR("MS:1002364","protein-level local FDR","Estimation of the local false discovery rate of proteins",false),
 	PROTEIN_Q_VALUE("MS:1001869","protein-level q-value","Estimation of the q-value for proteins",false),
+	PROTEIN_FDR_SCORE(null,"protein-level FDRScore","FDRScore for proteins",false),
 	GROUP_P_VALUE("MS:1002371","protein group-level p-value","Estimation of the p-value for protein groups",false),
 	GROUP_LOCAL_FDR("MS:1002370","protein group-level local FDR","Estimation of the local false discovery rate of protein groups", false),
-	GROUP_Q_VALUE("MS:1002373","protein group-level q-value","Estimation of the q-value for protein groups",false);
+	GROUP_Q_VALUE("MS:1002373","protein group-level q-value","Estimation of the q-value for protein groups",false),
+	GROUP_FDR_SCORE(null,"group-level FDRScore","FDRScore for protein groups",false);
 	
 	private final String accession;
 	private final String name;

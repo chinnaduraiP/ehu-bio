@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Logger;
 
 import es.ehubio.proteomics.MsMsData;
 import es.ehubio.proteomics.Peptide;
@@ -18,7 +17,7 @@ import es.ehubio.proteomics.psi.mzid11.CVParamType;
 import es.ehubio.proteomics.psi.mzid11.UserParamType;
 
 public class Filter {
-	private final static Logger logger = Logger.getLogger(Filter.class.getName());	
+	//private final static Logger logger = Logger.getLogger(Filter.class.getName());	
 	private Score psmScoreThreshold;
 	private Score peptideScoreThreshold;
 	private Score proteinScoreThreshold;
@@ -28,8 +27,7 @@ public class Filter {
 	private Boolean filterDecoyPeptides;
 	private int rankTreshold = 0;
 	private Double ppmThreshold;
-	private final MsMsData data;
-	private final static int MAXITER=15;
+	private final MsMsData data;	
 	private ScoreType onlyBestPsmPerPrecursor;
 	
 	public Filter( MsMsData data ) {
@@ -129,76 +127,6 @@ public class Filter {
 		data.loadFromSpectra(spectra);
 		
 		updateMetaData();
-	}
-	
-	public double runPsmFdrThreshold( ScoreType type, double fdr) {
-		// Initial filter
-		setFilterDecoyPeptides(false);
-		run();
-		logCounts("Filter");
-		
-		// FDR filter
-		Validator validator = new Validator(data);
-		double th = validator.getPsmFdrThreshold(type, fdr);
-		Score score = new Score(type, th);
-		setPsmScoreThreshold(score);
-		run();
-		logCounts(String.format("PSM FDR=%s (%s th=%s)", validator.getPsmFdr().getRatio(), type.getName(), th));
-		
-		// Decoy removal
-		setFilterDecoyPeptides(true);
-		run();
-		logCounts("Decoy removal");
-		
-		CVParamType cv = new CVParamType();
-		cv.setAccession("MS:1002260");
-		cv.setCvRef("PSI-MS");
-		cv.setName("PSM:FDR threshold");
-		cv.setValue(String.format("%s",fdr));
-		data.setThreshold(cv);
-		
-		return th;
-	}	
-	
-	public double runGroupFdrThreshold( ScoreType type, double fdr) {
-		// Initial filter and update groups using PAnalyzer
-		PAnalyzer pAnalyzer = new PAnalyzer(data);				
-		pAnalyzer.run();
-		setFilterDecoyPeptides(false);
-		run();
-		pAnalyzer.run();
-		
-		// FDR Initialization
-		Validator validator = new Validator(data);
-		double prevThreshold;
-		double newThreshold = validator.getGroupFdrThreshold(type, fdr);		
-		Score score = new Score(type, newThreshold);
-		setGroupScoreThreshold(score);
-		
-		// Iteration
-		int i = 0;
-		do {
-			prevThreshold = newThreshold;
-			run();
-			pAnalyzer.run();
-			newThreshold = validator.getGroupFdrThreshold(type, fdr);
-			score.setValue(newThreshold);
-			logger.info(String.format("Iteration: %s -> prev=%s, new=%s", ++i, prevThreshold, newThreshold));
-		} while( type.compare(newThreshold, prevThreshold) > 0 && i < MAXITER );
-		
-		// Decoy removal
-		setFilterDecoyPeptides(true);
-		run();
-		pAnalyzer.run();
-		
-		if( type.compare(newThreshold, prevThreshold) > 0 )
-			logger.warning("Maximum number of iterations reached!");
-		
-		return prevThreshold;
-	}
-	
-	private void logCounts( String title ) {
-		logger.info(String.format("%s: %s", title, data.toString()));
 	}
 	
 	private void filterPsms() {
