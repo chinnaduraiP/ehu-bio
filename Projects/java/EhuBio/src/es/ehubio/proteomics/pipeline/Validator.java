@@ -89,34 +89,77 @@ public final class Validator {
 		this.data = data;
 	}
 
-	public void addPsmDecoyScores( ScoreType type ) {
-		List<Psm> list = new ArrayList<>(data.getPsms());
+	public void updatePsmDecoyScores( ScoreType type ) {
+		updateDecoyScores(data.getPsms(), type, ScoreType.PSM_P_VALUE, ScoreType.PSM_LOCAL_FDR, ScoreType.PSM_Q_VALUE, ScoreType.PSM_FDR_SCORE);
+	}
+	
+	public void updatePeptideDecoyScores( ScoreType type ) {
+		updateDecoyScores(data.getPeptides(), type, null, ScoreType.PEPTIDE_LOCAL_FDR, ScoreType.PEPTIDE_Q_VALUE, ScoreType.PEPTIDE_FDR_SCORE);
+	}
+	
+	public void updateProteinDecoyScores( ScoreType type ) {
+		updateDecoyScores(data.getProteins(), type, null, ScoreType.PROTEIN_LOCAL_FDR, ScoreType.PROTEIN_Q_VALUE, ScoreType.PROTEIN_FDR_SCORE);
+	}
+	
+	public void updateGroupDecoyScores( ScoreType type ) {
+		updateDecoyScores(data.getGroups(), type, null, ScoreType.GROUP_LOCAL_FDR, ScoreType.GROUP_Q_VALUE, ScoreType.GROUP_FDR_SCORE);
+	}
+	
+	private void updateDecoyScores( Set<? extends Decoyable> set, ScoreType type, ScoreType pValue, ScoreType localFdr, ScoreType qValue, ScoreType fdrScore ) {
+		List<Decoyable> list = new ArrayList<>();
+		for( Decoyable item : set )
+			if( !item.skipFdr() )
+				list.add(item);
 		sort(list,type);
 		Map<Double,ScoreGroup> mapScores = new HashMap<>();
+
+		getLocalFdr(list,type,pValue!=null,mapScores);
+		getQValues(list,type,mapScores);
+		if( fdrScore != null )
+			getFdrScores(list,type,mapScores);		
 		
+		// Assign scores
+		for( Decoyable item : list ) {
+			ScoreGroup scoreGroup = mapScores.get(item.getScoreByType(type).getValue());
+			if( pValue != null )
+				item.setScore(new Score(pValue, scoreGroup.getpValue()));
+			item.setScore(new Score(localFdr,scoreGroup.getFdr()));
+			item.setScore(new Score(qValue,scoreGroup.getqValue()));
+			if( fdrScore != null )
+				item.setScore(new Score(fdrScore,scoreGroup.getFdrScore()));
+			//System.out.println(String.format("%s,%s,%s,%s,%s",psm.getScoreByType(type).getValue(),scoreGroup.getpValue(),scoreGroup.getFdr(),scoreGroup.getqValue(),scoreGroup.getFdrScore()));
+		}
+	}
+	
+	private void getLocalFdr(List<Decoyable> list, ScoreType type, boolean pValue, Map<Double,ScoreGroup> mapScores) {
 		// Count total decoy number (for p-values)
 		int totalDecoys = 0;
-		for( Psm psm : data.getPsms() )
-			if( Boolean.TRUE.equals(psm.getDecoy()) )
-				totalDecoys++;
-		
+		if( pValue )
+			for( Decoyable item : list )
+				if( Boolean.TRUE.equals(item.getDecoy()) )
+					totalDecoys++;
+
 		// Traverse from best to worst to calculate local FDRs and p-values
 		int decoy = 0;
 		int target = 0;
+		Decoyable item;
 		for( int i = list.size()-1; i >= 0; i-- ) {
-			Psm psm = list.get(i);
-			if( Boolean.TRUE.equals(psm.getDecoy()) )
+			item = list.get(i);
+			if( Boolean.TRUE.equals(item.getDecoy()) )
 				decoy++;
 			else
 				target++;
 			ScoreGroup scoreGroup = new ScoreGroup();
 			scoreGroup.setFdr(getFdr(decoy,target));
-			scoreGroup.setpValue(((double)decoy)/totalDecoys);
-			mapScores.put(psm.getScoreByType(type).getValue(), scoreGroup);
+			if( pValue )
+				scoreGroup.setpValue(((double)decoy)/totalDecoys);
+			mapScores.put(item.getScoreByType(type).getValue(), scoreGroup);
 		}
-		
+	}
+	
+	private void getQValues(List<Decoyable> list, ScoreType type, Map<Double, ScoreGroup> mapScores) {
 		// Traverse from worst to best to calculate q-values
-		double min = mapScores.get(list.get(0).getScoreByType(type).getValue()).getFdr();
+		double min = mapScores.get(list.get(0).getScoreByType(type).getValue()).getFdr();		
 		for( int i = 0; i < list.size(); i++ ) {
 			ScoreGroup scoreGroup = mapScores.get(list.get(i).getScoreByType(type).getValue());
 			double fdr = scoreGroup.getFdr();
@@ -124,7 +167,9 @@ public final class Validator {
 				min = fdr;
 			scoreGroup.setqValue(min);
 		}
-		
+	}
+	
+	private void getFdrScores(List<Decoyable> list, ScoreType type, Map<Double, ScoreGroup> mapScores) {
 		// Interpolate q-values from best to worst to calculate FDRScores
 		int j, i = list.size()-1;
 		double x1 = list.get(i).getScoreByType(type).getValue();
@@ -146,38 +191,30 @@ public final class Validator {
 			}
 			i=j;
 		}
-		
-		// Assign scores
-		for( Psm psm : data.getPsms() ) {
-			ScoreGroup scoreGroup = mapScores.get(psm.getScoreByType(type).getValue());
-			psm.setScore(new Score(ScoreType.PSM_P_VALUE, scoreGroup.getpValue()));
-			psm.setScore(new Score(ScoreType.PSM_LOCAL_FDR,scoreGroup.getFdr()));
-			psm.setScore(new Score(ScoreType.PSM_Q_VALUE,scoreGroup.getqValue()));
-			psm.setScore(new Score(ScoreType.PSM_FDR_SCORE,scoreGroup.getFdrScore()));
-			//System.out.println(String.format("%s,%s,%s,%s,%s",psm.getScoreByType(type).getValue(),scoreGroup.getpValue(),scoreGroup.getFdr(),scoreGroup.getqValue(),scoreGroup.getFdrScore()));
-		}
 	}
-	
-	public void addProbabilities() {
-		double p;
-		
-		// Peptide-level
+
+	public void updatePeptideProbabilities() {
+		double p;		
 		for( Peptide peptide : data.getPeptides() ) {
 			p = 1;
 			for( Psm psm : peptide.getPsms() )
 				p *= psm.getScoreByType(ScoreType.PSM_P_VALUE).getValue();
 			peptide.setScore(new Score(ScoreType.PEPTIDE_P_VALUE, p));
 		}
-		
-		// Protein-level
+	}
+	
+	public void updateProteinProbabilities() {
+		double p;
 		for( Protein protein : data.getProteins() ) {
 			p = 1;
 			for( Peptide peptide : protein.getPeptides() )
 				p *= peptide.getScoreByType(ScoreType.PEPTIDE_P_VALUE).getValue();
 			protein.setScore(new Score(ScoreType.PROTEIN_P_VALUE, p));
 		}
-		
-		// Protein group-level
+	}
+	
+	public void updateGroupProbabilities() {
+		double p;
 		Set<Peptide> peptides = new HashSet<>();
 		for( ProteinGroup group : data.getGroups() ) {
 			if( group.getConfidence() == Protein.Confidence.NON_CONCLUSIVE )
@@ -194,6 +231,12 @@ public final class Validator {
 		}
 	}
 	
+	public void updateProbabilities() {
+		updatePeptideProbabilities();
+		updateProteinProbabilities();
+		updateGroupProbabilities();
+	}
+	
 	public boolean isCountDecoy() {
 		return countDecoy;
 	}
@@ -205,59 +248,7 @@ public final class Validator {
 	 */
 	public void setCountDecoy(boolean countDecoy) {
 		this.countDecoy = countDecoy;
-	}
-	
-	public double getPsmFdrThreshold( ScoreType type, double threshold ) {
-		return getFdrThreshold(data.getPsms(), type, threshold);
-	}
-	
-	public double getPeptideFdrThreshold( ScoreType type, double threshold ) {
-		return getFdrThreshold(data.getPeptides(), type, threshold);
-	}
-	
-	public double getProteinFdrThreshold( ScoreType type, double threshold ) {
-		return getFdrThreshold(data.getProteins(), type, threshold);
-	}
-	
-	public double getGroupFdrThreshold( ScoreType type, double threshold ) {
-		return getFdrThreshold(data.getGroups(), type, threshold);
 	}	
-	
-	private double getFdrThreshold( Set<? extends Decoyable> set, ScoreType type, double threshold ) {
-		if( set.isEmpty() )
-			return 0.0;
-		
-		List<Decoyable> list = new ArrayList<>(set);		
-		sort(list, type);
-		
-		//logger.info("Calculating score threshold ...");
-		FdrResult orig = getSetFdr(set);
-		int decoy = orig.getDecoy();
-		int target = orig.getTarget();
-		double fdr = orig.getRatio();
-		int offset = 0;
-		Decoyable item = list.get(offset);
-		Score oldScore = item.getScoreByType(type);		
-		while( fdr > threshold && offset < list.size()-1 ) {			
-			Score nextScore;
-			do {	// items with the same score
-				if( Boolean.TRUE.equals(item.getDecoy()) )
-					decoy--;
-				else
-					target--;
-				offset++;
-				item = list.get(offset);
-				nextScore = item.getScoreByType(type);
-			} while( offset < list.size()-1 && oldScore.compare(nextScore.getValue()) == 0 );
-			oldScore = nextScore;
-			fdr = getFdr(decoy, target);
-			//System.out.println(String.format("Score=%s,  FDR=%s",score.getValue(),fdr));			
-		}
-		if( fdr > threshold )
-			logger.warning("Desired FDR cannot be reached");
-		//logger.info("done!");
-		return oldScore.getValue();
-	}
 	
 	private void sort( List<? extends Decoyable> list, ScoreType type ) {
 		//logger.info("Sorting scores ...");
@@ -288,6 +279,11 @@ public final class Validator {
 	
 	public FdrResult getGroupFdr() {
 		return getSetFdr(data.getGroups());	
+	}
+	
+	public void logFdrs() {
+		logger.info(String.format("FDR -> PSM: %s, Peptide: %s, Protein: %s, Group: %s",
+			getPsmFdr().getRatio(), getPeptideFdr().getRatio(), getProteinFdr().getRatio(), getGroupFdr().getRatio()));
 	}
 	
 	private FdrResult getSetFdr( Set<? extends Decoyable> set ) {

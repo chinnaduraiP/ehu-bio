@@ -75,6 +75,19 @@ public class PAnalyzer {
 		public String toString() {
 			return str;
 		}
+		@Override
+		public boolean equals(Object obj) {
+			if( obj == null || !Counts.class.isInstance(obj) )
+				return false;
+			Counts other = (Counts)obj;
+			return conclusive == other.conclusive && nonConclusive == other.nonConclusive
+				&& ambiguous == other.ambiguous && ambiguousGroups == other.ambiguousGroups
+				&& indistinguishable == other.indistinguishable && indistinguishableGroups == other.indistinguishableGroups;
+		}
+		@Override
+		public int hashCode() {
+			return minimum;
+		}
 	}
 	
 	private final MsMsData data;

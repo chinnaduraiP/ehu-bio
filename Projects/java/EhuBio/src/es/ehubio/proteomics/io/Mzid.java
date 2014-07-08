@@ -416,6 +416,7 @@ public final class Mzid extends MsMsFile {
 			pdh.getCvParamsAndUserParams().add(cvEvidence);
 			pdh.getCvParamsAndUserParams().add(cvLeading);
 		}
+		pdh.setPassThreshold(protein.isPassThreshold());
 		updateScores(protein, pdh.getCvParamsAndUserParams());
 		for( Peptide peptide : protein.getPeptides() )
 			pdh.getPeptideHypothesises().add(buildPh(protein,peptide));

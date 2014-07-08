@@ -3,6 +3,7 @@ package es.ehubio.tools;
 import java.util.logging.Logger;
 
 import es.ehubio.proteomics.MsMsData;
+import es.ehubio.proteomics.Score;
 import es.ehubio.proteomics.ScoreType;
 import es.ehubio.proteomics.io.MsMsFile;
 import es.ehubio.proteomics.io.Mzid;
@@ -14,93 +15,148 @@ public final class PAnalyzerCli implements Command.Interface {
 	private static final Logger logger = Logger.getLogger(PAnalyzerCli.class.getName());
 	private MsMsData data;
 	private MsMsFile file;
+	private PAnalyzer pAnalyzer;
+	private Validator validator;
 	private final ScoreType scoreType = ScoreType.XTANDEM_EVALUE;
-	//private final ScoreType scoreType = ScoreType.XTANDEM_HYPERSCORE;
 	private final double fdr = 0.01;
+	private final static int MAXITER=15;
 
 	@Override
 	public String getUsage() {
-		return "</path/input.mzid> </path/output.mzid>";
+		return "<psm|grp|pep-grp|x> </path/input.mzid> </path/output.mzid>";
 	}
 
 	@Override
 	public int getMinArgs() {
-		return 2;
+		return 3;
 	}
 
 	@Override
 	public int getMaxArgs() {
-		return 2;
+		return 3;
 	}	
 
 	@Override
 	public void run(String[] args) throws Exception {
-		load(args[0],"decoy");
-		process();
+		load(args[1],"decoy");
+		initialize();
+		rebuildGroups();
+		if( args[0].equals("psm") ) {
+			logger.info("PSM FDR based process");
+			processPsmFdr();
+		} else if( args[0].equals("grp") ) {
+			logger.info("Protein group FDR based process");
+			processGroupFdr();
+		} else if( args[0].equals("pep-grp") ) {
+			logger.info("Peptide+Protein Group FDR based process");
+			processPeptideGroupFdr();
+		}
 		//dump();
-		save(args[1]);
+		
+		save(args[2]);
+		
 		logger.info("finished!");
-	}	
+	}		
+
+	private void initialize() {
+		pAnalyzer = new PAnalyzer(data);		
+		validator = new Validator(data);
+	}
+
+	private void processPsmFdr() {				
+		inputFilter();
+		
+		validator.updatePsmDecoyScores(scoreType);
+		Filter filter = new Filter(data);
+		filter.setPsmScoreThreshold(new Score(ScoreType.PSM_Q_VALUE, fdr));
+		filterAndGroup(filter,"FDR filter");
+		
+		removeDecoys();
+	}
 	
-	private void process() {
-		// PAnalyzer
-		logger.info("Running PAnalyzer ...");
-		PAnalyzer pAnalyzer = new PAnalyzer(data);
+	private void processGroupFdr() {
+		inputFilter();
+				
+		PAnalyzer.Counts curCount = pAnalyzer.getCounts(), prevCount;
+		int i = 0;
+		validator.updatePsmDecoyScores(scoreType);
+		Filter filter = new Filter(data);
+		filter.setGroupScoreThreshold(new Score(ScoreType.GROUP_Q_VALUE, fdr));
+		do {
+			i++;
+			validator.updatePeptideProbabilities();
+			validator.updateGroupProbabilities();
+			validator.updateGroupDecoyScores(ScoreType.GROUP_P_VALUE);
+			filterAndGroup(filter,String.format("Iteration %s", i));
+			prevCount = curCount;
+			curCount = pAnalyzer.getCounts();			
+			logger.info(String.format("Iteration: %s -> prev=%s, new=%s", i, prevCount.toString(), curCount.toString()));
+		} while( !curCount.equals(prevCount) && i < MAXITER );
+		if( i >= MAXITER )
+			logger.warning("Maximum number of iterations reached!");
+
+		removeDecoys();
+	}
+	
+	private void processPeptideGroupFdr() {
+		inputFilter();
+		
+		validator.updatePsmDecoyScores(scoreType);
+		validator.updatePeptideProbabilities();
+		validator.updatePeptideDecoyScores(ScoreType.PEPTIDE_P_VALUE);
+		Filter filter = new Filter(data);
+		filter.setPeptideScoreThreshold(new Score(ScoreType.PEPTIDE_Q_VALUE, fdr));
+		filterAndGroup(filter, "Peptide FDR filter");
+		
+		validator.updateGroupProbabilities();
+		validator.updateGroupDecoyScores(ScoreType.GROUP_P_VALUE);
+		filter = new Filter(data);
+		filter.setGroupScoreThreshold(new Score(ScoreType.GROUP_Q_VALUE, fdr));
+		filterAndGroup(filter,"Group FDR filter");
+		
+		removeDecoys();
+	}
+	
+	private void filterAndGroup( Filter filter, String title ) {
+		filter.run();
+		logCounts(title);
+		rebuildGroups();
+	}
+	
+	private void inputFilter() {
+		Filter filter = new Filter(data);
+		filter.setOnlyBestPsmPerPrecursor(scoreType);
+		filter.setMinPeptideLength(7);
+		filter.setFilterDecoyPeptides(false);
+		filterAndGroup(filter,"Input filter");
+	}
+	
+	private void rebuildGroups() {
+		logger.info("Updating protein groups ...");
 		pAnalyzer.run();
 		PAnalyzer.Counts counts = pAnalyzer.getCounts();
 		logger.info(counts.toString());
-		
-		// Validator
-		Validator validator = new Validator(data);
-		validator.addPsmDecoyScores(scoreType);
-
-		// Filter		
-		logger.info("Filtering data ...");
+	}
+	
+	private void removeDecoys() {
+		validator.logFdrs();
 		Filter filter = new Filter(data);
-		//filter.setRankTreshold(1);
-		//filter.setPpmThreshold(10.0);
-		//Score score = new Score(ScoreType.XTANDEM_EVALUE,0.33);
-		//Score score = new Score(ScoreType.XTANDEM_EVALUE,29);
-		//Score score = new Score(ScoreType.XTANDEM_HYPERSCORE,20.3);
-		//Score score = new Score(ScoreType.XTANDEM_HYPERSCORE,9.5);
-		//filter.setPsmScoreThreshold(score);
-		filter.setOnlyBestPsmPerPrecursor(scoreType);
-		filter.setMinPeptideLength(7);
-		//filter.setFilterDecoyPeptides(true);
-		//filter.setMzidPassThreshold(true);
-		//Score score = new Score(ScoreType.XTANDEM_EVALUE,0.1);
-		//filter.setPeptideScoreThreshold(score);
-		//Score score = new Score(ScoreType.XTANDEM_EVALUE,0.041);
-		//filter.setProteinScoreThreshold(score);
-		//Score score = new Score(ScoreType.XTANDEM_EVALUE,0.046);
-		//filter.setGroupScoreThreshold(score);		
-		filter.run();
-		//filter.runPsmFdrThreshold(scoreType, fdr);
-		//filter.runGroupFdrThreshold(scoreType, fdr);
-		logger.info(String.format("Filter: %s", data.toString()));
-
-		// PAnalyzer
-		logger.info("Running PAnalyzer again ...");
-		pAnalyzer.run();
-		counts = pAnalyzer.getCounts();
-		logger.info(counts.toString());
-		
-		// Validator
-		validator.addProbabilities();
-		logger.info(String.format("FDR -> PSM: %s, Peptide: %s, Protein: %s, Group: %s",
-			validator.getPsmFdr().getRatio(), validator.getPeptideFdr().getRatio(), validator.getProteinFdr().getRatio(), validator.getGroupFdr().getRatio()));
-		logger.info(String.format("Thresholds for FDR=%s -> PSM: %s, Peptide: %s, Protein: %s, Group: %s",
-			fdr,validator.getPsmFdrThreshold(scoreType, fdr),validator.getPeptideFdrThreshold(scoreType, fdr),validator.getProteinFdrThreshold(scoreType, fdr),validator.getGroupFdrThreshold(scoreType, fdr)));
+		filter.setFilterDecoyPeptides(true);
+		filterAndGroup(filter,"Decoy removal");
 	}
 	
 	private void load( String path, String decoy ) throws Exception {
 		file = new Mzid();		
 		data = file.load(path,decoy);
-		logger.info(String.format("Loaded: %s", data.toString()));
+		logCounts("Loaded");
 	}
 	
 	private void save( String path ) throws Exception {
 		file.save(path);
+	}
+	
+	private void logCounts( String title ) {
+		logger.info(String.format("%s: %s", title, data.toString()));
 	}
 	
 	//private void dump() {
