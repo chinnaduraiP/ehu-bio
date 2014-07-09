@@ -140,4 +140,9 @@ public class Protein extends DecoyBase {
 			return null;
 		return best.getScoreByType(type);
 	}
+	
+	@Override
+	public String toString() {
+		return getAccession();
+	}
 }

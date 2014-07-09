@@ -5,10 +5,10 @@ public class CsvUtils {
 		StringBuilder builder = new StringBuilder();
 		int i = 0;
 		for( ; i < fields.length - 1; i++ ) {
-			builder.append(fields[i].toString());
+			builder.append(String.valueOf(fields[i]));
 			builder.append(separator);
 		}
-		builder.append(fields[i].toString());
+		builder.append(String.valueOf(fields[i]));
 		return builder.toString();
 	}
 }

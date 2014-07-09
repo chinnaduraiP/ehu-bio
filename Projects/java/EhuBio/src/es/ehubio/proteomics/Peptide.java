@@ -106,7 +106,8 @@ public class Peptide extends DecoyBase {
 	
 	@Override
 	public String toString() {
-		StringBuilder builder = new StringBuilder(getSequence());
+		//StringBuilder builder = new StringBuilder(getSequence());
+		StringBuilder builder = new StringBuilder(""+getId());
 		if( getConfidence() == null )
 			builder.append('?');
 		else if( getConfidence() == Confidence.DISCRIMINATING )

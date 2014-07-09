@@ -228,7 +228,8 @@ public class Filter {
 			if( getGroupScoreThreshold() == null )
 				continue;
 			Score score = group.getScoreByType(getGroupScoreThreshold().getType());
-			if( score == null || getGroupScoreThreshold().compare(score.getValue()) > 0 )
+			//if( score == null || getGroupScoreThreshold().compare(score.getValue()) > 0 )
+			if( score != null && getGroupScoreThreshold().compare(score.getValue()) > 0 )
 				unlinkGroup(group);
 		}
 	}

@@ -7,6 +7,7 @@ import es.ehubio.proteomics.Score;
 import es.ehubio.proteomics.ScoreType;
 import es.ehubio.proteomics.io.MsMsFile;
 import es.ehubio.proteomics.io.Mzid;
+import es.ehubio.proteomics.io.SpHppCsv;
 import es.ehubio.proteomics.pipeline.Filter;
 import es.ehubio.proteomics.pipeline.PAnalyzer;
 import es.ehubio.proteomics.pipeline.Validator;
@@ -42,13 +43,13 @@ public final class PAnalyzerCli implements Command.Interface {
 		initialize();
 		rebuildGroups();
 		if( args[0].equals("psm") ) {
-			logger.info("PSM FDR based process");
+			logger.info("--- PSM FDR based process ---");
 			processPsmFdr();
 		} else if( args[0].equals("grp") ) {
-			logger.info("Protein group FDR based process");
+			logger.info("--- Protein group FDR based process ---");
 			processGroupFdr();
 		} else if( args[0].equals("pep-grp") ) {
-			logger.info("Peptide+Protein Group FDR based process");
+			logger.info("--- Peptide+Protein Group FDR based process ---");
 			processPeptideGroupFdr();
 		}
 		//dump();
@@ -71,7 +72,7 @@ public final class PAnalyzerCli implements Command.Interface {
 		filter.setPsmScoreThreshold(new Score(ScoreType.PSM_Q_VALUE, fdr));
 		filterAndGroup(filter,"FDR filter");
 		
-		removeDecoys();
+		finalSteps();
 	}
 	
 	private void processGroupFdr() {
@@ -90,12 +91,15 @@ public final class PAnalyzerCli implements Command.Interface {
 			filterAndGroup(filter,String.format("Iteration %s", i));
 			prevCount = curCount;
 			curCount = pAnalyzer.getCounts();			
-			logger.info(String.format("Iteration: %s -> prev=%s, new=%s", i, prevCount.toString(), curCount.toString()));
+			//logger.info(String.format("Iteration: %s -> prev=%s, new=%s", i, prevCount.toString(), curCount.toString()));
 		} while( !curCount.equals(prevCount) && i < MAXITER );
 		if( i >= MAXITER )
 			logger.warning("Maximum number of iterations reached!");
+		
+		validator.updateGroupProbabilities();
+		validator.updateGroupDecoyScores(ScoreType.GROUP_P_VALUE);
 
-		removeDecoys();
+		finalSteps();
 	}
 	
 	private void processPeptideGroupFdr() {
@@ -113,8 +117,10 @@ public final class PAnalyzerCli implements Command.Interface {
 		filter = new Filter(data);
 		filter.setGroupScoreThreshold(new Score(ScoreType.GROUP_Q_VALUE, fdr));
 		filterAndGroup(filter,"Group FDR filter");
+		validator.updateGroupProbabilities();
+		validator.updateGroupDecoyScores(ScoreType.GROUP_P_VALUE);
 		
-		removeDecoys();
+		finalSteps();
 	}
 	
 	private void filterAndGroup( Filter filter, String title ) {
@@ -132,17 +138,20 @@ public final class PAnalyzerCli implements Command.Interface {
 	}
 	
 	private void rebuildGroups() {
-		logger.info("Updating protein groups ...");
+		//logger.info("Updating protein groups ...");
 		pAnalyzer.run();
 		PAnalyzer.Counts counts = pAnalyzer.getCounts();
-		logger.info(counts.toString());
+		logger.info("Re-grouped: "+counts.toString());
 	}
 	
-	private void removeDecoys() {
+	private void finalSteps() {
 		validator.logFdrs();
-		Filter filter = new Filter(data);
+		/*Filter filter = new Filter(data);
 		filter.setFilterDecoyPeptides(true);
-		filterAndGroup(filter,"Decoy removal");
+		filterAndGroup(filter,"Decoy removal");*/
+		logCounts("Final counts");
+		PAnalyzer.Counts counts = pAnalyzer.getCounts();
+		logger.info(counts.toString());
 	}
 	
 	private void load( String path, String decoy ) throws Exception {
@@ -153,6 +162,8 @@ public final class PAnalyzerCli implements Command.Interface {
 	
 	private void save( String path ) throws Exception {
 		file.save(path);
+		SpHppCsv csv = new SpHppCsv(data);
+		csv.save(path);
 	}
 	
 	private void logCounts( String title ) {

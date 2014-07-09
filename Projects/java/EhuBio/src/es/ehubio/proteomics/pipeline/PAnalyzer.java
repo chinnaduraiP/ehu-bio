@@ -33,6 +33,7 @@ public class PAnalyzer {
 		private final int indistinguishableGroups;
 		private final int maximum;
 		private final int minimum;
+		private final int groups;
 		private final String str;
 		
 		public Counts( int conclusive, int indistinguishable, int indistinguishableGroups, int ambiguous, int ambiguousGroups, int nonConclusive ) {
@@ -44,7 +45,8 @@ public class PAnalyzer {
 			this.nonConclusive = nonConclusive;
 			maximum = conclusive+nonConclusive+indistinguishable+ambiguous;
 			minimum = conclusive+indistinguishableGroups+ambiguousGroups;
-			str = String.format("Protein count=%s (%s) -> %s conclusive, %s indistinguishable groups (%s), %s ambiguous groups (%s), non-conclusive (%s)",
+			groups = minimum+nonConclusive;
+			str = String.format("protein count=%s (%s) -> %s conclusive, %s indistinguishable groups (%s), %s ambiguous groups (%s), non-conclusive (%s)",
 				minimum, maximum, conclusive, indistinguishableGroups, indistinguishable, ambiguousGroups, ambiguous, nonConclusive);
 		}
 		public int getConclusive() {
@@ -71,6 +73,9 @@ public class PAnalyzer {
 		public int getMinimum() {
 			return minimum;
 		}
+		public int getGroups() {
+			return groups;
+		}
 		@Override
 		public String toString() {
 			return str;
@@ -87,7 +92,7 @@ public class PAnalyzer {
 		@Override
 		public int hashCode() {
 			return minimum;
-		}
+		}		
 	}
 	
 	private final MsMsData data;
