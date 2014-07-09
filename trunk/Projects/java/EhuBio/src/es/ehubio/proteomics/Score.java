@@ -44,4 +44,9 @@ public class Score {
 	public int compare( double value2 ) {
 		return type.compare(value, value2);
 	}
+	
+	@Override
+	public String toString() {
+		return getValue()+"";
+	}
 }

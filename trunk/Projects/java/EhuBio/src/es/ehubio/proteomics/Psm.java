@@ -97,5 +97,10 @@ public class Psm extends DecoyBase {
 	public void setDecoy(Boolean decoy) {
 		if( peptide != null )
 			peptide.setDecoy(decoy);
-	}	
+	}
+	
+	@Override
+	public String toString() {
+		return ""+getId();
+	}
 }
