@@ -37,14 +37,14 @@ public class SpHppCsv extends MsMsFile {
 	@Override
 	public void save(String path) throws Exception {
 		path = path.replaceAll("\\..*", "");
+		logger.info(String.format("Saving '%s' CSVs ...", path));
 		SavePsms(path+"-psms.csv");
 		SavePeptides(path+"-peptides.csv");
 		SaveProteins(path+"-proteins.csv");
 		SaveGroups(path+"-groups.csv");
 	}	
 
-	private void SavePsms( String path ) throws IOException {
-		logger.info(String.format("Saving '%s' ...", path));
+	private void SavePsms( String path ) throws IOException {		
 		PrintWriter pw = new PrintWriter(path);
 		pw.println(CsvUtils.getCsv(SEP,
 			"id","decoy","calcMz","expMz","charge","file","spectrum",
@@ -70,7 +70,6 @@ public class SpHppCsv extends MsMsFile {
 	}
 	
 	private void SavePeptides(String path) throws IOException {
-		logger.info(String.format("Saving '%s' ...", path));
 		PrintWriter pw = new PrintWriter(path);
 		pw.println(CsvUtils.getCsv(SEP,
 			"id","decoy","confidence","sequence","ptms","psms",
@@ -94,7 +93,6 @@ public class SpHppCsv extends MsMsFile {
 	}
 
 	private void SaveProteins(String path) throws IOException {
-		logger.info(String.format("Saving '%s' ...", path));
 		PrintWriter pw = new PrintWriter(path);
 		pw.println(CsvUtils.getCsv(SEP,
 			"accession","decoy","confidence","peptides",
@@ -118,7 +116,6 @@ public class SpHppCsv extends MsMsFile {
 	}
 
 	private void SaveGroups(String path) throws IOException {
-		logger.info(String.format("Saving '%s' ...", path));
 		PrintWriter pw = new PrintWriter(path);
 		pw.println(CsvUtils.getCsv(SEP,
 			"id","name","decoy","confidence","proteins",
