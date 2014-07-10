@@ -207,6 +207,10 @@ public class Filter {
 
 	private void filterProteins() {
 		for( Protein protein : data.getProteins() ) {
+			if( protein.getPeptides().isEmpty() ) {
+				unlinkProtein(protein);
+				continue;
+			}
 			if( isPassThreshold() && !protein.isPassThreshold() ) {
 				unlinkProtein(protein);
 				continue;
@@ -221,6 +225,10 @@ public class Filter {
 
 	private void filterGroups() {		
 		for( ProteinGroup group : data.getGroups() ) {
+			if( group.getProteins().isEmpty() ) {
+				unlinkGroup(group);
+				continue;
+			}
 			if( isPassThreshold() && !group.isPassThreshold() ) {
 				unlinkGroup(group);
 				continue;

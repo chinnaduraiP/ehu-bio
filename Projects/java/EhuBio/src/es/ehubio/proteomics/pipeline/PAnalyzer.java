@@ -110,12 +110,13 @@ public class PAnalyzer {
 	 * @see <a href="http://www.biomedcentral.com/1471-2105/13/288">original paper</a>
 	 */
 	public void run() {
-		data.getGroups().clear();		
+		data.getGroups().clear();
+		resetConfidences();
 		classifyPeptides();
 		classifyProteins();
 		updateMetadata();
-	}
-	
+	}	
+
 	public Counts getCounts() {
 		int conclusive = 0;
 		int indistinguishable = 0;
@@ -132,6 +133,13 @@ public class PAnalyzer {
 			}
 		}
 		return new Counts(conclusive, indistinguishable, indistinguishableGroups, ambiguous, ambiguousGroups, nonConclusive);
+	}
+	
+	private void resetConfidences() {
+		for( Peptide peptide : data.getPeptides() )
+			peptide.setConfidence(null);
+		for( Protein protein : data.getProteins() )
+			protein.setConfidence(null);
 	}
 
 	private void classifyPeptides() {

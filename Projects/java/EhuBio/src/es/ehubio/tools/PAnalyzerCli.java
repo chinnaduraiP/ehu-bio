@@ -24,7 +24,7 @@ public final class PAnalyzerCli implements Command.Interface {
 
 	@Override
 	public String getUsage() {
-		return "<psm|grp|pep-grp|x> </path/input.mzid> </path/output.mzid>";
+		return "<psm|grp|pepg|x> </path/input.mzid> </path/output.mzid>";
 	}
 
 	@Override
@@ -39,21 +39,27 @@ public final class PAnalyzerCli implements Command.Interface {
 
 	@Override
 	public void run(String[] args) throws Exception {
-		load(args[1],"decoy");
+		load(args[1],"decoy");		
 		initialize();
-		rebuildGroups();
-		if( args[0].equals("psm") ) {
-			logger.info("--- PSM FDR based process ---");
-			processPsmFdr();
-		} else if( args[0].equals("grp") ) {
-			logger.info("--- Protein group FDR based process ---");
-			processGroupFdr();
-		} else if( args[0].equals("pep-grp") ) {
-			logger.info("--- Peptide+Protein Group FDR based process ---");
-			processPeptideGroupFdr();
+		rebuildGroups();		
+		inputFilter();
+		switch( args[0] ) {
+			case "psm":
+				logger.info("--- PSM FDR based process ---");
+				processPsmFdr();
+				break;
+			case "grp":
+				logger.info("--- Protein group FDR based process (iterative) ---");
+				processGroupFdr();
+				break;
+			case "pepg":
+				logger.info("--- Peptide+Protein Group FDR based process (non-iterative) ---");
+				processPeptideGroupFdr();
+				break;
+			default:
+				logger.info("--- Non FDR based process ---");
 		}
-		//dump();
-		
+		finalSteps();		
 		save(args[2]);
 		
 		logger.info("finished!");
@@ -65,19 +71,13 @@ public final class PAnalyzerCli implements Command.Interface {
 	}
 
 	private void processPsmFdr() {				
-		inputFilter();
-		
 		validator.updatePsmDecoyScores(scoreType);
 		Filter filter = new Filter(data);
 		filter.setPsmScoreThreshold(new Score(ScoreType.PSM_Q_VALUE, fdr));
 		filterAndGroup(filter,"FDR filter");
-		
-		finalSteps();
 	}
 	
 	private void processGroupFdr() {
-		inputFilter();
-				
 		PAnalyzer.Counts curCount = pAnalyzer.getCounts(), prevCount;
 		int i = 0;
 		validator.updatePsmDecoyScores(scoreType);
@@ -98,13 +98,9 @@ public final class PAnalyzerCli implements Command.Interface {
 		
 		validator.updateGroupProbabilities();
 		validator.updateGroupDecoyScores(ScoreType.GROUP_P_VALUE);
-
-		finalSteps();
 	}
 	
 	private void processPeptideGroupFdr() {
-		inputFilter();
-		
 		validator.updatePsmDecoyScores(scoreType);
 		validator.updatePeptideProbabilities();
 		validator.updatePeptideDecoyScores(ScoreType.PEPTIDE_P_VALUE);
@@ -119,8 +115,6 @@ public final class PAnalyzerCli implements Command.Interface {
 		filterAndGroup(filter,"Group FDR filter");
 		validator.updateGroupProbabilities();
 		validator.updateGroupDecoyScores(ScoreType.GROUP_P_VALUE);
-		
-		finalSteps();
 	}
 	
 	private void filterAndGroup( Filter filter, String title ) {
@@ -130,11 +124,13 @@ public final class PAnalyzerCli implements Command.Interface {
 	}
 	
 	private void inputFilter() {
+		validator.logFdrs();
 		Filter filter = new Filter(data);
 		filter.setOnlyBestPsmPerPrecursor(scoreType);
 		filter.setMinPeptideLength(7);
 		filter.setFilterDecoyPeptides(false);
 		filterAndGroup(filter,"Input filter");
+		validator.logFdrs();
 	}
 	
 	private void rebuildGroups() {
