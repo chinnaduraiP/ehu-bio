@@ -1,6 +1,9 @@
 package es.ehubio.proteomics;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -119,17 +122,41 @@ public class Peptide extends DecoyBase {
 	
 	public String getMassSequence() {
 		StringBuilder str = new StringBuilder();
+		
 		for( int i = 0; i < sequence.length(); i++ ) {
-			str.append(sequence.charAt(i));
+			List<Double> localized = new ArrayList<>();
 			for( Ptm ptm : getPtms() ) {
 				if( ptm.getPosition() == null || ptm.getPosition()-1 != i )
 					continue;
-				if( ptm.getMassDelta() == null )
-					str.append("(?)");
-				else
-					str.append(String.format("(+%.2f)", ptm.getMassDelta()));
+				localized.add(ptm.getMassDelta());
 			}
-		}		
+			addMassString(str, sequence.charAt(i), localized);
+		}
+		
+		List<Double> unlocalized = new ArrayList<>();
+		for( Ptm ptm : getPtms() )
+			if( ptm.getPosition() == null )
+				unlocalized.add(ptm.getMassDelta());
+		addMassString(str, '?', unlocalized);
+		
 		return str.toString();
-	}	
+	}
+	
+	private void addMassString(StringBuilder str, char aa, List<Double> list) {
+		str.append(aa);
+		Collections.sort(list);
+		for( Double mass : list ) {			
+			if( mass == null )
+				str.append("(?)");
+			else if( mass < 0 )
+				str.append(String.format("(%.2f)", mass));
+			else
+				str.append(String.format("(+%.2f)", mass));
+		}			
+	}
+	
+	@Override
+	public String getUniqueString() {
+		return getMassSequence();
+	}
 }

@@ -145,4 +145,9 @@ public class Protein extends DecoyBase {
 	public String toString() {
 		return getAccession();
 	}
+	
+	@Override
+	public String getUniqueString() {
+		return getAccession();
+	}
 }

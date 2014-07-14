@@ -103,4 +103,9 @@ public class Psm extends DecoyBase {
 	public String toString() {
 		return ""+getId();
 	}
+	
+	@Override
+	public String getUniqueString() {
+		return toString();
+	}
 }

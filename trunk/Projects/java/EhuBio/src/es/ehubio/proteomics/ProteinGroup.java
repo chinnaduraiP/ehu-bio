@@ -108,4 +108,9 @@ public class ProteinGroup extends DecoyBase {
 			names.add(protein.getAccession());
 		return Util.mergeStrings(names);
 	}
+	
+	@Override
+	public String getUniqueString() {
+		return ""+id;
+	}
 }

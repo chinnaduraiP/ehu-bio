@@ -1,7 +1,9 @@
 package es.ehubio.proteomics;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import es.ehubio.proteomics.psi.mzid11.AbstractParamType;
@@ -24,6 +26,8 @@ public class MsMsData {
 	private Set<Peptide> peptides = new HashSet<>();
 	private Set<Protein> proteins = new HashSet<>();
 	private Set<ProteinGroup> groups = new HashSet<>();
+	private Map<String,Peptide> mapPeptide;
+	private Map<String,Protein> mapProtein;
 	
 	private OrganizationType organization;
 	private PersonType author;
@@ -149,5 +153,47 @@ public class MsMsData {
 		if( remove != null )
 			list.remove(remove);
 		list.add(param);
+	}
+	
+	/**
+	 * Merge MS/MS data from searches using the same DB (ej. fractions). After the
+	 * merging, data2 will be broken and should not be used. Groups will be cleared
+	 * and should be re-built next if desired.
+	 * 
+	 * @param data2
+	 */
+	public void merge( MsMsData data2 ) {
+		spectra.addAll(data2.getSpectra());
+		psms.addAll(data2.getPsms());
+		if( mapPeptide == null || mapProtein == null ) {
+			mapPeptide = new HashMap<>();
+			for( Peptide peptide : peptides )
+				mapPeptide.put(peptide.getUniqueString(), peptide);
+			mapProtein = new HashMap<>();
+			for( Protein protein : proteins )
+				mapProtein.put(protein.getUniqueString(), protein);
+		}
+		for( Peptide peptide2 : data2.getPeptides() ) {
+			Peptide peptide = mapPeptide.get(peptide2.getUniqueString());
+			if( peptide != null ) {
+				for( Psm psm2 : peptide2.getPsms() )
+					psm2.linkPeptide(peptide);
+			} else {
+				mapPeptide.put(peptide2.getUniqueString(), peptide2);
+				peptides.add(peptide2);
+				for( Protein protein2 : peptide2.getProteins().toArray(new Protein[0]) ) {
+					Protein protein = mapProtein.get(protein2.getUniqueString());
+					if( protein == null ) {
+						mapProtein.put(protein2.getUniqueString(), protein2);
+						proteins.add(protein2);
+					}
+					else {
+						peptide2.getProteins().remove(protein2);
+						peptide2.addProtein(protein);
+					}
+				}
+			}
+		}
+		groups.clear();
 	}
 }
