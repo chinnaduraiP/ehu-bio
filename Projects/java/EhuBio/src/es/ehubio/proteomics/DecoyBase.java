@@ -60,4 +60,6 @@ public abstract class DecoyBase implements Decoyable {
 	public boolean isPassThreshold() {
 		return passThreshold;
 	}
+	
+	public abstract String getUniqueString();
 }

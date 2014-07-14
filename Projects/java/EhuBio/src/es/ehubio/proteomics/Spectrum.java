@@ -54,4 +54,8 @@ public class Spectrum {
 	public String toString() {
 		return String.format("%s@%s", getFileId(), getFileName());
 	}
+	
+	public String getUniqueString() {
+		return toString();
+	}
 }
