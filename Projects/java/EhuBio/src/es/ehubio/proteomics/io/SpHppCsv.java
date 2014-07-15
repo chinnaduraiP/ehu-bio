@@ -12,6 +12,7 @@ import es.ehubio.proteomics.Peptide;
 import es.ehubio.proteomics.Protein;
 import es.ehubio.proteomics.ProteinGroup;
 import es.ehubio.proteomics.Psm;
+import es.ehubio.proteomics.Ptm;
 import es.ehubio.proteomics.ScoreType;
 
 public class SpHppCsv extends MsMsFile {
@@ -42,6 +43,7 @@ public class SpHppCsv extends MsMsFile {
 		SavePeptides(path+"-peptides.csv");
 		SaveProteins(path+"-proteins.csv");
 		SaveGroups(path+"-groups.csv");
+		SavePtms(path+"-ptms.csv");
 	}	
 
 	private void SavePsms( String path ) throws IOException {		
@@ -89,6 +91,29 @@ public class SpHppCsv extends MsMsFile {
 				peptide.getScoreByType(ScoreType.PEPTIDE_FDR_SCORE),
 				peptide.isPassThreshold()
 				));
+		pw.close();
+	}
+	
+	private void SavePtms(String path) throws IOException {
+		PrintWriter pw = new PrintWriter(path);
+		pw.println(CsvUtils.getCsv(SEP,
+			"protein_accession",
+			"group_id", "group_name", "group_type",
+			"peptide_sequence", "peptide_type", "best_psm_e-value", "peptide_p-value", "peptide_q-value",
+			"ptm_type", "ptm_position"
+			));
+		for( Peptide peptide : data.getPeptides() )
+			for( Ptm ptm : peptide.getPtms() )
+				for( Protein protein : peptide.getProteins() )
+					pw.println(CsvUtils.getCsv(SEP,
+						protein.getAccession(),
+						protein.getGroup().getId(), protein.getGroup().buildName(), protein.getGroup().getConfidence(),
+						peptide.getMassSequence(), peptide.getConfidence(),
+						peptide.getBestPsm(ScoreType.XTANDEM_EVALUE).getScoreByType(ScoreType.XTANDEM_EVALUE),
+						peptide.getScoreByType(ScoreType.PEPTIDE_P_VALUE),
+						peptide.getScoreByType(ScoreType.PEPTIDE_Q_VALUE),
+						ptm.getName(), ptm.getPosition()
+						));
 		pw.close();
 	}
 

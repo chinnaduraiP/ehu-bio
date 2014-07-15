@@ -222,7 +222,7 @@ public final class Validator {
 			peptides.clear();
 			p = 1;			
 			for( Protein protein : group.getProteins() )
-				for( Peptide peptide : protein.getPeptides() )
+				for( Peptide peptide : protein.getPeptides() )				
 					if( peptide.getConfidence() != Peptide.Confidence.NON_DISCRIMINATING )
 						peptides.add(peptide);
 			for( Peptide peptide : peptides )

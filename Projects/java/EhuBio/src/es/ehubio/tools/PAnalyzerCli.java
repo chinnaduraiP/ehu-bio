@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -27,8 +26,8 @@ public final class PAnalyzerCli implements Command.Interface {
 	private PAnalyzer pAnalyzer;
 	private Validator validator;
 	private final ScoreType scoreType = ScoreType.XTANDEM_EVALUE;
-	private final double fdr = 0.01;
-	private final static int MAXITER=15;	
+	private final static int MAXITER=15;
+	private Configuration cfg;
 	
 	@XmlRootElement
 	private static class Configuration {
@@ -38,6 +37,9 @@ public final class PAnalyzerCli implements Command.Interface {
 		}
 		public String description;
 		public String operation;
+		public Double psmFdr;
+		public Double peptideFdr;
+		public Double groupFdr;
 		@XmlElement(name="input")
 		public List<InputFile> inputs;
 		public String output;
@@ -60,7 +62,7 @@ public final class PAnalyzerCli implements Command.Interface {
 
 	@Override
 	public void run(String[] args) throws Exception {
-		Configuration cfg = load(args[0]);		
+		load(args[0]);		
 		initialize();
 		rebuildGroups();		
 		inputFilter();
@@ -94,8 +96,8 @@ public final class PAnalyzerCli implements Command.Interface {
 	private void processPsmFdr() {				
 		validator.updatePsmDecoyScores(scoreType);
 		Filter filter = new Filter(data);
-		filter.setPsmScoreThreshold(new Score(ScoreType.PSM_Q_VALUE, fdr));
-		filterAndGroup(filter,"PSM FDR filter");
+		filter.setPsmScoreThreshold(new Score(ScoreType.PSM_Q_VALUE, cfg.psmFdr));
+		filterAndGroup(filter,String.format("PSM FDR=%s filter",cfg.psmFdr));
 	}
 	
 	private void processPeptideFdr() {
@@ -103,8 +105,8 @@ public final class PAnalyzerCli implements Command.Interface {
 		validator.updatePeptideProbabilities();
 		validator.updatePeptideDecoyScores(ScoreType.PEPTIDE_P_VALUE);
 		Filter filter = new Filter(data);
-		filter.setPeptideScoreThreshold(new Score(ScoreType.PEPTIDE_Q_VALUE, fdr));
-		filterAndGroup(filter,"Peptide FDR filter");
+		filter.setPeptideScoreThreshold(new Score(ScoreType.PEPTIDE_Q_VALUE, cfg.peptideFdr));
+		filterAndGroup(filter,String.format("Peptide FDR=%s filter",cfg.peptideFdr));
 	}
 	
 	private void processGroupFdr() {
@@ -113,12 +115,12 @@ public final class PAnalyzerCli implements Command.Interface {
 		PAnalyzer.Counts curCount = pAnalyzer.getCounts(), prevCount;
 		int i = 0;
 		Filter filter = new Filter(data);
-		filter.setGroupScoreThreshold(new Score(ScoreType.GROUP_Q_VALUE, fdr));
+		filter.setGroupScoreThreshold(new Score(ScoreType.GROUP_Q_VALUE, cfg.groupFdr));
 		do {
 			i++;
 			validator.updateGroupProbabilities();
 			validator.updateGroupDecoyScores(ScoreType.GROUP_P_VALUE);
-			filterAndGroup(filter,String.format("Group FDR filter, iteration %s", i));
+			filterAndGroup(filter,String.format("Group FDR=%s filter, iteration %s",cfg.groupFdr,i));
 			prevCount = curCount;
 			curCount = pAnalyzer.getCounts();
 		} while( !curCount.equals(prevCount) && i < MAXITER );
@@ -162,8 +164,12 @@ public final class PAnalyzerCli implements Command.Interface {
 		logger.info(counts.toString());
 	}
 	
-	private Configuration load( String path ) throws Exception {
-		Configuration cfg = loadConfig(path);		
+	private void load( String path ) throws Exception {
+		JAXBContext context = JAXBContext.newInstance(Configuration.class);
+		Unmarshaller um = context.createUnmarshaller();
+		cfg = (Configuration)um.unmarshal(new File(path));
+		logger.info(String.format("Using %s: %s", path, cfg.description));	
+		
 		MsMsData tmp;
 		for( Configuration.InputFile input : cfg.inputs ) {
 			file = new Mzid();		
@@ -176,17 +182,8 @@ public final class PAnalyzerCli implements Command.Interface {
 				logCounts("Merged");
 			}
 		}
-		return cfg;
 	}
-	
-	private Configuration loadConfig( String path ) throws JAXBException {		
-		JAXBContext context = JAXBContext.newInstance(Configuration.class);
-		Unmarshaller um = context.createUnmarshaller();
-		Configuration cfg = (Configuration)um.unmarshal(new File(path));
-		logger.info(String.format("Using %s: %s", path, cfg.description));
-		return cfg;
-	}
-	
+
 	private void save( Configuration cfg ) throws Exception {
 		if( cfg.inputs.size() == 1 )
 			file.save(cfg.output);
