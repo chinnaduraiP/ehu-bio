@@ -143,6 +143,8 @@ public class Peptide extends DecoyBase {
 	}
 	
 	private void addMassString(StringBuilder str, char aa, List<Double> list) {
+		if( aa == '?' && list.isEmpty() )
+			return;
 		str.append(aa);
 		Collections.sort(list);
 		for( Double mass : list ) {			

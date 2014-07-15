@@ -164,36 +164,51 @@ public class MsMsData {
 	 */
 	public void merge( MsMsData data2 ) {
 		spectra.addAll(data2.getSpectra());
-		psms.addAll(data2.getPsms());
-		if( mapPeptide == null || mapProtein == null ) {
-			mapPeptide = new HashMap<>();
-			for( Peptide peptide : peptides )
-				mapPeptide.put(peptide.getUniqueString(), peptide);
+		psms.addAll(data2.getPsms());		
+		mergeProteins(data2.getProteins());
+		mergePeptides(data2.getPeptides());		
+		groups.clear();
+	}	
+
+	private void mergeProteins(Set<Protein> proteins2) {
+		if( mapProtein == null ) {
 			mapProtein = new HashMap<>();
 			for( Protein protein : proteins )
 				mapProtein.put(protein.getUniqueString(), protein);
 		}
-		for( Peptide peptide2 : data2.getPeptides() ) {
-			Peptide peptide = mapPeptide.get(peptide2.getUniqueString());
-			if( peptide != null ) {
-				for( Psm psm2 : peptide2.getPsms() )
-					psm2.linkPeptide(peptide);
+		for( Protein protein2 : proteins2 ) {
+			Protein protein = mapProtein.get(protein2.getUniqueString());
+			if( protein == null ) {
+				mapProtein.put(protein2.getUniqueString(), protein2);
+				proteins.add(protein2);
 			} else {
-				mapPeptide.put(peptide2.getUniqueString(), peptide2);
-				peptides.add(peptide2);
-				for( Protein protein2 : peptide2.getProteins().toArray(new Protein[0]) ) {
-					Protein protein = mapProtein.get(protein2.getUniqueString());
-					if( protein == null ) {
-						mapProtein.put(protein2.getUniqueString(), protein2);
-						proteins.add(protein2);
-					}
-					else {
-						peptide2.getProteins().remove(protein2);
-						peptide2.addProtein(protein);
-					}
+				for( Peptide peptide2 : protein2.getPeptides() ) {
+					peptide2.getProteins().remove(protein2);
+					peptide2.addProtein(protein);
 				}
 			}
 		}
-		groups.clear();
+	}
+	
+	private void mergePeptides(Set<Peptide> peptides2) {
+		if( mapPeptide == null ) {
+			mapPeptide = new HashMap<>();
+			for( Peptide peptide : peptides )
+				mapPeptide.put(peptide.getUniqueString(), peptide);
+		}
+		for( Peptide peptide2 : peptides2 ) {
+			Peptide peptide = mapPeptide.get(peptide2.getUniqueString());
+			if( peptide == null ) {
+				mapPeptide.put(peptide2.getUniqueString(), peptide2);
+				peptides.add(peptide2);
+			} else {
+				for( Psm psm2 : peptide2.getPsms() )
+					psm2.linkPeptide(peptide);
+				for( Protein protein2 : peptide2.getProteins() ) {
+					protein2.getPeptides().remove(peptide2);
+					protein2.addPeptide(peptide);
+				}
+			}
+		}
 	}
 }
