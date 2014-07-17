@@ -4,8 +4,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.logging.Logger;
 
+import es.ehubio.db.uniprot.UniProt;
 import es.ehubio.io.CsvUtils;
 import es.ehubio.proteomics.MsMsData;
 import es.ehubio.proteomics.Peptide;
@@ -20,9 +26,18 @@ public class SpHppCsv extends MsMsFile {
 	private final MsMsData data;
 	private final static char SEP = '\t';
 	private final static char INTER = ';';
-	
+	private ScoreType psmScoreType = ScoreType.XTANDEM_EVALUE;	
+
 	public SpHppCsv( MsMsData data ) {
 		this.data = data;
+	}
+	
+	public ScoreType getPsmScoreType() {
+		return psmScoreType;
+	}
+
+	public void setPsmScoreType(ScoreType psmScoreType) {
+		this.psmScoreType = psmScoreType;
 	}
 
 	@Override
@@ -39,18 +54,18 @@ public class SpHppCsv extends MsMsFile {
 	public void save(String path) throws Exception {
 		path = path.replaceAll("\\..*", "");
 		logger.info(String.format("Saving '%s' CSVs ...", path));
-		SavePsms(path+"-psms.csv");
-		SavePeptides(path+"-peptides.csv");
-		SaveProteins(path+"-proteins.csv");
-		SaveGroups(path+"-groups.csv");
-		SavePtms(path+"-ptms.csv");
+		savePsms(path+"-psms.csv");
+		savePeptides(path+"-peptides.csv");
+		saveProteins(path+"-proteins.csv");
+		saveGroups(path+"-groups.csv");
+		savePtms(path+"-ptms.csv");
 	}	
 
-	private void SavePsms( String path ) throws IOException {		
+	private void savePsms( String path ) throws IOException {		
 		PrintWriter pw = new PrintWriter(path);
 		pw.println(CsvUtils.getCsv(SEP,
 			"id","decoy","calcMz","expMz","charge","file","spectrum",
-			ScoreType.XTANDEM_EVALUE.getName(),
+			psmScoreType.getName(),
 			ScoreType.PSM_P_VALUE.getName(),
 			ScoreType.PSM_LOCAL_FDR.getName(),
 			ScoreType.PSM_Q_VALUE.getName(),
@@ -61,7 +76,7 @@ public class SpHppCsv extends MsMsFile {
 			pw.println(CsvUtils.getCsv(SEP,
 				psm.getId(), Boolean.TRUE.equals(psm.getDecoy()), psm.getCalcMz(), psm.getExpMz(), psm.getCharge(),
 				psm.getSpectrum().getFileName(), psm.getSpectrum().getFileId(),
-				psm.getScoreByType(ScoreType.XTANDEM_EVALUE),
+				psm.getScoreByType(psmScoreType),
 				psm.getScoreByType(ScoreType.PSM_P_VALUE),
 				psm.getScoreByType(ScoreType.PSM_LOCAL_FDR),
 				psm.getScoreByType(ScoreType.PSM_Q_VALUE),
@@ -71,7 +86,7 @@ public class SpHppCsv extends MsMsFile {
 		pw.close();
 	}
 	
-	private void SavePeptides(String path) throws IOException {
+	private void savePeptides(String path) throws IOException {
 		PrintWriter pw = new PrintWriter(path);
 		pw.println(CsvUtils.getCsv(SEP,
 			"id","decoy","confidence","sequence","ptms","psms",
@@ -94,30 +109,43 @@ public class SpHppCsv extends MsMsFile {
 		pw.close();
 	}
 	
-	private void SavePtms(String path) throws IOException {
+	private void savePtms(String path) throws IOException {
 		PrintWriter pw = new PrintWriter(path);
 		pw.println(CsvUtils.getCsv(SEP,
-			"protein_accession",
+			"canonical_id", "protein_isoforms",
 			"group_id", "group_name", "group_type",
-			"peptide_sequence", "peptide_type", "best_psm_e-value", "peptide_p-value", "peptide_q-value",
+			"peptide_sequence", "peptide_ptm_sequence", "peptide_type", "peptide_p-value", "peptide_q-value",
 			"ptm_type", "ptm_position"
 			));
+		Map<String,List<Protein>> mapCanonical = new HashMap<>();
 		for( Peptide peptide : data.getPeptides() )
-			for( Ptm ptm : peptide.getPtms() )
-				for( Protein protein : peptide.getProteins() )
+			for( Ptm ptm : peptide.getPtms() ) {
+				mapCanonical.clear();				
+				for( Protein protein : peptide.getProteins() ) {
+					String can = UniProt.canonicalAccesion(protein.getAccession());
+					List<Protein> list = mapCanonical.get(can);
+					if( list == null ) {
+						list = new ArrayList<>();
+						mapCanonical.put(can, list);
+					}
+					list.add(protein);
+				}
+				for( Entry<String,List<Protein>> entry : mapCanonical.entrySet() ) {
+					ProteinGroup group = entry.getValue().iterator().next().getGroup();
 					pw.println(CsvUtils.getCsv(SEP,
-						protein.getAccession(),
-						protein.getGroup().getId(), protein.getGroup().buildName(), protein.getGroup().getConfidence(),
-						peptide.getMassSequence(), peptide.getConfidence(),
-						peptide.getBestPsm(ScoreType.XTANDEM_EVALUE).getScoreByType(ScoreType.XTANDEM_EVALUE),
+						entry.getKey(), CsvUtils.getCsv(INTER, entry.getValue().toArray()),
+						group.getId(), group.buildName(), group.getConfidence(),
+						peptide.getSequence(), peptide.getMassSequence(), peptide.getConfidence(),						
 						peptide.getScoreByType(ScoreType.PEPTIDE_P_VALUE),
 						peptide.getScoreByType(ScoreType.PEPTIDE_Q_VALUE),
 						ptm.getName(), ptm.getPosition()
 						));
+				}
+			}
 		pw.close();
 	}
 
-	private void SaveProteins(String path) throws IOException {
+	private void saveProteins(String path) throws IOException {
 		PrintWriter pw = new PrintWriter(path);
 		pw.println(CsvUtils.getCsv(SEP,
 			"accession","decoy","confidence","peptides",
@@ -140,7 +168,7 @@ public class SpHppCsv extends MsMsFile {
 		pw.close();
 	}
 
-	private void SaveGroups(String path) throws IOException {
+	private void saveGroups(String path) throws IOException {
 		PrintWriter pw = new PrintWriter(path);
 		pw.println(CsvUtils.getCsv(SEP,
 			"id","name","decoy","confidence","proteins",

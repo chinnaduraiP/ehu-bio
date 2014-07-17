@@ -143,16 +143,20 @@ public final class Validator {
 		int decoy = 0;
 		int target = 0;
 		Decoyable item;
+		double pOff;
 		for( int i = list.size()-1; i >= 0; i-- ) {
 			item = list.get(i);
-			if( Boolean.TRUE.equals(item.getDecoy()) )
+			if( Boolean.TRUE.equals(item.getDecoy()) ) {
 				decoy++;
-			else
+				pOff = -0.5;
+			} else {
 				target++;
+				pOff = 0.5;
+			}
 			ScoreGroup scoreGroup = new ScoreGroup();
 			scoreGroup.setFdr(getFdr(decoy,target));
 			if( pValue )
-				scoreGroup.setpValue(((double)decoy)/totalDecoys);
+				scoreGroup.setpValue((decoy+pOff)/totalDecoys);
 			mapScores.put(item.getScoreByType(type).getValue(), scoreGroup);
 		}
 	}
