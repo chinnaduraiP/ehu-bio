@@ -25,7 +25,7 @@ public final class PAnalyzerCli implements Command.Interface {
 	private MsMsFile file;
 	private PAnalyzer pAnalyzer;
 	private Validator validator;
-	private final ScoreType scoreType = ScoreType.XTANDEM_EVALUE;
+	private ScoreType psmScoreType;
 	private final static int MAXITER=15;
 	private Configuration cfg;
 	
@@ -37,6 +37,7 @@ public final class PAnalyzerCli implements Command.Interface {
 		}
 		public String description;
 		public String operation;
+		public String psmScore;
 		public Double psmFdr;
 		public Double peptideFdr;
 		public Double groupFdr;
@@ -94,14 +95,14 @@ public final class PAnalyzerCli implements Command.Interface {
 	}
 
 	private void processPsmFdr() {				
-		validator.updatePsmDecoyScores(scoreType);
+		validator.updatePsmDecoyScores(psmScoreType);
 		Filter filter = new Filter(data);
 		filter.setPsmScoreThreshold(new Score(ScoreType.PSM_Q_VALUE, cfg.psmFdr));
 		filterAndGroup(filter,String.format("PSM FDR=%s filter",cfg.psmFdr));
 	}
 	
 	private void processPeptideFdr() {
-		validator.updatePsmDecoyScores(scoreType);
+		validator.updatePsmDecoyScores(psmScoreType);
 		validator.updatePeptideProbabilities();
 		validator.updatePeptideDecoyScores(ScoreType.PEPTIDE_P_VALUE);
 		Filter filter = new Filter(data);
@@ -140,7 +141,7 @@ public final class PAnalyzerCli implements Command.Interface {
 	private void inputFilter() {
 		validator.logFdrs();
 		Filter filter = new Filter(data);
-		filter.setOnlyBestPsmPerPrecursor(scoreType);
+		filter.setOnlyBestPsmPerPrecursor(psmScoreType);
 		filter.setMinPeptideLength(7);
 		filter.setFilterDecoyPeptides(false);
 		filterAndGroup(filter,"Input filter");
@@ -168,6 +169,7 @@ public final class PAnalyzerCli implements Command.Interface {
 		JAXBContext context = JAXBContext.newInstance(Configuration.class);
 		Unmarshaller um = context.createUnmarshaller();
 		cfg = (Configuration)um.unmarshal(new File(path));
+		psmScoreType = ScoreType.getByName(cfg.psmScore);
 		logger.info(String.format("Using %s: %s", path, cfg.description));	
 		
 		MsMsData tmp;
@@ -188,6 +190,7 @@ public final class PAnalyzerCli implements Command.Interface {
 		if( cfg.inputs.size() == 1 )
 			file.save(cfg.output);
 		SpHppCsv csv = new SpHppCsv(data);
+		csv.setPsmScoreType(psmScoreType);
 		csv.save(cfg.output);
 	}
 	
