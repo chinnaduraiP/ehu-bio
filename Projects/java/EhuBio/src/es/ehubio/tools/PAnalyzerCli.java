@@ -14,7 +14,7 @@ import es.ehubio.proteomics.Score;
 import es.ehubio.proteomics.ScoreType;
 import es.ehubio.proteomics.io.MsMsFile;
 import es.ehubio.proteomics.io.Mzid;
-import es.ehubio.proteomics.io.SpHppCsv;
+import es.ehubio.proteomics.io.EhubioCsv;
 import es.ehubio.proteomics.pipeline.Filter;
 import es.ehubio.proteomics.pipeline.PAnalyzer;
 import es.ehubio.proteomics.pipeline.Validator;
@@ -30,7 +30,7 @@ public final class PAnalyzerCli implements Command.Interface {
 	private Configuration cfg;
 	
 	@XmlRootElement
-	private static class Configuration {
+	public static class Configuration {
 		public static class InputFile {
 			public String path;
 			public String decoyRegex;
@@ -87,7 +87,15 @@ public final class PAnalyzerCli implements Command.Interface {
 		save(cfg);
 		
 		logger.info("finished!");
-	}	
+	}
+	
+	public Configuration getConfiguration() {
+		return cfg;
+	}
+	
+	public MsMsData getData() {
+		return data;
+	}
 
 	private void initialize() {
 		pAnalyzer = new PAnalyzer(data);		
@@ -189,7 +197,7 @@ public final class PAnalyzerCli implements Command.Interface {
 	private void save( Configuration cfg ) throws Exception {
 		if( cfg.inputs.size() == 1 )
 			file.save(cfg.output);
-		SpHppCsv csv = new SpHppCsv(data);
+		EhubioCsv csv = new EhubioCsv(data);
 		csv.setPsmScoreType(psmScoreType);
 		csv.save(cfg.output);
 	}

@@ -3,7 +3,7 @@ package es.ehubio.db.uniprot;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class UniProt {
+public class UniProtUtils {
 	public static boolean validAccession( String acc ) {
 		Matcher matcher = accPattern.matcher(acc);
 		return matcher.matches();
