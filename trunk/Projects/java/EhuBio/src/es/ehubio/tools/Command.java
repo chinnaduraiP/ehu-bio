@@ -13,13 +13,13 @@ public class Command {
 		public void run( String[] args ) throws Exception;
 	}
 	
-	public static void main( String[] args ) {
+	public static void run( String pkg, String[] args ) {
 		if( args.length == 0 ) {
 			System.out.println( "Usage:\n\tCommand <command> [args]" );
 			return;
 		}		
 		try {
-			Interface cmd = (Interface)Class.forName("es.ehubio.tools."+args[0]).newInstance();
+			Interface cmd = (Interface)Class.forName(String.format("%s.%s", pkg,args[0])).newInstance();
 			int nargs = args.length-1;
 			if( nargs < cmd.getMinArgs() || (cmd.getMaxArgs() >= 0 && nargs > cmd.getMaxArgs()) ) {
 				System.out.println( "Usage:\n\tCommand "+args[0]+" "+cmd.getUsage() );
@@ -29,5 +29,9 @@ public class Command {
 		} catch( Exception e ) {
 			e.printStackTrace();
 		}
+	}
+	
+	public static void main( String[] args ) {
+		run("es.ehubio.tools",args);
 	}
 }
