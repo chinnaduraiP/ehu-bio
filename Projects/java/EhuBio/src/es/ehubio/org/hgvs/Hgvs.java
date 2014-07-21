@@ -3,7 +3,7 @@ package es.ehubio.org.hgvs;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import es.ehubio.db.Aminoacid;
+import es.ehubio.model.Aminoacid;
 
 // Human Genome Variation Society
 public class Hgvs {

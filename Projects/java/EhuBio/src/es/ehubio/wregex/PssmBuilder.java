@@ -8,8 +8,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import es.ehubio.db.Aminoacid;
 import es.ehubio.io.UnixCfgReader;
+import es.ehubio.model.Aminoacid;
 
 public class PssmBuilder {
 	public class PssmBuilderException extends Exception {

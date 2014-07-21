@@ -16,6 +16,7 @@ import javax.xml.bind.Unmarshaller;
 
 import es.ehubio.db.fasta.Fasta;
 import es.ehubio.db.fasta.HeaderParser;
+import es.ehubio.model.ProteinModificationType;
 import es.ehubio.proteomics.DecoyBase;
 import es.ehubio.proteomics.MsMsData;
 import es.ehubio.proteomics.Peptide;
@@ -191,12 +192,14 @@ public final class Mzid extends MsMsFile {
 				StringBuilder builder = new StringBuilder();
 				for( String residue : modificationType.getResidues() )
 					builder.append(residue);
-				ptm.setAminoacid(builder.toString());
+				ptm.setResidues(builder.toString());
 				ptm.setPosition(modificationType.getLocation());
 				ptm.setMassDelta(modificationType.getMonoisotopicMassDelta());
 				for( CVParamType param : modificationType.getCvParams() )
 					if( param.getCvRef().equalsIgnoreCase("UNIMOD") ) {
 						ptm.setName(param.getName());
+						if( ptm.getName().startsWith("Phospho") )
+							ptm.setType(ProteinModificationType.PHOSPHORYLATION);
 						break;
 					}
 				peptide.addPtm(ptm);

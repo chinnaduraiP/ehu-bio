@@ -1,41 +1,16 @@
 package es.ehubio.proteomics;
 
+import es.ehubio.model.ProteinModification;
+
 /**
  * Post-Translational Mofidication in a MS/MS proteomics experiment.
  * 
  * @author gorka
  *
  */
-public class Ptm {	
-	private String aminoacid;
-	private Integer position;
-	private String name;
+public class Ptm extends ProteinModification {	
 	private Double massDelta;
-	
-	public String getAminoacid() {
-		return aminoacid;
-	}
-	
-	public void setAminoacid(String aminoacid) {
-		this.aminoacid = aminoacid;
-	}
-
-	public Integer getPosition() {
-		return position;
-	}
-
-	public void setPosition(Integer position) {
-		this.position = position;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-	
+		
 	public Double getMassDelta() {
 		return massDelta;
 	}
@@ -46,11 +21,11 @@ public class Ptm {
 	
 	@Override
 	public String toString() {
-		StringBuilder str = new StringBuilder(name);
-		if( aminoacid != null )
-			str.append("+"+aminoacid);
-		if( position != null )
-			str.append(String.format("(%d)", position));
+		StringBuilder str = new StringBuilder(getName());
+		if( getResidues() != null )
+			str.append("+"+getResidues());
+		if( getPosition() != null )
+			str.append(String.format("(%d)", getPosition()));
 		return str.toString();
 	}
 }

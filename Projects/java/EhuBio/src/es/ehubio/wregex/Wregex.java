@@ -5,8 +5,8 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import es.ehubio.db.Aminoacid;
 import es.ehubio.db.fasta.Fasta;
+import es.ehubio.model.Aminoacid;
 import es.ehubio.wregex.Pssm.PssmException;
 
 public final class Wregex {

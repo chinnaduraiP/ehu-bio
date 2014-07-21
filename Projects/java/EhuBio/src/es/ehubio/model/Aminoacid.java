@@ -1,4 +1,4 @@
-package es.ehubio.db;
+package es.ehubio.model;
 
 import java.util.HashMap;
 import java.util.Map;
