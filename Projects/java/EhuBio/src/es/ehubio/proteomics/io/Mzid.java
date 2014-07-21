@@ -1,5 +1,8 @@
 package es.ehubio.proteomics.io;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.HashMap;
@@ -7,6 +10,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -48,6 +52,7 @@ import es.ehubio.proteomics.psi.mzid11.ProteinDetectionHypothesisType;
 import es.ehubio.proteomics.psi.mzid11.ProteinDetectionListType;
 import es.ehubio.proteomics.psi.mzid11.ProteinDetectionProtocolType;
 import es.ehubio.proteomics.psi.mzid11.ProteinDetectionType;
+import es.ehubio.proteomics.psi.mzid11.SpectraDataType;
 import es.ehubio.proteomics.psi.mzid11.SpectrumIdentificationItemRefType;
 import es.ehubio.proteomics.psi.mzid11.SpectrumIdentificationItemType;
 import es.ehubio.proteomics.psi.mzid11.SpectrumIdentificationListType;
@@ -58,7 +63,7 @@ import es.ehubio.proteomics.psi.mzid11.UserParamType;
  * Proxy class for managing MS/MS information in an mzid file.
  */
 public final class Mzid extends MsMsFile {
-	//private final Logger logger = Logger.getLogger(Mzid.class.getName());
+	private final Logger logger = Logger.getLogger(Mzid.class.getName());
 	private MzIdentML mzid;
 	private Map<String,Protein> mapProteins = new HashMap<>();
 	private Map<Protein,String> mapSequences = new HashMap<>();	
@@ -114,7 +119,49 @@ public final class Mzid extends MsMsFile {
 		marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
 		marshaller.marshal(mzid, output);
 		//logger.info("finished!");
-	}		
+	}
+	
+	@Override
+	public void loadIons(String optionalPath) throws Exception {
+		for( SpectraDataType spectrum : mzid.getDataCollection().getInputs().getSpectraDatas() ) {
+			if( !spectrum.getFileFormat().getCvParam().getAccession().equals("MS:1001062") ||
+				!spectrum.getSpectrumIDFormat().getCvParam().getAccession().equals("MS:1000774") )
+				throw new UnsupportedOperationException("Spectra format not supported");
+			loadIons( getIonsPath(optionalPath, spectrum.getLocation()), spectrum.getLocation() );
+		}
+	}
+	
+	private String getIonsPath(String optionalPath, String location) {
+		// 1) Try spectrum path in mzid
+		File origFile = new File(location);
+		File file = origFile;
+		if( !file.isFile() && optionalPath != null ) {
+			// 2) Try spectrum file provided by the user  
+			File optFile = new File(optionalPath);
+			file = optFile;
+			if( !file.isFile() ) {
+				// 3) Try spectrum file in mzid in the directory provided by the user
+				if( !optFile.isDirectory() )
+					optFile = optFile.getParentFile();
+				file = new File(optFile,origFile.getName());
+			}
+		}
+		return file.getAbsolutePath();
+	}
+
+	private void loadIons(String path, String orig) throws FileNotFoundException, IOException {		
+		logger.info(String.format("Loading ions from %s ...", path));
+		List<Spectrum> mgfs = MgfFile.loadSpectra(path);
+		for( Spectrum spectrum : data.getSpectra() )
+			if( spectrum.getFileName().equals(orig) ) {
+				Spectrum mgf = mgfs.get(Integer.parseInt(spectrum.getFileId().replaceAll("index=","")));
+				spectrum.setIons(mgf.getIons());
+				spectrum.setScan(mgf.getScan());
+				spectrum.setRt(mgf.getRt());
+				/*spectrum.setMass(mgf.getMass());
+				spectrum.setCharge(mgf.getCharge());*/
+			}
+	}
 
 	private void loadProteins() {
 		//logger.info("Building proteins ...");
@@ -240,13 +287,17 @@ public final class Mzid extends MsMsFile {
 
 	private void loadSpectra() {
 		//logger.info("Building spectra ...");
+		Map<String,String> mapSpectraFile = new HashMap<>();
+		for( SpectraDataType spectrum : mzid.getDataCollection().getInputs().getSpectraDatas() )
+			mapSpectraFile.put(spectrum.getId(), spectrum.getLocation());
+		
 		Set<Spectrum> spectra = new HashSet<>();
 		mapSii.clear();
 		mapPsm.clear();
 		for( SpectrumIdentificationListType sil : mzid.getDataCollection().getAnalysisData().getSpectrumIdentificationLists() )
 			for( SpectrumIdentificationResultType sir : sil.getSpectrumIdentificationResults() ) {
 				Spectrum spectrum = new Spectrum();			
-				spectrum.setFileName(sir.getSpectraDataRef());
+				spectrum.setFileName(mapSpectraFile.get(sir.getSpectraDataRef()));
 				spectrum.setFileId(sir.getSpectrumID());
 				for( SpectrumIdentificationItemType sii : sir.getSpectrumIdentificationItems() ) {
 					Psm psm = new Psm();
@@ -567,5 +618,5 @@ public final class Mzid extends MsMsFile {
 		if( remove != null )
 			mzid.getAuditCollection().getPersonsAndOrganizations().remove(remove);
 		mzid.getAuditCollection().getPersonsAndOrganizations().add(data.getOrganization());
-	}
+	}	
 }
