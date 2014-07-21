@@ -28,22 +28,23 @@ public final class PAnalyzerCli implements Command.Interface {
 	private ScoreType psmScoreType;
 	private final static int MAXITER=15;
 	private Configuration cfg;
+	private boolean loadIons = false;
+	private boolean saveResults = true;
 	
-	@XmlRootElement
-	public static class Configuration {
-		public static class InputFile {
-			public String path;
-			public String decoyRegex;
-		}
-		public String description;
-		public String operation;
-		public String psmScore;
-		public Double psmFdr;
-		public Double peptideFdr;
-		public Double groupFdr;
-		@XmlElement(name="input")
-		public List<InputFile> inputs;
-		public String output;
+	public boolean isLoadIons() {
+		return loadIons;
+	}
+
+	public void setLoadIons(boolean loadIons) {
+		this.loadIons = loadIons;
+	}
+	
+	public boolean isSaveResults() {
+		return saveResults;
+	}
+
+	public void setSaveResults(boolean saveResults) {
+		this.saveResults = saveResults;
 	}
 
 	@Override
@@ -84,7 +85,8 @@ public final class PAnalyzerCli implements Command.Interface {
 				logger.info("--- Non FDR based process ---");
 		}
 		finalSteps();
-		save(cfg);
+		if( isSaveResults() )
+			save();
 		
 		logger.info("finished!");
 	}
@@ -96,7 +98,7 @@ public final class PAnalyzerCli implements Command.Interface {
 	public MsMsData getData() {
 		return data;
 	}
-
+	
 	private void initialize() {
 		pAnalyzer = new PAnalyzer(data);		
 		validator = new Validator(data);
@@ -184,6 +186,8 @@ public final class PAnalyzerCli implements Command.Interface {
 		for( Configuration.InputFile input : cfg.inputs ) {
 			file = new Mzid();		
 			tmp = file.load(input.path,input.decoyRegex);
+			if( isLoadIons() )
+				file.loadIons(input.ions);
 			if( data == null ) {
 				data = tmp;
 				logCounts("Loaded");
@@ -194,7 +198,7 @@ public final class PAnalyzerCli implements Command.Interface {
 		}
 	}
 
-	private void save( Configuration cfg ) throws Exception {
+	private void save() throws Exception {
 		if( cfg.inputs.size() == 1 )
 			file.save(cfg.output);
 		EhubioCsv csv = new EhubioCsv(data);
@@ -204,25 +208,23 @@ public final class PAnalyzerCli implements Command.Interface {
 	
 	private void logCounts( String title ) {
 		logger.info(String.format("%s: %s", title, data.toString()));
-	}
-	
-	//private void dump() {
-		// Dump Proteins
-		/*List<String> monitor = Arrays.asList("?????");
-		for( Protein protein : data.getProteins() )
-			if( monitor.contains(protein.getAccession()) ) {
-				System.out.println(protein.getAccession()+"-"+protein.getConfidence());
-				for( Peptide peptide : protein.getPeptides() ) {
-					System.out.print(peptide.toString()+": ");
-					for( Protein protein2 : peptide.getProteins() )
-						System.out.print(protein2.getAccession()+" ");
-					System.out.println();
-				}
-				System.out.println();
-			}*/
+	}	
 
-		// Dump PSMs
-		/*for( Psm psm : data.getPsms() )
-			System.out.println(String.format("%s:%s:%s", psm.getPeptide().getMassSequence(), psm.getMz(), psm.getScoreByType(Psm.ScoreType.MASCOT_SCORE).getValue()));*/
-	//}
+	@XmlRootElement
+	public static class Configuration {
+		public static class InputFile {
+			public String path;			
+			public String decoyRegex;
+			public String ions;
+		}
+		public String description;
+		public String operation;
+		public String psmScore;
+		public Double psmFdr;
+		public Double peptideFdr;
+		public Double groupFdr;
+		@XmlElement(name="input")
+		public List<InputFile> inputs;
+		public String output;
+	}
 }

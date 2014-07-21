@@ -1,6 +1,8 @@
 package es.ehubio.proteomics;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -9,12 +11,15 @@ import java.util.Set;
  * @author gorka
  *
  */
-public class Spectrum {
+public class Spectrum {	
 	private static int idCount = 1;
 	private final int id;
 	private String fileName;
 	private String fileId;
 	private Set<Psm> psms = new HashSet<>();
+	private String scan;
+	private Double rt;
+	private List<FragmentIon> ions = new ArrayList<>();
 	
 	public Spectrum() {
 		id = idCount++;
@@ -57,5 +62,29 @@ public class Spectrum {
 	
 	public String getUniqueString() {
 		return toString();
+	}
+	
+	public String getScan() {
+		return scan;
+	}
+
+	public void setScan(String scan) {
+		this.scan = scan;
+	}
+
+	public Double getRt() {
+		return rt;
+	}
+
+	public void setRt(Double rt) {
+		this.rt = rt;
+	}
+
+	public List<FragmentIon> getIons() {
+		return ions;
+	}
+	
+	public void setIons( List<FragmentIon> ions ) {
+		this.ions = ions;
 	}
 }

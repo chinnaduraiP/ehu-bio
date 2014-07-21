@@ -36,4 +36,7 @@ public abstract class MsMsFile {
 	}
 	
 	public abstract void save( OutputStream output ) throws Exception;
+	
+	public void loadIons( String optionalPath ) throws Exception {		
+	}
 }
