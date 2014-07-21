@@ -10,7 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import es.ehubio.db.Aminoacid;
+import es.ehubio.model.Aminoacid;
 import es.ehubio.wregex.PssmBuilder.PssmBuilderException;
 
 /** Inmutable class for PSSM */

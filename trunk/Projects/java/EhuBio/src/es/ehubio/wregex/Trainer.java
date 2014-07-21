@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import es.ehubio.db.Aminoacid;
+import es.ehubio.model.Aminoacid;
 import es.ehubio.wregex.PssmBuilder.PssmBuilderException;
 import es.ehubio.wregex.Wregex.WregexException;
 

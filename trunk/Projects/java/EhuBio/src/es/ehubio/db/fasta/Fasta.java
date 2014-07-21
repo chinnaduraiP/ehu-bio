@@ -16,9 +16,9 @@ import java.util.List;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-import es.ehubio.db.Aminoacid;
-import es.ehubio.db.Nucleotide;
 import es.ehubio.io.UnixCfgReader;
+import es.ehubio.model.Aminoacid;
+import es.ehubio.model.Nucleotide;
 
 public final class Fasta {
 	private final String sequence;

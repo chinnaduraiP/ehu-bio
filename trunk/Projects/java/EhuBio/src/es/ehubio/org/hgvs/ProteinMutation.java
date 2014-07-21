@@ -1,6 +1,6 @@
 package es.ehubio.org.hgvs;
 
-import es.ehubio.db.Aminoacid;
+import es.ehubio.model.Aminoacid;
 
 public class ProteinMutation {
 	public enum Type {Frameshift, Nonsense, Missense, Synonymous, Unknown};

@@ -1,4 +1,4 @@
-package es.ehubio.db;
+package es.ehubio.model;
 
 public enum Nucleotide {
 	ADENINE("Adenine",'A',false,true,true,true),
