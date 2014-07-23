@@ -28,22 +28,26 @@ public class MgfFile {
 	public static List<Spectrum> loadSpectra( BufferedReader rd ) throws IOException {
 		List<Spectrum> spectra = new ArrayList<>();
 		String line;
-		Spectrum spectrum = new Spectrum();
+		Spectrum spectrum = null;
 		while( (line=rd.readLine()) != null ) {
-			if( line.startsWith("TITLE") )
-				spectrum.setScan(line.replaceAll(".*scan=","").replaceAll("\"",""));
-			else if( line.startsWith("RTINSECONDS") )
-				spectrum.setRt(Double.parseDouble(line.replaceAll(".*=","")));
-			/*else if( line.startsWith("PEPMASS") )
-				spectrum.setMass(Double.parseDouble(line.replaceAll(".*=","")));
-			else if( line.startsWith("CHARGE") )
-				spectrum.setCharge(Integer.parseInt(line.replaceAll(".*=","").replaceAll("\\+","")));*/
-			else if( line.length() > 0 && Character.isDigit(line.charAt(0)) ) {
-				String[] fields = line.split("[ \\t]");
-				spectrum.getIons().add(new FragmentIon(Double.parseDouble(fields[0]),Double.parseDouble(fields[1])));
-			} else if( line.startsWith("END IONS") ) {
-				spectra.add(spectrum);
+			if( line.startsWith("BEGIN IONS") )
 				spectrum = new Spectrum();
+			else if ( spectrum != null ) {
+				if( line.startsWith("TITLE") )
+					spectrum.setScan(line.replaceAll(".*scan=","").replaceAll("\"",""));
+				else if( line.startsWith("RTINSECONDS") )
+					spectrum.setRt(Double.parseDouble(line.replaceAll(".*=","")));
+				/*else if( line.startsWith("PEPMASS") )
+					spectrum.setMass(Double.parseDouble(line.replaceAll(".*=","")));
+				else if( line.startsWith("CHARGE") )
+					spectrum.setCharge(Integer.parseInt(line.replaceAll(".*=","").replaceAll("\\+","")));*/
+				else if( line.length() > 0 && Character.isDigit(line.charAt(0)) ) {
+					String[] fields = line.split("[ \\t]");
+					spectrum.getIons().add(new FragmentIon(Double.parseDouble(fields[0]),Double.parseDouble(fields[1])));
+				} else if( line.startsWith("END IONS") ) {
+					spectra.add(spectrum);
+					spectrum = null;
+				}
 			}
 		}
 		return spectra;

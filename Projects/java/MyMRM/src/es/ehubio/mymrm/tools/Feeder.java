@@ -1,6 +1,10 @@
-package es.ehubio.tools;
+package es.ehubio.mymrm.tools;
 
-public class MyMRM implements Command.Interface {
+import es.ehubio.proteomics.MsMsData;
+import es.ehubio.tools.Command;
+import es.ehubio.tools.PAnalyzerCli;
+
+public class Feeder implements Command.Interface {
 	private final PAnalyzerCli panalyzer = new PAnalyzerCli();
 
 	@Override
@@ -23,6 +27,11 @@ public class MyMRM implements Command.Interface {
 		panalyzer.setLoadIons(true);
 		panalyzer.setSaveResults(false);
 		panalyzer.run(args);
+		feedDb(panalyzer.getData());
 	}
 
+	private void feedDb(MsMsData data) {
+		// TODO Auto-generated method stub
+		
+	}	
 }
