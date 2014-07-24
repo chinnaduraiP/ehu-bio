@@ -35,7 +35,7 @@ public class HomeBean implements Serializable {
 		addPage(page);
 		
 		page = new PageSummary();
-		page.setName("Methods");
+		page.setName("Materials & Methods");
 		page.setDescription("Materials and methods.");
 		page.setAction("methods");
 		addPage(page);
@@ -43,7 +43,7 @@ public class HomeBean implements Serializable {
 		page = new PageSummary();
 		page.setName("Search");
 		page.setDescription("Search database for observed transitions.");
-		page.setAction("home");
+		page.setAction("search");
 		addPage(page);
 		
 		news = new ArrayList<>();
