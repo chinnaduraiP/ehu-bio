@@ -12,7 +12,6 @@ import es.ehubio.mymrm.data.Experiment;
 import es.ehubio.mymrm.data.Instrument;
 import es.ehubio.mymrm.data.InstrumentType;
 import es.ehubio.mymrm.data.Peptide;
-import es.ehubio.mymrm.data.Transition;
 import es.ehubio.tools.PAnalyzerCli;
 
 @ManagedBean
