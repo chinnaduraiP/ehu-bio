@@ -1,0 +1,31 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui">
+
+<h:body>
+	<ui:composition template="./template.xhtml">
+		<ui:define name="title">Search</ui:define>
+		<ui:define name="content">			
+			<h:form>
+				<p:panelGrid columns="2">
+					<f:facet name="header">Search options</f:facet>
+					<h:outputText value="Peptide sequence" />
+					<h:inputText value="#{searchMB.peptide}" />
+				</p:panelGrid>
+				<br/>
+				<p:commandButton value="Search" action="#{searchMB.search(databaseMB)}" ajax="false"/>
+			</h:form>
+			<br/>
+			<p:dataTable value="#{searchMB.result}" rowIndexVar="row" var="item" rendered="#{searchMB.peptide != null}">
+				<f:facet name="header">Results</f:facet>
+				<p:column headerText="massSequence">
+					<h:outputText value="#{item.massSequence}"/>						
+				</p:column>
+			</p:dataTable>
+		</ui:define>
+	</ui:composition>
+</h:body>
+</html>
