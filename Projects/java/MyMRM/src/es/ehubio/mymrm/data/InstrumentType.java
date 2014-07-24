@@ -1,7 +1,9 @@
 package es.ehubio.mymrm.data;
 
 import java.io.Serializable;
+
 import javax.persistence.*;
+
 import java.util.List;
 
 
@@ -75,5 +77,4 @@ public class InstrumentType implements Serializable {
 
 		return instrument;
 	}
-
 }

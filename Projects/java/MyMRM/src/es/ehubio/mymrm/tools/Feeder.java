@@ -1,5 +1,6 @@
 package es.ehubio.mymrm.tools;
 
+import es.ehubio.mymrm.business.Database;
 import es.ehubio.proteomics.MsMsData;
 import es.ehubio.tools.Command;
 import es.ehubio.tools.PAnalyzerCli;
@@ -31,7 +32,8 @@ public class Feeder implements Command.Interface {
 	}
 
 	private void feedDb(MsMsData data) {
-		// TODO Auto-generated method stub
-		
+		Database.connect();
+		Database.feed(4,data);
+		Database.close();
 	}	
 }

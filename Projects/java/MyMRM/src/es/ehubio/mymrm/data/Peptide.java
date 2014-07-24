@@ -10,7 +10,11 @@ import java.util.List;
  * 
  */
 @Entity
-@NamedQuery(name="Peptide.findAll", query="SELECT p FROM Peptide p")
+@NamedQueries({
+@NamedQuery(name="Peptide.findAll", query="SELECT p FROM Peptide p"),
+@NamedQuery(name="Peptide.findByMassSequence", query="SELECT p FROM Peptide p WHERE p.massSequence = :massSequence"),
+@NamedQuery(name="Peptide.findBySequence", query="SELECT p FROM Peptide p WHERE p.sequence = :sequence")
+})
 public class Peptide implements Serializable {
 	private static final long serialVersionUID = 1L;
 
