@@ -24,6 +24,7 @@ public class Peptide extends DecoyBase {
 	private Confidence confidence;
 	private Set<Protein> proteins = new HashSet<>();
 	private Set<Psm> psms = new HashSet<>();
+	private String name;
 	
 	public Peptide() {
 		id = idCount++;
@@ -160,5 +161,13 @@ public class Peptide extends DecoyBase {
 	@Override
 	public String getUniqueString() {
 		return getMassSequence();
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
 	}
 }

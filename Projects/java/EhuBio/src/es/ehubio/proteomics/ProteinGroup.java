@@ -113,4 +113,12 @@ public class ProteinGroup extends DecoyBase {
 	public String getUniqueString() {
 		return ""+id;
 	}
+	
+	public Set<Peptide> getPeptides() {
+		Set<Peptide> peptides = new HashSet<>();
+		for( Protein protein : getProteins() )
+			for( Peptide peptide : protein.getPeptides() )
+				peptides.add(peptide);
+		return peptides;
+	}
 }
