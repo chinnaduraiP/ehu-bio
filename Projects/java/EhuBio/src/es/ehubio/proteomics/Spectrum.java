@@ -19,6 +19,7 @@ public class Spectrum {
 	private Set<Psm> psms = new HashSet<>();
 	private String scan;
 	private Double rt;
+	private Double intensity;
 	private List<FragmentIon> ions = new ArrayList<>();
 	
 	public Spectrum() {
@@ -86,5 +87,13 @@ public class Spectrum {
 	
 	public void setIons( List<FragmentIon> ions ) {
 		this.ions = ions;
+	}
+
+	public Double getIntensity() {
+		return intensity;
+	}
+
+	public void setIntensity(Double intensity) {
+		this.intensity = intensity;
 	}
 }

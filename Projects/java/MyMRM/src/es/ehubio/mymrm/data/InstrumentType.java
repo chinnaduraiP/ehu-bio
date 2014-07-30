@@ -1,9 +1,7 @@
 package es.ehubio.mymrm.data;
 
 import java.io.Serializable;
-
 import javax.persistence.*;
-
 import java.util.List;
 
 
@@ -20,7 +18,6 @@ public class InstrumentType implements Serializable {
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	private int id;
 
-	@Lob
 	private String description;
 
 	private String name;
@@ -77,4 +74,5 @@ public class InstrumentType implements Serializable {
 
 		return instrument;
 	}
+
 }

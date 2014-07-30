@@ -14,7 +14,15 @@ import java.util.Set;
  */
 public class Peptide extends DecoyBase {
 	public enum Confidence {
-		UNIQUE, DISCRIMINATING, NON_DISCRIMINATING
+		UNIQUE(0), DISCRIMINATING(1), NON_DISCRIMINATING(2);
+		
+		private Confidence( int order ) {
+			this.order = order;
+		}
+		public int getOrder() {
+			return order;
+		}
+		private final int order;
 	}
 	
 	private static int idCount = 1;

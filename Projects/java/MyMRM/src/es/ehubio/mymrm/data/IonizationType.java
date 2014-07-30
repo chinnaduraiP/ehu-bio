@@ -6,12 +6,12 @@ import java.util.List;
 
 
 /**
- * The persistent class for the Instrument database table.
+ * The persistent class for the IonizationType database table.
  * 
  */
 @Entity
-@NamedQuery(name="Instrument.findAll", query="SELECT i FROM Instrument i")
-public class Instrument implements Serializable {
+@NamedQuery(name="IonizationType.findAll", query="SELECT i FROM IonizationType i")
+public class IonizationType implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	@Id
@@ -23,15 +23,10 @@ public class Instrument implements Serializable {
 	private String name;
 
 	//bi-directional many-to-one association to Experiment
-	@OneToMany(mappedBy="instrumentBean")
+	@OneToMany(mappedBy="ionizationTypeBean")
 	private List<Experiment> experiments;
 
-	//bi-directional many-to-one association to InstrumentType
-	@ManyToOne
-	@JoinColumn(name="instrumentType")
-	private InstrumentType instrumentTypeBean;
-
-	public Instrument() {
+	public IonizationType() {
 	}
 
 	public int getId() {
@@ -68,24 +63,16 @@ public class Instrument implements Serializable {
 
 	public Experiment addExperiment(Experiment experiment) {
 		getExperiments().add(experiment);
-		experiment.setInstrumentBean(this);
+		experiment.setIonizationTypeBean(this);
 
 		return experiment;
 	}
 
 	public Experiment removeExperiment(Experiment experiment) {
 		getExperiments().remove(experiment);
-		experiment.setInstrumentBean(null);
+		experiment.setIonizationTypeBean(null);
 
 		return experiment;
-	}
-
-	public InstrumentType getInstrumentTypeBean() {
-		return this.instrumentTypeBean;
-	}
-
-	public void setInstrumentTypeBean(InstrumentType instrumentTypeBean) {
-		this.instrumentTypeBean = instrumentTypeBean;
 	}
 
 }

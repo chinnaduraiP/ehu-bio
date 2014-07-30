@@ -13,6 +13,8 @@ public class ExperimentMB implements Serializable {
 	private static final long serialVersionUID = 1L;
 	private final Experiment entity = new Experiment();
 	private String instrument;
+	private String ionization;
+	private String fragmentation;
 	private String chromatography;
 	private String pax; 
 	private String id;
@@ -51,5 +53,21 @@ public class ExperimentMB implements Serializable {
 
 	public void setId(String id) {
 		this.id = id;
+	}
+
+	public String getIonization() {
+		return ionization;
+	}
+
+	public void setIonization(String ionization) {
+		this.ionization = ionization;
+	}
+
+	public String getFragmentation() {
+		return fragmentation;
+	}
+
+	public void setFragmentation(String fragmentation) {
+		this.fragmentation = fragmentation;
 	}
 }

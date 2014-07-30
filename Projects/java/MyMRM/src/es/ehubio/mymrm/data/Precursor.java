@@ -20,12 +20,15 @@ public class Precursor implements Serializable {
 
 	private int charge;
 
+	private Double intensity;
+
 	private double mz;
 
-	//bi-directional many-to-one association to Peptide
-	@ManyToOne
-	@JoinColumn(name="peptide")
-	private Peptide peptideBean;
+	private Double rt;
+
+	//bi-directional many-to-one association to PeptideEvidence
+	@OneToMany(mappedBy="precursorBean")
+	private List<PeptideEvidence> peptideEvidences;
 
 	//bi-directional many-to-one association to Transition
 	@OneToMany(mappedBy="precursorBean")
@@ -50,6 +53,14 @@ public class Precursor implements Serializable {
 		this.charge = charge;
 	}
 
+	public Double getIntensity() {
+		return this.intensity;
+	}
+
+	public void setIntensity(Double intensity) {
+		this.intensity = intensity;
+	}
+
 	public double getMz() {
 		return this.mz;
 	}
@@ -58,12 +69,34 @@ public class Precursor implements Serializable {
 		this.mz = mz;
 	}
 
-	public Peptide getPeptideBean() {
-		return this.peptideBean;
+	public Double getRt() {
+		return this.rt;
 	}
 
-	public void setPeptideBean(Peptide peptideBean) {
-		this.peptideBean = peptideBean;
+	public void setRt(Double rt) {
+		this.rt = rt;
+	}
+
+	public List<PeptideEvidence> getPeptideEvidences() {
+		return this.peptideEvidences;
+	}
+
+	public void setPeptideEvidences(List<PeptideEvidence> peptideEvidences) {
+		this.peptideEvidences = peptideEvidences;
+	}
+
+	public PeptideEvidence addPeptideEvidence(PeptideEvidence peptideEvidence) {
+		getPeptideEvidences().add(peptideEvidence);
+		peptideEvidence.setPrecursorBean(this);
+
+		return peptideEvidence;
+	}
+
+	public PeptideEvidence removePeptideEvidence(PeptideEvidence peptideEvidence) {
+		getPeptideEvidences().remove(peptideEvidence);
+		peptideEvidence.setPrecursorBean(null);
+
+		return peptideEvidence;
 	}
 
 	public List<Transition> getTransitions() {

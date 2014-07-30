@@ -9,6 +9,11 @@
 		<class>es.ehubio.mymrm.data.Peptide</class>
 		<class>es.ehubio.mymrm.data.Precursor</class>
 		<class>es.ehubio.mymrm.data.Transition</class>
+		<class>es.ehubio.mymrm.data.FragmentationType</class>
+		<class>es.ehubio.mymrm.data.IonizationType</class>
+		<class>es.ehubio.mymrm.data.PeptideEvidence</class>
+		<class>es.ehubio.mymrm.data.Score</class>
+		<class>es.ehubio.mymrm.data.ScoreType</class>
 		<properties>
 			<property name="hibernate.connection.username" value="mymrm"/>
 			<property name="hibernate.connection.password" value="MyMRM"/>

@@ -37,11 +37,11 @@ public class MgfFile {
 					spectrum.setScan(line.replaceAll(".*scan=","").replaceAll("\"",""));
 				else if( line.startsWith("RTINSECONDS") )
 					spectrum.setRt(Double.parseDouble(line.replaceAll(".*=","")));
-				/*else if( line.startsWith("PEPMASS") )
-					spectrum.setMass(Double.parseDouble(line.replaceAll(".*=","")));
-				else if( line.startsWith("CHARGE") )
-					spectrum.setCharge(Integer.parseInt(line.replaceAll(".*=","").replaceAll("\\+","")));*/
-				else if( line.length() > 0 && Character.isDigit(line.charAt(0)) ) {
+				else if( line.startsWith("PEPMASS") ) {
+					String[] fields = line.split("[ \\t]");
+					if( fields.length >= 2 )
+						spectrum.setIntensity(Double.parseDouble(fields[1]));
+				} else if( line.length() > 0 && Character.isDigit(line.charAt(0)) ) {
 					String[] fields = line.split("[ \\t]");
 					spectrum.getIons().add(new FragmentIon(Double.parseDouble(fields[0]),Double.parseDouble(fields[1])));
 				} else if( line.startsWith("END IONS") ) {

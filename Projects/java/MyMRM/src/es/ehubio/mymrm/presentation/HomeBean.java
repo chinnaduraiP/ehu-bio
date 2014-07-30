@@ -29,7 +29,7 @@ public class HomeBean implements Serializable {
 		addPage(page);
 		
 		page = new PageSummary();
-		page.setName("Feed");
+		page.setName("Upload");
 		page.setDescription("Feed database with new experiments.");
 		page.setAction("feed");
 		addPage(page);
@@ -41,8 +41,14 @@ public class HomeBean implements Serializable {
 		addPage(page);
 		
 		page = new PageSummary();
-		page.setName("Search");
-		page.setDescription("Search database for observed transitions.");
+		page.setName("Search Peptide");
+		page.setDescription("Search database for evidences and transactions of a given peptide secuence.");
+		page.setAction("search");
+		addPage(page);
+		
+		page = new PageSummary();
+		page.setName("Search Protein");
+		page.setDescription("Search database for evidences and transactions of unique peptides for a given protein.");
 		page.setAction("search");
 		addPage(page);
 		

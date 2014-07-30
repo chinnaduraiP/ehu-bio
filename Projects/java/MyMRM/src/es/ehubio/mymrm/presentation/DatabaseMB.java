@@ -9,9 +9,13 @@ import javax.faces.bean.ManagedBean;
 import es.ehubio.mymrm.business.Database;
 import es.ehubio.mymrm.data.Chromatography;
 import es.ehubio.mymrm.data.Experiment;
+import es.ehubio.mymrm.data.Fragment;
+import es.ehubio.mymrm.data.FragmentationType;
 import es.ehubio.mymrm.data.Instrument;
 import es.ehubio.mymrm.data.InstrumentType;
+import es.ehubio.mymrm.data.IonizationType;
 import es.ehubio.mymrm.data.Peptide;
+import es.ehubio.mymrm.data.Precursor;
 import es.ehubio.tools.PAnalyzerCli;
 
 @ManagedBean
@@ -94,8 +98,46 @@ public class DatabaseMB {
 	public void addExperiment( ExperimentMB bean ) {
 		Experiment experiment = bean.getEntity();
 		experiment.setInstrumentBean(Database.findById(Instrument.class, Integer.parseInt(bean.getInstrument())));
+		experiment.setIonizationTypeBean(Database.findById(IonizationType.class, Integer.parseInt(bean.getIonization())));
+		experiment.setFragmentationTypeBean(Database.findById(FragmentationType.class, Integer.parseInt(bean.getFragmentation())));
 		experiment.setChromatographyBean(Database.findById(Chromatography.class, Integer.parseInt(bean.getChromatography())));
 		Database.add(experiment);
+	}
+	
+	public List<FragmentationType> getFragmentationTypes() {
+		return Database.findAll(FragmentationType.class);
+	}
+	
+	public List<FragmentationType> getFragmentationTypesNull() {
+		List<FragmentationType> list = new ArrayList<>(getFragmentationTypes());
+		list.add(null);
+		return list;
+	}
+	
+	public void removeFragmentationType( FragmentationType type ) {
+		Database.remove(FragmentationType.class, type.getId());
+	}
+	
+	public void addFragmentationType( FragmentationTypeMB bean ) {
+		Database.add(bean.getEntity());
+	}
+	
+	public List<IonizationType> getIonizationTypes() {
+		return Database.findAll(IonizationType.class);
+	}
+	
+	public List<IonizationType> getIonizationTypesNull() {
+		List<IonizationType> list = new ArrayList<>(getIonizationTypes());
+		list.add(null);
+		return list;
+	}
+	
+	public void removeIonizationType( IonizationType type ) {
+		Database.remove(IonizationType.class, type.getId());
+	}
+	
+	public void addIonizationType( IonizationTypeMB bean ) {
+		Database.add(bean.getEntity());
 	}
 	
 	public void feed( ExperimentMB bean ) {
@@ -108,19 +150,27 @@ public class DatabaseMB {
 			panalyzer.setSaveResults(false);
 			String[] args = {bean.getPax()};
 			panalyzer.run(args);		
-			Database.feed(experiment.getId(), panalyzer.getData());
+			Database.feed(experiment.getId(), panalyzer.getData(), es.ehubio.proteomics.Peptide.Confidence.DISCRIMINATING);
 		} catch( Exception e ) {
 			e.printStackTrace();
 		}
 	}
 	
+	public List<Fragment> getFragments( int idPrecursor ) {
+		return Database.findFragments( idPrecursor );
+	}
+	
 	public List<Peptide> search( String pepSequence ) {
-		return Database.search( pepSequence );
+		return Database.findPeptides( pepSequence );
 	}
 	
 	@Override
 	protected void finalize() throws Throwable {
 		Database.close();
 		super.finalize();
+	}
+
+	public List<Precursor> getPrecursors(double mz, int idExperiment) {
+		return Database.findPrecursors(mz, idExperiment);
 	}
 }

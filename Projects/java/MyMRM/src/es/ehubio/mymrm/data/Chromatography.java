@@ -18,8 +18,9 @@ public class Chromatography implements Serializable {
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	private int id;
 
-	@Lob
 	private String description;
+
+	private Double gradientLength;
 
 	private String name;
 
@@ -44,6 +45,14 @@ public class Chromatography implements Serializable {
 
 	public void setDescription(String description) {
 		this.description = description;
+	}
+
+	public Double getGradientLength() {
+		return this.gradientLength;
+	}
+
+	public void setGradientLength(Double gradientLength) {
+		this.gradientLength = gradientLength;
 	}
 
 	public String getName() {
