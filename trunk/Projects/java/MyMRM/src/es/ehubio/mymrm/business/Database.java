@@ -1,7 +1,11 @@
 package es.ehubio.mymrm.business;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
+import java.util.logging.Logger;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -11,13 +15,19 @@ import javax.persistence.Persistence;
 import es.ehubio.mymrm.data.Experiment;
 import es.ehubio.mymrm.data.Fragment;
 import es.ehubio.mymrm.data.Peptide;
+import es.ehubio.mymrm.data.PeptideEvidence;
 import es.ehubio.mymrm.data.Precursor;
+import es.ehubio.mymrm.data.ScoreType;
 import es.ehubio.mymrm.data.Transition;
 import es.ehubio.proteomics.FragmentIon;
 import es.ehubio.proteomics.MsMsData;
 import es.ehubio.proteomics.Psm;
+import es.ehubio.proteomics.Score;
 
 public class Database {
+	private static final Logger logger = Logger.getLogger(Database.class.getName());
+	private static final int FRAGMENTS=10;
+	private static final int OKFRAGMENTS=3;
 	private static EntityManagerFactory emf;
 	private static EntityManager em;	
 	
@@ -87,12 +97,26 @@ public class Database {
 		return list == null ? new ArrayList<Peptide>() : list;
 	}
 	
-	public static boolean feed( int experimentId, MsMsData data ) {
+	public static ScoreType findScoreTypeByName( String name ) {
+		ScoreType scoreType = null;
+		try {
+			scoreType = em
+					.createQuery("SELECT s FROM ScoreType s WHERE s.name = :name",ScoreType.class)
+					.setParameter("name", name)
+					.getSingleResult();
+		} catch( NoResultException ex ) {			
+		}
+		return scoreType;
+	}
+	
+	public static boolean feed( int experimentId, MsMsData data, es.ehubio.proteomics.Peptide.Confidence confidence ) {
 		Experiment experiment = findById(Experiment.class, experimentId);
 		if( experiment == null )
 			return false;
 		
 		for( es.ehubio.proteomics.Peptide peptide : data.getPeptides() ) {
+			if( Boolean.TRUE.equals(peptide.getDecoy()) || peptide.getConfidence().getOrder() > confidence.getOrder() )
+				continue;
 			beginTransaction();
 			Peptide dbPeptide = findByMassSequence(peptide.getMassSequence());
 			if( dbPeptide == null ) {
@@ -102,47 +126,103 @@ public class Database {
 				em.persist(dbPeptide);				
 			}			
 			for( Psm psm : peptide.getPsms() ) {
+				logger.info(String.format("Feedind with %s (mz=%s)", peptide.getSequence(), psm.getCalcMz()));
 				Precursor precursor = new Precursor();
-				precursor.setMz(psm.getExpMz());
+				precursor.setMz(psm.getCalcMz());
 				precursor.setCharge(psm.getCharge());
-				precursor.setPeptideBean(dbPeptide);
+				precursor.setRt(psm.getSpectrum().getRt());
+				precursor.setIntensity(psm.getSpectrum().getIntensity());
 				em.persist(precursor);
-				for( FragmentIon ion : psm.getSpectrum().getIons() ) {
-					Fragment fragment = new Fragment();
-					fragment.setMz(ion.getMz());
-					fragment.setIntensity(ion.getIntensity());
-					em.persist(fragment);
-					Transition transition = new Transition();
-					transition.setExperimentBean(experiment);
-					transition.setPrecursorBean(precursor);
-					transition.setFragmentBean(fragment);
-					em.persist(transition);
-				}
+				PeptideEvidence evidence = new PeptideEvidence();
+				evidence.setPeptideBean(dbPeptide);
+				evidence.setPrecursorBean(precursor);				
+				evidence.setExperimentBean(experiment);
+				em.persist(evidence);
+				feedIons(precursor,psm.getSpectrum().getIons());
+				feedScores(evidence,psm.getScores());
 			}
 			commitTransaction();
 		}
 		return true;
 	}
-
-	public static List<Peptide> search(String pepSequence) {
-		//List<Transition> result = new ArrayList<>();
-		List<Peptide> peptides = findBySequence(pepSequence);
-		/*for( Peptide peptide : peptides ) {
-			List<Precursor> precursors = findPrecursors(peptide);
+	
+	private static void feedIons( Precursor precursor, List<FragmentIon> ions) {
+		Collections.sort(ions, new Comparator<FragmentIon>() {
+			@Override
+			public int compare(FragmentIon o1, FragmentIon o2) {
+				return (int)Math.signum(o2.getIntensity()-o1.getIntensity());
+			}
+		});
+		int count = FRAGMENTS;
+		int countok = OKFRAGMENTS;
+		for( FragmentIon ion : ions ) {
+			if( count > 0 || (countok > 0 && ion.getMz() > precursor.getMz()) ) {
+				Fragment fragment = new Fragment();
+				fragment.setMz(ion.getMz());
+				fragment.setIntensity(ion.getIntensity());
+				em.persist(fragment);
+				Transition transition = new Transition();
+				transition.setPrecursorBean(precursor);
+				transition.setFragmentBean(fragment);
+				em.persist(transition);
+				count--;
+				if( ion.getMz() > precursor.getMz() )
+					countok--;
+			}			
 		}
-		return result;*/
+	}
+	
+	private static void feedScores(PeptideEvidence evidence, Set<Score> scores) {
+		for( Score score : scores ) {
+			ScoreType scoreType = findScoreTypeByName(score.getName());
+			if( scoreType == null ) {
+				scoreType = new ScoreType();
+				scoreType.setName(score.getName());
+				scoreType.setDescription(score.getType().getDescription());
+				scoreType.setLargerBetter(score.getType().isLargerBetter());
+				em.persist(scoreType);
+			}
+			es.ehubio.mymrm.data.Score dbScore = new es.ehubio.mymrm.data.Score();
+			dbScore.setScoreType(scoreType);
+			dbScore.setPeptideEvidenceBean(evidence);
+			dbScore.setValue(score.getValue());
+		}
+	}
+
+	public static List<Peptide> findPeptides(String pepSequence) {
+		List<Peptide> peptides = findBySequence(pepSequence);
+		for( Peptide peptide : peptides )
+			peptide.setPeptideEvidences(findEvidences(peptide.getId()));
 		return peptides;
 	}
 
-	private static List<Precursor> findPrecursors(Peptide peptide) {
-		List<Precursor> precursors = null;
+	private static List<PeptideEvidence> findEvidences(int idPeptide) {
+		List<PeptideEvidence> evidences = null;
 		try {
-			precursors = em
-					.createQuery("SELECT p FROM Precursor WHERE p.petideBean = :peptide", Precursor.class)
-					.setParameter("peptide", peptide)
+			evidences = em
+					.createQuery("SELECT p FROM PeptideEvidence p WHERE p.peptideBean.id = :peptide", PeptideEvidence.class)
+					.setParameter("peptide", idPeptide)
 					.getResultList();
 		} catch( NoResultException ex ) {			
 		}
-		return precursors == null ? new ArrayList<Precursor>() : precursors;
+		return evidences == null ? new ArrayList<PeptideEvidence>() : evidences;
+	}
+
+	public static List<Fragment> findFragments(int idPrecursor) {
+		List<Fragment> fragments = new ArrayList<>();
+		try {
+			List<Transition> transitions = em
+					.createQuery("SELECT t FROM Transition t WHERE t.precursorBean.id = :precursor",Transition.class)
+					.setParameter("precursor", idPrecursor)
+					.getResultList();
+			for( Transition transition : transitions )
+				fragments.add(transition.getFragmentBean());
+		} catch( NoResultException ex ) {			
+		}
+		return fragments;
+	}
+
+	public static List<Precursor> findPrecursors(double mz, int idExperiment) {
+		return new ArrayList<Precursor>();
 	}
 }

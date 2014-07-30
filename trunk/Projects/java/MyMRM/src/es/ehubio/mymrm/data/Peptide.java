@@ -10,11 +10,7 @@ import java.util.List;
  * 
  */
 @Entity
-@NamedQueries({
-@NamedQuery(name="Peptide.findAll", query="SELECT p FROM Peptide p"),
-@NamedQuery(name="Peptide.findByMassSequence", query="SELECT p FROM Peptide p WHERE p.massSequence = :massSequence"),
-@NamedQuery(name="Peptide.findBySequence", query="SELECT p FROM Peptide p WHERE p.sequence = :sequence")
-})
+@NamedQuery(name="Peptide.findAll", query="SELECT p FROM Peptide p")
 public class Peptide implements Serializable {
 	private static final long serialVersionUID = 1L;
 
@@ -22,15 +18,13 @@ public class Peptide implements Serializable {
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	private int id;
 
-	@Lob
 	private String massSequence;
 
-	@Lob
 	private String sequence;
 
-	//bi-directional many-to-one association to Precursor
+	//bi-directional many-to-one association to PeptideEvidence
 	@OneToMany(mappedBy="peptideBean")
-	private List<Precursor> precursors;
+	private List<PeptideEvidence> peptideEvidences;
 
 	public Peptide() {
 	}
@@ -59,26 +53,26 @@ public class Peptide implements Serializable {
 		this.sequence = sequence;
 	}
 
-	public List<Precursor> getPrecursors() {
-		return this.precursors;
+	public List<PeptideEvidence> getPeptideEvidences() {
+		return this.peptideEvidences;
 	}
 
-	public void setPrecursors(List<Precursor> precursors) {
-		this.precursors = precursors;
+	public void setPeptideEvidences(List<PeptideEvidence> peptideEvidences) {
+		this.peptideEvidences = peptideEvidences;
 	}
 
-	public Precursor addPrecursor(Precursor precursor) {
-		getPrecursors().add(precursor);
-		precursor.setPeptideBean(this);
+	public PeptideEvidence addPeptideEvidence(PeptideEvidence peptideEvidence) {
+		getPeptideEvidences().add(peptideEvidence);
+		peptideEvidence.setPeptideBean(this);
 
-		return precursor;
+		return peptideEvidence;
 	}
 
-	public Precursor removePrecursor(Precursor precursor) {
-		getPrecursors().remove(precursor);
-		precursor.setPeptideBean(null);
+	public PeptideEvidence removePeptideEvidence(PeptideEvidence peptideEvidence) {
+		getPeptideEvidences().remove(peptideEvidence);
+		peptideEvidence.setPeptideBean(null);
 
-		return precursor;
+		return peptideEvidence;
 	}
 
 }

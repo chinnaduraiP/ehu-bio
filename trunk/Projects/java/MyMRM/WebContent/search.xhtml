@@ -13,18 +13,32 @@
 				<p:panelGrid columns="2">
 					<f:facet name="header">Search options</f:facet>
 					<h:outputText value="Peptide sequence" />
-					<h:inputText value="#{searchMB.peptide}" />
+					<h:inputText value="#{searchMB.peptideSequence}" />
 				</p:panelGrid>
 				<br/>
 				<p:commandButton value="Search" action="#{searchMB.search(databaseMB)}" ajax="false"/>
 			</h:form>
 			<br/>
-			<p:dataTable value="#{searchMB.result}" rowIndexVar="row" var="item" rendered="#{searchMB.peptide != null}">
-				<f:facet name="header">Results</f:facet>
-				<p:column headerText="massSequence">
-					<h:outputText value="#{item.massSequence}"/>						
-				</p:column>
-			</p:dataTable>
+			<h:form>
+				<p:dataTable value="#{searchMB.peptides}" rowIndexVar="row" var="item" rendered="#{searchMB.peptideSequence != null}">
+					<f:facet name="header">Results</f:facet>
+					<p:column headerText="massSequence">
+						<h:outputText value="#{item.massSequence}"/>						
+					</p:column>
+					<p:column headerText="precursors">
+						<p:dataTable value="#{item.precursors}" var="pre">
+							<p:column headerText="m/z">#{pre.mz}</p:column>
+							<p:column headerText="charge">#{pre.charge}</p:column>
+							<p:column headerText="# evidences">
+								<p:panelGrid columns="2">
+									<h:outputText value="#{pre.experiments.size()}" />
+									<p:commandButton value="details ..." action="#{searchMB.showDetails(pre,databaseMB)}" ajax="false"/>
+								</p:panelGrid>							
+							</p:column>
+						</p:dataTable>				
+					</p:column>
+				</p:dataTable>
+			</h:form>
 		</ui:define>
 	</ui:composition>
 </h:body>

@@ -18,10 +18,8 @@ public class Experiment implements Serializable {
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	private int id;
 
-	@Lob
 	private String contact;
 
-	@Lob
 	private String description;
 
 	private String name;
@@ -31,14 +29,24 @@ public class Experiment implements Serializable {
 	@JoinColumn(name="chromatography")
 	private Chromatography chromatographyBean;
 
+	//bi-directional many-to-one association to FragmentationType
+	@ManyToOne
+	@JoinColumn(name="fragmentationType")
+	private FragmentationType fragmentationTypeBean;
+
 	//bi-directional many-to-one association to Instrument
 	@ManyToOne
 	@JoinColumn(name="instrument")
 	private Instrument instrumentBean;
 
-	//bi-directional many-to-one association to Transition
+	//bi-directional many-to-one association to IonizationType
+	@ManyToOne
+	@JoinColumn(name="ionizationType")
+	private IonizationType ionizationTypeBean;
+
+	//bi-directional many-to-one association to PeptideEvidence
 	@OneToMany(mappedBy="experimentBean")
-	private List<Transition> transitions;
+	private List<PeptideEvidence> peptideEvidences;
 
 	public Experiment() {
 	}
@@ -83,6 +91,14 @@ public class Experiment implements Serializable {
 		this.chromatographyBean = chromatographyBean;
 	}
 
+	public FragmentationType getFragmentationTypeBean() {
+		return this.fragmentationTypeBean;
+	}
+
+	public void setFragmentationTypeBean(FragmentationType fragmentationTypeBean) {
+		this.fragmentationTypeBean = fragmentationTypeBean;
+	}
+
 	public Instrument getInstrumentBean() {
 		return this.instrumentBean;
 	}
@@ -91,26 +107,34 @@ public class Experiment implements Serializable {
 		this.instrumentBean = instrumentBean;
 	}
 
-	public List<Transition> getTransitions() {
-		return this.transitions;
+	public IonizationType getIonizationTypeBean() {
+		return this.ionizationTypeBean;
 	}
 
-	public void setTransitions(List<Transition> transitions) {
-		this.transitions = transitions;
+	public void setIonizationTypeBean(IonizationType ionizationTypeBean) {
+		this.ionizationTypeBean = ionizationTypeBean;
 	}
 
-	public Transition addTransition(Transition transition) {
-		getTransitions().add(transition);
-		transition.setExperimentBean(this);
-
-		return transition;
+	public List<PeptideEvidence> getPeptideEvidences() {
+		return this.peptideEvidences;
 	}
 
-	public Transition removeTransition(Transition transition) {
-		getTransitions().remove(transition);
-		transition.setExperimentBean(null);
+	public void setPeptideEvidences(List<PeptideEvidence> peptideEvidences) {
+		this.peptideEvidences = peptideEvidences;
+	}
 
-		return transition;
+	public PeptideEvidence addPeptideEvidence(PeptideEvidence peptideEvidence) {
+		getPeptideEvidences().add(peptideEvidence);
+		peptideEvidence.setExperimentBean(this);
+
+		return peptideEvidence;
+	}
+
+	public PeptideEvidence removePeptideEvidence(PeptideEvidence peptideEvidence) {
+		getPeptideEvidences().remove(peptideEvidence);
+		peptideEvidence.setExperimentBean(null);
+
+		return peptideEvidence;
 	}
 
 }

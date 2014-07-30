@@ -17,11 +17,6 @@ public class Transition implements Serializable {
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	private int id;
 
-	//bi-directional many-to-one association to Experiment
-	@ManyToOne
-	@JoinColumn(name="experiment")
-	private Experiment experimentBean;
-
 	//bi-directional many-to-one association to Fragment
 	@ManyToOne
 	@JoinColumn(name="fragment")
@@ -41,14 +36,6 @@ public class Transition implements Serializable {
 
 	public void setId(int id) {
 		this.id = id;
-	}
-
-	public Experiment getExperimentBean() {
-		return this.experimentBean;
-	}
-
-	public void setExperimentBean(Experiment experimentBean) {
-		this.experimentBean = experimentBean;
 	}
 
 	public Fragment getFragmentBean() {

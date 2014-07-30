@@ -29,6 +29,18 @@
 							<f:selectItems value="#{databaseMB.instruments}" var="inst" itemLabel="#{inst.name}" itemValue="#{inst.id}"/>					
 						</p:selectOneMenu>
 					</p:column>
+					<p:column headerText="ionization">
+						<h:outputText value="#{item.ionizationTypeBean.name}" rendered="#{item != null}"/>
+						<p:selectOneMenu value="#{experimentMB.ionization}" rendered="#{item == null}">
+							<f:selectItems value="#{databaseMB.ionizationTypes}" var="ion" itemLabel="#{ion.name}" itemValue="#{ion.id}"/>					
+						</p:selectOneMenu>
+					</p:column>
+					<p:column headerText="fragmentation">
+						<h:outputText value="#{item.fragmentationTypeBean.name}" rendered="#{item != null}"/>
+						<p:selectOneMenu value="#{experimentMB.fragmentation}" rendered="#{item == null}">
+							<f:selectItems value="#{databaseMB.fragmentationTypes}" var="frag" itemLabel="#{frag.name}" itemValue="#{frag.id}"/>					
+						</p:selectOneMenu>
+					</p:column>
 					<p:column headerText="chromatography">
 						<h:outputText value="#{item.chromatographyBean.name}" rendered="#{item != null}"/>
 						<p:selectOneMenu value="#{experimentMB.chromatography}" rendered="#{item == null}">
