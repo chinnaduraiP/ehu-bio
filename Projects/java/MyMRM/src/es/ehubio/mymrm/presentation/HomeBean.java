@@ -29,7 +29,7 @@ public class HomeBean implements Serializable {
 		addPage(page);
 		
 		page = new PageSummary();
-		page.setName("Upload");
+		page.setName("Experiments");
 		page.setDescription("Feed database with new experiments.");
 		page.setAction("feed");
 		addPage(page);
@@ -38,6 +38,12 @@ public class HomeBean implements Serializable {
 		page.setName("Materials & Methods");
 		page.setDescription("Materials and methods.");
 		page.setAction("methods");
+		addPage(page);
+		
+		page = new PageSummary();
+		page.setName("Databases");
+		page.setDescription("Manage fasta databases for protein search.");
+		page.setAction("databases");
 		addPage(page);
 		
 		page = new PageSummary();

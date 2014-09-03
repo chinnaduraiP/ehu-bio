@@ -8,7 +8,6 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
 
 import es.ehubio.mymrm.data.Peptide;
-import es.ehubio.mymrm.data.Precursor;
 
 @ManagedBean
 @SessionScoped
@@ -45,11 +44,11 @@ public class SearchMB implements Serializable {
 	
 	public String showDetails( PrecursorBean bean, DatabaseMB db ) {
 		this.precursor = bean;
-		for( ExperimentBean experiment : bean.getExperiments() ) {
-			experiment.getFragments().clear();
-			List<Precursor> precursors = db.getPrecursors(bean.getMz(), experiment.getEntity().getId());
-			for( Precursor precursor : precursors )
-				experiment.getFragments().addAll(db.getFragments(precursor.getId()));
+		for( DetailsBean experiment : bean.getExperiments() ) {
+			if( experiment.getFragments().isEmpty() )			
+				experiment.getFragments().addAll(db.getFragments(experiment.getPrecursor().getId()));
+			if( experiment.getScores().isEmpty() )
+				experiment.getScores().addAll(db.getScores(experiment.getEvidence().getId()));
 		}
 		return "transitions";
 	}
