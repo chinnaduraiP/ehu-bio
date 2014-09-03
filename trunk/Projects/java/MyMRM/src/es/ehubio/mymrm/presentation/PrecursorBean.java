@@ -6,7 +6,7 @@ import java.util.List;
 public class PrecursorBean {
 	private double mz;
 	private String charge;
-	private List<ExperimentBean> experiments = new ArrayList<>();
+	private List<DetailsBean> experiments = new ArrayList<>();
 
 	public double getMz() {
 		return mz;
@@ -16,7 +16,7 @@ public class PrecursorBean {
 		this.mz = mz;
 	}
 
-	public List<ExperimentBean> getExperiments() {
+	public List<DetailsBean> getExperiments() {
 		return experiments;
 	}
 

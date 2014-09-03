@@ -1,21 +1,24 @@
 package es.ehubio.mymrm.presentation;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.faces.bean.ApplicationScoped;
 import javax.faces.bean.ManagedBean;
+import javax.faces.context.FacesContext;
 
 import es.ehubio.mymrm.business.Database;
 import es.ehubio.mymrm.data.Chromatography;
 import es.ehubio.mymrm.data.Experiment;
+import es.ehubio.mymrm.data.FastaFile;
 import es.ehubio.mymrm.data.Fragment;
 import es.ehubio.mymrm.data.FragmentationType;
 import es.ehubio.mymrm.data.Instrument;
 import es.ehubio.mymrm.data.InstrumentType;
 import es.ehubio.mymrm.data.IonizationType;
 import es.ehubio.mymrm.data.Peptide;
-import es.ehubio.mymrm.data.Precursor;
+import es.ehubio.mymrm.data.Score;
 import es.ehubio.tools.PAnalyzerCli;
 
 @ManagedBean
@@ -140,6 +143,17 @@ public class DatabaseMB {
 		Database.add(bean.getEntity());
 	}
 	
+	public List<FastaFile> getFastas() {
+		List<FastaFile> list = new ArrayList<>();
+		File dir = new File(FacesContext.getCurrentInstance().getExternalContext().getInitParameter("MyMRM.fastaDir"));
+		for( File file : dir.listFiles("*fasta*") )
+		return list;
+	}
+	
+	public void removeFasta( FastaFile fasta ) {
+		Database.remove(FastaFile.class, fasta.getId());
+	}
+	
 	public void feed( ExperimentMB bean ) {
 		Experiment experiment = Database.findById(Experiment.class, Integer.parseInt(bean.getId()));
 		if( experiment == null )
@@ -170,7 +184,7 @@ public class DatabaseMB {
 		super.finalize();
 	}
 
-	public List<Precursor> getPrecursors(double mz, int idExperiment) {
-		return Database.findPrecursors(mz, idExperiment);
-	}
+	public List<Score> getScores(int evidenceId) {
+		return Database.findScores(evidenceId);
+	}	
 }

@@ -186,6 +186,7 @@ public class Database {
 			dbScore.setScoreType(scoreType);
 			dbScore.setPeptideEvidenceBean(evidence);
 			dbScore.setValue(score.getValue());
+			em.persist(dbScore);
 		}
 	}
 
@@ -212,7 +213,7 @@ public class Database {
 		List<Fragment> fragments = new ArrayList<>();
 		try {
 			List<Transition> transitions = em
-					.createQuery("SELECT t FROM Transition t WHERE t.precursorBean.id = :precursor",Transition.class)
+					.createQuery("SELECT t FROM Transition t WHERE t.precursorBean.id = :precursor", Transition.class)
 					.setParameter("precursor", idPrecursor)
 					.getResultList();
 			for( Transition transition : transitions )
@@ -222,7 +223,15 @@ public class Database {
 		return fragments;
 	}
 
-	public static List<Precursor> findPrecursors(double mz, int idExperiment) {
-		return new ArrayList<Precursor>();
+	public static List<es.ehubio.mymrm.data.Score> findScores(int evidenceId) {
+		List<es.ehubio.mymrm.data.Score> scores = null;
+		try {
+			scores = em
+				.createQuery("SELECT s FROM Score s WHERE s.peptideEvidenceBean.id = :evidence", es.ehubio.mymrm.data.Score.class)
+				.setParameter("evidence", evidenceId)
+				.getResultList();
+		} catch( NoResultException ex ) {			
+		}
+		return scores == null ? new ArrayList<es.ehubio.mymrm.data.Score>() : scores;
 	}
 }

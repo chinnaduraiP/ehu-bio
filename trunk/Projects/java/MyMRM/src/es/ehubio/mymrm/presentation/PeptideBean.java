@@ -19,6 +19,7 @@ public class PeptideBean {
 	public void setEntity(Peptide entity) {
 		this.entity = entity;
 		
+		// Build precursor beans using peptide evidences
 		precursors.clear();
 		Map<Double, PrecursorBean> map = new HashMap<>();
 		for( PeptideEvidence evidence : entity.getPeptideEvidences() ) {
@@ -29,8 +30,10 @@ public class PeptideBean {
 				bean.setCharge(evidence.getPrecursorBean().getCharge());
 				map.put(bean.getMz(), bean);
 			}
-			ExperimentBean experimentBean = new ExperimentBean();
-			experimentBean.setEntity(evidence.getExperimentBean());
+			DetailsBean experimentBean = new DetailsBean();
+			experimentBean.setExperiment(evidence.getExperimentBean());
+			experimentBean.setPrecursor(evidence.getPrecursorBean());
+			experimentBean.setEvidence(evidence);
 			bean.getExperiments().add(experimentBean);
 		}
 		precursors.addAll(map.values());
