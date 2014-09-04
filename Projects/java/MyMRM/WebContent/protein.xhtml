@@ -1,0 +1,54 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui">
+
+<h:body>
+	<ui:composition template="./template.xhtml">
+		<ui:define name="title">Protein search</ui:define>
+		<ui:define name="content">
+			<h:form rendered="#{empty databaseMB.fastas}">
+				To perform a protein search you must first <p:commandButton value="upload" action="databases"/> a fasta file.
+			</h:form>
+			<h:panelGroup rendered="#{not empty databaseMB.fastas}">			
+				<h:form>
+					<p:panelGrid columns="2">
+						<f:facet name="header">Search options</f:facet>
+						<h:outputText value="Protein accession" />
+						<h:inputText value="#{searchMB.proteinAccession}" />
+						<h:outputText value="Fasta file" />
+						<p:selectOneMenu value="#{searchMB.fastaFile}">
+							<f:selectItems value="#{databaseMB.fastas}" var="fasta" itemLabel="#{fasta.name}" itemValue="#{fasta.name}"/>					
+						</p:selectOneMenu>
+					</p:panelGrid>
+					<br/>
+					<p:commandButton value="Search" action="#{searchMB.searchProtein()}" ajax="false"/>
+				</h:form>
+				<br/>
+				<h:form rendered="#{searchMB.protein != null}">
+					<p:dataTable value="#{searchMB.proteinPeptides}" rowIndexVar="row" var="pep">
+						<f:facet name="header">Results for #{searchMB.proteinAccession}</f:facet>
+						<p:column headerText="peptide">
+							#{pep}
+						</p:column>
+						<p:column headerText="type">
+							#{pep.confidence}
+						</p:column>
+						<p:column headerText="proteins">
+							#{pep.proteins}
+						</p:column>
+						<p:column headerText="sequence">
+							#{pep.sequence}
+						</p:column>
+						<p:column headerText="action">
+							<p:commandButton value="Search" action="#{searchMB.searchProteinPeptide(databaseMB,pep.sequence)}"/>
+						</p:column>						
+					</p:dataTable>
+				</h:form>
+			</h:panelGroup>
+		</ui:define>
+	</ui:composition>
+</h:body>
+</html>

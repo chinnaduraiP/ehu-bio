@@ -7,7 +7,7 @@
 
 <h:body>
 	<ui:composition template="./template.xhtml">
-		<ui:define name="title">Search</ui:define>
+		<ui:define name="title">Peptide search</ui:define>
 		<ui:define name="content">			
 			<h:form>
 				<p:panelGrid columns="2">
@@ -16,11 +16,11 @@
 					<h:inputText value="#{searchMB.peptideSequence}" />
 				</p:panelGrid>
 				<br/>
-				<p:commandButton value="Search" action="#{searchMB.search(databaseMB)}" ajax="false"/>
+				<p:commandButton value="Search" action="#{searchMB.searchPeptide(databaseMB)}" ajax="false"/>
 			</h:form>
 			<br/>
 			<h:form>
-				<p:dataTable value="#{searchMB.peptides}" rowIndexVar="row" var="item" rendered="#{searchMB.peptideSequence != null}">
+				<p:dataTable value="#{searchMB.seqPeptides}" rowIndexVar="row" var="item" rendered="#{searchMB.peptideSequence != null}">
 					<f:facet name="header">Results</f:facet>
 					<p:column headerText="massSequence">
 						<h:outputText value="#{item.massSequence}"/>						

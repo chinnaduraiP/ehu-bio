@@ -57,11 +57,11 @@ public class MsMsData {
 	}
 	
 	public void loadFromSpectra( Set<Spectrum> spectra ) {
-		this.spectra = spectra;
 		psms.clear();
 		peptides.clear();
 		proteins.clear();
 		groups.clear();
+		this.spectra = spectra;		
 		for( Spectrum spectrum : spectra )			
 			for( Psm psm : spectrum.getPsms() ) {				
 				psms.add(psm);
@@ -74,6 +74,22 @@ public class MsMsData {
 						groups.add(protein.getGroup());
 				}
 			}
+	}
+	
+	public void loadFromPeptides( Set<Peptide> peptides ) {
+		spectra.clear();
+		psms.clear();
+		this.peptides.clear();
+		proteins.clear();
+		groups.clear();
+		for( Peptide peptide : peptides ) {
+			Spectrum spectrum = new Spectrum();
+			Psm psm = new Psm();
+			psm.linkPeptide(peptide);
+			psm.linkSpectrum(spectrum);
+			spectra.add(spectrum);
+		}
+		loadFromSpectra(spectra);
 	}
 	
 	public void clearMetaData() {
