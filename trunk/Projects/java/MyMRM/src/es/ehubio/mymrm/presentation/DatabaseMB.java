@@ -1,12 +1,19 @@
 package es.ehubio.mymrm.presentation;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.faces.bean.ApplicationScoped;
 import javax.faces.bean.ManagedBean;
 import javax.faces.context.FacesContext;
+
+import org.apache.commons.io.IOUtils;
+import org.primefaces.event.FileUploadEvent;
+import org.primefaces.model.UploadedFile;
 
 import es.ehubio.mymrm.business.Database;
 import es.ehubio.mymrm.data.Chromatography;
@@ -145,13 +152,31 @@ public class DatabaseMB {
 	
 	public List<FastaFile> getFastas() {
 		List<FastaFile> list = new ArrayList<>();
-		File dir = new File(FacesContext.getCurrentInstance().getExternalContext().getInitParameter("MyMRM.fastaDir"));
-		for( File file : dir.listFiles("*fasta*") )
+		File dir = new File(getFastaDir());
+		for( File file : dir.listFiles() )
+			if( file.isFile() && file.getName().contains("fasta") ) {
+				FastaFile fasta = new FastaFile();
+				fasta.setName(file.getName());
+				list.add(fasta);
+			}
 		return list;
 	}
 	
 	public void removeFasta( FastaFile fasta ) {
-		Database.remove(FastaFile.class, fasta.getId());
+		File file = new File(getFastaDir(),fasta.getName());
+		file.delete();
+	}
+	
+	public void uploadFasta( FileUploadEvent event ) {
+		try {
+			UploadedFile file = event.getFile();
+			InputStream is = file.getInputstream();
+			OutputStream os = new FileOutputStream(new File(getFastaDir(), file.getFileName()));
+			IOUtils.copy(is, os);
+			is.close();
+			os.close();
+		} catch( Exception e ) {			
+		}
 	}
 	
 	public void feed( ExperimentMB bean ) {
@@ -186,5 +211,9 @@ public class DatabaseMB {
 
 	public List<Score> getScores(int evidenceId) {
 		return Database.findScores(evidenceId);
-	}	
+	}
+	
+	public static String getFastaDir() {
+		return FacesContext.getCurrentInstance().getExternalContext().getInitParameter("MyMRM.fastaDir");
+	}
 }

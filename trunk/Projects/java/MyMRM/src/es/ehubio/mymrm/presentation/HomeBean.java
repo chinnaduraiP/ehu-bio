@@ -49,13 +49,13 @@ public class HomeBean implements Serializable {
 		page = new PageSummary();
 		page.setName("Search Peptide");
 		page.setDescription("Search database for evidences and transactions of a given peptide secuence.");
-		page.setAction("search");
+		page.setAction("peptide");
 		addPage(page);
 		
 		page = new PageSummary();
 		page.setName("Search Protein");
 		page.setDescription("Search database for evidences and transactions of unique peptides for a given protein.");
-		page.setAction("search");
+		page.setAction("protein");
 		addPage(page);
 		
 		news = new ArrayList<>();

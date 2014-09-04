@@ -3,6 +3,8 @@ package es.ehubio.proteomics;
 import java.util.HashSet;
 import java.util.Set;
 
+import es.ehubio.db.fasta.Fasta;
+
 /**
  * Protein in a MS/MS proteomics experiment with PAnalyzer confidence category.
  * 
@@ -30,6 +32,13 @@ public class Protein extends DecoyBase {
 
 	public int getId() {
 		return id;
+	}
+	
+	public void setFasta( Fasta fasta ) {
+		setAccession(fasta.getAccession());
+		setDescription(fasta.getDescription());
+		setName(fasta.getProteinName());
+		setSequence(fasta.getSequence());
 	}
 	
 	public String getAccession() {
