@@ -1,7 +1,9 @@
 package es.ehubio.mymrm.data;
 
 import java.io.Serializable;
+
 import javax.persistence.*;
+
 import java.util.List;
 
 
@@ -47,6 +49,10 @@ public class Experiment implements Serializable {
 	//bi-directional many-to-one association to PeptideEvidence
 	@OneToMany(mappedBy="experimentBean")
 	private List<PeptideEvidence> peptideEvidences;
+	
+	//bi-directional many-to-one association to ExperimentFile
+	@OneToMany(mappedBy="experimentBean")
+	private List<ExperimentFile> experimentFiles;
 
 	public Experiment() {
 	}
@@ -137,4 +143,25 @@ public class Experiment implements Serializable {
 		return peptideEvidence;
 	}
 
+	public List<ExperimentFile> getExperimentFiles() {
+		return this.experimentFiles;
+	}
+
+	public void setExperimentFiles(List<ExperimentFile> experimentFiles) {
+		this.experimentFiles = experimentFiles;
+	}
+
+	public ExperimentFile addExperimentFile(ExperimentFile experimentFile) {
+		getExperimentFiles().add(experimentFile);
+		experimentFile.setExperimentBean(this);
+
+		return experimentFile;
+	}
+
+	public ExperimentFile removeExperimentFile(ExperimentFile experimentFile) {
+		getExperimentFiles().remove(experimentFile);
+		experimentFile.setExperimentBean(null);
+
+		return experimentFile;
+	}
 }

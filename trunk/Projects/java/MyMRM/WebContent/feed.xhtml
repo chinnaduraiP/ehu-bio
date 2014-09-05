@@ -50,6 +50,10 @@
 					<p:column headerText="description">
 						<h:outputText value="#{item.description}" rendered="#{item != null}"/>
 						<h:inputText value="#{experimentMB.entity.description}" rendered="#{item == null}"/>
+					</p:column>
+					<p:column headerText="data">
+						<p:commandButton value="details ..." rendered="#{item != null and item.experimentFiles.size() > 0}" action="#{filesMB.setExperiment(item)}"/>
+						<h:outputText value="empty" rendered="#{item != null and item.experimentFiles.size() == 0}"/>
 					</p:column>					
 					<p:column headerText="action" style="text-align: center">
 						<h:commandLink actionListener="#{databaseMB.removeExperiment(item)}" rendered="#{item != null}">
@@ -61,25 +65,26 @@
 					</p:column>
 				</p:dataTable>
 			</h:form>
-			<br/>
-			<h3>Add data to an experiment:</h3>
-			<h:form>
-				<p:panelGrid columns="2">
-					<f:facet name="header">Experiment files</f:facet>
-					<h:outputText value="Experiment:" />
-					<p:selectOneMenu value="#{experimentMB.id}">
-						<f:selectItems value="#{databaseMB.experiments}" var="item" itemLabel="#{item.name}" itemValue="#{item.id}"/>					
-					</p:selectOneMenu>
-					<h:outputText value="Identification file:" />
-					<h:outputText value="--- (*.mzid) ---" />
-					<h:outputText value="Spectra file:" />
-					<h:outputText value="--- (*.mgf) ---" />
-					<h:outputText value="PAnalyzer configuration file (*.pax):" />
-					<h:inputText value="#{experimentMB.pax}" />
-				</p:panelGrid>
+			<h:panelGroup rendered="#{not empty databaseMB.emptyExperiments}">
 				<br/>
-				<p:commandButton value="Submit" actionListener="#{databaseMB.feed(experimentMB)}" ajax="false"/>
-			</h:form>			
+				<h3>Add data to an empty experiment:</h3>
+				<h:form enctype="multipart/form-data">
+					<p:panelGrid columns="2">
+						<f:facet name="header">Experiment files</f:facet>
+						<h:outputText value="Experiment:" />
+						<p:selectOneMenu value="#{experimentMB.id}">
+							<f:selectItems value="#{databaseMB.emptyExperiments}" var="item" itemLabel="#{item.name}" itemValue="#{item.id}"/>					
+						</p:selectOneMenu>
+						<h:outputText value="Upload files:" />
+						<p:fileUpload fileUploadListener="#{databaseMB.uploadFasta}"
+							allowTypes="/\.(mzid|mgf)(\.gz)?$/" multiple="true" auto="flase" mode="advanced" update="@all"/>
+						<h:outputText value="PAnalyzer configuration file (*.pax):" />
+						<h:inputText value="#{experimentMB.pax}" />
+					</p:panelGrid>
+					<br/>
+					<p:commandButton value="Submit" actionListener="#{databaseMB.feed(experimentMB)}" ajax="false"/>
+				</h:form>
+			</h:panelGroup>
 		</ui:define>
 	</ui:composition>
 </h:body>

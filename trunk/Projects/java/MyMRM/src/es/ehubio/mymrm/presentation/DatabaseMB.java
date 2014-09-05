@@ -18,6 +18,7 @@ import org.primefaces.model.UploadedFile;
 import es.ehubio.mymrm.business.Database;
 import es.ehubio.mymrm.data.Chromatography;
 import es.ehubio.mymrm.data.Experiment;
+import es.ehubio.mymrm.data.ExperimentFile;
 import es.ehubio.mymrm.data.FastaFile;
 import es.ehubio.mymrm.data.Fragment;
 import es.ehubio.mymrm.data.FragmentationType;
@@ -92,7 +93,16 @@ public class DatabaseMB {
 	}
 	
 	public List<Experiment> getExperiments() {
-		return Database.findAll(Experiment.class);
+		return Database.findExperiments();
+	}
+	
+	public List<Experiment> getEmptyExperiments() {
+		List<Experiment> experiments = getExperiments();
+		List<Experiment> empty = new ArrayList<>();
+		for( Experiment experiment : experiments )
+			if( experiment.getExperimentFiles().isEmpty() )
+				empty.add(experiment);
+		return empty;
 	}
 	
 	public List<Experiment> getExperimentsNull() {
@@ -190,6 +200,13 @@ public class DatabaseMB {
 			String[] args = {bean.getPax()};
 			panalyzer.run(args);		
 			Database.feed(experiment.getId(), panalyzer.getData(), es.ehubio.proteomics.Peptide.Confidence.DISCRIMINATING);
+			for( PAnalyzerCli.Configuration.InputFile input : panalyzer.getConfiguration().inputs ) {
+				ExperimentFile file = new ExperimentFile();
+				file.setExperimentBean(experiment);
+				file.setIdentification(input.path);
+				file.setSpectra(input.ions);
+				Database.add(file);
+			}
 		} catch( Exception e ) {
 			e.printStackTrace();
 		}
@@ -201,6 +218,10 @@ public class DatabaseMB {
 	
 	public List<Peptide> search( String pepSequence ) {
 		return Database.findPeptides( pepSequence );
+	}
+	
+	public int checkPeptideAvailable( String pepSequence ) {
+		return Database.countPeptidesBySequence(pepSequence);
 	}
 	
 	@Override
@@ -215,5 +236,13 @@ public class DatabaseMB {
 	
 	public static String getFastaDir() {
 		return FacesContext.getCurrentInstance().getExternalContext().getInitParameter("MyMRM.fastaDir");
+	}
+	
+	public List<ExperimentFile> findExperimentFiles( int idExperiment ) {
+		return Database.findExperimentFiles(idExperiment);
+	}
+	
+	public int countExperimentFiles( int idExperiment ) {
+		return Database.countExperimentFiles(idExperiment);
 	}
 }

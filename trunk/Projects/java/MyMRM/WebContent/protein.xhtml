@@ -17,33 +17,48 @@
 					<p:panelGrid columns="2">
 						<f:facet name="header">Search options</f:facet>
 						<h:outputText value="Protein accession" />
-						<h:inputText value="#{searchMB.proteinAccession}" />
+						<h:panelGroup>
+							<h:inputText id="acc" value="#{searchMB.proteinAccession}" required="true" requiredMessage="Enter a protein accession in the selected fasta file"/>
+							<h:message for="acc" style="color:red"/>
+						</h:panelGroup>
 						<h:outputText value="Fasta file" />
 						<p:selectOneMenu value="#{searchMB.fastaFile}">
 							<f:selectItems value="#{databaseMB.fastas}" var="fasta" itemLabel="#{fasta.name}" itemValue="#{fasta.name}"/>					
 						</p:selectOneMenu>
+						<h:outputText value="Enzyme" />
+						<p:selectOneMenu value="#{searchMB.enzyme}">
+							<f:selectItems value="#{searchMB.enzymes}" var="e" itemLabel="#{e.description}" itemValue="#{e}"/>					
+						</p:selectOneMenu>
+						<h:outputText value="Minimum peptide length"/>
+						<h:panelGroup>
+							<p:inputText id="len" value="#{searchMB.minPeptideLength}" required="true">
+								<f:validateLongRange minimum="0" maximum="20"/>
+							</p:inputText>
+							<h:message for="len" style="color:red"/>						
+						</h:panelGroup>
 					</p:panelGrid>
 					<br/>
-					<p:commandButton value="Search" action="#{searchMB.searchProtein()}" ajax="false"/>
+					<p:commandButton value="Search" action="#{searchMB.searchProtein(databaseMB)}" ajax="false"/>
 				</h:form>
 				<br/>
 				<h:form rendered="#{searchMB.protein != null}">
-					<p:dataTable value="#{searchMB.proteinPeptides}" rowIndexVar="row" var="pep">
+					<p:dataTable value="#{searchMB.candidates}" rowIndexVar="row" var="can">
 						<f:facet name="header">Results for #{searchMB.proteinAccession}</f:facet>
 						<p:column headerText="peptide">
-							#{pep}
+							#{can.peptide}
 						</p:column>
 						<p:column headerText="type">
-							#{pep.confidence}
+							#{can.peptide.confidence}
 						</p:column>
 						<p:column headerText="proteins">
-							#{pep.proteins}
+							#{can.peptide.proteins}
 						</p:column>
 						<p:column headerText="sequence">
-							#{pep.sequence}
+							#{can.peptide.sequence}
 						</p:column>
 						<p:column headerText="action">
-							<p:commandButton value="Search" action="#{searchMB.searchProteinPeptide(databaseMB,pep.sequence)}"/>
+							<p:commandButton value="Details ..." rendered="#{can.available}" action="#{searchMB.searchProteinPeptide(databaseMB,can.peptide.sequence)}"/>
+							<h:outputText value="Not available" rendered="#{!can.available}"/>
 						</p:column>						
 					</p:dataTable>
 				</h:form>

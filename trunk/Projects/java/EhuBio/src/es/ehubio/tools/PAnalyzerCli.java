@@ -27,7 +27,7 @@ public final class PAnalyzerCli implements Command.Interface {
 	private Validator validator;
 	private ScoreType psmScoreType;
 	private final static int MAXITER=15;
-	private Configuration cfg;
+	private Configuration cfg;	
 	private boolean loadIons = false;
 	private boolean saveResults = true;
 	
@@ -208,7 +208,7 @@ public final class PAnalyzerCli implements Command.Interface {
 	
 	private void logCounts( String title ) {
 		logger.info(String.format("%s: %s", title, data.toString()));
-	}	
+	}
 
 	@XmlRootElement
 	public static class Configuration {
