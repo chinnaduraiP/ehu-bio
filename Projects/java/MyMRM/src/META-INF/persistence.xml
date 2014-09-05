@@ -14,7 +14,7 @@
 		<class>es.ehubio.mymrm.data.PeptideEvidence</class>
 		<class>es.ehubio.mymrm.data.Score</class>
 		<class>es.ehubio.mymrm.data.ScoreType</class>
-		<class>es.ehubio.mymrm.data.FastaFile</class>
+		<class>es.ehubio.mymrm.data.ExperimentFile</class>
 		<properties>
 			<property name="hibernate.connection.username" value="mymrm"/>
 			<property name="hibernate.connection.password" value="MyMRM"/>

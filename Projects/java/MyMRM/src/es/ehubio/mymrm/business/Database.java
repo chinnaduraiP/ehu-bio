@@ -13,6 +13,7 @@ import javax.persistence.NoResultException;
 import javax.persistence.Persistence;
 
 import es.ehubio.mymrm.data.Experiment;
+import es.ehubio.mymrm.data.ExperimentFile;
 import es.ehubio.mymrm.data.Fragment;
 import es.ehubio.mymrm.data.Peptide;
 import es.ehubio.mymrm.data.PeptideEvidence;
@@ -73,6 +74,13 @@ public class Database {
 		return true;
 	}
 	
+	public static List<Experiment> findExperiments() {
+		List<Experiment> experiments = findAll(Experiment.class);
+		for( Experiment experiment : experiments )
+			experiment.setExperimentFiles(findExperimentFiles(experiment.getId()));
+		return experiments;
+	}
+	
 	public static Peptide findByMassSequence( String massSequence ) {
 		Peptide peptide = null;
 		try {
@@ -83,6 +91,13 @@ public class Database {
 		} catch( NoResultException ex ) {			
 		}
 		return peptide;
+	}
+	
+	public static int countPeptidesBySequence( String sequence ) {
+		Number res = em.createQuery("SELECT COUNT (p) FROM Peptide p WHERE p.sequence = :sequence",Number.class)
+			.setParameter("sequence", sequence)
+			.getSingleResult();
+		return res.intValue();
 	}
 	
 	public static List<Peptide> findBySequence( String sequence ) {
@@ -114,7 +129,10 @@ public class Database {
 		if( experiment == null )
 			return false;
 		
+		double total = data.getPeptides().size();
+		double partial = 0.0;
 		for( es.ehubio.proteomics.Peptide peptide : data.getPeptides() ) {
+			partial += 1.0;
 			if( Boolean.TRUE.equals(peptide.getDecoy()) || peptide.getConfidence().getOrder() > confidence.getOrder() )
 				continue;
 			beginTransaction();
@@ -126,7 +144,7 @@ public class Database {
 				em.persist(dbPeptide);				
 			}			
 			for( Psm psm : peptide.getPsms() ) {
-				logger.info(String.format("Feedind with %s (mz=%s)", peptide.getSequence(), psm.getCalcMz()));
+				//logger.info(String.format("Feedind with %s (mz=%s)", peptide.getSequence(), psm.getCalcMz()));
 				Precursor precursor = new Precursor();
 				precursor.setMz(psm.getCalcMz());
 				precursor.setCharge(psm.getCharge());
@@ -142,6 +160,8 @@ public class Database {
 				feedScores(evidence,psm.getScores());
 			}
 			commitTransaction();
+			if( ((int)(partial+0.5))%10 == 0 )
+				logger.info(String.format("Completed %.1f%%", partial/total*100.0));
 		}
 		return true;
 	}
@@ -233,5 +253,24 @@ public class Database {
 		} catch( NoResultException ex ) {			
 		}
 		return scores == null ? new ArrayList<es.ehubio.mymrm.data.Score>() : scores;
+	}
+	
+	public static List<ExperimentFile> findExperimentFiles( int idExperiment ) {
+		List<ExperimentFile> files = null;
+		try {
+			files = em
+				.createQuery("SELECT f FROM ExperimentFile f WHERE f.experimentBean.id = :exp", ExperimentFile.class)
+				.setParameter("exp", idExperiment)
+				.getResultList();
+		} catch( NoResultException ex ) {			
+		}
+		return files == null ? new ArrayList<ExperimentFile>() : files;
+	}
+	
+	public static int countExperimentFiles( int idExperiment ) {
+		Number res = em.createQuery("SELECT COUNT (f) FROM ExperimentFile f WHERE f.experimentBean.id = :exp",Number.class)
+			.setParameter("exp", idExperiment)
+			.getSingleResult();
+		return res.intValue();
 	}
 }

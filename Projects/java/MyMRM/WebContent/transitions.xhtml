@@ -9,27 +9,29 @@
 	<ui:composition template="./template.xhtml">
 		<ui:define name="title">Search details</ui:define>
 		<ui:define name="content">
-			<p:dataTable value="#{searchMB.precursor.experiments}" var="ex">
-				<f:facet name="header">Details</f:facet>
-				<p:column headerText="experiment">
-					<h:outputText value="#{ex.experiment.name}" />
-				</p:column>
-				<p:column headerText="precursor scores">
-					<p:dataTable value="#{ex.scores}" var="score">
-						<p:column headerText="name">#{score.scoreType.name}</p:column>
-						<p:column headerText="value">#{score.value}</p:column>
-					</p:dataTable>
-				</p:column>
-				<p:column headerText="transitions">
-					<p:dataTable value="#{ex.fragments}" var="frag">
-						<p:column headerText="mz">
-							<h:outputText value="#{frag.mz}" style="color:red" rendered="#{frag.mz lt ex.precursor.mz}"/>
-							<h:outputText value="#{frag.mz}" style="color:green" rendered="#{frag.mz ge ex.precursor.mz}"/>
-						</p:column>
-						<p:column headerText="intensity">#{frag.intensity}</p:column>
-					</p:dataTable>					
-				</p:column>
-			</p:dataTable>	
+			<h:form>
+				<p:dataTable value="#{searchMB.precursor.experiments}" var="ex">
+					<f:facet name="header">Details</f:facet>
+					<p:column headerText="experiment">
+						<p:commandButton value="#{ex.experiment.name}" action="#{filesMB.setExperiment(ex.experiment)}"/>
+					</p:column>
+					<p:column headerText="precursor scores">
+						<p:dataTable value="#{ex.scores}" var="score">
+							<p:column headerText="name">#{score.scoreType.name}</p:column>
+							<p:column headerText="value">#{score.value}</p:column>
+						</p:dataTable>
+					</p:column>
+					<p:column headerText="transitions">
+						<p:dataTable value="#{ex.fragments}" var="frag">
+							<p:column headerText="mz">
+								<h:outputText value="#{frag.mz}" style="color:red" rendered="#{frag.mz lt ex.precursor.mz}"/>
+								<h:outputText value="#{frag.mz}" style="color:green" rendered="#{frag.mz ge ex.precursor.mz}"/>
+							</p:column>
+							<p:column headerText="intensity">#{frag.intensity}</p:column>
+						</p:dataTable>					
+					</p:column>
+				</p:dataTable>
+			</h:form>	
 		</ui:define>
 	</ui:composition>
 </h:body>

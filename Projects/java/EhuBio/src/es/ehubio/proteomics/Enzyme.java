@@ -3,8 +3,8 @@ package es.ehubio.proteomics;
 import java.util.regex.Pattern;
 
 public enum Enzyme {
-	TRYPSIN("Trypsin","Trypsin (C-term to K/R, except before P)","[KR][^P]"),
-	TRYPSIN_P("Trypsin-P","Trypsin (C-term to K/R, even before P)","[KR]");
+	TRYPSIN("Trypsin","Trypsin (C-term to K/R, except before P)","(?<=[KR])(?!P)"),
+	TRYPSIN_P("Trypsin-P","Trypsin (C-term to K/R, even before P)","(?<=[KR])");
 	
 	private final String name;
 	private final String description;

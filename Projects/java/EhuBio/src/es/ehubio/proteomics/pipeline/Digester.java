@@ -1,14 +1,11 @@
 package es.ehubio.proteomics.pipeline;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import es.ehubio.db.fasta.Fasta;
 import es.ehubio.db.fasta.Fasta.InvalidSequenceException;
@@ -18,8 +15,9 @@ import es.ehubio.proteomics.Peptide;
 import es.ehubio.proteomics.Protein;
 
 public class Digester {
-	public static List<String> digestSequence( String sequence, Enzyme enzyme ) {
-		List<String> list = new ArrayList<>();
+	public static String[] digestSequence( String sequence, Enzyme enzyme ) {
+		return enzyme.getPattern().split(sequence);
+		/*List<String> list = new ArrayList<>();
 		Pattern pattern = enzyme.getPattern();
 		Matcher matcher = pattern.matcher(sequence);
 		int start = 0;
@@ -29,7 +27,7 @@ public class Digester {
 		}
 		if( start < sequence.length() )
 			list.add(sequence.substring(start, sequence.length()));
-		return list;
+		return list;*/
 	}
 	
 	public static Set<Peptide> digestDatabase( String path, Enzyme enzyme, int minLength ) throws IOException, InvalidSequenceException {
@@ -38,7 +36,7 @@ public class Digester {
 		for( Fasta fasta : database ) {
 			Protein protein = new Protein();
 			protein.setFasta(fasta);
-			List<String> seqs = digestSequence(protein.getSequence(), enzyme);
+			String[] seqs = digestSequence(protein.getSequence(), enzyme);
 			for( String seq : seqs ) {
 				if( seq.length() < minLength )
 					continue;

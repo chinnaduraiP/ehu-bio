@@ -6,7 +6,9 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.faces.bean.ManagedBean;
@@ -28,9 +30,12 @@ public class SearchMB implements Serializable {
 	private List<PeptideBean> seqPeptides;
 	private PrecursorBean precursor;
 	private String proteinAccession;
-	private String fastaFile;
+	private String fastaFile, prevFastaFile;
+	private Enzyme enzyme, prevEnzyme;
 	private Protein protein;
-	private List<es.ehubio.proteomics.Peptide> proteinPeptides = new ArrayList<>();
+	private List<CandidateBean> candidates = new ArrayList<>();
+	private Map<String, Protein> proteins = new HashMap<>();
+	private int minPeptideLength = 7, prevPeptideLength = 0;
 	
 	public String getPeptideSequence() {
 		return peptideSequence;
@@ -55,32 +60,31 @@ public class SearchMB implements Serializable {
 		return "peptide";
 	}
 	
-	public void searchProtein() {
-		this.protein = null;
-		proteinPeptides.clear();
+	public void searchProtein( DatabaseMB db ) {
+		protein = null;
+		candidates.clear();
 		try {
-			Set<es.ehubio.proteomics.Peptide> peptides = Digester.digestDatabase(
-				new File(DatabaseMB.getFastaDir(),fastaFile).getAbsolutePath(),
-				Enzyme.TRYPSIN,
-				7);
-			MsMsData data = new MsMsData();
-			data.loadFromPeptides(peptides);
-			PAnalyzer pAnalyzer = new PAnalyzer(data);
-			pAnalyzer.run();
-			for( Protein protein : data.getProteins() )
-				if( protein.getAccession().equalsIgnoreCase(proteinAccession) ) {
-					this.protein = protein;
-					break;
+			if( prevPeptideLength != minPeptideLength || !fastaFile.equals(prevFastaFile) || !enzyme.equals(prevEnzyme) ) {
+				redigest();
+				prevPeptideLength = minPeptideLength;
+				prevFastaFile = fastaFile;
+				prevEnzyme = enzyme;				
+			}
+			protein = proteins.get(proteinAccession.toUpperCase());
+			if( protein != null ) {
+				for( es.ehubio.proteomics.Peptide peptide : protein.getPeptides() ) {
+					CandidateBean candidate = new CandidateBean();
+					candidate.setPeptide(peptide);
+					candidate.setAvailable(db.checkPeptideAvailable(peptide.getSequence())>0);
+					candidates.add(candidate);
 				}
-			if( this.protein != null ) {
-				proteinPeptides.addAll(protein.getPeptides());
-				Collections.sort(proteinPeptides, new Comparator<es.ehubio.proteomics.Peptide>() {
+				Collections.sort(candidates, new Comparator<CandidateBean>() {
 					@Override
-					public int compare(es.ehubio.proteomics.Peptide p1, es.ehubio.proteomics.Peptide p2) {
-						int res = p1.getConfidence().getOrder() - p2.getConfidence().getOrder(); 
+					public int compare(CandidateBean c1, CandidateBean c2) {
+						int res = c1.getPeptide().getConfidence().getOrder() - c2.getPeptide().getConfidence().getOrder(); 
 						if( res != 0 )
 							return res;
-						res = p2.getSequence().length()-p1.getSequence().length();
+						res = c2.getPeptide().getSequence().length()-c1.getPeptide().getSequence().length();
 						return res;
 					}
 				});
@@ -88,6 +92,19 @@ public class SearchMB implements Serializable {
 		} catch (IOException | InvalidSequenceException e) {
 			e.printStackTrace();
 		}
+	}
+	
+	private void redigest() throws IOException, InvalidSequenceException {
+		proteins.clear();
+		Set<es.ehubio.proteomics.Peptide> peptides = Digester.digestDatabase(
+			new File(DatabaseMB.getFastaDir(),fastaFile).getAbsolutePath(),
+			enzyme, minPeptideLength);
+		MsMsData data = new MsMsData();
+		data.loadFromPeptides(peptides);
+		PAnalyzer pAnalyzer = new PAnalyzer(data);
+		pAnalyzer.run();
+		for( Protein protein : data.getProteins() )
+			proteins.put(protein.getAccession().toUpperCase(), protein);
 	}
 
 	public List<PeptideBean> getSeqPeptides() {
@@ -129,7 +146,27 @@ public class SearchMB implements Serializable {
 		return protein;
 	}
 
-	public List<es.ehubio.proteomics.Peptide> getProteinPeptides() {
-		return proteinPeptides;
+	public List<CandidateBean> getCandidates() {
+		return candidates;
+	}
+	
+	public Enzyme[] getEnzymes() {
+		return Enzyme.class.getEnumConstants();
+	}
+
+	public Enzyme getEnzyme() {
+		return enzyme;
+	}
+
+	public void setEnzyme(Enzyme enzyme) {
+		this.enzyme = enzyme;
+	}
+
+	public int getMinPeptideLength() {
+		return minPeptideLength;
+	}
+
+	public void setMinPeptideLength(int minPeptideLength) {
+		this.minPeptideLength = minPeptideLength;
 	}
 }

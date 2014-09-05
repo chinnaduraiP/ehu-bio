@@ -2,7 +2,6 @@ package es.ehubio.proteomics.test;
 
 import static org.junit.Assert.*;
 
-import java.util.List;
 import java.util.logging.Logger;
 
 import org.junit.Test;
@@ -16,22 +15,22 @@ public class Digestion {
 	@Test
 	public void testTrypsine() {
 		String seq = "ASDFKFDSARQWERPQWE";
-		List<String> list = Digester.digestSequence(seq, Enzyme.TRYPSIN);
+		String[] list = Digester.digestSequence(seq, Enzyme.TRYPSIN);
 		logger.info("Sequence: "+seq);
 		for( String pep : list )
 			logger.info("Peptide: "+pep);
-		assertEquals(3, list.size());
-		assertTrue(list.get(2).equalsIgnoreCase("QWERPQWE"));
+		assertEquals(3, list.length);
+		assertTrue(list[2].equalsIgnoreCase("QWERPQWE"));
 	}
 
 	@Test
 	public void testTrypsineP() {
 		String seq = "ASDFKFDSARQWERPQWE";
-		List<String> list = Digester.digestSequence(seq, Enzyme.TRYPSIN_P);
+		String[] list = Digester.digestSequence(seq, Enzyme.TRYPSIN_P);
 		logger.info("Sequence: "+seq);
 		for( String pep : list )
 			logger.info("Peptide: "+pep);
-		assertEquals(4, list.size());
-		assertTrue(list.get(3).equalsIgnoreCase("PQWE"));
+		assertEquals(4, list.length);
+		assertTrue(list[3].equalsIgnoreCase("PQWE"));
 	}
 }
