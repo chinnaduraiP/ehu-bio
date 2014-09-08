@@ -3,19 +3,19 @@ package es.ehubio.proteomics;
 import java.util.HashMap;
 import java.util.Map;
 
-public enum ScoreType {
-	OTHER_LARGER(null,"other:larger","Other, larger values are better",true),
-	OTHER_SMALLER(null,"other:smaller","Other, smaller values are better",false),
+public enum ScoreType {	
 	MASCOT_EVALUE("MS:1001172","Mascot:expectation value","The Mascot result 'expectation value",false),
 	MASCOT_SCORE("MS:1001171","Mascot:score","The Mascot result 'Score'",true),
 	SEQUEST_XCORR("MS:1001155","SEQUEST:xcorr","The SEQUEST result 'XCorr'",true),
 	XTANDEM_EVALUE("MS:1001330","X!Tandem:expect","The X!Tandem expectation value",false),
-	XTANDEM_HYPERSCORE("MS:1001331","X!Tandem:hyperscore","The X!Tandem hyperscore",true),
-	PROPHET_PROBABILITY(null,"PeptideProphet:probability","PeptideProphet probability score",true),
+	XTANDEM_HYPERSCORE("MS:1001331","X!Tandem:hyperscore","The X!Tandem hyperscore",true),	
 	PSM_P_VALUE("MS:1002352","PSM-level p-value","Estimation of the p-value for peptide spectrum matches",false),
 	PSM_LOCAL_FDR("MS:1002351","PSM-level local FDR","Estimation of the local false discovery rate of peptide spectrum matches",false),
 	PSM_Q_VALUE("MS:1002354","PSM-level q-value","Estimation of the q-value for peptide spectrum matches",false),
 	PSM_FDR_SCORE("MS:1002355","PSM-level FDRScore","FDRScore for peptide spectrum matches",false),
+	OTHER_LARGER(null,"other:larger","Other, larger values are better",true),
+	OTHER_SMALLER(null,"other:smaller","Other, smaller values are better",false),
+	PROPHET_PROBABILITY(null,"PeptideProphet:probability","PeptideProphet probability score",true),
 	PEPTIDE_P_VALUE(null,"peptide-level p-value","Estimation of the p-value for peptides",false),
 	PEPTIDE_LOCAL_FDR("MS:1002359","distinct peptide-level local FDR","Estimation of the local false discovery rate for distinct peptides once redundant identifications of the same peptide have been removed (id est multiple PSMs have been collapsed to one entry)",false),
 	PEPTIDE_Q_VALUE(null,"peptide-level q-value","Estimation of the q-value for peptides",false),
