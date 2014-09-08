@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -122,16 +123,21 @@ public final class Mzid extends MsMsFile {
 	}
 	
 	@Override
-	public void loadIons(String optionalPath) throws Exception {
+	public List<File> loadIons(String optionalPath) throws Exception {
+		List<File> files = new ArrayList<>();
 		for( SpectraDataType spectrum : mzid.getDataCollection().getInputs().getSpectraDatas() ) {
 			if( !spectrum.getFileFormat().getCvParam().getAccession().equals("MS:1001062") ||
 				!spectrum.getSpectrumIDFormat().getCvParam().getAccession().equals("MS:1000774") )
 				throw new UnsupportedOperationException("Spectra format not supported");
-			loadIons( getIonsPath(optionalPath, spectrum.getLocation()), spectrum.getLocation() );
+			File file = getIonsFile(optionalPath, spectrum.getLocation());
+			String path = file.getAbsolutePath();
+			loadIons( path, spectrum.getLocation() );
+			files.add(file);
 		}
+		return files;
 	}
 	
-	private String getIonsPath(String optionalPath, String location) {
+	private File getIonsFile(String optionalPath, String location) {
 		// 1) Try spectrum path in mzid
 		File origFile = new File(location);
 		File file = origFile;
@@ -146,7 +152,7 @@ public final class Mzid extends MsMsFile {
 				file = new File(optFile,origFile.getName());
 			}
 		}
-		return file.getAbsolutePath();
+		return file;
 	}
 
 	private void loadIons(String path, String orig) throws FileNotFoundException, IOException {		
@@ -618,5 +624,5 @@ public final class Mzid extends MsMsFile {
 		if( remove != null )
 			mzid.getAuditCollection().getPersonsAndOrganizations().remove(remove);
 		mzid.getAuditCollection().getPersonsAndOrganizations().add(data.getOrganization());
-	}	
+	}
 }

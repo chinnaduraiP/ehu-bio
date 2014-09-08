@@ -1,6 +1,7 @@
 package es.ehubio.tools;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -9,6 +10,7 @@ import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import es.ehubio.io.CsvUtils;
 import es.ehubio.proteomics.MsMsData;
 import es.ehubio.proteomics.Score;
 import es.ehubio.proteomics.ScoreType;
@@ -64,7 +66,7 @@ public final class PAnalyzerCli implements Command.Interface {
 
 	@Override
 	public void run(String[] args) throws Exception {
-		load(args[0]);		
+		load((args == null||args.length==0)?null:args[0]);		
 		initialize();
 		rebuildGroups();		
 		inputFilter();
@@ -93,6 +95,10 @@ public final class PAnalyzerCli implements Command.Interface {
 	
 	public Configuration getConfiguration() {
 		return cfg;
+	}
+	
+	public void setConfiguration( Configuration cfg ) {
+		this.cfg = cfg;
 	}
 	
 	public MsMsData getData() {
@@ -176,18 +182,25 @@ public final class PAnalyzerCli implements Command.Interface {
 	}
 	
 	private void load( String path ) throws Exception {
-		JAXBContext context = JAXBContext.newInstance(Configuration.class);
-		Unmarshaller um = context.createUnmarshaller();
-		cfg = (Configuration)um.unmarshal(new File(path));
+		if( cfg == null ) {
+			JAXBContext context = JAXBContext.newInstance(Configuration.class);
+			Unmarshaller um = context.createUnmarshaller();
+			cfg = (Configuration)um.unmarshal(new File(path));		
+			logger.info(String.format("Using %s: %s", path, cfg.description));
+		}
 		psmScoreType = ScoreType.getByName(cfg.psmScore);
-		logger.info(String.format("Using %s: %s", path, cfg.description));	
 		
 		MsMsData tmp;
 		for( Configuration.InputFile input : cfg.inputs ) {
 			file = new Mzid();		
 			tmp = file.load(input.path,input.decoyRegex);
-			if( isLoadIons() )
-				file.loadIons(input.ions);
+			if( isLoadIons() ) {
+				List<File> files = file.loadIons(input.ions);
+				List<String> names = new ArrayList<>();
+				for( File file : files )
+					names.add(file.getName());
+				input.ions = CsvUtils.getCsv(';', names.toArray());
+			}
 			if( data == null ) {
 				data = tmp;
 				logCounts("Loaded");

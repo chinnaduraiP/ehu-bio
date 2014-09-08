@@ -1,9 +1,11 @@
 package es.ehubio.proteomics.io;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.List;
 import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -37,6 +39,7 @@ public abstract class MsMsFile {
 	
 	public abstract void save( OutputStream output ) throws Exception;
 	
-	public void loadIons( String optionalPath ) throws Exception {		
+	public List<File> loadIons( String optionalPath ) throws Exception {
+		return null;
 	}
 }

@@ -1,10 +1,14 @@
 package es.ehubio.mymrm.business;
 
+import java.io.File;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingDeque;
 import java.util.logging.Logger;
 
 import javax.persistence.EntityManager;
@@ -24,20 +28,31 @@ import es.ehubio.proteomics.FragmentIon;
 import es.ehubio.proteomics.MsMsData;
 import es.ehubio.proteomics.Psm;
 import es.ehubio.proteomics.Score;
+import es.ehubio.tools.PAnalyzerCli;
 
 public class Database {
 	private static final Logger logger = Logger.getLogger(Database.class.getName());
 	private static final int FRAGMENTS=10;
 	private static final int OKFRAGMENTS=3;
 	private static EntityManagerFactory emf;
-	private static EntityManager em;	
+	private static EntityManager em;
+	private static BlockingQueue<ExperimentFeed> queue = new LinkedBlockingDeque<>();
+	private static Worker worker;
+	private static volatile boolean working = false;
+	private static volatile boolean cancel = false;
+	private static ExperimentFeed currentFeed = null;
 	
 	public static void connect() {
 		emf = Persistence.createEntityManagerFactory("MyMRM");
 		em = emf.createEntityManager();
+		working = true;
+		worker = new Worker();
+		worker.start();
 	}
 	
-	public static void close() {
+	public static void close() throws InterruptedException {
+		working = false;
+		worker.join(2000);
 		em.close();
 		emf.close();
 	}
@@ -50,14 +65,16 @@ public class Database {
 		em.getTransaction().commit();
 	}
 	
+	public static void rollbackTransaction() {
+		em.getTransaction().rollback();
+	}
+	
 	public static <T> List<T> findAll(Class<T> c) {
 		return em.createQuery(String.format("SELECT x FROM %s x",c.getSimpleName()),c).getResultList();
 	}
 	
 	public static <T> void add(T item) {
-		beginTransaction();
 		em.persist(item);
-		commitTransaction();
 	}
 	
 	public static <T> T findById(Class<T> c, int id) {
@@ -68,10 +85,12 @@ public class Database {
 		T item = findById(c, id);
 		if( item == null )
 			return false;
-		beginTransaction();
 		em.remove(item);
-		commitTransaction();
 		return true;
+	}
+	
+	public static <T> void remove( T c ) {
+		em.remove(c);
 	}
 	
 	public static List<Experiment> findExperiments() {
@@ -81,16 +100,12 @@ public class Database {
 		return experiments;
 	}
 	
-	public static Peptide findByMassSequence( String massSequence ) {
-		Peptide peptide = null;
-		try {
-			peptide = em
-					.createQuery("SELECT p FROM Peptide p WHERE p.massSequence = :massSequence",Peptide.class)
-					.setParameter("massSequence", massSequence)
-					.getSingleResult();
-		} catch( NoResultException ex ) {			
-		}
-		return peptide;
+	public static void removeExperiment( int experimentId ) {
+		List<ExperimentFile> files = Database.findExperimentFiles(experimentId);
+		for( ExperimentFile file : files )
+			Database.remove(ExperimentFile.class, file.getId());
+		Database.remove(Experiment.class, experimentId);
+		Database.clearPeptides();
 	}
 	
 	public static int countPeptidesBySequence( String sequence ) {
@@ -104,110 +119,37 @@ public class Database {
 		List<Peptide> list = null;
 		try {
 			list = em
-					.createQuery("SELECT p FROM Peptide p WHERE p.sequence = :sequence",Peptide.class)
-					.setParameter("sequence", sequence)
-					.getResultList();
+				.createQuery("SELECT p FROM Peptide p WHERE p.sequence = :sequence",Peptide.class)
+				.setParameter("sequence", sequence)
+				.getResultList();
 		} catch( NoResultException ex ) {			
 		}
 		return list == null ? new ArrayList<Peptide>() : list;
+	}	
+	
+	public static void feed( ExperimentFeed experiment ) throws InterruptedException {
+		experiment.setStatus("Waiting ...");
+		queue.put(experiment);
 	}
 	
-	public static ScoreType findScoreTypeByName( String name ) {
-		ScoreType scoreType = null;
-		try {
-			scoreType = em
-					.createQuery("SELECT s FROM ScoreType s WHERE s.name = :name",ScoreType.class)
-					.setParameter("name", name)
-					.getSingleResult();
-		} catch( NoResultException ex ) {			
-		}
-		return scoreType;
+	public static Collection<ExperimentFeed> getPendingExperiments() {
+		if( currentFeed == null )
+			return queue;
+		List<ExperimentFeed> list = new ArrayList<>();
+		list.add(currentFeed);
+		list.addAll(queue);		
+		return list;
 	}
 	
-	public static boolean feed( int experimentId, MsMsData data, es.ehubio.proteomics.Peptide.Confidence confidence ) {
-		Experiment experiment = findById(Experiment.class, experimentId);
-		if( experiment == null )
-			return false;
-		
-		double total = data.getPeptides().size();
-		double partial = 0.0;
-		for( es.ehubio.proteomics.Peptide peptide : data.getPeptides() ) {
-			partial += 1.0;
-			if( Boolean.TRUE.equals(peptide.getDecoy()) || peptide.getConfidence().getOrder() > confidence.getOrder() )
-				continue;
-			beginTransaction();
-			Peptide dbPeptide = findByMassSequence(peptide.getMassSequence());
-			if( dbPeptide == null ) {
-				dbPeptide = new Peptide();
-				dbPeptide.setSequence(peptide.getSequence());
-				dbPeptide.setMassSequence(peptide.getMassSequence());				
-				em.persist(dbPeptide);				
-			}			
-			for( Psm psm : peptide.getPsms() ) {
-				//logger.info(String.format("Feedind with %s (mz=%s)", peptide.getSequence(), psm.getCalcMz()));
-				Precursor precursor = new Precursor();
-				precursor.setMz(psm.getCalcMz());
-				precursor.setCharge(psm.getCharge());
-				precursor.setRt(psm.getSpectrum().getRt());
-				precursor.setIntensity(psm.getSpectrum().getIntensity());
-				em.persist(precursor);
-				PeptideEvidence evidence = new PeptideEvidence();
-				evidence.setPeptideBean(dbPeptide);
-				evidence.setPrecursorBean(precursor);				
-				evidence.setExperimentBean(experiment);
-				em.persist(evidence);
-				feedIons(precursor,psm.getSpectrum().getIons());
-				feedScores(evidence,psm.getScores());
-			}
-			commitTransaction();
-			if( ((int)(partial+0.5))%10 == 0 )
-				logger.info(String.format("Completed %.1f%%", partial/total*100.0));
+	public static void cancelFeed( ExperimentFeed feed ) throws InterruptedException {
+		if( feed != currentFeed ) {
+			queue.remove(feed);
+			return;
 		}
-		return true;
-	}
-	
-	private static void feedIons( Precursor precursor, List<FragmentIon> ions) {
-		Collections.sort(ions, new Comparator<FragmentIon>() {
-			@Override
-			public int compare(FragmentIon o1, FragmentIon o2) {
-				return (int)Math.signum(o2.getIntensity()-o1.getIntensity());
-			}
-		});
-		int count = FRAGMENTS;
-		int countok = OKFRAGMENTS;
-		for( FragmentIon ion : ions ) {
-			if( count > 0 || (countok > 0 && ion.getMz() > precursor.getMz()) ) {
-				Fragment fragment = new Fragment();
-				fragment.setMz(ion.getMz());
-				fragment.setIntensity(ion.getIntensity());
-				em.persist(fragment);
-				Transition transition = new Transition();
-				transition.setPrecursorBean(precursor);
-				transition.setFragmentBean(fragment);
-				em.persist(transition);
-				count--;
-				if( ion.getMz() > precursor.getMz() )
-					countok--;
-			}			
-		}
-	}
-	
-	private static void feedScores(PeptideEvidence evidence, Set<Score> scores) {
-		for( Score score : scores ) {
-			ScoreType scoreType = findScoreTypeByName(score.getName());
-			if( scoreType == null ) {
-				scoreType = new ScoreType();
-				scoreType.setName(score.getName());
-				scoreType.setDescription(score.getType().getDescription());
-				scoreType.setLargerBetter(score.getType().isLargerBetter());
-				em.persist(scoreType);
-			}
-			es.ehubio.mymrm.data.Score dbScore = new es.ehubio.mymrm.data.Score();
-			dbScore.setScoreType(scoreType);
-			dbScore.setPeptideEvidenceBean(evidence);
-			dbScore.setValue(score.getValue());
-			em.persist(dbScore);
-		}
+		cancel = true;
+		while( cancel == true )
+			Thread.sleep(100);
+		remove(Experiment.class, feed.getExperiment().getId());
 	}
 
 	public static List<Peptide> findPeptides(String pepSequence) {
@@ -216,14 +158,18 @@ public class Database {
 			peptide.setPeptideEvidences(findEvidences(peptide.getId()));
 		return peptides;
 	}
+	
+	public static void clearPeptides() {
+		em.createQuery("DELETE FROM Peptide p WHERE p.id NOT IN (SELECT e.peptideBean.id FROM PeptideEvidence e)").executeUpdate();
+	}
 
 	private static List<PeptideEvidence> findEvidences(int idPeptide) {
 		List<PeptideEvidence> evidences = null;
 		try {
 			evidences = em
-					.createQuery("SELECT p FROM PeptideEvidence p WHERE p.peptideBean.id = :peptide", PeptideEvidence.class)
-					.setParameter("peptide", idPeptide)
-					.getResultList();
+				.createQuery("SELECT p FROM PeptideEvidence p WHERE p.peptideBean.id = :peptide", PeptideEvidence.class)
+				.setParameter("peptide", idPeptide)
+				.getResultList();
 		} catch( NoResultException ex ) {			
 		}
 		return evidences == null ? new ArrayList<PeptideEvidence>() : evidences;
@@ -233,9 +179,9 @@ public class Database {
 		List<Fragment> fragments = new ArrayList<>();
 		try {
 			List<Transition> transitions = em
-					.createQuery("SELECT t FROM Transition t WHERE t.precursorBean.id = :precursor", Transition.class)
-					.setParameter("precursor", idPrecursor)
-					.getResultList();
+				.createQuery("SELECT t FROM Transition t WHERE t.precursorBean.id = :precursor", Transition.class)
+				.setParameter("precursor", idPrecursor)
+				.getResultList();
 			for( Transition transition : transitions )
 				fragments.add(transition.getFragmentBean());
 		} catch( NoResultException ex ) {			
@@ -272,5 +218,163 @@ public class Database {
 			.setParameter("exp", idExperiment)
 			.getSingleResult();
 		return res.intValue();
+	}
+	
+	private static class Worker extends Thread {
+		private static EntityManager em;
+	
+		@Override
+		public void run() {
+			em = emf.createEntityManager();		
+			while( working ) {
+				try {
+					ExperimentFeed experiment = queue.take();
+					currentFeed = experiment;
+					feed( experiment );
+					currentFeed = null;
+				} catch( Exception e ) {
+					e.printStackTrace();
+				}
+			}
+		}
+		
+		private void feed( ExperimentFeed e ) throws Exception {						
+			em.getTransaction().begin();
+			em.persist(e.getExperiment());
+			
+			e.setStatus("Analyzing ...");
+			PAnalyzerCli panalyzer = new PAnalyzerCli();
+			panalyzer.setConfiguration(e.getConfiguration());
+			panalyzer.setLoadIons(true);
+			panalyzer.setSaveResults(false);
+			try {
+				panalyzer.run(null);	
+			} catch (Exception ex) {
+				ex.printStackTrace();
+				em.getTransaction().rollback();
+				cancel = false;
+				return;
+			}
+			MsMsData data = panalyzer.getData();
+
+			double total = data.getPeptides().size();
+			double partial = 0.0;
+			for( es.ehubio.proteomics.Peptide peptide : data.getPeptides() ) {
+				if( cancel == true ) {
+					em.getTransaction().rollback();
+					cancel = false;
+					return;
+				}
+				partial += 1.0;
+				if( Boolean.TRUE.equals(peptide.getDecoy()) || peptide.getConfidence().getOrder() > e.getConfidence().getOrder() )
+					continue;
+				Peptide dbPeptide = findByMassSequence(peptide.getMassSequence());
+				if( dbPeptide == null ) {
+					dbPeptide = new Peptide();
+					dbPeptide.setSequence(peptide.getSequence());
+					dbPeptide.setMassSequence(peptide.getMassSequence());				
+					em.persist(dbPeptide);				
+				}			
+				for( Psm psm : peptide.getPsms() ) {
+					//logger.info(String.format("Feedind with %s (mz=%s)", peptide.getSequence(), psm.getCalcMz()));
+					Precursor precursor = new Precursor();
+					precursor.setMz(psm.getCalcMz());
+					precursor.setCharge(psm.getCharge());
+					precursor.setRt(psm.getSpectrum().getRt());
+					precursor.setIntensity(psm.getSpectrum().getIntensity());
+					em.persist(precursor);
+					PeptideEvidence evidence = new PeptideEvidence();
+					evidence.setPeptideBean(dbPeptide);
+					evidence.setPrecursorBean(precursor);				
+					evidence.setExperimentBean(e.getExperiment());
+					em.persist(evidence);
+					feedIons(precursor,psm.getSpectrum().getIons());
+					feedScores(evidence,psm.getScores());
+				}
+				e.setStatus(String.format("Completed %.1f%%", partial/total*100.0));
+				if( ((int)(partial+0.5))%20 == 0 )					
+					logger.info(e.getStatus());
+			}
+			feedFiles(e.getExperiment(), e.getConfiguration());
+			em.getTransaction().commit();
+		}
+		
+		private static Peptide findByMassSequence( String massSequence ) {
+			Peptide peptide = null;
+			try {
+				peptide = em
+					.createQuery("SELECT p FROM Peptide p WHERE p.massSequence = :massSequence",Peptide.class)
+					.setParameter("massSequence", massSequence)
+					.getSingleResult();
+			} catch( NoResultException ex ) {			
+			}
+			return peptide;
+		}
+		
+		private static void feedIons( Precursor precursor, List<FragmentIon> ions) {
+			Collections.sort(ions, new Comparator<FragmentIon>() {
+				@Override
+				public int compare(FragmentIon o1, FragmentIon o2) {
+					return (int)Math.signum(o2.getIntensity()-o1.getIntensity());
+				}
+			});
+			int count = FRAGMENTS;
+			int countok = OKFRAGMENTS;
+			for( FragmentIon ion : ions ) {
+				if( count > 0 || (countok > 0 && ion.getMz() > precursor.getMz()) ) {
+					Fragment fragment = new Fragment();
+					fragment.setMz(ion.getMz());
+					fragment.setIntensity(ion.getIntensity());
+					em.persist(fragment);
+					Transition transition = new Transition();
+					transition.setPrecursorBean(precursor);
+					transition.setFragmentBean(fragment);
+					em.persist(transition);
+					count--;
+					if( ion.getMz() > precursor.getMz() )
+						countok--;
+				}			
+			}
+		}
+		
+		private static void feedScores(PeptideEvidence evidence, Set<Score> scores) {
+			for( Score score : scores ) {
+				ScoreType scoreType = findScoreTypeByName(score.getName());
+				if( scoreType == null ) {
+					scoreType = new ScoreType();
+					scoreType.setName(score.getName());
+					scoreType.setDescription(score.getType().getDescription());
+					scoreType.setLargerBetter(score.getType().isLargerBetter());
+					em.persist(scoreType);
+				}
+				es.ehubio.mymrm.data.Score dbScore = new es.ehubio.mymrm.data.Score();
+				dbScore.setScoreType(scoreType);
+				dbScore.setPeptideEvidenceBean(evidence);
+				dbScore.setValue(score.getValue());
+				em.persist(dbScore);
+			}
+		}
+		
+		private static ScoreType findScoreTypeByName( String name ) {
+			ScoreType scoreType = null;
+			try {
+				scoreType = em
+					.createQuery("SELECT s FROM ScoreType s WHERE s.name = :name",ScoreType.class)
+					.setParameter("name", name)
+					.getSingleResult();
+			} catch( NoResultException ex ) {			
+			}
+			return scoreType;
+		}
+		
+		private static void feedFiles( Experiment e, PAnalyzerCli.Configuration cfg ) {
+			for( PAnalyzerCli.Configuration.InputFile input : cfg.inputs ) {
+				ExperimentFile file = new ExperimentFile();
+				file.setExperimentBean(e);
+				file.setIdentification(new File(input.path).getName());
+				file.setSpectra(input.ions);
+				em.persist(file);
+			}
+		}
 	}
 }
