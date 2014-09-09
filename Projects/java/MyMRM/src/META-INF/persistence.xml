@@ -3,7 +3,6 @@
 	<persistence-unit name="MyMRM">
 		<class>es.ehubio.mymrm.data.Chromatography</class>
 		<class>es.ehubio.mymrm.data.Experiment</class>
-		<class>es.ehubio.mymrm.data.Fragment</class>
 		<class>es.ehubio.mymrm.data.Instrument</class>
 		<class>es.ehubio.mymrm.data.InstrumentType</class>
 		<class>es.ehubio.mymrm.data.Peptide</class>
@@ -15,6 +14,8 @@
 		<class>es.ehubio.mymrm.data.Score</class>
 		<class>es.ehubio.mymrm.data.ScoreType</class>
 		<class>es.ehubio.mymrm.data.ExperimentFile</class>
+		<class>es.ehubio.mymrm.data.Fragment</class>
+		<class>es.ehubio.mymrm.data.IonType</class>
 		<properties>
 			<property name="hibernate.connection.username" value="mymrm"/>
 			<property name="hibernate.connection.password" value="MyMRM"/>

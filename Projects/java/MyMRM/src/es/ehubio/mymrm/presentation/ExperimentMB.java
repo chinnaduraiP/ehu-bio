@@ -104,18 +104,12 @@ public class ExperimentMB implements Serializable {
 		cfg.description = getEntity().getName();
 		cfg.operation = "grp";
 		cfg.psmScore = psmScore;
+		cfg.decoyRegex = decoyRegex;
 		cfg.peptideFdr = 0.01;
 		cfg.groupFdr = 0.01;
 		cfg.inputs = new ArrayList<>();
-		for( String file : files ) {
-			if( !file.contains("mzid") )
-				continue;
-			PAnalyzerCli.Configuration.InputFile input = new PAnalyzerCli.Configuration.InputFile();
-			input.path = new File(getTmpDir(),file).getAbsolutePath();
-			input.ions = getTmpDir();
-			input.decoyRegex = decoyRegex;
-			cfg.inputs.add(input);
-		}
+		for( String file : files )
+			cfg.inputs.add(new File(getTmpDir(),file).getAbsolutePath());
 
 		ExperimentFeed feed = new ExperimentFeed(experiment, cfg, Peptide.Confidence.DISCRIMINATING);
 		try {

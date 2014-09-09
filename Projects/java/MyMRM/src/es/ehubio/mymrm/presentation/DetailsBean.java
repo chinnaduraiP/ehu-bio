@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import es.ehubio.mymrm.data.Experiment;
-import es.ehubio.mymrm.data.Fragment;
 import es.ehubio.mymrm.data.PeptideEvidence;
 import es.ehubio.mymrm.data.Precursor;
 import es.ehubio.mymrm.data.Score;
@@ -13,10 +12,10 @@ public class DetailsBean {
 	private PeptideEvidence evidence;
 	private Experiment experiment;
 	private Precursor precursor;
-	private final List<Fragment> fragments = new ArrayList<>();
+	private final List<FragmentBean> fragments = new ArrayList<>();
 	private final List<Score> scores = new ArrayList<>();
 
-	public List<Fragment> getFragments() {
+	public List<FragmentBean> getFragments() {
 		return fragments;
 	}
 

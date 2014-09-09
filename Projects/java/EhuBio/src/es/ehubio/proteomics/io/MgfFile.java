@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
 
-import es.ehubio.proteomics.FragmentIon;
 import es.ehubio.proteomics.Spectrum;
 
 public class MgfFile {
@@ -43,7 +42,7 @@ public class MgfFile {
 						spectrum.setIntensity(Double.parseDouble(fields[1]));
 				} else if( line.length() > 0 && Character.isDigit(line.charAt(0)) ) {
 					String[] fields = line.split("[ \\t]");
-					spectrum.getIons().add(new FragmentIon(Double.parseDouble(fields[0]),Double.parseDouble(fields[1])));
+					spectrum.getPeaks().add(new Spectrum.Peak(Double.parseDouble(fields[0]),Double.parseDouble(fields[1])));
 				} else if( line.startsWith("END IONS") ) {
 					spectra.add(spectrum);
 					spectrum = null;

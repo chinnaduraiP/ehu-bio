@@ -26,14 +26,7 @@
 				<h:outputText value="Description" />
 				<h:outputText value="#{filesMB.experiment.description}" />
 				<h:outputText value="Data files" />
-				<p:dataTable value="#{filesMB.experiment.experimentFiles}" var="file">
-					<p:column headerText="identification">
-						#{file.identification}
-					</p:column>
-					<p:column headerText="spectra">
-						#{file.spectra}
-					</p:column>
-				</p:dataTable>
+				<h:outputText value="#{filesMB.experiment.experimentFiles}" />
 			</p:panelGrid>			
 		</ui:define>
 	</ui:composition>

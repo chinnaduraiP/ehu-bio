@@ -39,7 +39,7 @@ public abstract class MsMsFile {
 	
 	public abstract void save( OutputStream output ) throws Exception;
 	
-	public List<File> loadIons( String optionalPath ) throws Exception {
+	public List<File> loadPeaks( String optionalPath ) throws Exception {
 		return null;
 	}
 }

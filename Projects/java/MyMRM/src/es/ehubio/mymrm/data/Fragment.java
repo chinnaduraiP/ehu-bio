@@ -1,7 +1,9 @@
 package es.ehubio.mymrm.data;
 
 import java.io.Serializable;
+
 import javax.persistence.*;
+
 import java.util.List;
 
 
@@ -18,6 +20,12 @@ public class Fragment implements Serializable {
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	private int id;
 
+	private int charge;
+
+	private double error;
+
+	private int position;
+
 	private double intensity;
 
 	private double mz;
@@ -25,6 +33,11 @@ public class Fragment implements Serializable {
 	//bi-directional many-to-one association to Transition
 	@OneToMany(mappedBy="fragmentBean")
 	private List<Transition> transitions;
+
+	//bi-directional many-to-one association to IonType
+	@ManyToOne
+	@JoinColumn(name="type")
+	private IonType ionType;
 
 	public Fragment() {
 	}
@@ -35,6 +48,30 @@ public class Fragment implements Serializable {
 
 	public void setId(int id) {
 		this.id = id;
+	}
+
+	public int getCharge() {
+		return this.charge;
+	}
+
+	public void setCharge(int charge) {
+		this.charge = charge;
+	}
+
+	public double getError() {
+		return this.error;
+	}
+
+	public void setError(double error) {
+		this.error = error;
+	}
+
+	public int getPosition() {
+		return this.position;
+	}
+
+	public void setPosition(int index) {
+		this.position = index;
 	}
 
 	public double getIntensity() {
@@ -73,6 +110,14 @@ public class Fragment implements Serializable {
 		transition.setFragmentBean(null);
 
 		return transition;
+	}
+
+	public IonType getIonType() {
+		return this.ionType;
+	}
+
+	public void setIonType(IonType ionType) {
+		this.ionType = ionType;
 	}
 
 }

@@ -23,6 +23,8 @@ import es.ehubio.db.fasta.Fasta;
 import es.ehubio.db.fasta.HeaderParser;
 import es.ehubio.model.ProteinModificationType;
 import es.ehubio.proteomics.DecoyBase;
+import es.ehubio.proteomics.FragmentIon;
+import es.ehubio.proteomics.IonType;
 import es.ehubio.proteomics.MsMsData;
 import es.ehubio.proteomics.Peptide;
 import es.ehubio.proteomics.Protein;
@@ -39,7 +41,10 @@ import es.ehubio.proteomics.psi.mzid11.AnalysisSoftwareType;
 import es.ehubio.proteomics.psi.mzid11.BibliographicReferenceType;
 import es.ehubio.proteomics.psi.mzid11.CVParamType;
 import es.ehubio.proteomics.psi.mzid11.DBSequenceType;
+import es.ehubio.proteomics.psi.mzid11.FragmentArrayType;
 import es.ehubio.proteomics.psi.mzid11.InputSpectrumIdentificationsType;
+import es.ehubio.proteomics.psi.mzid11.IonTypeType;
+import es.ehubio.proteomics.psi.mzid11.MeasureType;
 import es.ehubio.proteomics.psi.mzid11.ModificationType;
 import es.ehubio.proteomics.psi.mzid11.MzIdentML;
 import es.ehubio.proteomics.psi.mzid11.OrganizationType;
@@ -123,21 +128,21 @@ public final class Mzid extends MsMsFile {
 	}
 	
 	@Override
-	public List<File> loadIons(String optionalPath) throws Exception {
+	public List<File> loadPeaks(String optionalPath) throws Exception {
 		List<File> files = new ArrayList<>();
 		for( SpectraDataType spectrum : mzid.getDataCollection().getInputs().getSpectraDatas() ) {
 			if( !spectrum.getFileFormat().getCvParam().getAccession().equals("MS:1001062") ||
 				!spectrum.getSpectrumIDFormat().getCvParam().getAccession().equals("MS:1000774") )
 				throw new UnsupportedOperationException("Spectra format not supported");
-			File file = getIonsFile(optionalPath, spectrum.getLocation());
+			File file = getPeaksFile(optionalPath, spectrum.getLocation());
 			String path = file.getAbsolutePath();
-			loadIons( path, spectrum.getLocation() );
+			loadPeaks( path, spectrum.getLocation() );
 			files.add(file);
 		}
 		return files;
 	}
 	
-	private File getIonsFile(String optionalPath, String location) {
+	private File getPeaksFile(String optionalPath, String location) {
 		// 1) Try spectrum path in mzid
 		File origFile = new File(location);
 		File file = origFile;
@@ -155,13 +160,13 @@ public final class Mzid extends MsMsFile {
 		return file;
 	}
 
-	private void loadIons(String path, String orig) throws FileNotFoundException, IOException {		
-		logger.info(String.format("Loading ions from %s ...", path));
+	private void loadPeaks(String path, String orig) throws FileNotFoundException, IOException {		
+		logger.info(String.format("Loading spectra from %s ...", path));
 		List<Spectrum> mgfs = MgfFile.loadSpectra(path);
 		for( Spectrum spectrum : data.getSpectra() )
 			if( spectrum.getFileName().equals(orig) ) {
 				Spectrum mgf = mgfs.get(Integer.parseInt(spectrum.getFileId().replaceAll("index=","")));
-				spectrum.setIons(mgf.getIons());
+				spectrum.setPeaks(mgf.getPeaks());
 				spectrum.setScan(mgf.getScan());
 				spectrum.setRt(mgf.getRt());
 				/*spectrum.setMass(mgf.getMass());
@@ -304,16 +309,11 @@ public final class Mzid extends MsMsFile {
 			for( SpectrumIdentificationResultType sir : sil.getSpectrumIdentificationResults() ) {
 				Spectrum spectrum = new Spectrum();			
 				spectrum.setFileName(mapSpectraFile.get(sir.getSpectraDataRef()));
-				spectrum.setFileId(sir.getSpectrumID());
+				loadSpectrum(spectrum,sir);
 				for( SpectrumIdentificationItemType sii : sir.getSpectrumIdentificationItems() ) {
 					Psm psm = new Psm();
 					psm.linkSpectrum(spectrum);
-					psm.setCharge(sii.getChargeState());
-					psm.setExpMz(sii.getExperimentalMassToCharge());
-					psm.setCalcMz(sii.getCalculatedMassToCharge());
-					psm.setRank(sii.getRank());
-					psm.setPassThreshold(sii.isPassThreshold());
-					loadScores(psm, sii);
+					loadPsm(psm,sii,sil);					
 					mapSii.put(psm, sii);
 					mapPsm.put(sii, psm);
 					if( sii.getPeptideEvidenceReves() == null )
@@ -329,8 +329,80 @@ public final class Mzid extends MsMsFile {
 				spectra.add(spectrum);
 			}
 		data.loadFromSpectra(spectra);
+	}	
+
+	private void loadSpectrum(Spectrum spectrum, SpectrumIdentificationResultType sir) {
+		spectrum.setFileId(sir.getSpectrumID());
+		CVParamType cv = getCVParam("MS:1000796", sir.getCvParamsAndUserParams());
+		if( cv == null )
+			return;
+		spectrum.setTitle(cv.getValue());
+		Pattern pattern = Pattern.compile("RTINSECONDS=([0-9]*\\.?[0-9]*)",Pattern.CASE_INSENSITIVE);
+		Matcher matcher = pattern.matcher(cv.getValue());
+		if( matcher.find() )
+			spectrum.setRt(Double.parseDouble(matcher.group(1)));
+		pattern = Pattern.compile("scan=([0-9]*)",Pattern.CASE_INSENSITIVE);
+		matcher = pattern.matcher(cv.getValue());
+		if( matcher.find() )
+			spectrum.setScan(matcher.group(1));
 	}
 	
+	private void loadPsm(Psm psm, SpectrumIdentificationItemType sii, SpectrumIdentificationListType sil) {
+		psm.setCharge(sii.getChargeState());
+		psm.setExpMz(sii.getExperimentalMassToCharge());
+		psm.setCalcMz(sii.getCalculatedMassToCharge());
+		psm.setRank(sii.getRank());
+		psm.setPassThreshold(sii.isPassThreshold());
+		loadScores(psm, sii);
+		loadIons(psm,sii,sil);
+	}
+
+	private void loadIons(Psm psm, SpectrumIdentificationItemType sii, SpectrumIdentificationListType sil) {
+		if( sil.getFragmentationTable() == null || sii.getFragmentation() == null )
+			return;
+		
+		String mzMeasure = null, errorMeasure = null, intensityMeasure = null;
+		for( MeasureType measure : sil.getFragmentationTable().getMeasures() ) {
+			CVParamType cv = getCVParam("MS:1001225", measure.getCvParams());
+			if( cv != null ) {
+				mzMeasure = measure.getId();
+				continue;
+			}
+			cv = getCVParam("MS:1001227", measure.getCvParams());
+			if( cv != null ) {
+				errorMeasure = measure.getId();
+				continue;
+			}
+			cv = getCVParam("MS:1001226", measure.getCvParams());
+			if( cv != null )
+				intensityMeasure = measure.getId();
+		}
+		
+		for( IonTypeType ion : sii.getFragmentation().getIonTypes() ) {
+			List<FragmentIon> fragments = new ArrayList<>();
+			IonType type = IonType.getByAccession(ion.getCvParam().getAccession());
+			for( Number i : ion.getIndices() ) {
+				FragmentIon fragment = new FragmentIon();
+				fragment.setIndex(i.intValue());
+				fragment.setCharge(ion.getCharge());
+				fragment.setType(type);
+				fragments.add(fragment);
+			}
+			for( FragmentArrayType array : ion.getFragmentArraies() ) {
+				for( int i = 0; i < array.getValues().size(); i++ ) {
+					FragmentIon fragment = fragments.get(i);
+					if( array.getMeasureRef().equals(mzMeasure) )
+						fragment.setMz(array.getValues().get(i));
+					else if( array.getMeasureRef().equals(errorMeasure) )
+						fragment.setMzError(array.getValues().get(i));
+					else if( array.getMeasureRef().equals(intensityMeasure) )
+						fragment.setIntensity(array.getValues().get(i));
+				}
+			}
+			psm.getIons().addAll(fragments);
+		}
+	}
+
 	private void loadScores( Psm psm, SpectrumIdentificationItemType sii ) {
 		for( AbstractParamType param : sii.getCvParamsAndUserParams() ) {
 			ScoreType type;
@@ -345,7 +417,7 @@ public final class Mzid extends MsMsFile {
 		}
 	}	
 	
-	private CVParamType getCVParam( String accession, List<AbstractParamType> params ) {
+	private CVParamType getCVParam( String accession, List<? extends AbstractParamType> params ) {
 		for( AbstractParamType param : params ) {
 			if( !CVParamType.class.isInstance(param) )
 				continue;
@@ -356,7 +428,7 @@ public final class Mzid extends MsMsFile {
 		return null;
 	}
 	
-	private UserParamType getUserParam( String name, List<AbstractParamType> params ) {
+	private UserParamType getUserParam( String name, List<? extends AbstractParamType> params ) {
 		for( AbstractParamType param : params ) {
 			if( !UserParamType.class.isInstance(param) )
 				continue;

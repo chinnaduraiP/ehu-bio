@@ -5,7 +5,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -19,6 +21,7 @@ import javax.persistence.Persistence;
 import es.ehubio.mymrm.data.Experiment;
 import es.ehubio.mymrm.data.ExperimentFile;
 import es.ehubio.mymrm.data.Fragment;
+import es.ehubio.mymrm.data.IonType;
 import es.ehubio.mymrm.data.Peptide;
 import es.ehubio.mymrm.data.PeptideEvidence;
 import es.ehubio.mymrm.data.Precursor;
@@ -245,7 +248,6 @@ public class Database {
 			e.setStatus("Analyzing ...");
 			PAnalyzerCli panalyzer = new PAnalyzerCli();
 			panalyzer.setConfiguration(e.getConfiguration());
-			panalyzer.setLoadIons(true);
 			panalyzer.setSaveResults(false);
 			try {
 				panalyzer.run(null);	
@@ -288,7 +290,7 @@ public class Database {
 					evidence.setPrecursorBean(precursor);				
 					evidence.setExperimentBean(e.getExperiment());
 					em.persist(evidence);
-					feedIons(precursor,psm.getSpectrum().getIons());
+					feedIons(precursor,psm.getIons());
 					feedScores(evidence,psm.getScores());
 				}
 				e.setStatus(String.format("Completed %.1f%%", partial/total*100.0));
@@ -320,11 +322,26 @@ public class Database {
 			});
 			int count = FRAGMENTS;
 			int countok = OKFRAGMENTS;
+			Map<String,IonType> mapTypes = new HashMap<>();
 			for( FragmentIon ion : ions ) {
 				if( count > 0 || (countok > 0 && ion.getMz() > precursor.getMz()) ) {
+					IonType ionType = mapTypes.get(ion.getType().getName());
+					if( ionType == null ) {
+						ionType = findIonTypeByName(ion.getType().getName());
+						if( ionType == null ) {
+							ionType = new IonType();
+							ionType.setName(ion.getType().getName());
+							em.persist(ionType);
+						}
+						mapTypes.put(ion.getType().getName(), ionType);
+					}
 					Fragment fragment = new Fragment();
 					fragment.setMz(ion.getMz());
 					fragment.setIntensity(ion.getIntensity());
+					fragment.setError(ion.getMzError());
+					fragment.setCharge(ion.getCharge());
+					fragment.setPosition(ion.getIndex());
+					fragment.setIonType(ionType);
 					em.persist(fragment);
 					Transition transition = new Transition();
 					transition.setPrecursorBean(precursor);
@@ -337,15 +354,32 @@ public class Database {
 			}
 		}
 		
+		private static IonType findIonTypeByName( String name ) {
+			IonType ionType = null;
+			try {
+				ionType = em
+					.createQuery("SELECT i FROM IonType i WHERE i.name = :name",IonType.class)
+					.setParameter("name", name)
+					.getSingleResult();
+			} catch( NoResultException ex ) {			
+			}
+			return ionType;
+		}
+		
 		private static void feedScores(PeptideEvidence evidence, Set<Score> scores) {
+			Map<String, ScoreType> mapTypes = new HashMap<>();
 			for( Score score : scores ) {
-				ScoreType scoreType = findScoreTypeByName(score.getName());
+				ScoreType scoreType = mapTypes.get(score.getName());
 				if( scoreType == null ) {
-					scoreType = new ScoreType();
-					scoreType.setName(score.getName());
-					scoreType.setDescription(score.getType().getDescription());
-					scoreType.setLargerBetter(score.getType().isLargerBetter());
-					em.persist(scoreType);
+					scoreType = findScoreTypeByName(score.getName());
+					if( scoreType == null ) {
+						scoreType = new ScoreType();
+						scoreType.setName(score.getName());
+						scoreType.setDescription(score.getType().getDescription());
+						scoreType.setLargerBetter(score.getType().isLargerBetter());
+						em.persist(scoreType);
+					}
+					mapTypes.put(score.getName(), scoreType);
 				}
 				es.ehubio.mymrm.data.Score dbScore = new es.ehubio.mymrm.data.Score();
 				dbScore.setScoreType(scoreType);
@@ -368,11 +402,10 @@ public class Database {
 		}
 		
 		private static void feedFiles( Experiment e, PAnalyzerCli.Configuration cfg ) {
-			for( PAnalyzerCli.Configuration.InputFile input : cfg.inputs ) {
+			for( String input : cfg.inputs ) {
 				ExperimentFile file = new ExperimentFile();
 				file.setExperimentBean(e);
-				file.setIdentification(new File(input.path).getName());
-				file.setSpectra(input.ions);
+				file.setFileName(new File(input).getName());
 				em.persist(file);
 			}
 		}

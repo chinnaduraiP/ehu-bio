@@ -15,6 +15,7 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
 
 import es.ehubio.db.fasta.Fasta.InvalidSequenceException;
+import es.ehubio.mymrm.data.Fragment;
 import es.ehubio.mymrm.data.Peptide;
 import es.ehubio.proteomics.Enzyme;
 import es.ehubio.proteomics.MsMsData;
@@ -118,8 +119,13 @@ public class SearchMB implements Serializable {
 	public String showDetails( PrecursorBean bean, DatabaseMB db ) {
 		this.precursor = bean;
 		for( DetailsBean experiment : bean.getExperiments() ) {
-			if( experiment.getFragments().isEmpty() )			
-				experiment.getFragments().addAll(db.getFragments(experiment.getPrecursor().getId()));
+			if( experiment.getFragments().isEmpty() ) {			
+				for( Fragment fragment : db.getFragments(experiment.getPrecursor().getId()) ) {
+					FragmentBean fragmentBean = new FragmentBean();
+					fragmentBean.setEntity(fragment);
+					experiment.getFragments().add(fragmentBean);
+				}
+			}
 			if( experiment.getScores().isEmpty() )
 				experiment.getScores().addAll(db.getScores(experiment.getEvidence().getId()));
 		}
