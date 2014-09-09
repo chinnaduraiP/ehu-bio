@@ -1,5 +1,8 @@
 package es.ehubio.proteomics;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Peptide-Spectrum Match in a MS/MS proteomics experiment.
  * 
@@ -15,6 +18,7 @@ public class Psm extends DecoyBase {
 	private Integer rank;
 	private Spectrum spectrum;
 	private Peptide peptide;
+	private List<FragmentIon> ions = new ArrayList<>();
 	
 	public Psm() {
 		id = idCount++;
@@ -107,5 +111,13 @@ public class Psm extends DecoyBase {
 	@Override
 	public String getUniqueString() {
 		return toString();
+	}
+
+	public List<FragmentIon> getIons() {
+		return ions;
+	}
+
+	public void setIons(List<FragmentIon> ions) {
+		this.ions = ions;
 	}
 }

@@ -18,9 +18,7 @@ public class ExperimentFile implements Serializable {
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	private int id;
 
-	private String identification;
-
-	private String spectra;
+	private String fileName;
 
 	//bi-directional many-to-one association to Experiment
 	@ManyToOne
@@ -38,20 +36,12 @@ public class ExperimentFile implements Serializable {
 		this.id = id;
 	}
 
-	public String getIdentification() {
-		return this.identification;
+	public String getFileName() {
+		return this.fileName;
 	}
 
-	public void setIdentification(String identification) {
-		this.identification = identification;
-	}
-
-	public String getSpectra() {
-		return this.spectra;
-	}
-
-	public void setSpectra(String spectra) {
-		this.spectra = spectra;
+	public void setFileName(String fileName) {
+		this.fileName = fileName;
 	}
 
 	public Experiment getExperimentBean() {
@@ -62,4 +52,8 @@ public class ExperimentFile implements Serializable {
 		this.experimentBean = experimentBean;
 	}
 
+	@Override
+	public String toString() {
+		return getFileName();
+	}
 }

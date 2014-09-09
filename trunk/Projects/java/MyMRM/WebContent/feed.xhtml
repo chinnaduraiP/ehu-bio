@@ -82,7 +82,7 @@
 					<h:panelGroup>
 						<p:fileUpload
 							fileUploadListener="#{experimentMB.uploadFile}"
-							allowTypes="/\.(mzid|mgf)(\.gz)?$/" multiple="true" auto="false"
+							allowTypes="/\.mzid(\.gz)?$/" multiple="true" auto="false"
 							mode="advanced" update="@all"/>
 						<h:outputText value="#{experimentMB.files}"/>
 					</h:panelGroup>

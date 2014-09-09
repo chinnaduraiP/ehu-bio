@@ -17,10 +17,11 @@ public class Spectrum {
 	private String fileName;
 	private String fileId;
 	private Set<Psm> psms = new HashSet<>();
+	private String title;
 	private String scan;
 	private Double rt;
 	private Double intensity;
-	private List<FragmentIon> ions = new ArrayList<>();
+	private List<Peak> peaks = new ArrayList<>();
 	
 	public Spectrum() {
 		id = idCount++;
@@ -81,12 +82,12 @@ public class Spectrum {
 		this.rt = rt;
 	}
 
-	public List<FragmentIon> getIons() {
-		return ions;
+	public List<Peak> getPeaks() {
+		return peaks;
 	}
 	
-	public void setIons( List<FragmentIon> ions ) {
-		this.ions = ions;
+	public void setPeaks( List<Peak> peaks ) {
+		this.peaks = peaks;
 	}
 
 	public Double getIntensity() {
@@ -95,5 +96,34 @@ public class Spectrum {
 
 	public void setIntensity(Double intensity) {
 		this.intensity = intensity;
+	}
+	
+	public String getTitle() {
+		return title;
+	}
+
+	public void setTitle(String title) {
+		this.title = title;
+	}
+
+	public static class Peak {
+		private double mz;
+		private double intensity;
+		public Peak( double mz, double intensity ) {
+			this.mz = mz;
+			this.intensity = intensity;
+		}
+		public double getMz() {
+			return mz;
+		}
+		public void setMz(double mz) {
+			this.mz = mz;
+		}
+		public double getIntensity() {
+			return intensity;
+		}
+		public void setIntensity(double intensity) {
+			this.intensity = intensity;
+		}
 	}
 }

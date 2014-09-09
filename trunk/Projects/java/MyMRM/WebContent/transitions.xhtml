@@ -21,13 +21,17 @@
 							<p:column headerText="value">#{score.value}</p:column>
 						</p:dataTable>
 					</p:column>
-					<p:column headerText="transitions">
+					<p:column headerText="retention time">#{ex.precursor.rt}</p:column>
+					<p:column headerText="fragment ions">
 						<p:dataTable value="#{ex.fragments}" var="frag">
 							<p:column headerText="mz">
-								<h:outputText value="#{frag.mz}" style="color:red" rendered="#{frag.mz lt ex.precursor.mz}"/>
-								<h:outputText value="#{frag.mz}" style="color:green" rendered="#{frag.mz ge ex.precursor.mz}"/>
+								<h:outputText value="#{frag.entity.mz}" style="color:red" rendered="#{frag.entity.mz lt ex.precursor.mz}"/>
+								<h:outputText value="#{frag.entity.mz}" style="color:green" rendered="#{frag.entity.mz ge ex.precursor.mz}"/>
 							</p:column>
-							<p:column headerText="intensity">#{frag.intensity}</p:column>
+							<p:column headerText="intensity">#{frag.entity.intensity}</p:column>
+							<p:column headerText="mz error">#{frag.entity.error}</p:column>
+							<p:column headerText="charge">#{frag.entity.charge}</p:column>
+							<p:column headerText="type">#{frag.name}</p:column>
 						</p:dataTable>					
 					</p:column>
 				</p:dataTable>

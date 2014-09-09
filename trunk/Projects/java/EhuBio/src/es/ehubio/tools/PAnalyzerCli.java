@@ -1,7 +1,6 @@
 package es.ehubio.tools;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -10,13 +9,12 @@ import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import es.ehubio.io.CsvUtils;
 import es.ehubio.proteomics.MsMsData;
 import es.ehubio.proteomics.Score;
 import es.ehubio.proteomics.ScoreType;
+import es.ehubio.proteomics.io.EhubioCsv;
 import es.ehubio.proteomics.io.MsMsFile;
 import es.ehubio.proteomics.io.Mzid;
-import es.ehubio.proteomics.io.EhubioCsv;
 import es.ehubio.proteomics.pipeline.Filter;
 import es.ehubio.proteomics.pipeline.PAnalyzer;
 import es.ehubio.proteomics.pipeline.Validator;
@@ -30,16 +28,7 @@ public final class PAnalyzerCli implements Command.Interface {
 	private ScoreType psmScoreType;
 	private final static int MAXITER=15;
 	private Configuration cfg;	
-	private boolean loadIons = false;
 	private boolean saveResults = true;
-	
-	public boolean isLoadIons() {
-		return loadIons;
-	}
-
-	public void setLoadIons(boolean loadIons) {
-		this.loadIons = loadIons;
-	}
 	
 	public boolean isSaveResults() {
 		return saveResults;
@@ -191,16 +180,9 @@ public final class PAnalyzerCli implements Command.Interface {
 		psmScoreType = ScoreType.getByName(cfg.psmScore);
 		
 		MsMsData tmp;
-		for( Configuration.InputFile input : cfg.inputs ) {
+		for( String input : cfg.inputs ) {
 			file = new Mzid();		
-			tmp = file.load(input.path,input.decoyRegex);
-			if( isLoadIons() ) {
-				List<File> files = file.loadIons(input.ions);
-				List<String> names = new ArrayList<>();
-				for( File file : files )
-					names.add(file.getName());
-				input.ions = CsvUtils.getCsv(';', names.toArray());
-			}
+			tmp = file.load(input,cfg.decoyRegex);
 			if( data == null ) {
 				data = tmp;
 				logCounts("Loaded");
@@ -225,19 +207,15 @@ public final class PAnalyzerCli implements Command.Interface {
 
 	@XmlRootElement
 	public static class Configuration {
-		public static class InputFile {
-			public String path;			
-			public String decoyRegex;
-			public String ions;
-		}
 		public String description;
 		public String operation;
 		public String psmScore;
+		public String decoyRegex;
 		public Double psmFdr;
 		public Double peptideFdr;
 		public Double groupFdr;
 		@XmlElement(name="input")
-		public List<InputFile> inputs;
+		public List<String> inputs;
 		public String output;
 	}
 }
