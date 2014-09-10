@@ -305,15 +305,16 @@ public final class Mzid extends MsMsFile {
 		Set<Spectrum> spectra = new HashSet<>();
 		mapSii.clear();
 		mapPsm.clear();
-		for( SpectrumIdentificationListType sil : mzid.getDataCollection().getAnalysisData().getSpectrumIdentificationLists() )
+		for( SpectrumIdentificationListType sil : mzid.getDataCollection().getAnalysisData().getSpectrumIdentificationLists() ) {
+			MeasureIds ids = getMeasureIds(sil);
 			for( SpectrumIdentificationResultType sir : sil.getSpectrumIdentificationResults() ) {
 				Spectrum spectrum = new Spectrum();			
 				spectrum.setFileName(mapSpectraFile.get(sir.getSpectraDataRef()));
 				loadSpectrum(spectrum,sir);
 				for( SpectrumIdentificationItemType sii : sir.getSpectrumIdentificationItems() ) {
 					Psm psm = new Psm();
-					psm.linkSpectrum(spectrum);
-					loadPsm(psm,sii,sil);					
+					psm.linkSpectrum(spectrum);					
+					loadPsm(psm,sii,ids);					
 					mapSii.put(psm, sii);
 					mapPsm.put(sii, psm);
 					if( sii.getPeptideEvidenceReves() == null )
@@ -328,55 +329,65 @@ public final class Mzid extends MsMsFile {
 				}
 				spectra.add(spectrum);
 			}
+		}
 		data.loadFromSpectra(spectra);
 	}	
 
 	private void loadSpectrum(Spectrum spectrum, SpectrumIdentificationResultType sir) {
 		spectrum.setFileId(sir.getSpectrumID());
 		CVParamType cv = getCVParam("MS:1000796", sir.getCvParamsAndUserParams());
+		if( cv != null ) {
+			spectrum.setTitle(cv.getValue());
+			Pattern pattern = Pattern.compile("RTINSECONDS=([0-9]*\\.?[0-9]*)",Pattern.CASE_INSENSITIVE);
+			Matcher matcher = pattern.matcher(cv.getValue());
+			if( matcher.find() )
+				spectrum.setRt(Double.parseDouble(matcher.group(1)));
+			pattern = Pattern.compile("scan=([0-9]*)",Pattern.CASE_INSENSITIVE);
+			matcher = pattern.matcher(cv.getValue());
+			if( matcher.find() )
+				spectrum.setScan(matcher.group(1));
+		}
+		cv = getCVParam("MS:1001114", sir.getCvParamsAndUserParams());
 		if( cv == null )
 			return;
-		spectrum.setTitle(cv.getValue());
-		Pattern pattern = Pattern.compile("RTINSECONDS=([0-9]*\\.?[0-9]*)",Pattern.CASE_INSENSITIVE);
-		Matcher matcher = pattern.matcher(cv.getValue());
-		if( matcher.find() )
-			spectrum.setRt(Double.parseDouble(matcher.group(1)));
-		pattern = Pattern.compile("scan=([0-9]*)",Pattern.CASE_INSENSITIVE);
-		matcher = pattern.matcher(cv.getValue());
-		if( matcher.find() )
-			spectrum.setScan(matcher.group(1));
+		spectrum.setRt(Double.parseDouble(cv.getValue()));
 	}
 	
-	private void loadPsm(Psm psm, SpectrumIdentificationItemType sii, SpectrumIdentificationListType sil) {
+	private void loadPsm(Psm psm, SpectrumIdentificationItemType sii, MeasureIds ids) {
 		psm.setCharge(sii.getChargeState());
 		psm.setExpMz(sii.getExperimentalMassToCharge());
 		psm.setCalcMz(sii.getCalculatedMassToCharge());
 		psm.setRank(sii.getRank());
 		psm.setPassThreshold(sii.isPassThreshold());
-		loadScores(psm, sii);
-		loadIons(psm,sii,sil);
+		loadScores(psm, sii);		
+		loadIons(psm,sii,ids);
 	}
-
-	private void loadIons(Psm psm, SpectrumIdentificationItemType sii, SpectrumIdentificationListType sil) {
-		if( sil.getFragmentationTable() == null || sii.getFragmentation() == null )
-			return;
-		
-		String mzMeasure = null, errorMeasure = null, intensityMeasure = null;
+	
+	private MeasureIds getMeasureIds( SpectrumIdentificationListType sil ) {
+		if( sil.getFragmentationTable() == null )
+			return null;
+		MeasureIds ids = new MeasureIds();
 		for( MeasureType measure : sil.getFragmentationTable().getMeasures() ) {
 			CVParamType cv = getCVParam("MS:1001225", measure.getCvParams());
 			if( cv != null ) {
-				mzMeasure = measure.getId();
+				ids.mz = measure.getId();
 				continue;
 			}
 			cv = getCVParam("MS:1001227", measure.getCvParams());
 			if( cv != null ) {
-				errorMeasure = measure.getId();
+				ids.error = measure.getId();
 				continue;
 			}
 			cv = getCVParam("MS:1001226", measure.getCvParams());
 			if( cv != null )
-				intensityMeasure = measure.getId();
+				ids.intensity = measure.getId();
 		}
+		return ids;
+	}
+
+	private void loadIons(Psm psm, SpectrumIdentificationItemType sii, MeasureIds ids) {
+		if( ids == null || sii.getFragmentation() == null )
+			return;
 		
 		for( IonTypeType ion : sii.getFragmentation().getIonTypes() ) {
 			List<FragmentIon> fragments = new ArrayList<>();
@@ -391,11 +402,11 @@ public final class Mzid extends MsMsFile {
 			for( FragmentArrayType array : ion.getFragmentArraies() ) {
 				for( int i = 0; i < array.getValues().size(); i++ ) {
 					FragmentIon fragment = fragments.get(i);
-					if( array.getMeasureRef().equals(mzMeasure) )
+					if( array.getMeasureRef().equals(ids.mz) )
 						fragment.setMz(array.getValues().get(i));
-					else if( array.getMeasureRef().equals(errorMeasure) )
+					else if( array.getMeasureRef().equals(ids.error) )
 						fragment.setMzError(array.getValues().get(i));
-					else if( array.getMeasureRef().equals(intensityMeasure) )
+					else if( array.getMeasureRef().equals(ids.intensity) )
 						fragment.setIntensity(array.getValues().get(i));
 				}
 			}
@@ -696,5 +707,11 @@ public final class Mzid extends MsMsFile {
 		if( remove != null )
 			mzid.getAuditCollection().getPersonsAndOrganizations().remove(remove);
 		mzid.getAuditCollection().getPersonsAndOrganizations().add(data.getOrganization());
+	}
+	
+	private static class MeasureIds {
+		public String mz;
+		public String error;
+		public String intensity;
 	}
 }

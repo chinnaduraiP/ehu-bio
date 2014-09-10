@@ -39,7 +39,8 @@ public class ExperimentMB implements Serializable {
 	private String chromatography;
 	private String decoyRegex = "decoy";
 	private String psmScore;
-	private final Set<String> files = new HashSet<>();	
+	private final Set<String> files = new HashSet<>();
+	private Peptide.Confidence peptideConfidence = Peptide.Confidence.DISCRIMINATING;
 
 	public Experiment getEntity() {
 		return entity;
@@ -111,7 +112,7 @@ public class ExperimentMB implements Serializable {
 		for( String file : files )
 			cfg.inputs.add(new File(getTmpDir(),file).getAbsolutePath());
 
-		ExperimentFeed feed = new ExperimentFeed(experiment, cfg, Peptide.Confidence.DISCRIMINATING);
+		ExperimentFeed feed = new ExperimentFeed(experiment, cfg, peptideConfidence);
 		try {
 			Database.feed(feed);
 		} catch (InterruptedException e) {
@@ -148,4 +149,12 @@ public class ExperimentMB implements Serializable {
 	public boolean isReady() {
 		return !files.isEmpty() && entity.getName() != null && !entity.getName().isEmpty(); 
 	}
+
+	public Peptide.Confidence getPeptideConfidence() {
+		return peptideConfidence;
+	}
+
+	public void setPeptideConfidence(Peptide.Confidence peptideConfidence) {
+		this.peptideConfidence = peptideConfidence;
+	}	
 }
