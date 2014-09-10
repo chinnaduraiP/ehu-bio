@@ -27,8 +27,12 @@
 					</p:column>
 					<p:column headerText="precursors">
 						<p:dataTable value="#{item.precursors}" var="pre">
-							<p:column headerText="m/z">#{pre.mz}</p:column>
-							<p:column headerText="charge">#{pre.charge}</p:column>
+							<p:column headerText="m/z" style="text-align: right;">
+								<h:outputText value="#{pre.mz}">
+									<f:convertNumber pattern="0.00000"/>
+								</h:outputText>
+							</p:column>
+							<p:column headerText="charge" style="text-align: center;">#{pre.charge}</p:column>
 							<p:column headerText="# evidences">
 								<p:panelGrid columns="2">
 									<h:outputText value="#{pre.experiments.size()}" />

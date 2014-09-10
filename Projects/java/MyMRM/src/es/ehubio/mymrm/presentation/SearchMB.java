@@ -82,6 +82,8 @@ public class SearchMB implements Serializable {
 				Collections.sort(candidates, new Comparator<CandidateBean>() {
 					@Override
 					public int compare(CandidateBean c1, CandidateBean c2) {
+						if( c1.isAvailable() != c2.isAvailable() )
+							return c1.isAvailable() ? -1 : 1;
 						int res = c1.getPeptide().getConfidence().getOrder() - c2.getPeptide().getConfidence().getOrder(); 
 						if( res != 0 )
 							return res;

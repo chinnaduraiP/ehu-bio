@@ -285,5 +285,9 @@ public class DatabaseMB {
 		return count;
 	}
 	
+	public es.ehubio.proteomics.Peptide.Confidence[] getPeptideConfidences() {
+		return es.ehubio.proteomics.Peptide.Confidence.values();
+	}
+	
 	private List<String> scoreTypes;
 }

@@ -156,7 +156,7 @@ public final class Validator {
 			ScoreGroup scoreGroup = new ScoreGroup();
 			scoreGroup.setFdr(getFdr(decoy,target));
 			if( pValue )
-				scoreGroup.setpValue((decoy+pOff)/totalDecoys);
+				scoreGroup.setpValue(totalDecoys==0?0:(decoy+pOff)/totalDecoys);
 			mapScores.put(item.getScoreByType(type).getValue(), scoreGroup);
 		}
 	}

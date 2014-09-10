@@ -48,16 +48,7 @@ public enum IonType {
 	
 	public String getLoss() {
 		return loss;
-	}
-	
-	public String format( int i ) {
-		StringBuilder builder = new StringBuilder(code);
-		if( i > 0 )
-			builder.append(String.format("%d", i));
-		if( loss != null )
-			builder.append(String.format("-%s", loss));
-		return builder.toString();
-	}
+	}	
 	
 	public static IonType getByAccession( String accession ) {
 		return mapAccession.get(accession);

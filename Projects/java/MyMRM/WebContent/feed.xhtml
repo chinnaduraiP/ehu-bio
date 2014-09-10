@@ -92,6 +92,10 @@
 					<p:selectOneMenu value="#{experimentMB.psmScore}">
 						<f:selectItems value="#{databaseMB.scoreTypes}" var="score" itemLabel="#{score}" itemValue="#{score}"/>					
 					</p:selectOneMenu>
+					<h:outputText value="Minimum peptide confidence:" />
+					<p:selectOneMenu value="#{experimentMB.peptideConfidence}">
+						<f:selectItems value="#{databaseMB.peptideConfidences}" var="conf" itemLabel="#{conf}" itemValue="#{conf}"/>					
+					</p:selectOneMenu>
 				</p:panelGrid>
 				<br />
 				<p:commandButton value="Submit" actionListener="#{experimentMB.feed()}" ajax="false" />

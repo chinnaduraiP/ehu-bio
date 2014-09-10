@@ -11,27 +11,50 @@
 		<ui:define name="content">
 			<h:form>
 				<p:dataTable value="#{searchMB.precursor.experiments}" var="ex">
-					<f:facet name="header">Details</f:facet>
+					<f:facet name="header">
+						Details for precursor: m/z=<h:outputText value="#{searchMB.precursor.mz}">
+							<f:convertNumber pattern="0.00000"/>
+						</h:outputText>
+						charge=#{searchMB.precursor.charge}</f:facet>
 					<p:column headerText="experiment">
 						<p:commandButton value="#{ex.experiment.name}" action="#{filesMB.setExperiment(ex.experiment)}"/>
 					</p:column>
 					<p:column headerText="precursor scores">
 						<p:dataTable value="#{ex.scores}" var="score">
 							<p:column headerText="name">#{score.scoreType.name}</p:column>
-							<p:column headerText="value">#{score.value}</p:column>
+							<p:column headerText="value" style="text-align: right;">
+								<h:outputText value="#{score.value}">
+									<f:convertNumber pattern="0.00E0"/>
+								</h:outputText>
+							</p:column>
 						</p:dataTable>
 					</p:column>
-					<p:column headerText="retention time">#{ex.precursor.rt}</p:column>
+					<p:column headerText="retention time (s)" style="text-align: right;">
+						<h:outputText value="#{ex.precursor.rt}">
+							<f:convertNumber pattern="0.000"/>
+						</h:outputText>
+					</p:column>
 					<p:column headerText="fragment ions">
 						<p:dataTable value="#{ex.fragments}" var="frag">
-							<p:column headerText="mz">
-								<h:outputText value="#{frag.entity.mz}" style="color:red" rendered="#{frag.entity.mz lt ex.precursor.mz}"/>
-								<h:outputText value="#{frag.entity.mz}" style="color:green" rendered="#{frag.entity.mz ge ex.precursor.mz}"/>
+							<p:column headerText="m/z" style="text-align: right;">
+								<h:outputText value="#{frag.entity.mz}" style="color:red" rendered="#{frag.entity.mz lt ex.precursor.mz}">
+									<f:convertNumber pattern="0.00000"/>
+								</h:outputText>
+								<h:outputText value="#{frag.entity.mz}" style="color:green" rendered="#{frag.entity.mz ge ex.precursor.mz}">
+									<f:convertNumber pattern="0.00000"/>
+								</h:outputText>
 							</p:column>
-							<p:column headerText="intensity">#{frag.entity.intensity}</p:column>
-							<p:column headerText="mz error">#{frag.entity.error}</p:column>
-							<p:column headerText="charge">#{frag.entity.charge}</p:column>
-							<p:column headerText="type">#{frag.name}</p:column>
+							<p:column headerText="intensity" style="text-align: right;">
+								<h:outputText value="#{frag.entity.intensity}">
+									<f:convertNumber pattern="0.0"/>
+								</h:outputText>								
+							</p:column>
+							<p:column headerText="m/z error (ppm)" style="text-align: right;">
+								<h:outputText value="#{frag.ppm}">
+									<f:convertNumber pattern="0.00"/>
+								</h:outputText>
+							</p:column>
+							<p:column headerText="ion type">#{frag.type}</p:column>
 						</p:dataTable>					
 					</p:column>
 				</p:dataTable>
