@@ -108,7 +108,7 @@ public class Database {
 		for( ExperimentFile file : files )
 			Database.remove(ExperimentFile.class, file.getId());
 		Database.remove(Experiment.class, experimentId);
-		Database.clearPeptides();
+		Database.clearUnreferenced();
 	}
 	
 	public static int countPeptidesBySequence( String sequence ) {
@@ -162,8 +162,10 @@ public class Database {
 		return peptides;
 	}
 	
-	public static void clearPeptides() {
+	public static void clearUnreferenced() {
 		em.createQuery("DELETE FROM Peptide p WHERE p.id NOT IN (SELECT e.peptideBean.id FROM PeptideEvidence e)").executeUpdate();
+		em.createQuery("DELETE FROM Precursor p WHERE p.id NOT IN (SELECT e.precursorBean.id FROM PeptideEvidence e)").executeUpdate();
+		em.createQuery("DELETE FROM Fragment f WHERE f.id NOT IN (SELECT t.fragmentBean.id FROM Transition t)").executeUpdate();
 	}
 
 	private static List<PeptideEvidence> findEvidences(int idPeptide) {
@@ -323,7 +325,7 @@ public class Database {
 			int count = FRAGMENTS;
 			int countok = OKFRAGMENTS;
 			Map<String,IonType> mapTypes = new HashMap<>();
-			for( FragmentIon ion : ions ) {
+			for( FragmentIon ion : filterIons(ions) ) {
 				if( count > 0 || (countok > 0 && ion.getMz() > precursor.getMz()) ) {
 					IonType ionType = mapTypes.get(ion.getType().getName());
 					if( ionType == null ) {
@@ -354,6 +356,23 @@ public class Database {
 			}
 		}
 		
+		private static List<FragmentIon> filterIons(List<FragmentIon> ions) {
+			Map<Double,FragmentIon> map = new HashMap<>();
+			for( FragmentIon ion : ions ) {
+				FragmentIon prev = map.get(ion.getMz());
+				if( prev == null || (Math.abs(prev.getMzError()/prev.getMz()) > Math.abs(ion.getMzError()/ion.getMz())) )
+					map.put(ion.getMz(), ion);			
+			}
+			List<FragmentIon> res = new ArrayList<>(map.values());
+			Collections.sort(res, new Comparator<FragmentIon>() {
+				@Override
+				public int compare(FragmentIon o1, FragmentIon o2) {
+					return (int)Math.signum(o2.getIntensity()-o1.getIntensity());
+				}
+			});
+			return res;
+		}
+
 		private static IonType findIonTypeByName( String name ) {
 			IonType ionType = null;
 			try {
