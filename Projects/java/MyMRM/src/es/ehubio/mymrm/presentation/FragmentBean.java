@@ -10,6 +10,7 @@ public class FragmentBean implements Serializable {
 	private Fragment entity;
 	private String name;
 	private double ppm;
+	private double mzExp;
 	
 	public Fragment getEntity() {
 		return entity;
@@ -17,6 +18,7 @@ public class FragmentBean implements Serializable {
 	
 	public void setEntity(Fragment entity) {
 		this.entity = entity;
+		mzExp = entity.getMz()-entity.getError();
 		ppm = entity.getError()/entity.getMz()*1000000;
 		
 		IonType type = IonType.getByName(entity.getIonType().getName());
@@ -40,5 +42,9 @@ public class FragmentBean implements Serializable {
 	
 	public double getPpm() {
 		return ppm;
+	}
+
+	public double getMzExp() {
+		return mzExp;
 	}
 }

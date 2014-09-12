@@ -36,7 +36,7 @@
 					</p:column>
 					<p:column headerText="fragment ions">
 						<p:dataTable value="#{ex.fragments}" var="frag">
-							<p:column headerText="m/z" style="text-align: right;">
+							<p:column headerText="m/z calc." style="text-align: right;">
 								<h:outputText value="#{frag.entity.mz}" style="color:red" rendered="#{frag.entity.mz lt ex.precursor.mz}">
 									<f:convertNumber pattern="0.00000"/>
 								</h:outputText>
@@ -44,10 +44,20 @@
 									<f:convertNumber pattern="0.00000"/>
 								</h:outputText>
 							</p:column>
+							<p:column headerText="m/z exp." style="text-align: right;">
+								<h:outputText value="#{frag.mzExp}">
+									<f:convertNumber pattern="0.00000"/>
+								</h:outputText>
+							</p:column>
 							<p:column headerText="intensity" style="text-align: right;">
 								<h:outputText value="#{frag.entity.intensity}">
 									<f:convertNumber pattern="0.0"/>
 								</h:outputText>								
+							</p:column>
+							<p:column headerText="m/z error" style="text-align: right;">
+								<h:outputText value="#{frag.entity.error}">
+									<f:convertNumber pattern="0.00000"/>
+								</h:outputText>
 							</p:column>
 							<p:column headerText="m/z error (ppm)" style="text-align: right;">
 								<h:outputText value="#{frag.ppm}">
