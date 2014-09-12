@@ -17,6 +17,7 @@ import javax.faces.bean.SessionScoped;
 import es.ehubio.db.fasta.Fasta.InvalidSequenceException;
 import es.ehubio.mymrm.data.Fragment;
 import es.ehubio.mymrm.data.Peptide;
+import es.ehubio.mymrm.data.Score;
 import es.ehubio.proteomics.Enzyme;
 import es.ehubio.proteomics.MsMsData;
 import es.ehubio.proteomics.Protein;
@@ -127,9 +128,24 @@ public class SearchMB implements Serializable {
 					fragmentBean.setEntity(fragment);
 					experiment.getFragments().add(fragmentBean);
 				}
+				Collections.sort(experiment.getFragments(), new Comparator<FragmentBean>() {
+					@Override
+					public int compare(FragmentBean o1, FragmentBean o2) {
+						if( o1.getEntity().getIntensity() != o2.getEntity().getIntensity() )
+							return (int)Math.signum(o2.getEntity().getIntensity()-o1.getEntity().getIntensity());
+						return (int)Math.signum(Math.abs(o1.getPpm())-Math.abs(o2.getPpm()));
+					}
+				});
 			}
-			if( experiment.getScores().isEmpty() )
+			if( experiment.getScores().isEmpty() ) {
 				experiment.getScores().addAll(db.getScores(experiment.getEvidence().getId()));
+				Collections.sort(experiment.getScores(), new Comparator<Score>() {
+					@Override
+					public int compare(Score o1, Score o2) {
+						return o1.getScoreType().getName().compareTo(o2.getScoreType().getName());
+					}
+				});
+			}
 		}
 		return "transitions";
 	}
