@@ -51,7 +51,7 @@
                   </AnchorPane>
             </content>
           </Tab>
-            <Tab closable="false" text="Filter">
+            <Tab fx:id="tabFilter" closable="false" text="Filter">
                <content>
                   <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>
@@ -98,8 +98,8 @@
                               </GridPane>
                               <HBox fillHeight="false" maxWidth="1.7976931348623157E308" prefHeight="0.0" prefWidth="620.0" spacing="10.0">
                                  <children>
-                                    <Button mnemonicParsing="false" text="Reset" />
-                                    <Button mnemonicParsing="false" text="Filter" />
+                                    <Button fx:id="buttonReset" mnemonicParsing="false" onAction="#handleResetFilter" text="Reset" />
+                                    <Button fx:id="buttonFilter" mnemonicParsing="false" onAction="#handleApplyFilter" text="Filter" />
                                  </children>
                               </HBox>
                            </children>
@@ -110,14 +110,14 @@
                      </children></AnchorPane>
                </content>
             </Tab>
-            <Tab closable="false" text="Results">
+            <Tab fx:id="tabResults" closable="false" text="Results">
                <content>
                   <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>
                         <VBox layoutX="233.0" layoutY="62.0" prefHeight="419.0" prefWidth="630.0" spacing="10.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                            <children>
                               <TextArea editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="20000.0" prefWidth="200.0" />
-                              <Button mnemonicParsing="false" text="Generate report" />
+                              <Button fx:id="buttonSave" mnemonicParsing="false" onAction="#handleSaveFiles" text="Generate report" />
                            </children>
                            <padding>
                               <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
@@ -126,7 +126,7 @@
                      </children></AnchorPane>
                </content>
             </Tab>
-            <Tab closable="false" text="Browser">
+            <Tab fx:id="tabBrowser" closable="false" text="Browser">
                <content>
                   <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>
@@ -169,7 +169,7 @@
                                     <Label fx:id="labelSignature" text="PAnalyzer" GridPane.columnIndex="1" />
                                  </children>
                               </GridPane>
-                              <TextArea editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="261.0" prefWidth="533.0" text="Authors (UPV/EHU):&#10;&#10;Dr. Gorka Prieto &lt;gorka.prieto@ehu.es&gt;&#10;Dept. of Communications Engineering&#10;&#10;Dr. Kerman Aloria &lt;kerman.aloria@ehu.es&gt;&#10;Proteomics Core Falicity - SGIKER&#10;&#10;Prof. Jesus Mari Arizmendi &lt;jm.arizmendi@ehu.es&gt;&#10;Dept. of Biochemistry and Molecular Biolog¡y&#10;&#10;Dr. Asier Fullaondo &lt;asier.fullaondo@ehu.es&gt;&#10;Dpt. Genetics, Physical Anthropology and Animal Physiology&#10;" />
+                              <TextArea editable="false" focusTraversable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="261.0" prefWidth="533.0" text="Authors (UPV/EHU):&#10;&#10;Dr. Gorka Prieto &lt;gorka.prieto@ehu.es&gt;&#10;Dept. of Communications Engineering&#10;&#10;Dr. Kerman Aloria &lt;kerman.aloria@ehu.es&gt;&#10;Proteomics Core Falicity - SGIKER&#10;&#10;Prof. Jesus Mari Arizmendi &lt;jm.arizmendi@ehu.es&gt;&#10;Dept. of Biochemistry and Molecular Biolog¡y&#10;&#10;Dr. Asier Fullaondo &lt;asier.fullaondo@ehu.es&gt;&#10;Dpt. Genetics, Physical Anthropology and Animal Physiology&#10;" />
                            </children>
                            <padding>
                               <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />

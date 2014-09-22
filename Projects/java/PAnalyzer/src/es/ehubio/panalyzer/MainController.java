@@ -1,8 +1,8 @@
 package es.ehubio.panalyzer;
 
 import java.io.File;
+import java.lang.reflect.Method;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -13,9 +13,9 @@ import java.util.Set;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.Tab;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TreeCell;
 import javafx.scene.control.TreeItem;
@@ -32,16 +32,22 @@ public class MainController implements Initializable {
 	@FXML private Button buttonAdd;
 	@FXML private Button buttonClear;
 	@FXML private Button buttonLoad;
+	@FXML private Button buttonReset;
+	@FXML private Button buttonFilter;
+	@FXML private Button buttonSave;
+	@FXML private Tab tabFilter;
+	@FXML private Tab tabResults;
+	@FXML private Tab tabBrowser;
 	private final FileChooser fileChooser = new FileChooser();
-	private final List<String> files = new ArrayList<>();
+	private final Set<String> files = new HashSet<>();
 	
 	private final MainModel model;
 	private final Stage view;
 	
-	public enum Status { INIT, READY, LOADED, RESULTS};
+	public enum Status { INIT, READY, LOADED, RESULTS, SAVED};
 	private Status status = Status.INIT;
-	private final Map<Status, Set<Node>> mapNodes = new HashMap<>();
-	private final Set<Node> listNodes = new HashSet<>();
+	private final Map<Status, Set<Object>> mapNodes = new HashMap<>();
+	private final Set<Object> listNodes = new HashSet<>();
 	
 	public MainController( MainModel model, Stage view ) {
 		this.model = model;
@@ -53,9 +59,10 @@ public class MainController implements Initializable {
 		if( files == null )
 			return;
 		for( File file : files ) {
+			if( !this.files.add(file.getAbsolutePath()) )
+				continue;
 			TreeItem<String> item = new TreeItem<>(file.getName());
-			treeExperiment.getRoot().getChildren().add(item);
-			this.files.add(file.getAbsolutePath());
+			treeExperiment.getRoot().getChildren().add(item);			
 		}
 		status = Status.READY;
 		updateStatus();
@@ -70,6 +77,19 @@ public class MainController implements Initializable {
 	
 	@FXML private void handleLoadFiles( ActionEvent event ) {
 		status = Status.LOADED;
+		updateStatus();
+	}
+	
+	@FXML private void handleResetFilter( ActionEvent event ) {
+	}
+	
+	@FXML private void handleApplyFilter( ActionEvent event ) {
+		status = Status.RESULTS;
+		updateStatus();
+	}
+	
+	@FXML private void handleSaveFiles( ActionEvent event ) {
+		status = Status.SAVED;
 		updateStatus();
 	}
 
@@ -93,16 +113,22 @@ public class MainController implements Initializable {
 		
 		labelSignature.setText(MainModel.SIGNATURE);
 		
+		enable(treeExperiment,Status.INIT,Status.READY);
 		enable(buttonAdd,Status.INIT,Status.READY);
-		enable(buttonClear,Status.READY,Status.LOADED,Status.RESULTS);
+		enable(buttonClear,Status.READY,Status.LOADED,Status.RESULTS,Status.SAVED);
 		enable(buttonLoad,Status.READY);
+		enable(tabFilter,Status.LOADED,Status.RESULTS,Status.SAVED);
+		enable(tabFilter.getContent(),Status.LOADED,Status.RESULTS);
+		enable(tabResults,Status.RESULTS,Status.SAVED);
+		enable(tabResults.getContent(),Status.RESULTS,Status.SAVED);
+		enable(tabBrowser,Status.SAVED);		
 		
 		updateStatus();		
 	}
 	
-	private void enable( Node node, Status... states ) {
+	private void enable( Object node, Status... states ) {
 		for( Status status : states ) {
-			Set<Node> list = mapNodes.get(status);
+			Set<Object> list = mapNodes.get(status);
 			if( list == null ) {
 				list = new HashSet<>();
 				mapNodes.put(status, list);
@@ -112,12 +138,20 @@ public class MainController implements Initializable {
 		listNodes.add(node);
 	}
 	
+	private void disable( Object object, boolean disabled ) {
+		try {
+			Method method = object.getClass().getMethod("setDisable", boolean.class);
+			method.invoke(object, disabled);
+		} catch( Exception e ) {			
+		}
+	}
+	
 	private void updateStatus() {
 		textSummary.setText(model.getLog());
 		labelStatus.setText(model.getStatus());
-		for( Node node : listNodes )
-			node.setDisable(true);
-		for( Node node : mapNodes.get(status) )
-			node.setDisable(false);
-	}
+		for( Object node : listNodes )
+			disable(node,true);
+		for( Object node : mapNodes.get(status) )
+			disable(node,false);
+	}	
 }
