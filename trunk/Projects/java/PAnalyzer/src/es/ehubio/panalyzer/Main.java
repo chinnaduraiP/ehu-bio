@@ -18,7 +18,7 @@ public class Main extends Application {
 			VBox root = (VBox)loader.load();
 			Scene scene = new Scene(root,640,480);
 			scene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
-			stage.setTitle("PAnalyzer v2.0-alpha1 (UPV/EHU)");
+			stage.setTitle(String.format("%s - UPV/EHU", MainModel.SIGNATURE));
 			stage.setScene(scene);
 			stage.show();
 		} catch(Exception e) {
