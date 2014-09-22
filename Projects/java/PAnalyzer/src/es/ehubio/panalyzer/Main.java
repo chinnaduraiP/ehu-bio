@@ -13,7 +13,7 @@ public class Main extends Application {
 		try {
 			MainModel model = new MainModel();
 			MainController controller = new MainController(model,stage);
-			FXMLLoader loader = new FXMLLoader(getClass().getResource("Main.fxml"));
+			FXMLLoader loader = new FXMLLoader(getClass().getResource("MainView.fxml"));
 			loader.setController(controller);
 			VBox root = (VBox)loader.load();
 			Scene scene = new Scene(root,640,480);
