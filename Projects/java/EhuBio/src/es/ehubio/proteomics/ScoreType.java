@@ -4,8 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 public enum ScoreType {	
-	MASCOT_EVALUE("MS:1001172","Mascot:expectation value","The Mascot result 'expectation value",false),
-	MASCOT_SCORE("MS:1001171","Mascot:score","The Mascot result 'Score'",true),
+	MASCOT_EVALUE("MS:1001172","mascot:expectation value","The Mascot result 'expectation value",false),
+	MASCOT_SCORE("MS:1001171","mascot:score","The Mascot result 'Score'",true),
 	SEQUEST_XCORR("MS:1001155","SEQUEST:xcorr","The SEQUEST result 'XCorr'",true),
 	XTANDEM_EVALUE("MS:1001330","X!Tandem:expect","The X!Tandem expectation value",false),
 	XTANDEM_HYPERSCORE("MS:1001331","X!Tandem:hyperscore","The X!Tandem hyperscore",true),	
@@ -82,5 +82,10 @@ public enum ScoreType {
 	
 	public static ScoreType getByName( String name ) {
 		return mapName.get(name);
+	}
+	
+	@Override
+	public String toString() {
+		return getName();
 	}
 }
