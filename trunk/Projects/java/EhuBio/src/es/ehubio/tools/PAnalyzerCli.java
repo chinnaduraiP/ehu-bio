@@ -146,6 +146,7 @@ public final class PAnalyzerCli implements Command.Interface {
 	private void inputFilter() {
 		validator.logFdrs();
 		Filter filter = new Filter(data);
+		//filter.setRankTreshold(1);
 		filter.setOnlyBestPsmPerPrecursor(psmScoreType);
 		filter.setMinPeptideLength(7);
 		filter.setFilterDecoyPeptides(false);

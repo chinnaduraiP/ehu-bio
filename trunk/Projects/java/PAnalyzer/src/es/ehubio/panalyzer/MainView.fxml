@@ -31,12 +31,14 @@
                      <children>
                         <HBox layoutX="262.0" layoutY="158.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="367.0" prefWidth="630.0" spacing="5.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                            <children>
-                              <TreeView fx:id="treeExperiment" maxWidth="1.7976931348623157E308" prefHeight="409.0" prefWidth="448.0" />
+                              <TreeView fx:id="treeExperiment" maxWidth="1.7976931348623157E308" onEditCommit="#handleTreeEdit" prefHeight="409.0" prefWidth="448.0" />
                               <VBox maxWidth="1.7976931348623157E308" spacing="5.0">
                                  <children>
                                     <Button fx:id="buttonAdd" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleAddFiles" text="Add files" />
                                     <Button fx:id="buttonClear" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleClearFiles" text="Clear" />
                                     <Button fx:id="buttonLoad" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleLoadFiles" text="Load" />
+                                    <Label text="Decoy regex:" />
+                                    <TextField fx:id="textDecoy" />
                                  </children>
                                  <HBox.margin>
                                     <Insets />
@@ -77,7 +79,7 @@
                                     <Label text="Peptide-level FDR" GridPane.rowIndex="4" />
                                     <Label text="Protein level-FDR" GridPane.rowIndex="5" />
                                     <Label text="Protein group-level FDR" GridPane.rowIndex="6" />
-                                    <ChoiceBox maxWidth="1.7976931348623157E308" prefWidth="150.0" GridPane.columnIndex="1" />
+                                    <ChoiceBox fx:id="choiceScoreType" maxWidth="1.7976931348623157E308" prefWidth="150.0" GridPane.columnIndex="1" />
                                     <ChoiceBox maxWidth="1.7976931348623157E308" prefWidth="150.0" GridPane.columnIndex="2" />
                                     <TextField GridPane.columnIndex="1" GridPane.rowIndex="4" />
                                     <TextField GridPane.columnIndex="1" GridPane.rowIndex="5" />
