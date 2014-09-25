@@ -15,15 +15,20 @@ import es.ehubio.proteomics.Score;
 import es.ehubio.proteomics.ScoreType;
 import es.ehubio.proteomics.io.MsMsFile;
 import es.ehubio.proteomics.io.Mzid;
+import es.ehubio.proteomics.pipeline.Filter;
+import es.ehubio.proteomics.pipeline.PAnalyzer;
+import es.ehubio.proteomics.pipeline.Validator;
+import es.ehubio.proteomics.pipeline.Validator.FdrResult;
 
 public class MainModel {
 	public enum State { INIT, CONFIGURED, LOADED, RESULTS, SAVED}
 	public static final String NAME = "PAnalyzer";
 	public static final String VERSION = "v2.0-alpha1";
-	public static final String SIGNATURE = String.format("%s (%s)", NAME, VERSION);
+	public static final String SIGNATURE = String.format("%s (%s)", NAME, VERSION);	
 
 	private static final Logger logger = Logger.getLogger(MainModel.class.getName());
 	private static final String STATE_ERR_MSG="This method should not be called in the current state";
+	private static final int MAXITER=15;
 	private String status;
 	private MsMsData data;
 	private MsMsFile file;
@@ -31,20 +36,29 @@ public class MainModel {
 	private State state;
 	private Set<ScoreType> psmScoreTypes;
 	
+	private PAnalyzer pAnalyzer;
+	private Validator validator;
+	
 	public MainModel() {
-		resetAux();	
-	}	
-
-	private void resetAux() {		
-		config = null;
+		resetTotal();	
+	}
+	
+	private void resetData() {
 		data = null;
 		psmScoreTypes = null;
+		status = "Experiment configured, you can now load the data";
+		state = State.CONFIGURED;		
+	}
+
+	private void resetTotal() {
+		resetData();
+		config = null;		
 		status = "Load experiment data";
 		state = State.INIT;
 	}
 	
 	public void reset() {
-		resetAux();
+		resetTotal();
 		logger.info("--- Started a new analysis ---");
 	}
 	
@@ -57,12 +71,12 @@ public class MainModel {
 	}
 	
 	public void setConfig( Configuration config ) {
-		resetAux();
-		this.config = config;
-		if( config == null )
+		if( config == null ) {
+			resetTotal();
 			return;
-		state = State.CONFIGURED;
-		status = "Experiment configured, you can now load the data";
+		}
+		resetData();
+		this.config = config;
 	}
 	
 	public void loadConfig( String path ) throws JAXBException {
@@ -88,6 +102,9 @@ public class MainModel {
 					logCounts("Merged");
 				}
 			}
+			pAnalyzer = new PAnalyzer(data);
+			validator = new Validator(data);
+			rebuildGroups();
 			status = "Data loaded, you can now apply a filter";
 			state = State.LOADED;
 		} catch( Exception e ) {
@@ -113,19 +130,52 @@ public class MainModel {
 	public void filterData() {
 		assertState(state == State.LOADED || state == State.RESULTS);
 		try {
+			inputFilter();
+			processPsmFdr();
+			processPeptideFdr();
+			processProteinFdr();
+			processGroupFdr();
 			status = "Data filtered, you can now save the results";
 			state = State.RESULTS;
 		} catch( Exception e ) {
 			handleException(e, "Error filtering data, correct your configuration");
 		}
-	}
-	
+	}	
+
 	public MsMsData getData() {
 		return data;
 	}
 	
 	public String getStatus() {
 		return status;
+	}
+	
+	public PAnalyzer.Counts getCounts() {
+		return pAnalyzer.getCounts();
+	}
+	
+	public PAnalyzer.Counts getTargetCounts() {
+		return pAnalyzer.getTargetCounts();
+	}
+	
+	public PAnalyzer.Counts getDecoyCounts() {
+		return pAnalyzer.getDecoyCounts();
+	}
+	
+	public FdrResult getPsmFdr() {
+		return validator.getPsmFdr();
+	}
+	
+	public FdrResult getPeptideFdr() {
+		return validator.getPeptideFdr();
+	}
+	
+	public FdrResult getProteinFdr() {
+		return validator.getProteinFdr();
+	}
+	
+	public FdrResult getGroupFdr() {
+		return validator.getGroupFdr();
 	}
 	
 	private void logCounts( String title ) {
@@ -139,8 +189,87 @@ public class MainModel {
 	
 	private void handleException( Exception e, String msg ) {
 		e.printStackTrace();
-		resetAux();
+		resetData();
 		status = msg;
 		logger.severe(String.format("%s: %s", msg, e.getMessage()));
+	}
+	
+	private void rebuildGroups() {
+		//logger.info("Updating protein groups ...");
+		pAnalyzer.run();
+		PAnalyzer.Counts counts = pAnalyzer.getCounts();
+		logger.info("Re-grouped: "+counts.toString());
+	}
+	
+	private void filterAndGroup( Filter filter, String title ) {
+		filter.run();
+		logCounts(title);
+		rebuildGroups();
+	}
+	
+	private void inputFilter() {
+		validator.logFdrs();
+		Filter filter = new Filter(data);
+		filter.setRankTreshold(config.getPsmRankThreshold()==null?0:config.getPsmRankThreshold());
+		filter.setOnlyBestPsmPerPrecursor(Boolean.TRUE.equals(config.getBestPsmPerPrecursor())?config.getPsmScore():null);
+		filter.setMinPeptideLength(config.getMinPeptideLength()==null?0:config.getMinPeptideLength());
+		filter.setFilterDecoyPeptides(false);
+		filterAndGroup(filter,"Input filter");
+		validator.logFdrs();
+	}
+	
+	private void processPsmFdr() {
+		if( config.getPsmFdr() != null || config.getPeptideFdr() != null || config.getProteinFdr() != null || config.getGroupFdr() != null )
+			validator.updatePsmDecoyScores(config.getPsmScore());
+		if( config.getPsmFdr() == null )
+			return;
+		Filter filter = new Filter(data);
+		filter.setPsmScoreThreshold(new Score(ScoreType.PSM_Q_VALUE, config.getPsmFdr()));
+		filterAndGroup(filter,String.format("PSM FDR=%s filter",config.getPsmFdr()));
+	}
+	
+	private void processPeptideFdr() {
+		if( config.getPeptideFdr() != null || config.getProteinFdr() != null || config.getGroupFdr() != null ) {
+			validator.updatePeptideProbabilities();
+			validator.updatePeptideDecoyScores(ScoreType.PEPTIDE_P_VALUE);
+		}
+		if( config.getPeptideFdr() == null )
+			return;
+		Filter filter = new Filter(data);
+		filter.setPeptideScoreThreshold(new Score(ScoreType.PEPTIDE_Q_VALUE, config.getPeptideFdr()));
+		filterAndGroup(filter,String.format("Peptide FDR=%s filter",config.getPeptideFdr()));
+	}
+	
+	private void processProteinFdr() {
+		if( config.getProteinFdr() == null )
+			return;
+		validator.updateProteinProbabilities();
+		validator.updateProteinDecoyScores(ScoreType.PROTEIN_P_VALUE);
+		Filter filter = new Filter(data);
+		filter.setProteinScoreThreshold(new Score(ScoreType.PROTEIN_Q_VALUE, config.getProteinFdr()));
+		filterAndGroup(filter,String.format("Protein FDR=%s filter",config.getProteinFdr()));
+	}
+	
+	private void processGroupFdr() {
+		if( config.getGroupFdr() == null )
+			return;
+		
+		PAnalyzer.Counts curCount = pAnalyzer.getCounts(), prevCount;
+		int i = 0;
+		Filter filter = new Filter(data);
+		filter.setGroupScoreThreshold(new Score(ScoreType.GROUP_Q_VALUE, config.getGroupFdr()));
+		do {
+			i++;
+			validator.updateGroupProbabilities();
+			validator.updateGroupDecoyScores(ScoreType.GROUP_P_VALUE);
+			filterAndGroup(filter,String.format("Group FDR=%s filter, iteration %s",config.getGroupFdr(),i));
+			prevCount = curCount;
+			curCount = pAnalyzer.getCounts();
+		} while( !curCount.equals(prevCount) && i < MAXITER );
+		if( i >= MAXITER )
+			logger.warning("Maximum number of iterations reached!");
+		
+		validator.updateGroupProbabilities();
+		validator.updateGroupDecoyScores(ScoreType.GROUP_P_VALUE);
 	}
 }
