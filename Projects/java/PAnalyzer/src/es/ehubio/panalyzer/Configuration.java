@@ -6,8 +6,10 @@ import java.util.Set;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import es.ehubio.proteomics.ScoreType;
+
 @XmlRootElement
-public class Configuration {
+public class Configuration {	
 	public String getDescription() {
 		return description;
 	}
@@ -24,11 +26,11 @@ public class Configuration {
 		this.operation = operation;
 	}
 	
-	public String getPsmScore() {
+	public ScoreType getPsmScore() {
 		return psmScore;
 	}
 	
-	public void setPsmScore(String psmScore) {
+	public void setPsmScore(ScoreType psmScore) {
 		this.psmScore = psmScore;
 	}
 	
@@ -38,6 +40,22 @@ public class Configuration {
 	
 	public void setDecoyRegex(String decoyRegex) {
 		this.decoyRegex = decoyRegex;
+	}	
+	
+	public Integer getPsmRankThreshold() {
+		return psmRankThreshold;
+	}
+
+	public void setPsmRankThreshold(Integer psmRankThreshold) {
+		this.psmRankThreshold = psmRankThreshold;
+	}
+
+	public Boolean getBestPsmPerPrecursor() {
+		return bestPsmPerPrecursor;
+	}
+
+	public void setBestPsmPerPrecursor(Boolean bestPsmPerPrecursor) {
+		this.bestPsmPerPrecursor = bestPsmPerPrecursor;
 	}
 	
 	public Double getPsmFdr() {
@@ -46,6 +64,22 @@ public class Configuration {
 	
 	public void setPsmFdr(Double psmFdr) {
 		this.psmFdr = psmFdr;
+	}
+	
+	public Integer getMinPeptideLength() {
+		return minPeptideLength;
+	}
+
+	public void setMinPeptideLength(Integer minPeptideLength) {
+		this.minPeptideLength = minPeptideLength;
+	}
+	
+	public Double getProteinFdr() {
+		return proteinFdr;
+	}
+
+	public void setProteinFdr(Double proteinFdr) {
+		this.proteinFdr = proteinFdr;
 	}
 	
 	public Double getPeptideFdr() {
@@ -62,7 +96,7 @@ public class Configuration {
 	
 	public void setGroupFdr(Double groupFdr) {
 		this.groupFdr = groupFdr;
-	}
+	}			
 	
 	@XmlElement(name="input")
 	public Set<String> getInputs() {
@@ -85,10 +119,14 @@ public class Configuration {
 	
 	private String description;
 	private String operation;
-	private String psmScore;
+	private ScoreType psmScore;
 	private String decoyRegex;
 	private Double psmFdr;
+	private Integer psmRankThreshold;
+	private Boolean bestPsmPerPrecursor;
+	private Integer minPeptideLength;
 	private Double peptideFdr;
+	private Double proteinFdr;
 	private Double groupFdr;	
 	private Set<String> inputs;
 	private String output;

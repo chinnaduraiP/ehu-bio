@@ -3,10 +3,12 @@ package es.ehubio.proteomics.pipeline;
 import java.util.HashSet;
 import java.util.Set;
 
+import es.ehubio.proteomics.Decoyable;
 import es.ehubio.proteomics.MsMsData;
 import es.ehubio.proteomics.Peptide;
 import es.ehubio.proteomics.Protein;
 import es.ehubio.proteomics.ProteinGroup;
+import es.ehubio.proteomics.Psm;
 import es.ehubio.proteomics.psi.mzid11.AffiliationType;
 import es.ehubio.proteomics.psi.mzid11.AnalysisSoftwareType;
 import es.ehubio.proteomics.psi.mzid11.BibliographicReferenceType;
@@ -24,7 +26,7 @@ import es.ehubio.proteomics.psi.mzid11.RoleType;
  *
  */
 public class PAnalyzer {
-	public static class Counts {		
+	public static class Counts {				
 		private final int conclusive;
 		private final int nonConclusive;
 		private final int ambiguous;
@@ -34,9 +36,16 @@ public class PAnalyzer {
 		private final int maximum;
 		private final int minimum;
 		private final int groups;
+		private final int unique;
+		private final int discriminating;
+		private final int nonDiscriminating;
+		private final int peptides;
+		private final int psms;
 		private final String str;
 		
-		public Counts( int conclusive, int indistinguishable, int indistinguishableGroups, int ambiguous, int ambiguousGroups, int nonConclusive ) {
+		public Counts(
+			int conclusive, int indistinguishable, int indistinguishableGroups, int ambiguous, int ambiguousGroups, int nonConclusive,
+			int unique, int discriminating, int nonDiscriminating, int psms ) {
 			this.conclusive = conclusive;			
 			this.ambiguous = ambiguous;
 			this.ambiguousGroups = ambiguousGroups;
@@ -48,6 +57,11 @@ public class PAnalyzer {
 			groups = minimum+nonConclusive;
 			str = String.format("protein count=%s (%s) -> %s conclusive, %s indistinguishable groups (%s), %s ambiguous groups (%s), non-conclusive (%s)",
 				minimum, maximum, conclusive, indistinguishableGroups, indistinguishable, ambiguousGroups, ambiguous, nonConclusive);
+			this.unique = unique;
+			this.discriminating = discriminating;
+			this.nonDiscriminating = nonDiscriminating;
+			this.peptides = unique+discriminating+nonDiscriminating;
+			this.psms = psms;
 		}
 		public int getConclusive() {
 			return conclusive;
@@ -75,6 +89,21 @@ public class PAnalyzer {
 		}
 		public int getGroups() {
 			return groups;
+		}
+		public int getUnique() {
+			return unique;
+		}
+		public int getDiscriminating() {
+			return discriminating;
+		}
+		public int getNonDiscriminating() {
+			return nonDiscriminating;
+		}
+		public int getPeptides() {
+			return peptides;
+		}
+		public int getPsms() {
+			return psms;
 		}
 		@Override
 		public String toString() {
@@ -115,24 +144,57 @@ public class PAnalyzer {
 		classifyPeptides();
 		classifyProteins();
 		updateMetadata();
-	}	
-
-	public Counts getCounts() {
+	}
+	
+	private Counts getCounts(Boolean target) {
 		int conclusive = 0;
 		int indistinguishable = 0;
 		int indistinguishableGroups = 0;
 		int ambiguous = 0;
 		int ambiguousGroups = 0;
 		int nonConclusive = 0;
-		for( ProteinGroup group : data.getGroups() ) {
-			switch (group.getConfidence()) {
-				case CONCLUSIVE: conclusive++; break;
-				case NON_CONCLUSIVE: nonConclusive++; break;
-				case INDISTINGUISABLE_GROUP: indistinguishableGroups++; indistinguishable += group.size(); break;
-				case AMBIGUOUS_GROUP: ambiguousGroups++; ambiguous += group.size(); break;
-			}
-		}
-		return new Counts(conclusive, indistinguishable, indistinguishableGroups, ambiguous, ambiguousGroups, nonConclusive);
+		for( ProteinGroup group : data.getGroups() )
+			if( addToCount(target, group) )
+				switch( group.getConfidence() ) {
+					case CONCLUSIVE: conclusive++; break;
+					case NON_CONCLUSIVE: nonConclusive++; break;
+					case INDISTINGUISABLE_GROUP: indistinguishableGroups++; indistinguishable += group.size(); break;
+					case AMBIGUOUS_GROUP: ambiguousGroups++; ambiguous += group.size(); break;
+				}
+		int unique = 0;
+		int discriminating = 0;
+		int nonDiscriminating = 0;
+		for( Peptide peptide : data.getPeptides() )
+			if( addToCount(target, peptide) )
+				switch( peptide.getConfidence() ) {
+					case UNIQUE: unique++; break;
+					case DISCRIMINATING: discriminating++; break;
+					case NON_DISCRIMINATING: nonDiscriminating++; break;
+				}
+		int psms = 0;
+		for( Psm psm : data.getPsms() )
+			if( addToCount(target, psm) )
+				psms++;
+		return new Counts(conclusive, indistinguishable, indistinguishableGroups, ambiguous, ambiguousGroups, nonConclusive,
+			unique, discriminating, nonDiscriminating, psms);
+	}
+	
+	private boolean addToCount( Boolean target, Decoyable item ) {
+		return target == null ||
+			(target.equals(Boolean.FALSE) && Boolean.TRUE.equals((item.getDecoy()))) ||
+			(target.equals(Boolean.TRUE) && !Boolean.TRUE.equals((item.getDecoy())));
+	}
+
+	public Counts getCounts() {
+		return getCounts(null);
+	}
+	
+	public Counts getTargetCounts() {
+		return getCounts(Boolean.TRUE);
+	}
+	
+	public Counts getDecoyCounts() {
+		return getCounts(Boolean.FALSE);
 	}
 	
 	private void resetConfidences() {

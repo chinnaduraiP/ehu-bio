@@ -2,3 +2,7 @@
 
 .button {
 }
+
+#tableCounts .table-cell {
+    -fx-alignment: CENTER-RIGHT;
+}
