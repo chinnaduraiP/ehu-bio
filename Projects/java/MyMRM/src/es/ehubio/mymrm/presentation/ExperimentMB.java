@@ -5,7 +5,6 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -25,8 +24,9 @@ import es.ehubio.mymrm.data.Experiment;
 import es.ehubio.mymrm.data.FragmentationType;
 import es.ehubio.mymrm.data.Instrument;
 import es.ehubio.mymrm.data.IonizationType;
+import es.ehubio.panalyzer.Configuration;
 import es.ehubio.proteomics.Peptide;
-import es.ehubio.tools.PAnalyzerCli;
+import es.ehubio.proteomics.ScoreType;
 
 @ManagedBean
 @SessionScoped
@@ -101,16 +101,15 @@ public class ExperimentMB implements Serializable {
 		experiment.setFragmentationTypeBean(Database.findById(FragmentationType.class, Integer.parseInt(getFragmentation())));
 		experiment.setChromatographyBean(Database.findById(Chromatography.class, Integer.parseInt(getChromatography())));
 
-		PAnalyzerCli.Configuration cfg = new PAnalyzerCli.Configuration();
-		cfg.description = getEntity().getName();
-		cfg.operation = "grp";
-		cfg.psmScore = psmScore;
-		cfg.decoyRegex = decoyRegex;
-		cfg.peptideFdr = 0.01;
-		cfg.groupFdr = 0.01;
-		cfg.inputs = new ArrayList<>();
+		Configuration cfg = new Configuration();
+		cfg.setDescription(getEntity().getName());
+		cfg.setPsmScore(ScoreType.getByName(psmScore));
+		cfg.setDecoyRegex(decoyRegex);
+		cfg.setPeptideFdr(0.01);
+		cfg.setGroupFdr(0.01);
+		cfg.setInputs(new HashSet<String>());
 		for( String file : files )
-			cfg.inputs.add(new File(getTmpDir(),file).getAbsolutePath());
+			cfg.getInputs().add(new File(getTmpDir(),file).getAbsolutePath());
 
 		ExperimentFeed feed = new ExperimentFeed(experiment, cfg, peptideConfidence);
 		try {

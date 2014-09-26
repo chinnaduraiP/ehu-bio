@@ -74,4 +74,9 @@ public class MayuCsv extends MsMsFile {
 	public void save(OutputStream output) throws Exception {
 		throw new UnsupportedOperationException();		
 	}
+
+	@Override
+	public String getFilenameExtension() {
+		return "csv";
+	}
 }
