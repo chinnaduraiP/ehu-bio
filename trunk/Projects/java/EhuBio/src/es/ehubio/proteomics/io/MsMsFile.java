@@ -29,6 +29,8 @@ public abstract class MsMsFile {
 	public abstract MsMsData load( InputStream input, String decoyRegex ) throws Exception;	
 
 	public void save( String path ) throws Exception {
+		if( path.indexOf('.') == -1 )
+			path = String.format("%s.%s", path, getFilenameExtension());
 		logger.info(String.format("Saving '%s' ...", path));
 		OutputStream output = new FileOutputStream(path);
 		if( path.endsWith(".gz") )
@@ -42,4 +44,6 @@ public abstract class MsMsFile {
 	public List<File> loadPeaks( String optionalPath ) throws Exception {
 		return null;
 	}
+	
+	public abstract String getFilenameExtension();
 }

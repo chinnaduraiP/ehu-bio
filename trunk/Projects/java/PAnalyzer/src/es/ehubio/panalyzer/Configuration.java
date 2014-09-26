@@ -5,9 +5,16 @@ import java.util.Set;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
 
 import es.ehubio.proteomics.ScoreType;
 
+@XmlType(propOrder={
+	"description",
+	"psmRankThreshold","bestPsmPerPrecursor","psmFdr","psmScore",
+	"minPeptideLength","peptideFdr",
+	"proteinFdr","groupFdr",
+	"decoyRegex","inputs","filterDecoys","output"})
 @XmlRootElement
 public class Configuration {	
 	public String getDescription() {
@@ -16,14 +23,6 @@ public class Configuration {
 	
 	public void setDescription(String description) {
 		this.description = description;
-	}
-	
-	public String getOperation() {
-		return operation;
-	}
-	
-	public void setOperation(String operation) {
-		this.operation = operation;
 	}
 	
 	public ScoreType getPsmScore() {
@@ -117,8 +116,15 @@ public class Configuration {
 		this.output = output;
 	}
 	
+	public Boolean getFilterDecoys() {
+		return filterDecoys;
+	}
+
+	public void setFilterDecoys(Boolean filterDecoys) {
+		this.filterDecoys = filterDecoys;
+	}
+
 	private String description;
-	private String operation;
 	private ScoreType psmScore;
 	private String decoyRegex;
 	private Double psmFdr;
@@ -130,4 +136,5 @@ public class Configuration {
 	private Double groupFdr;	
 	private Set<String> inputs;
 	private String output;
+	private Boolean filterDecoys;
 }

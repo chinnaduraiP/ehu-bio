@@ -146,4 +146,9 @@ public class EhubioCsv extends MsMsFile {
 				));
 		pw.close();
 	}
+
+	@Override
+	public String getFilenameExtension() {
+		return "tsv";
+	}
 }

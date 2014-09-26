@@ -27,11 +27,12 @@ import es.ehubio.mymrm.data.PeptideEvidence;
 import es.ehubio.mymrm.data.Precursor;
 import es.ehubio.mymrm.data.ScoreType;
 import es.ehubio.mymrm.data.Transition;
+import es.ehubio.panalyzer.Configuration;
+import es.ehubio.panalyzer.MainModel;
 import es.ehubio.proteomics.FragmentIon;
 import es.ehubio.proteomics.MsMsData;
 import es.ehubio.proteomics.Psm;
 import es.ehubio.proteomics.Score;
-import es.ehubio.tools.PAnalyzerCli;
 
 public class Database {
 	private static final Logger logger = Logger.getLogger(Database.class.getName());
@@ -248,11 +249,10 @@ public class Database {
 			em.persist(e.getExperiment());
 			
 			e.setStatus("Analyzing ...");
-			PAnalyzerCli panalyzer = new PAnalyzerCli();
-			panalyzer.setConfiguration(e.getConfiguration());
-			panalyzer.setSaveResults(false);
+			MainModel panalyzer = new MainModel();
+			panalyzer.setConfig(e.getConfiguration());
 			try {
-				panalyzer.run(null);	
+				panalyzer.run();	
 			} catch (Exception ex) {
 				ex.printStackTrace();
 				em.getTransaction().rollback();
@@ -420,8 +420,8 @@ public class Database {
 			return scoreType;
 		}
 		
-		private static void feedFiles( Experiment e, PAnalyzerCli.Configuration cfg ) {
-			for( String input : cfg.inputs ) {
+		private static void feedFiles( Experiment e, Configuration cfg ) {
+			for( String input : cfg.getInputs() ) {
 				ExperimentFile file = new ExperimentFile();
 				file.setExperimentBean(e);
 				file.setFileName(new File(input).getName());

@@ -34,6 +34,7 @@ import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.control.TreeView.EditEvent;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Callback;
@@ -81,7 +82,9 @@ public class MainController implements Initializable {
 	@FXML private TableColumn<FdrBean, String> colFdrLevel;
 	@FXML private TableColumn<FdrBean, Double> colFdrValue;
 	@FXML private TableColumn<FdrBean, Double> colFdrThreshold;
-	private final FileChooser fileChooser = new FileChooser();	
+	@FXML private CheckBox checkFilterDecoys;
+	private final FileChooser fileChooser = new FileChooser();
+	private final DirectoryChooser directoryChooser = new DirectoryChooser();
 	
 	private Configuration config = new Configuration();
 	private final MainModel model;
@@ -110,6 +113,7 @@ public class MainController implements Initializable {
 		if( model.getConfig() == null )
 			model.setConfig(config);
 		config.setInputs(this.files);
+		config.setFilterDecoys(true);
 		updateView();
 	}
 	
@@ -121,6 +125,7 @@ public class MainController implements Initializable {
 	}
 	
 	@FXML private void handleLoadFiles( ActionEvent event ) {
+		logSeparator("Loading");
 		String decoy = textDecoy.getText().trim();
 		textDecoy.setText(decoy);
 		config.setDecoyRegex(decoy.length()==0?null:decoy);
@@ -138,6 +143,7 @@ public class MainController implements Initializable {
 	}
 	
 	@FXML private void handleApplyFilter( ActionEvent event ) {
+		logSeparator("Filtering");
 		try {
 			config.setPsmScore(choiceScoreType.getValue());
 			config.setPsmRankThreshold(tryInteger(textRank, labelRank));
@@ -221,7 +227,12 @@ public class MainController implements Initializable {
 		return result;
 	}
 	
-	@FXML private void handleSaveFiles( ActionEvent event ) {
+	@FXML private void handleSaveFiles( ActionEvent event ) {		
+		config.setFilterDecoys(checkFilterDecoys.isSelected());
+		File dir = directoryChooser.showDialog(view);
+		logSeparator("Saving");
+		config.setOutput(new File(dir,config.getDescription()).getAbsolutePath());
+		model.saveData();
 		updateView();
 	}
 	
@@ -240,7 +251,11 @@ public class MainController implements Initializable {
 		fileChooser.getExtensionFilters().addAll(
 			new FileChooser.ExtensionFilter("mzIdentML", "*.mzid", "*.mzid.gz"));
 		
-		TreeItem<String> rootItem = new TreeItem<>("MyExperiment");
+		directoryChooser.setTitle("Select destination directory");
+		directoryChooser.setInitialDirectory(new File(System.getProperty("user.home")));
+		
+		config.setDescription("MyExperiment");
+		TreeItem<String> rootItem = new TreeItem<>(config.getDescription());
 		rootItem.setExpanded(true);
 		treeExperiment.setEditable(true);
 		treeExperiment.setRoot(rootItem);
@@ -309,6 +324,7 @@ public class MainController implements Initializable {
 		textPeptideFdr.setText(valueOf(config.getPeptideFdr()));
 		textProteinFdr.setText(valueOf(config.getProteinFdr()));
 		textGroupFdr.setText(valueOf(config.getGroupFdr()));
+		checkFilterDecoys.setSelected(Boolean.TRUE.equals(config.getFilterDecoys()));
 		for( Object node : listNodes )
 			disableObject(node,true);
 		for( Object node : mapNodes.get(model.getState()) )
@@ -327,9 +343,13 @@ public class MainController implements Initializable {
 		pw.println("1. Load experiment file(s) in the 'Experiment' tab");
 		pw.println("2. Apply some quality criteria in the 'Filter' tab");
 		pw.println("3. Check and export the results in the 'Results' tab");
-		pw.println("4. Browse the results using the integrated 'Browser' tab or your favorite web browser outside this application");
+		pw.print("4. Browse the results using the integrated 'Browser' tab or your favorite web browser outside this application");
 		pw.close();
 		logger.info(string.toString());
+	}
+	
+	private void logSeparator( String msg ) {
+		logger.info(msg==null?"":String.format("\n--- %s ---", msg));
 	}
 	
 	private final class LogHandler extends Handler {

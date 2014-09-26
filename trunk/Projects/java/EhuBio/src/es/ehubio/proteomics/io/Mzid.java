@@ -714,4 +714,9 @@ public final class Mzid extends MsMsFile {
 		public String error;
 		public String intensity;
 	}
+
+	@Override
+	public String getFilenameExtension() {
+		return "mzid";
+	}
 }

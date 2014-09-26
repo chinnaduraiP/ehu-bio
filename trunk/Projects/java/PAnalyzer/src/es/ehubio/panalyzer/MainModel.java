@@ -1,18 +1,21 @@
 package es.ehubio.panalyzer;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Logger;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
 import es.ehubio.proteomics.MsMsData;
 import es.ehubio.proteomics.Psm;
 import es.ehubio.proteomics.Score;
 import es.ehubio.proteomics.ScoreType;
+import es.ehubio.proteomics.io.EhubioCsv;
 import es.ehubio.proteomics.io.MsMsFile;
 import es.ehubio.proteomics.io.Mzid;
 import es.ehubio.proteomics.pipeline.Filter;
@@ -41,6 +44,19 @@ public class MainModel {
 	
 	public MainModel() {
 		resetTotal();	
+	}
+	
+	public void run() {
+		resetData();
+		loadData();
+		filterData();
+		saveData();
+	}
+	
+	public void run( String pax ) throws JAXBException {
+		resetTotal();
+		loadConfig(pax);
+		run();
 	}
 	
 	private void resetData() {
@@ -108,6 +124,7 @@ public class MainModel {
 			status = "Data loaded, you can now apply a filter";
 			state = State.LOADED;
 		} catch( Exception e ) {
+			resetData();
 			handleException(e, "Error loading data, correct your configuration");
 		}
 	}
@@ -135,10 +152,37 @@ public class MainModel {
 			processPeptideFdr();
 			processProteinFdr();
 			processGroupFdr();
+			validator.logFdrs();
+			logCounts("Final counts");
+			logger.info(getCounts().toString());
 			status = "Data filtered, you can now save the results";
 			state = State.RESULTS;
 		} catch( Exception e ) {
+			resetData();
 			handleException(e, "Error filtering data, correct your configuration");
+		}
+	}
+	
+	public void saveData() {
+		try {
+			if( Boolean.TRUE.equals(config.getFilterDecoys()) ) {
+				Filter filter = new Filter(data);
+				filter.setFilterDecoyPeptides(true);
+				filterAndGroup(filter,"Decoy removal");
+			}
+			if( config.getOutput() == null || config.getOutput().isEmpty() )
+				return;
+			if( config.getInputs().size() == 1 )
+				file.save(config.getOutput());
+			EhubioCsv csv = new EhubioCsv(data);
+			csv.setPsmScoreType(config.getPsmScore());
+			csv.save(config.getOutput());
+			saveConfiguration();
+			generateHtml();
+			status = "Data saved, you can now browse the results";
+			state = State.SAVED;
+		} catch( Exception e ) {
+			handleException(e, "Error saving data, correct your configuration");
 		}
 	}	
 
@@ -178,6 +222,21 @@ public class MainModel {
 		return validator.getGroupFdr();
 	}
 	
+	private void saveConfiguration() throws JAXBException {
+		JAXBContext context = JAXBContext.newInstance(Configuration.class);
+		Marshaller marshaller = context.createMarshaller();
+		File pax = new File(String.format("%s.pax", getConfig().getOutput()));
+		marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+		marshaller.marshal(getConfig(), pax);
+		logger.info(String.format("Config saved in '%s'", pax.getName()));
+	}
+	
+	private void generateHtml() throws IOException {
+		HtmlReport html = new HtmlReport(this);
+		html.create();
+		logger.info(String.format("HTML report available in '%s'", html.getHtmlFile().getName()));
+	}	
+	
 	private void logCounts( String title ) {
 		logger.info(String.format("%s: %s", title, data.toString()));
 	}
@@ -189,7 +248,6 @@ public class MainModel {
 	
 	private void handleException( Exception e, String msg ) {
 		e.printStackTrace();
-		resetData();
 		status = msg;
 		logger.severe(String.format("%s: %s", msg, e.getMessage()));
 	}
@@ -197,8 +255,7 @@ public class MainModel {
 	private void rebuildGroups() {
 		//logger.info("Updating protein groups ...");
 		pAnalyzer.run();
-		PAnalyzer.Counts counts = pAnalyzer.getCounts();
-		logger.info("Re-grouped: "+counts.toString());
+		logger.info("Re-grouped: "+getCounts().toString());
 	}
 	
 	private void filterAndGroup( Filter filter, String title ) {
