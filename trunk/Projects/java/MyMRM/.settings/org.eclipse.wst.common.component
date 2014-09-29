@@ -8,6 +8,9 @@
         <dependent-module archiveName="mysql-connector-java.jar" deploy-path="/WEB-INF/lib" handle="module:/classpath/lib//usr/share/java/mysql-connector-java.jar">
             <dependency-type>uses</dependency-type>
         </dependent-module>
+        <dependent-module archiveName="PAnalyzer.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/PAnalyzer/PAnalyzer">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
         <property name="context-root" value="MyMRM"/>
         <property name="java-output-path" value="/MyMRM/build/classes"/>
     </wb-module>

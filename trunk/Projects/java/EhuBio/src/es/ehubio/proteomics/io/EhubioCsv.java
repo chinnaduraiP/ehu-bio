@@ -1,5 +1,6 @@
 package es.ehubio.proteomics.io;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -44,13 +45,12 @@ public class EhubioCsv extends MsMsFile {
 	}
 
 	@Override
-	public void save(String path) throws Exception {
-		path = path.replaceAll("\\..*", "");
-		logger.info(String.format("Saving '%s' CSVs ...", path));
-		savePsms(path+"-psms.csv");
-		savePeptides(path+"-peptides.csv");
-		saveProteins(path+"-proteins.csv");
-		saveGroups(path+"-groups.csv");		
+	public void save(String dir) throws Exception {
+		logger.info(String.format("Saving CSVs to '%s' ...", dir));
+		savePsms(new File(dir,"psms.csv").getAbsolutePath());
+		savePeptides(new File(dir,"peptides.csv").getAbsolutePath());
+		saveProteins(new File(dir,"proteins.csv").getAbsolutePath());
+		saveGroups(new File(dir,"groups.csv").getAbsolutePath());		
 	}	
 
 	private void savePsms( String path ) throws IOException {		

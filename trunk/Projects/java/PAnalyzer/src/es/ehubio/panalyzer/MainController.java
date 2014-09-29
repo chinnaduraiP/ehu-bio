@@ -34,6 +34,7 @@ import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.control.TreeView.EditEvent;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.web.WebView;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -83,6 +84,7 @@ public class MainController implements Initializable {
 	@FXML private TableColumn<FdrBean, Double> colFdrValue;
 	@FXML private TableColumn<FdrBean, Double> colFdrThreshold;
 	@FXML private CheckBox checkFilterDecoys;
+	@FXML private WebView webBrowser;
 	private final FileChooser fileChooser = new FileChooser();
 	private final DirectoryChooser directoryChooser = new DirectoryChooser();
 	
@@ -232,7 +234,8 @@ public class MainController implements Initializable {
 		File dir = directoryChooser.showDialog(view);
 		logSeparator("Saving");
 		config.setOutput(new File(dir,config.getDescription()).getAbsolutePath());
-		model.saveData();
+		File html = model.saveData();
+		webBrowser.getEngine().load(String.format("file://%s",html.getAbsolutePath()));
 		updateView();
 	}
 	

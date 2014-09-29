@@ -11,6 +11,7 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
+import es.ehubio.panalyzer.html.HtmlReport;
 import es.ehubio.proteomics.MsMsData;
 import es.ehubio.proteomics.Psm;
 import es.ehubio.proteomics.Score;
@@ -163,7 +164,7 @@ public class MainModel {
 		}
 	}
 	
-	public void saveData() {
+	public File saveData() {
 		try {
 			if( Boolean.TRUE.equals(config.getFilterDecoys()) ) {
 				Filter filter = new Filter(data);
@@ -171,19 +172,23 @@ public class MainModel {
 				filterAndGroup(filter,"Decoy removal");
 			}
 			if( config.getOutput() == null || config.getOutput().isEmpty() )
-				return;
+				return null;
+			File dir = new File(config.getOutput());
+			dir.mkdir();
 			if( config.getInputs().size() == 1 )
 				file.save(config.getOutput());
 			EhubioCsv csv = new EhubioCsv(data);
 			csv.setPsmScoreType(config.getPsmScore());
 			csv.save(config.getOutput());
 			saveConfiguration();
-			generateHtml();
+			File file = generateHtml();
 			status = "Data saved, you can now browse the results";
 			state = State.SAVED;
+			return file;
 		} catch( Exception e ) {
-			handleException(e, "Error saving data, correct your configuration");
+			handleException(e, "Error saving data, correct your configuration");			
 		}
+		return null;
 	}	
 
 	public MsMsData getData() {
@@ -225,16 +230,17 @@ public class MainModel {
 	private void saveConfiguration() throws JAXBException {
 		JAXBContext context = JAXBContext.newInstance(Configuration.class);
 		Marshaller marshaller = context.createMarshaller();
-		File pax = new File(String.format("%s.pax", getConfig().getOutput()));
+		File pax = new File(getConfig().getOutput(),"config.pax");
 		marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
 		marshaller.marshal(getConfig(), pax);
 		logger.info(String.format("Config saved in '%s'", pax.getName()));
 	}
 	
-	private void generateHtml() throws IOException {
+	private File generateHtml() throws IOException {
 		HtmlReport html = new HtmlReport(this);
 		html.create();
 		logger.info(String.format("HTML report available in '%s'", html.getHtmlFile().getName()));
+		return html.getHtmlFile();
 	}	
 	
 	private void logCounts( String title ) {
