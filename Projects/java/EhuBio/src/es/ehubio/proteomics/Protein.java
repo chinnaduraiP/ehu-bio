@@ -13,7 +13,7 @@ import es.ehubio.db.fasta.Fasta;
  */
 public class Protein extends DecoyBase {
 	public enum Confidence {
-		CONCLUSIVE, NON_CONCLUSIVE, AMBIGUOUS_GROUP, INDISTINGUISABLE_GROUP 
+		CONCLUSIVE, INDISTINGUISABLE_GROUP, AMBIGUOUS_GROUP, NON_CONCLUSIVE 
 	}
 	
 	private static int idCount = 1;

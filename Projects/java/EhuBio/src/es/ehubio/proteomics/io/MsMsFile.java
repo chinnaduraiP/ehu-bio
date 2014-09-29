@@ -14,6 +14,7 @@ import es.ehubio.proteomics.MsMsData;
 
 public abstract class MsMsFile {
 	private final Logger logger = Logger.getLogger(MsMsFile.class.getName());
+	private File originalFile;
 	protected MsMsData data;
 	
 	public MsMsData load( String path, String decoyRegex ) throws Exception {
@@ -23,12 +24,16 @@ public abstract class MsMsFile {
 			input = new GZIPInputStream(input);
 		data = load(input, decoyRegex);
 		input.close();
+		originalFile = new File(path);
 		return data;
 	}
 	
 	public abstract MsMsData load( InputStream input, String decoyRegex ) throws Exception;	
 
 	public void save( String path ) throws Exception {
+		File file = new File(path);
+		if( file.isDirectory() )
+			path = new File(file,originalFile.getName()).getAbsolutePath();
 		if( path.indexOf('.') == -1 )
 			path = String.format("%s.%s", path, getFilenameExtension());
 		logger.info(String.format("Saving '%s' ...", path));
