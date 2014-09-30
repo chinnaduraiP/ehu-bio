@@ -28,7 +28,8 @@ public class MainModel {
 	public enum State { INIT, CONFIGURED, LOADED, RESULTS, SAVED}
 	public static final String NAME = "PAnalyzer";
 	public static final String VERSION = "v2.0-alpha1";
-	public static final String SIGNATURE = String.format("%s (%s)", NAME, VERSION);	
+	public static final String SIGNATURE = String.format("%s (%s)", NAME, VERSION);
+	public static final String URL = "https://code.google.com/p/ehu-bio/wiki/PAnalyzer";
 
 	private static final Logger logger = Logger.getLogger(MainModel.class.getName());
 	private static final String STATE_ERR_MSG="This method should not be called in the current state";

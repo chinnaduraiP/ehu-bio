@@ -11,12 +11,16 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
 
+import es.ehubio.db.fasta.Fasta;
 import es.ehubio.io.CsvUtils;
 import es.ehubio.panalyzer.MainModel;
+import es.ehubio.proteomics.Peptide;
 import es.ehubio.proteomics.Protein;
+import es.ehubio.proteomics.pipeline.PAnalyzer;
 
 public class HtmlReport {
 	private static final String DATA = "html";
@@ -27,6 +31,7 @@ public class HtmlReport {
 	private static final int TAB_INDEX = 1;
 	private static final int TAB_CONFIG = 2;	
 	private static final int TAB_PROTEINS = 3;
+	private static final String SEP = ", ";
 	
 	private final MainModel model;
 	private File htmlDir;
@@ -86,11 +91,48 @@ public class HtmlReport {
 	}
 	
 	private String getConfig() {
-		return "";
+		HtmlTable table = new HtmlTable();
+		table.setTitle("Analysis Configuration");
+		table.addRow("Software",String.format("<a href=\"%s\">%s</a>", MainModel.URL, MainModel.SIGNATURE));
+		table.addRow("Experiment",model.getConfig().getDescription());
+		table.addPropertyRow(model.getConfig(),
+			"psmRankThreshold","bestPsmPerPrecursor","psmFdr","psmScore",
+			"minPeptideLength","peptideFdr",
+			"proteinFdr","groupFdr",
+			"decoyRegex");
+		table.addRow("inputs",getInputsLinks());		
+		table.addPropertyRow(model.getConfig(),"filterDecoys");
+		table.addRow("output",
+			String.format("<a href=\"file://%1$s\">%1$s</a>", model.getConfig().getOutput()));
+		return table.render();
 	}
 	
+	private String getInputsLinks() {
+		List<String> list = new ArrayList<>();
+		for( String input : model.getConfig().getInputs() )
+			list.add(String.format("<a href=\"file://%1$s\">%1$s</a>", input));
+		return CsvUtils.getCsv(SEP, list.toArray());
+	}
+
 	private String getSummary() {
-		return "";
+		PAnalyzer.Counts counts = model.getCounts();
+		HtmlTable table = new HtmlTable();
+		table.setTitle("Counts");
+		table.setColStyle(1, "text-align: right");
+		table.addRow("Minimum proteins (grouped)",String.format("<b>%d</b>", counts.getMinimum()));
+		table.addRow("Maximum proteins (un-grouped)",counts.getMaximum()+"");
+		table.addRow("Conclusive proteins",counts.getConclusive()+"");
+		table.addRow("Indistinguishable proteins (grouped)",counts.getIndistinguishableGroups()+"");
+		table.addRow("Indistinguishable proteins (un-grouped)",counts.getIndistinguishable()+"");
+		table.addRow("Ambigous proteins (grouped)",counts.getAmbiguousGroups()+"");
+		table.addRow("Ambigous proteins (un-grouped)",counts.getAmbiguous()+"");
+		table.addRow("Non-conclusive proteins",counts.getNonConclusive()+"");
+		table.addRow("Total peptides",counts.getPeptides()+"");
+		table.addRow("Unique peptides",counts.getUnique()+"");
+		table.addRow("Discriminating peptides",counts.getDiscriminating()+"");
+		table.addRow("Non-discriminating peptides",counts.getNonDiscriminating()+"");
+		table.addRow("Total PSMs",counts.getPsms()+"");
+		return table.render();
 	}
 	
 	private String getProteinList() {
@@ -106,29 +148,79 @@ public class HtmlReport {
 		});
 		HtmlTable table = new HtmlTable();
 		table.setTitle("Protein List");
-		table.beginHeader();
-		table.addCell("Accession");
-		//table.addCell("Name");
-		table.addCell("Evidence");
-		table.addCell("Peptide list (unique, discriminating*, non-discriminating**)");
-		table.addCell("Description");
-		table.endHeader();
+		table.setHeader(
+			"Accession",
+			//"Name",
+			"Evidence",
+			"Peptide list (unique, discriminating*, non-discriminating**)",
+			"Description");
 		for( Protein protein : proteins ) {
-			table.beginRow();
-			table.addCell(String.format("<a href=\"%1$s.html\">%1$s</a>", protein.getAccession()));
-			//table.addCell(protein.getName());
-			table.addCell(protein.getConfidence().toString());
-			table.addCell(CsvUtils.getCsv(", ", protein.getPeptides().toArray()));
-			table.addCell(trim(protein.getDescription(),120));
-			table.endRow();
+			table.addRow(
+				String.format("<a href=\"%1$s.html\">%1$s</a>", protein.getAccession()),
+				//protein.getName(),
+				protein.getConfidence().toString(),
+				CsvUtils.getCsv(SEP, protein.getPeptides().toArray()),
+				trim(protein.getDescription(),120));
 		}
 		return table.render();
 	}
 	
 	private String getProteinDetails(Protein protein) {
-		return "";
+		HtmlTable table = new HtmlTable();
+		//table.setColStyle(0, "white-space: nowrap");
+		//table.setColStyle(1, "width: 99%");
+		table.setTitle(String.format("Protein %s", protein.getAccession()));
+		table.addRow("Name",protein.getName());
+		table.addRow("Description",protein.getDescription());
+		table.addRow("Sequence",String.format("<pre>%s</pre>", Fasta.formatSequence(protein.getSequence(), 10)));
+		table.addRow("Evidence",protein.getConfidence().toString());
+		table.addRow("Peptide list",getPeptideLinks(protein.getPeptides()));
+		table.addRow("Peptides",getPeptidesDetails(protein));
+		return table.render();
 	}
 	
+	private String getPeptideLinks(Set<Peptide> peptides) {
+		List<String> list = new ArrayList<>();
+		for( Peptide peptide : peptides )
+			list.add(String.format("<a href=\"#pep%d\">%s</a>", peptide.getId(), peptide.toString()));
+		return CsvUtils.getCsv(SEP, list.toArray());
+	}
+
+	private String getPeptidesDetails(Protein protein) {
+		HtmlTable table = new HtmlTable();
+		table.setStyle("border:none; width:100%");
+		table.setColStyle(0, "white-space: nowrap");
+		table.setColStyle(1, "width: 99%");
+		boolean odd = false;
+		for( Peptide peptide : protein.getPeptides() ) {
+			table.addRow(peptide.toString(),getPeptideDetails(peptide,odd));
+			odd = !odd;
+		}
+		return table.render(false,true);
+	}
+
+	private String getPeptideDetails(Peptide peptide, boolean odd) {
+		HtmlTable table = new HtmlTable();
+		table.setStyle("border:none; width:100%");
+		table.setColStyle(0, "white-space: nowrap");
+		table.setColStyle(1, "width: 99%");
+		table.setHold(true);
+		table.addRow(
+			String.format("<a name=\"pep%d\">Type</a>",peptide.getId()),
+			peptide.getConfidence().toString());
+		table.addRow("Proteins",getProteinLinks(peptide.getProteins()));
+		table.addRow("Sequence",peptide.getSequence());
+		table.addRow("PTMs",CsvUtils.getCsv(SEP, peptide.getPtms().toArray()));
+		return table.render(odd,true);
+	}
+
+	private String getProteinLinks(Set<Protein> proteins) {
+		List<String> list = new ArrayList<>();
+		for( Protein protein : proteins )
+			list.add(String.format("<a href=\"%1$s.html\">%1$s</a>", protein.getAccession()));
+		return CsvUtils.getCsv(SEP, list.toArray());
+	}
+
 	private String trim( String str, int max ) {
 		if( str.length() < max )
 			return str;

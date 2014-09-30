@@ -115,13 +115,13 @@ public class DatabaseMB {
 	
 	public List<ExperimentBean> getExperiments() {
 		List<ExperimentBean> list = new ArrayList<>();
-		Database.beginTransaction();
+		//Database.beginTransaction();
 		for( Experiment experiment : Database.findExperiments() ) {
 			ExperimentBean bean = new ExperimentBean();
 			bean.setEntity(experiment);
 			list.add(bean);
 		}
-		Database.commitTransaction();
+		//Database.commitTransaction();
 		for( ExperimentFeed feed : Database.getPendingExperiments() ) {
 			ExperimentBean bean = new ExperimentBean();
 			bean.setFeed(feed);
@@ -146,7 +146,8 @@ public class DatabaseMB {
 	public List<FragmentationType> getFragmentationTypes() {
 		Database.beginTransaction();
 		List<FragmentationType> list = Database.findAll(FragmentationType.class);
-		Database.commitTransaction();return list;
+		Database.commitTransaction();
+		return list;
 	}
 	
 	public List<FragmentationType> getFragmentationTypesNull() {

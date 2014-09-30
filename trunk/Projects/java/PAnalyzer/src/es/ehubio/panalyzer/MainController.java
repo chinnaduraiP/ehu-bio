@@ -229,10 +229,10 @@ public class MainController implements Initializable {
 		return result;
 	}
 	
-	@FXML private void handleSaveFiles( ActionEvent event ) {		
-		config.setFilterDecoys(checkFilterDecoys.isSelected());
-		File dir = directoryChooser.showDialog(view);
+	@FXML private void handleSaveFiles( ActionEvent event ) {				
+		File dir = directoryChooser.showDialog(view);		
 		logSeparator("Saving");
+		config.setFilterDecoys(checkFilterDecoys.isSelected());
 		config.setOutput(new File(dir,config.getDescription()).getAbsolutePath());
 		File html = model.saveData();
 		webBrowser.getEngine().load(String.format("file://%s",html.getAbsolutePath()));

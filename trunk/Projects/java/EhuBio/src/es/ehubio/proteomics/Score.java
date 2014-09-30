@@ -47,6 +47,6 @@ public class Score {
 	
 	@Override
 	public String toString() {
-		return getValue()+"";
+		return String.format("%s=%s", getName(), getValue());
 	}
 }
