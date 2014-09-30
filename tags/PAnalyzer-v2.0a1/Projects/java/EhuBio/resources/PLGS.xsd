@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:element name="RESULT">
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element name="GeneratedBy" minOccurs="0" maxOccurs="1">
+          <xsd:complexType>
+            <xsd:sequence>
+              <xsd:element name="CommandLine" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+            </xsd:sequence>
+            <xsd:attribute name="Program" type="xsd:normalizedString" use="required"/>
+            <xsd:attribute name="Version" type="xsd:normalizedString" use="required"/>
+            <xsd:attribute name="CompileDate" type="xsd:normalizedString" use="required"/>
+            <xsd:attribute name="CompileTime" type="xsd:string" use="required"/>
+          </xsd:complexType>
+        </xsd:element>
+        <xsd:element name="PARAMS" minOccurs="0" maxOccurs="1">
+          <xsd:complexType>
+            <xsd:sequence>
+              <xsd:element name="PARAM" maxOccurs="unbounded">
+                <xsd:complexType>
+                  <xsd:simpleContent>
+                    <xsd:extension base="xsd:string">
+                      <xsd:attribute name="NAME" type="xsd:normalizedString" use="required"/>
+                      <xsd:attribute name="VALUE" type="xsd:normalizedString" use="required"/>
+                    </xsd:extension>
+                  </xsd:simpleContent>
+                </xsd:complexType>
+              </xsd:element>
+            </xsd:sequence>
+          </xsd:complexType>
+        </xsd:element>
+        <xsd:element name="CALCULATED" minOccurs="0" maxOccurs="1">
+          <xsd:complexType>
+            <xsd:sequence>
+              <xsd:element name="OUTPUT" minOccurs="0" maxOccurs="1">
+                <xsd:complexType>
+                  <xsd:simpleContent>
+                    <xsd:extension base="xsd:string">
+                      <xsd:attribute name="NAME" type="xsd:normalizedString" use="required"/>
+                      <xsd:attribute name="VALUE" type="xsd:decimal" use="required"/>
+                    </xsd:extension>
+                  </xsd:simpleContent>
+                </xsd:complexType>
+              </xsd:element>
+            </xsd:sequence>
+          </xsd:complexType>
+        </xsd:element>
+        <xsd:element name="ANALYSIS_MODIFIER" maxOccurs="unbounded">
+          <xsd:complexType>
+            <xsd:sequence>
+              <xsd:element name="MODIFIER" minOccurs="0" maxOccurs="1">
+                <xsd:complexType>
+                  <xsd:sequence>
+                    <xsd:element name="MODIFIES" minOccurs="0" maxOccurs="1">
+                      <xsd:complexType>
+                        <xsd:simpleContent>
+                          <xsd:extension base="xsd:string">
+                            <xsd:attribute name="APPLIES_TO" type="xsd:normalizedString" use="required"/>
+                            <xsd:attribute name="DELTA_MASS" type="xsd:decimal" use="required"/>
+                            <xsd:attribute name="TYPE" type="xsd:normalizedString" use="required"/>
+                          </xsd:extension>
+                        </xsd:simpleContent>
+                      </xsd:complexType>
+                    </xsd:element>
+                  </xsd:sequence>
+                  <xsd:attribute name="MCAT_REAGENT" type="xsd:normalizedString" use="required"/>
+                  <xsd:attribute name="NAME" type="xsd:normalizedString" use="required"/>
+                </xsd:complexType>
+              </xsd:element>
+            </xsd:sequence>
+            <xsd:attribute name="ENRICHED" type="xsd:normalizedString" use="required"/>
+            <xsd:attribute name="STATUS" type="xsd:normalizedString" use="required"/>
+          </xsd:complexType>
+        </xsd:element>
+        <xsd:element name="PRODUCT" maxOccurs="unbounded">
+          <xsd:complexType>
+            <xsd:simpleContent>
+              <xsd:extension base="xsd:string">
+                <xsd:attribute name="ID" type="xsd:int" use="required"/>
+                <xsd:attribute name="HE_EMRT_ID" type="xsd:int" use="required"/>
+                <xsd:attribute name="BY_TYPE" type="xsd:normalizedString" use="required"/>
+                <xsd:attribute name="BY_INDEX" type="xsd:int" use="required"/>
+                <xsd:attribute name="DB_MHPLUS" type="xsd:decimal" use="required"/>
+                <xsd:attribute name="CHARGE" type="xsd:decimal" use="required"/>
+                <xsd:attribute name="INTENSITY" type="xsd:int" use="required"/>
+                <xsd:attribute name="MASS" type="xsd:decimal" use="required"/>
+                <xsd:attribute name="MASS_ERROR" type="xsd:decimal" use="required"/>
+                <xsd:attribute name="MASS_ERROR_PPM" type="xsd:decimal" use="required"/>
+                <xsd:attribute name="RT_ERROR" type="xsd:decimal" use="required"/>
+                <xsd:attribute name="RETENTION_TIME" type="xsd:decimal" use="required"/>
+              </xsd:extension>
+            </xsd:simpleContent>
+          </xsd:complexType>
+        </xsd:element>
+        <xsd:element name="PEPTIDE" maxOccurs="unbounded">
+          <xsd:complexType>
+            <xsd:simpleContent>
+              <xsd:extension base="xsd:string">
+                <xsd:attribute name="ID" type="xsd:int" use="required"/>
+                <xsd:attribute name="PROT_ID" type="xsd:int" use="required"/>
+                <xsd:attribute name="QUERY_MASS_ID" type="xsd:int" use="required"/>
+                <xsd:attribute name="MASS" type="xsd:decimal" use="required"/>
+                <xsd:attribute name="SEQUENCE" type="xsd:normalizedString" use="required"/>
+                <xsd:attribute name="TYPE" type="xsd:normalizedString" use="required"/>
+              </xsd:extension>
+            </xsd:simpleContent>
+          </xsd:complexType>
+        </xsd:element>
+        <xsd:element name="QUERY_MASS" maxOccurs="unbounded">
+          <xsd:complexType>
+            <xsd:simpleContent>
+              <xsd:extension base="xsd:string">
+                <xsd:attribute name="ID" type="xsd:int" use="required"/>
+                <xsd:attribute name="LE_ID" type="xsd:int" use="required"/>
+                <xsd:attribute name="CHARGE" type="xsd:decimal" use="required"/>
+                <xsd:attribute name="INTENSITY" type="xsd:int" use="required"/>
+                <xsd:attribute name="MASS" type="xsd:decimal" use="required"/>
+                <xsd:attribute name="RETENTION_TIME" type="xsd:decimal" use="required"/>
+              </xsd:extension>
+            </xsd:simpleContent>
+          </xsd:complexType>
+        </xsd:element>
+        <xsd:element name="HIT" maxOccurs="unbounded">
+          <xsd:complexType>
+            <xsd:sequence>
+              <xsd:element name="PROTEIN" maxOccurs="unbounded">
+                <xsd:complexType>
+                  <xsd:sequence>
+                    <xsd:element name="ENTRY" minOccurs="0" maxOccurs="1" type="xsd:normalizedString"/>
+                    <xsd:element name="ACCESSION" minOccurs="0" maxOccurs="1" type="xsd:normalizedString"/>
+                    <xsd:element name="DESCRIPTION" minOccurs="0" maxOccurs="1" type="xsd:normalizedString"/>
+                    <xsd:element name="MW" minOccurs="0" maxOccurs="1" type="xsd:decimal"/>
+                    <xsd:element name="AQ_FMOLES" minOccurs="0" maxOccurs="1" type="xsd:decimal"/>
+                    <xsd:element name="AQ_NGRAMS" minOccurs="0" maxOccurs="1" type="xsd:decimal"/>
+                    <xsd:element name="PI" minOccurs="0" maxOccurs="1" type="xsd:decimal"/>
+                    <xsd:element name="SEQUENCE" minOccurs="0" maxOccurs="1" type="xsd:normalizedString"/>
+                    <xsd:element name="SEQUENCE_MATCH" maxOccurs="unbounded">
+                      <xsd:complexType>
+                        <xsd:sequence>
+                          <xsd:element name="FRAGMENT_ION" minOccurs="0" maxOccurs="1">
+                            <xsd:complexType>
+                              <xsd:simpleContent>
+                                <xsd:extension base="xsd:string">
+                                  <xsd:attribute name="IDS" type="xsd:string" use="required"/>
+                                </xsd:extension>
+                              </xsd:simpleContent>
+                            </xsd:complexType>
+                          </xsd:element>
+                        </xsd:sequence>
+                        <xsd:attribute name="ID" type="xsd:int" use="required"/>
+                        <xsd:attribute name="START" type="xsd:int" use="required"/>
+                        <xsd:attribute name="END" type="xsd:int" use="required"/>
+                        <xsd:attribute name="COVERAGE" type="xsd:decimal" use="required"/>
+                        <xsd:attribute name="FRAG_STRING" type="xsd:normalizedString" use="required"/>
+                        <xsd:attribute name="RMS_MASS_ERROR_PROD" type="xsd:decimal" use="required"/>
+                        <xsd:attribute name="RMS_RT_ERROR_PROD" type="xsd:decimal" use="required"/>
+                      </xsd:complexType>
+                    </xsd:element>
+                  </xsd:sequence>
+                  <xsd:attribute name="ID" type="xsd:int" use="required"/>
+                  <xsd:attribute name="AUTO_QC" type="xsd:int" use="required"/>
+                  <xsd:attribute name="CURATED" type="xsd:int" use="required"/>
+                  <xsd:attribute name="CONFIDENCE_LEVEL" type="xsd:string" use="required"/>
+                  <xsd:attribute name="COVERAGE" type="xsd:decimal" use="required"/>
+                  <xsd:attribute name="SCORE" type="xsd:decimal" use="required"/>
+                  <xsd:attribute name="PEP_MATCHES" type="xsd:int" use="required"/>
+                  <xsd:attribute name="VAR_MOD_MATCHES" type="xsd:int" use="required"/>
+                  <xsd:attribute name="FRAG_MATCHES" type="xsd:int" use="required"/>
+                  <xsd:attribute name="PEP_TOTAL" type="xsd:int" use="required"/>
+                  <xsd:attribute name="RMS_MASS_ERROR_PREC" type="xsd:decimal" use="required"/>
+                  <xsd:attribute name="RMS_MASS_ERROR_FRAG" type="xsd:decimal" use="required"/>
+                  <xsd:attribute name="RMS_RT_ERROR_FRAG" type="xsd:decimal" use="required"/>
+                </xsd:complexType>
+              </xsd:element>
+            </xsd:sequence>
+          </xsd:complexType>
+        </xsd:element>
+      </xsd:sequence>
+      <xsd:attribute name="ENTRIES_SEARCHED" type="xsd:int" use="required"/>
+      <xsd:attribute name="ID" type="xsd:normalizedString" use="required"/>
+      <xsd:attribute name="TIME_CALCULATED" type="xsd:int" use="required"/>
+    </xsd:complexType>
+  </xsd:element>
+</xsd:schema>
