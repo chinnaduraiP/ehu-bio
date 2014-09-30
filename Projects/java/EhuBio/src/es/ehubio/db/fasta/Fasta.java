@@ -204,4 +204,29 @@ public final class Fasta {
 	public String getDescription() {
 		return description;
 	}
+	
+	public static String formatSequence( String seq, int cols ) {
+		if( seq == null || seq.isEmpty() )
+			return "";				
+		int colSize = 10;
+		int i = 0;
+		int len;
+		int col = 0;
+		int digits = (int)Math.log10(seq.length())+1;
+		StringBuilder builder = new StringBuilder();
+		
+		while( i < seq.length() ) {
+			if( col == 0 )
+				builder.append(String.format("%0"+digits+"d", i+1));
+			len = (i+colSize) < seq.length() ? colSize : (seq.length()-i);
+			builder.append(seq.substring(i, len));
+			i += len;
+			if( ++col >= cols && i < seq.length() ) {
+				col = 0;
+				builder.append('\n');
+			}
+		}
+		
+		return builder.toString();
+	}
 }

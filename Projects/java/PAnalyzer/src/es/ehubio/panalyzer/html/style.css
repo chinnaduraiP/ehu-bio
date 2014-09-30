@@ -9,15 +9,15 @@ tr.even { background-color: #fefefe; }
 table { border: 2px black solid; border-collapse: collapse; }
 
 #tabs {
-	border-bottom: .5em solid #0033CC;
+	border-bottom: .2em solid darkgreen;
 	margin: 0;
 	padding: 0;
 }
 #tabs li { 
 	display:inline; 
-	border-top: .1em solid #03c;
-	border-left: .1em solid #03c;
-	border-right: .1em solid #03c;
+	border-top: .1em solid darkgreen;
+	border-left: .1em solid darkgreen;
+	border-right: .1em solid darkgreen;
 }
 #tabs li a {
 	text-decoration: none;
@@ -26,6 +26,6 @@ table { border: 2px black solid; border-collapse: collapse; }
 }
 #page1 #tabs li#tab1 a, #page2 #tabs li#tab2 a, #page3 #tabs li#tab3 a, .page4 li#tab4 a {
 	padding: 0.25em 1em;
-	background-color: #03c;
+	background-color: darkgreen;
 	color: #fff;
 }

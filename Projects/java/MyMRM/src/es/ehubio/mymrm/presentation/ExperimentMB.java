@@ -105,6 +105,9 @@ public class ExperimentMB implements Serializable {
 		cfg.setDescription(getEntity().getName());
 		cfg.setPsmScore(ScoreType.getByName(psmScore));
 		cfg.setDecoyRegex(decoyRegex);
+		cfg.setBestPsmPerPrecursor(true);
+		cfg.setMinPeptideLength(7);
+		cfg.setFilterDecoys(true);
 		cfg.setPeptideFdr(0.01);
 		cfg.setGroupFdr(0.01);
 		cfg.setInputs(new HashSet<String>());

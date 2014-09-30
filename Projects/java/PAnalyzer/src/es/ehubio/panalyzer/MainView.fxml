@@ -31,7 +31,7 @@
                      <children>
                         <HBox layoutX="262.0" layoutY="158.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="367.0" prefWidth="630.0" spacing="5.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                            <children>
-                              <TreeView fx:id="treeExperiment" maxWidth="1.7976931348623157E308" onEditCommit="#handleTreeEdit" prefHeight="409.0" prefWidth="448.0" />
+                              <TreeView fx:id="treeExperiment" maxWidth="1.7976931348623157E308" onEditCommit="#handleTreeEdit" prefHeight="409.0" prefWidth="448.0" HBox.hgrow="ALWAYS" />
                               <VBox maxWidth="1.7976931348623157E308" spacing="5.0">
                                  <children>
                                     <Button fx:id="buttonAdd" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleAddFiles" text="Add files" />
@@ -117,14 +117,14 @@
                      <children>
                         <VBox layoutX="233.0" layoutY="62.0" prefHeight="419.0" prefWidth="630.0" spacing="10.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                            <children>
-                              <VBox>
+                              <VBox maxHeight="1.7976931348623157E308" VBox.vgrow="ALWAYS">
                                  <children>
                                     <Label text="Counts">
                                        <font>
                                           <Font size="14.0" />
                                        </font>
                                     </Label>
-                                    <TableView fx:id="tableCounts" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="309.0" prefWidth="620.0">
+                                    <TableView fx:id="tableCounts" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="309.0" prefWidth="620.0" VBox.vgrow="ALWAYS">
                                       <columns>
                                         <TableColumn fx:id="colCountType" maxWidth="1.7976931348623157E308" minWidth="70.0" prefWidth="300.0" text="Type" />
                                         <TableColumn fx:id="colTargetCount" minWidth="-Infinity" prefWidth="75.0" text="Target" />
@@ -134,14 +134,14 @@
                                     </TableView>
                                  </children>
                               </VBox>
-                              <VBox>
+                              <VBox VBox.vgrow="ALWAYS">
                                  <children>
                                     <Label text="Global FDR">
                                        <font>
                                           <Font size="14.0" />
                                        </font>
                                     </Label>
-                                    <TableView fx:id="tableFdr" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="200.0" prefWidth="200.0">
+                                    <TableView fx:id="tableFdr" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="200.0" prefWidth="200.0" VBox.vgrow="ALWAYS">
                                       <columns>
                                         <TableColumn fx:id="colFdrLevel" prefWidth="150.0" text="Level" />
                                         <TableColumn fx:id="colFdrValue" prefWidth="100.0" text="Value" />
