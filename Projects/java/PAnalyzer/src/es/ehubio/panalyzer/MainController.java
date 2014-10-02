@@ -17,6 +17,8 @@ import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
 import javafx.collections.FXCollections;
+import javafx.concurrent.Service;
+import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -39,6 +41,9 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Callback;
+
+import org.controlsfx.dialog.Dialogs;
+
 import es.ehubio.proteomics.ScoreType;
 import es.ehubio.proteomics.pipeline.PAnalyzer;
 
@@ -131,7 +136,7 @@ public class MainController implements Initializable {
 		String decoy = textDecoy.getText().trim();
 		textDecoy.setText(decoy);
 		config.setDecoyRegex(decoy.length()==0?null:decoy);
-		model.loadData();
+		loadData();
 		choiceScoreType.getItems().clear();
 		choiceScoreType.getItems().addAll(model.getPsmScoreTypes());		
 		if( model.getPsmScoreTypes().contains(ScoreType.XTANDEM_EVALUE) )
@@ -142,6 +147,35 @@ public class MainController implements Initializable {
 			choiceScoreType.getSelectionModel().selectFirst();
 		resetFilter();
 		updateView();
+	}
+	
+	private void loadData() {
+		Service<Void> service = new Service<Void>() {			
+			@Override
+			protected Task<Void> createTask() {
+				return new Task<Void>() {
+					@Override
+					protected Void call() throws Exception {
+						new Thread(){
+							public void run() {
+								model.loadData();
+							};
+						}.start();
+						do {
+							Thread.sleep(200);
+							updateProgress(model.getProgressPercent(), 100);
+							updateMessage(model.getProgressMessage());
+						} while( model.getState() == es.ehubio.panalyzer.MainModel.State.WORKING );
+						return null;
+					}
+				};
+			}
+		};
+		Dialogs.create().owner(view)
+			.title("Progress Dialog")
+			.masthead("Loading files ...")
+			.showWorkerProgress(service);
+		service.start();
 	}
 	
 	@FXML private void handleApplyFilter( ActionEvent event ) {
@@ -234,11 +268,42 @@ public class MainController implements Initializable {
 		logSeparator("Saving");
 		config.setFilterDecoys(checkFilterDecoys.isSelected());
 		config.setOutput(new File(dir,config.getDescription()).getAbsolutePath());
-		File html = model.saveData();
+		File html = saveFiles();
 		webBrowser.getEngine().load(String.format("file://%s",html.getAbsolutePath()));
 		updateView();
 	}
 	
+	private File saveFiles() {
+		Service<File> service = new Service<File>() {			
+			@Override
+			protected Task<File> createTask() {
+				return new Task<File>() {
+					@Override
+					protected File call() throws Exception {
+						File file = new File("index.html");
+						new Thread(){
+							public void run() {
+								model.saveData();
+							};
+						}.start();
+						do {
+							Thread.sleep(200);
+							updateProgress(model.getProgressPercent(), 100);
+							updateMessage(model.getProgressMessage());
+						} while( model.getState() == es.ehubio.panalyzer.MainModel.State.WORKING );
+						return file;
+					}
+				};
+			}
+		};
+		Dialogs.create().owner(view)
+			.title("Progress Dialog")
+			.masthead("Saving results ...")
+			.showWorkerProgress(service);
+		service.start();
+		return service.getValue();
+	}
+
 	@FXML private void handleTreeEdit( EditEvent<String> event ) {
 		config.setDescription(treeExperiment.getRoot().getValue());
 	}

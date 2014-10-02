@@ -1,9 +1,11 @@
 package es.ehubio.mymrm.presentation;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PrecursorBean {
+public class PrecursorBean implements Serializable {
+	private static final long serialVersionUID = 1L;
 	private double mz;
 	private String charge;
 	private List<DetailsBean> experiments = new ArrayList<>();

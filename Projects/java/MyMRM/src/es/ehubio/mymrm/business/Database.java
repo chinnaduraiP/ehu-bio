@@ -326,7 +326,7 @@ public class Database {
 			int countok = OKFRAGMENTS;
 			Map<String,IonType> mapTypes = new HashMap<>();
 			for( FragmentIon ion : filterIons(ions) ) {
-				if( count > 0 || (countok > 0 && ion.getMz() > precursor.getMz()) ) {
+				if( count > 0 || (countok > 0 && ion.getMzCalc() > precursor.getMz()) ) {
 					IonType ionType = mapTypes.get(ion.getType().getName());
 					if( ionType == null ) {
 						ionType = findIonTypeByName(ion.getType().getName());
@@ -338,7 +338,7 @@ public class Database {
 						mapTypes.put(ion.getType().getName(), ionType);
 					}
 					Fragment fragment = new Fragment();
-					fragment.setMz(ion.getMz());
+					fragment.setMz(ion.getMzCalc());
 					fragment.setIntensity(ion.getIntensity());
 					fragment.setError(ion.getMzError());
 					fragment.setCharge(ion.getCharge());
@@ -350,7 +350,7 @@ public class Database {
 					transition.setFragmentBean(fragment);
 					em.persist(transition);
 					count--;
-					if( ion.getMz() > precursor.getMz() )
+					if( ion.getMzCalc() > precursor.getMz() )
 						countok--;
 				}			
 			}
@@ -359,9 +359,9 @@ public class Database {
 		private static List<FragmentIon> filterIons(List<FragmentIon> ions) {
 			Map<Double,FragmentIon> map = new HashMap<>();
 			for( FragmentIon ion : ions ) {
-				FragmentIon prev = map.get(ion.getMz());
-				if( prev == null || (Math.abs(prev.getMzError()/prev.getMz()) > Math.abs(ion.getMzError()/ion.getMz())) )
-					map.put(ion.getMz(), ion);			
+				FragmentIon prev = map.get(ion.getMzCalc());
+				if( prev == null || (Math.abs(prev.getMzError()/prev.getMzCalc()) > Math.abs(ion.getMzError()/ion.getMzCalc())) )
+					map.put(ion.getMzCalc(), ion);			
 			}
 			List<FragmentIon> res = new ArrayList<>(map.values());
 			Collections.sort(res, new Comparator<FragmentIon>() {
