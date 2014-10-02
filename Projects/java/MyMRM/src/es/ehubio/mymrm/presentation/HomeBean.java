@@ -59,7 +59,7 @@ public class HomeBean implements Serializable {
 		addPage(page);
 		
 		news = new ArrayList<>();
-		news.add(new LatestNew("Jul 23, 2014", "Started MyMRM web GUI"));
+		news.add(new LatestNew("Oct 02, 2014", "MyMRM v1.0 ready for HUPO 2014"));
 	}
 	
 	public List<PageSummary> getPages() {
