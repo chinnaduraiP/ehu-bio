@@ -269,7 +269,10 @@ public class DatabaseMB {
 	}
 	
 	public static String getFastaDir() {
-		return FacesContext.getCurrentInstance().getExternalContext().getInitParameter("MyMRM.fastaDir");
+		String dir = FacesContext.getCurrentInstance().getExternalContext().getInitParameter("MyMRM.fastaDir");
+		if( dir == null )
+			dir = System.getProperty("java.io.tmpdir");
+		return dir;
 	}
 	
 	public List<ExperimentFile> findExperimentFiles( int idExperiment ) {

@@ -125,7 +125,8 @@ public class ExperimentMB implements Serializable {
 	}
 	
 	public static String getTmpDir() {
-		return FacesContext.getCurrentInstance().getExternalContext().getInitParameter("MyMRM.fastaDir");
+		//return FacesContext.getCurrentInstance().getExternalContext().getInitParameter("MyMRM.fastaDir");
+		return System.getProperty("java.io.tmpdir");
 	}
 
 	public String getDecoyRegex() {

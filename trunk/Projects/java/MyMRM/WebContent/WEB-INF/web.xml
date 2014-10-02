@@ -18,10 +18,12 @@
 		<url-pattern>*.jsf</url-pattern>
 		<url-pattern>*.xhtml</url-pattern>
 	</servlet-mapping>
+	<!-- Default is user's temp directory
 	<context-param>
 		<param-name>MyMRM.fastaDir</param-name>
 		<param-value>/tmp</param-value>
 	</context-param>
+	-->
 	<context-param>
 		<description>State saving method: 'client' or 'server' (=default). See JSF Specification 2.5.2</description>
 		<param-name>javax.faces.STATE_SAVING_METHOD</param-name>
