@@ -86,7 +86,7 @@ public class HomeBean implements Serializable {
 	}
 	
 	public String getSignature() {
-		return "MyMRM (v0.1)";
+		return "MyMRM (v1.0)";
 	}
 	
 	public String getLastUpdated() {
