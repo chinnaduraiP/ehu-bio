@@ -25,9 +25,9 @@ import es.ehubio.proteomics.pipeline.Validator;
 import es.ehubio.proteomics.pipeline.Validator.FdrResult;
 
 public class MainModel {
-	public enum State { INIT, CONFIGURED, LOADED, RESULTS, SAVED}
+	public enum State { WORKING, INIT, CONFIGURED, LOADED, RESULTS, SAVED}
 	public static final String NAME = "PAnalyzer";
-	public static final String VERSION = "v2.0-alpha1";
+	public static final String VERSION = "v2.0-alpha2";
 	public static final String SIGNATURE = String.format("%s (%s)", NAME, VERSION);
 	public static final String URL = "https://code.google.com/p/ehu-bio/wiki/PAnalyzer";
 
@@ -35,6 +35,8 @@ public class MainModel {
 	private static final String STATE_ERR_MSG="This method should not be called in the current state";
 	private static final int MAXITER=15;
 	private String status;
+	private String progressMessage="";
+	private int progressPercent = 0;
 	private MsMsData data;
 	private MsMsFile file;
 	private Configuration config;
@@ -64,15 +66,13 @@ public class MainModel {
 	private void resetData() {
 		data = null;
 		psmScoreTypes = null;
-		status = "Experiment configured, you can now load the data";
-		state = State.CONFIGURED;		
+		setState(State.CONFIGURED, "Experiment configured, you can now load the data");
 	}
 
 	private void resetTotal() {
 		resetData();
 		config = null;		
-		status = "Load experiment data";
-		state = State.INIT;
+		setState(State.INIT, "Load experiment data");
 	}
 	
 	public void reset() {
@@ -109,7 +109,9 @@ public class MainModel {
 		assertState(state==State.CONFIGURED);
 		try {
 			MsMsData tmp;
+			int step = 0;
 			for( String input : config.getInputs() ) {
+				setProgress(step++, config.getInputs().size(), String.format("Loading %s ...", input));
 				file = new Mzid();		
 				tmp = file.load(input,config.getDecoyRegex());
 				if( data == null ) {
@@ -123,8 +125,7 @@ public class MainModel {
 			pAnalyzer = new PAnalyzer(data);
 			validator = new Validator(data);
 			rebuildGroups();
-			status = "Data loaded, you can now apply a filter";
-			state = State.LOADED;
+			finishProgress(State.LOADED, "Data loaded, you can now apply a filter");
 		} catch( Exception e ) {
 			resetData();
 			handleException(e, "Error loading data, correct your configuration");
@@ -157,8 +158,7 @@ public class MainModel {
 			validator.logFdrs();
 			logCounts("Final counts");
 			logger.info(getCounts().toString());
-			status = "Data filtered, you can now save the results";
-			state = State.RESULTS;
+			setState(State.RESULTS, "Data filtered, you can now save the results");
 		} catch( Exception e ) {
 			resetData();
 			handleException(e, "Error filtering data, correct your configuration");
@@ -166,6 +166,7 @@ public class MainModel {
 	}
 	
 	public File saveData() {
+		assertState(state == State.RESULTS);
 		try {
 			if( Boolean.TRUE.equals(config.getFilterDecoys()) ) {
 				Filter filter = new Filter(data);
@@ -174,17 +175,24 @@ public class MainModel {
 			}
 			if( config.getOutput() == null || config.getOutput().isEmpty() )
 				return null;
+			int step = 0;
+			int steps = 3;
 			File dir = new File(config.getOutput());
 			dir.mkdir();
-			if( config.getInputs().size() == 1 )
+			if( config.getInputs().size() == 1 ) {
+				steps++;
+				setProgress(step++, steps, "Saving in input format ...");
 				file.save(config.getOutput());
+			}
+			setProgress(step++, steps, "Saving csv files ...");
 			EhubioCsv csv = new EhubioCsv(data);
 			csv.setPsmScoreType(config.getPsmScore());
 			csv.save(config.getOutput());
+			setProgress(step++, steps, "Saving configuration ...");
 			saveConfiguration();
+			setProgress(step++, steps, "Saving html report ...");
 			File file = generateHtml();
-			status = "Data saved, you can now browse the results";
-			state = State.SAVED;
+			finishProgress(State.SAVED, "Data saved, you can now browse the results");
 			return file;
 		} catch( Exception e ) {
 			handleException(e, "Error saving data, correct your configuration");			
@@ -250,7 +258,7 @@ public class MainModel {
 	
 	private void assertState( boolean ok ) {
 		if( !ok )
-			throw new AssertionError(STATE_ERR_MSG);
+			throw new AssertionError(String.format("%s (%s)",STATE_ERR_MSG,state.toString()));
 	}
 	
 	private void handleException( Exception e, String msg ) {
@@ -335,5 +343,32 @@ public class MainModel {
 		
 		validator.updateGroupProbabilities();
 		validator.updateGroupDecoyScores(ScoreType.GROUP_P_VALUE);
+	}
+
+	public String getProgressMessage() {
+		return progressMessage;
+	}
+
+	public int getProgressPercent() {
+		return progressPercent;
+	}
+	
+	private void setState( State state, String msg ) {
+		this.state = state;
+		status = msg;
+	}
+	
+	private void setProgress( int step, int steps, String msg ) {
+		setState(State.WORKING, "Working ...");
+		progressPercent = (int)Math.round(step*100.0/steps);
+		progressMessage = msg;
+		logger.info(String.format("%s (%d%%)", progressMessage, progressPercent));
+	}
+	
+	private void finishProgress( State state, String msg ) {
+		setState(state, msg);
+		progressPercent = 100;
+		progressMessage = status;
+		logger.info("finished");
 	}
 }

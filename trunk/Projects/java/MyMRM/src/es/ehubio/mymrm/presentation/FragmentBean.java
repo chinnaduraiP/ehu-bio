@@ -18,7 +18,7 @@ public class FragmentBean implements Serializable {
 	
 	public void setEntity(Fragment entity) {
 		this.entity = entity;
-		mzExp = entity.getMz()-entity.getError();
+		mzExp = entity.getMz()+entity.getError();
 		ppm = entity.getError()/entity.getMz()*1000000;
 		
 		IonType type = IonType.getByName(entity.getIonType().getName());

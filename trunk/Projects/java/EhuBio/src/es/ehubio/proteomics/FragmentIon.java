@@ -5,12 +5,16 @@ import java.io.Serializable;
 public class FragmentIon implements Serializable {
 	private static final long serialVersionUID = 1L;
 	
-	public double getMz() {
-		return mz;
+	public double getMzExp() {
+		return mzExp;
 	}
 	
-	public void setMz(double mz) {
-		this.mz = mz;
+	public void setMzExp(double mzExp) {
+		this.mzExp = mzExp;
+	}
+	
+	public double getMzCalc() {
+		return getMzExp()-getMzError();
 	}
 	
 	public double getIntensity() {
@@ -53,7 +57,7 @@ public class FragmentIon implements Serializable {
 		this.type = type;
 	}
 
-	private double mz;
+	private double mzExp;
 	private double intensity;
 	private int charge;
 	private int index;

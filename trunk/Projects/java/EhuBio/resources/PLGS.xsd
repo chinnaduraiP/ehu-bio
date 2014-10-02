@@ -19,12 +19,8 @@
             <xsd:sequence>
               <xsd:element name="PARAM" maxOccurs="unbounded">
                 <xsd:complexType>
-                  <xsd:simpleContent>
-                    <xsd:extension base="xsd:string">
-                      <xsd:attribute name="NAME" type="xsd:normalizedString" use="required"/>
-                      <xsd:attribute name="VALUE" type="xsd:normalizedString" use="required"/>
-                    </xsd:extension>
-                  </xsd:simpleContent>
+                	<xsd:attribute name="NAME" type="xsd:normalizedString" use="required"/>
+                    <xsd:attribute name="VALUE" type="xsd:normalizedString" use="required"/>
                 </xsd:complexType>
               </xsd:element>
             </xsd:sequence>
@@ -35,12 +31,8 @@
             <xsd:sequence>
               <xsd:element name="OUTPUT" minOccurs="0" maxOccurs="1">
                 <xsd:complexType>
-                  <xsd:simpleContent>
-                    <xsd:extension base="xsd:string">
                       <xsd:attribute name="NAME" type="xsd:normalizedString" use="required"/>
                       <xsd:attribute name="VALUE" type="xsd:decimal" use="required"/>
-                    </xsd:extension>
-                  </xsd:simpleContent>
                 </xsd:complexType>
               </xsd:element>
             </xsd:sequence>

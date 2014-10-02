@@ -403,7 +403,7 @@ public final class Mzid extends MsMsFile {
 				for( int i = 0; i < array.getValues().size(); i++ ) {
 					FragmentIon fragment = fragments.get(i);
 					if( array.getMeasureRef().equals(ids.mz) )
-						fragment.setMz(array.getValues().get(i));
+						fragment.setMzExp(array.getValues().get(i));
 					else if( array.getMeasureRef().equals(ids.error) )
 						fragment.setMzError(array.getValues().get(i));
 					else if( array.getMeasureRef().equals(ids.intensity) )
