@@ -20,11 +20,7 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry combineaccessrules="false" kind="src" path="/EhuBio"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/PrimeFaces-4.0">
-		<attributes>
-			<attribute name="org.eclipse.jst.component.dependency" value="/WEB-INF/lib"/>
-		</attributes>
-	</classpathentry>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/PrimeFaces-4.0"/>
 	<classpathentry kind="lib" path="/home/gorka/Aplicaciones/libs/commons-fileupload-1.3.1/lib/commons-fileupload-1.3.1.jar">
 		<attributes>
 			<attribute name="org.eclipse.jst.component.dependency" value="/WEB-INF/lib"/>

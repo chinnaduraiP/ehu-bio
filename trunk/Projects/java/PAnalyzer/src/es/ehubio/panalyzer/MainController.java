@@ -11,15 +11,24 @@ import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
+import javafx.concurrent.WorkerStateEvent;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
@@ -27,6 +36,7 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tab;
+import javafx.scene.control.TabPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
@@ -34,7 +44,6 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.TreeCell;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
-import javafx.scene.control.TreeView.EditEvent;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.web.WebView;
 import javafx.stage.DirectoryChooser;
@@ -47,6 +56,7 @@ import org.controlsfx.dialog.Dialogs;
 import es.ehubio.proteomics.ScoreType;
 import es.ehubio.proteomics.pipeline.PAnalyzer;
 
+@SuppressWarnings("deprecation")
 public class MainController implements Initializable {
 	private static final Logger logger = Logger.getLogger(MainController.class.getName());
 	
@@ -60,6 +70,7 @@ public class MainController implements Initializable {
 	@FXML private Button buttonFilter;
 	@FXML private Button buttonReset;
 	@FXML private Button buttonSave;
+	@FXML private TabPane tabPane;
 	@FXML private Tab tabFilter;
 	@FXML private Tab tabResults;
 	@FXML private Tab tabBrowser;
@@ -136,51 +147,37 @@ public class MainController implements Initializable {
 		String decoy = textDecoy.getText().trim();
 		textDecoy.setText(decoy);
 		config.setDecoyRegex(decoy.length()==0?null:decoy);
-		loadData();
-		choiceScoreType.getItems().clear();
-		choiceScoreType.getItems().addAll(model.getPsmScoreTypes());		
-		if( model.getPsmScoreTypes().contains(ScoreType.XTANDEM_EVALUE) )
-			choiceScoreType.setValue(ScoreType.XTANDEM_EVALUE);
-		else if( model.getPsmScoreTypes().contains(ScoreType.MASCOT_EVALUE) )
-			choiceScoreType.setValue(ScoreType.MASCOT_EVALUE);
-		else
-			choiceScoreType.getSelectionModel().selectFirst();
-		resetFilter();
-		updateView();
-	}
-	
-	private void loadData() {
-		Service<Void> service = new Service<Void>() {			
+		Callable<Void> thread = new Callable<Void>() {
 			@Override
-			protected Task<Void> createTask() {
-				return new Task<Void>() {
-					@Override
-					protected Void call() throws Exception {
-						new Thread(){
-							public void run() {
-								model.loadData();
-							};
-						}.start();
-						do {
-							Thread.sleep(200);
-							updateProgress(model.getProgressPercent(), 100);
-							updateMessage(model.getProgressMessage());
-						} while( model.getState() == es.ehubio.panalyzer.MainModel.State.WORKING );
-						return null;
-					}
-				};
+			public Void call() throws Exception {
+				model.loadData();
+				return null;
 			}
 		};
-		Dialogs.create().owner(view)
-			.title("Progress Dialog")
-			.masthead("Loading files ...")
-			.showWorkerProgress(service);
-		service.start();
+		Runnable gui = new Runnable() {			
+			@Override
+			public void run() {
+				choiceScoreType.getItems().clear();
+				choiceScoreType.getItems().addAll(model.getPsmScoreTypes());		
+				if( model.getPsmScoreTypes().contains(ScoreType.XTANDEM_EVALUE) )
+					choiceScoreType.setValue(ScoreType.XTANDEM_EVALUE);
+				else if( model.getPsmScoreTypes().contains(ScoreType.MASCOT_EVALUE) )
+					choiceScoreType.setValue(ScoreType.MASCOT_EVALUE);
+				else
+					choiceScoreType.getSelectionModel().selectFirst();
+				resetFilter();
+				tabPane.getSelectionModel().select(tabFilter);
+				updateView();
+			}
+		};
+		GuiService service = new GuiService(thread, gui);
+		service.start("Loading files ...");
 	}
 	
 	@FXML private void handleApplyFilter( ActionEvent event ) {
 		logSeparator("Filtering");
 		try {
+			config.setDescription(treeExperiment.getRoot().getValue());
 			config.setPsmScore(choiceScoreType.getValue());
 			config.setPsmRankThreshold(tryInteger(textRank, labelRank));
 			config.setBestPsmPerPrecursor(checkBestPsm.isSelected());
@@ -189,13 +186,27 @@ public class MainController implements Initializable {
 			config.setPeptideFdr(tryDouble(textPeptideFdr, labelPeptideFdr));
 			config.setProteinFdr(tryDouble(textProteinFdr, labelProteinFdr));
 			config.setGroupFdr(tryDouble(textGroupFdr, labelGroupFdr));
-			model.filterData();
-			updateResults();
+			Callable<Void> thread = new Callable<Void>() {
+				@Override
+				public Void call() throws Exception {
+					model.filterData();
+					return null;
+				}
+			};
+			Runnable gui = new Runnable() {				
+				@Override
+				public void run() {
+					updateResults();
+					tabPane.getSelectionModel().select(tabResults);
+					updateView();
+				}
+			};
+			GuiService service = new GuiService(thread, gui);
+			service.start("Aplying filter ...");
 		} catch (Exception e) {
 			logger.warning(e.getMessage());
 			return;
-		}
-		updateView();
+		}		
 	}
 	
 	@FXML private void handleReset( ActionEvent event ) {
@@ -268,44 +279,23 @@ public class MainController implements Initializable {
 		logSeparator("Saving");
 		config.setFilterDecoys(checkFilterDecoys.isSelected());
 		config.setOutput(new File(dir,config.getDescription()).getAbsolutePath());
-		File html = saveFiles();
-		webBrowser.getEngine().load(String.format("file://%s",html.getAbsolutePath()));
-		updateView();
-	}
-	
-	private File saveFiles() {
-		Service<File> service = new Service<File>() {			
+		Callable<Void> thread = new Callable<Void>() {			
 			@Override
-			protected Task<File> createTask() {
-				return new Task<File>() {
-					@Override
-					protected File call() throws Exception {
-						File file = new File("index.html");
-						new Thread(){
-							public void run() {
-								model.saveData();
-							};
-						}.start();
-						do {
-							Thread.sleep(200);
-							updateProgress(model.getProgressPercent(), 100);
-							updateMessage(model.getProgressMessage());
-						} while( model.getState() == es.ehubio.panalyzer.MainModel.State.WORKING );
-						return file;
-					}
-				};
+			public Void call() throws Exception {
+				model.saveData();
+				return null;
 			}
 		};
-		Dialogs.create().owner(view)
-			.title("Progress Dialog")
-			.masthead("Saving results ...")
-			.showWorkerProgress(service);
-		service.start();
-		return service.getValue();
-	}
-
-	@FXML private void handleTreeEdit( EditEvent<String> event ) {
-		config.setDescription(treeExperiment.getRoot().getValue());
+		Runnable gui = new Runnable() {			
+			@Override
+			public void run() {
+				webBrowser.getEngine().load(String.format("file://%s",model.getReportFile().getAbsolutePath()));				
+				tabPane.getSelectionModel().select(tabBrowser);
+				updateView();
+			}
+		};
+		GuiService service = new GuiService(thread, gui);
+		service.start("Saving results ...");
 	}
 	
 	@Override
@@ -418,6 +408,74 @@ public class MainController implements Initializable {
 	
 	private void logSeparator( String msg ) {
 		logger.info(msg==null?"":String.format("\n--- %s ---", msg));
+	}
+	
+	private final class GuiService {
+		private Service<Void> service;
+		
+		public GuiService(final Callable<Void> thread, final Runnable ok ) {
+			final Runnable fail = new Runnable() {				
+				@Override
+				public void run() {
+					updateView();
+					Dialogs.create().owner(view)
+						.title("Error Dialog")
+						.masthead("An error ocurred")
+						.message(model.getStatus())
+						.showError();					
+				}
+			};
+			create(thread,ok,fail);
+		}
+		
+		@SuppressWarnings("unused")
+		public GuiService(final Callable<Void> thread, final Runnable ok, final Runnable fail) {
+			create(thread, ok, fail);
+		}
+		
+		private void create(final Callable<Void> thread, final Runnable ok, final Runnable fail) {
+			service = new Service<Void>() {				
+				@Override
+				protected Task<Void> createTask() {
+					return new Task<Void>() {
+						@Override
+						protected Void call() throws Exception {
+							ExecutorService pool = Executors.newSingleThreadExecutor();
+							Future<Void> future = pool.submit(thread);
+							do {
+								try {
+									future.get(200, TimeUnit.MILLISECONDS);
+								} catch( TimeoutException e ) {									
+								}
+								updateProgress(model.getProgressPercent(), 100);
+								updateMessage(model.getProgressMessage());
+							} while( model.getState() == es.ehubio.panalyzer.MainModel.State.WORKING && !future.isDone() );							
+							return null;
+						}
+					};
+				}				
+			};
+			service.setOnSucceeded(new EventHandler<WorkerStateEvent>() {				
+				@Override
+				public void handle(WorkerStateEvent event) {
+					Platform.runLater(ok);
+				}
+			});
+			service.setOnFailed(new EventHandler<WorkerStateEvent>() {				
+				@Override
+				public void handle(WorkerStateEvent event) {
+					Platform.runLater(fail);
+				}
+			});
+		}
+		
+		public void start( String msg ) {
+			Dialogs.create().owner(view)
+				.title("Progress Dialog")
+				.masthead(msg)
+				.showWorkerProgress(service);
+			service.start();
+		}
 	}
 	
 	private final class LogHandler extends Handler {
