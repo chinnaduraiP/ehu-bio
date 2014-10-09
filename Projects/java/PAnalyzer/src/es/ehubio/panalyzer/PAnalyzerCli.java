@@ -1,9 +1,8 @@
 package es.ehubio.panalyzer;
 
-import javax.xml.bind.JAXBException;
 
 public class PAnalyzerCli {
-	public static void main( String[] args ) throws JAXBException {
+	public static void main( String[] args ) throws Exception {
 		if( args.length != 1 ) {
 			showUsage();
 			return;

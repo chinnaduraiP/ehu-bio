@@ -27,7 +27,7 @@ import es.ehubio.proteomics.pipeline.Validator.FdrResult;
 public class MainModel {
 	public enum State { WORKING, INIT, CONFIGURED, LOADED, RESULTS, SAVED}
 	public static final String NAME = "PAnalyzer";
-	public static final String VERSION = "v2.0-alpha2";
+	public static final String VERSION = "v2.0-alpha3";
 	public static final String SIGNATURE = String.format("%s (%s)", NAME, VERSION);
 	public static final String URL = "https://code.google.com/p/ehu-bio/wiki/PAnalyzer";
 
@@ -42,6 +42,7 @@ public class MainModel {
 	private Configuration config;
 	private State state;
 	private Set<ScoreType> psmScoreTypes;
+	private File reportFile = null;
 	
 	private PAnalyzer pAnalyzer;
 	private Validator validator;
@@ -50,14 +51,14 @@ public class MainModel {
 		resetTotal();	
 	}
 	
-	public void run() {
+	public void run() throws Exception {
 		resetData();
 		loadData();
 		filterData();
 		saveData();
 	}
 	
-	public void run( String pax ) throws JAXBException {
+	public void run( String pax ) throws Exception {
 		resetTotal();
 		loadConfig(pax);
 		run();
@@ -105,13 +106,13 @@ public class MainModel {
 		setConfig(config);
 	}
 	
-	public void loadData() {
+	public void loadData() throws Exception {
 		assertState(state==State.CONFIGURED);
 		try {
 			MsMsData tmp;
 			int step = 0;
 			for( String input : config.getInputs() ) {
-				setProgress(step++, config.getInputs().size(), String.format("Loading %s ...", input));
+				setProgress(step++, config.getInputs().size(), String.format("Loading %s ...", new File(input).getName()));
 				file = new Mzid();		
 				tmp = file.load(input,config.getDecoyRegex());
 				if( data == null ) {
@@ -147,25 +148,32 @@ public class MainModel {
 		return psmScoreTypes;
 	}
 	
-	public void filterData() {
+	public void filterData() throws Exception {
 		assertState(state == State.LOADED || state == State.RESULTS);
 		try {
+			int step = 0, steps = 5;
+			setProgress(step++, steps, "Applying input filter ...");
 			inputFilter();
+			setProgress(step++, steps, "Applying PSM FDR filter ...");
 			processPsmFdr();
+			setProgress(step++, steps, "Applying peptide FDR filter ...");
 			processPeptideFdr();
+			setProgress(step++, steps, "Applying protein FDR filter ...");
 			processProteinFdr();
+			setProgress(step++, steps, "Applying protein group FDR filter ...");
 			processGroupFdr();
 			validator.logFdrs();
 			logCounts("Final counts");
 			logger.info(getCounts().toString());
-			setState(State.RESULTS, "Data filtered, you can now save the results");
+			finishProgress(State.RESULTS, "Data filtered, you can now save the results");
 		} catch( Exception e ) {
 			resetData();
 			handleException(e, "Error filtering data, correct your configuration");
 		}
 	}
 	
-	public File saveData() {
+	public File saveData() throws Exception {
+		reportFile = null;
 		assertState(state == State.RESULTS);
 		try {
 			if( Boolean.TRUE.equals(config.getFilterDecoys()) ) {
@@ -191,13 +199,12 @@ public class MainModel {
 			setProgress(step++, steps, "Saving configuration ...");
 			saveConfiguration();
 			setProgress(step++, steps, "Saving html report ...");
-			File file = generateHtml();
+			reportFile = generateHtml();
 			finishProgress(State.SAVED, "Data saved, you can now browse the results");
-			return file;
 		} catch( Exception e ) {
 			handleException(e, "Error saving data, correct your configuration");			
 		}
-		return null;
+		return reportFile;
 	}	
 
 	public MsMsData getData() {
@@ -261,10 +268,11 @@ public class MainModel {
 			throw new AssertionError(String.format("%s (%s)",STATE_ERR_MSG,state.toString()));
 	}
 	
-	private void handleException( Exception e, String msg ) {
+	private void handleException( Exception e, String msg ) throws Exception {
 		e.printStackTrace();
 		status = msg;
 		logger.severe(String.format("%s: %s", msg, e.getMessage()));
+		throw e;
 	}
 	
 	private void rebuildGroups() {
@@ -369,6 +377,10 @@ public class MainModel {
 		setState(state, msg);
 		progressPercent = 100;
 		progressMessage = status;
-		logger.info("finished");
+		logger.info(String.format("Finished! (state=%s)",this.state.toString()));
+	}
+
+	public File getReportFile() {
+		return reportFile;
 	}
 }

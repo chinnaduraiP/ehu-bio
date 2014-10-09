@@ -166,8 +166,11 @@ public class Filter {
 			map.clear();
 			bests.clear();
 			for( Psm psm : peptide.getPsms() ) {
+				Score score = psm.getScoreByType(onlyBestPsmPerPrecursor);
+				if( score == null )
+					continue;
 				prev = map.get(psm.getCharge());
-				cur = psm.getScoreByType(onlyBestPsmPerPrecursor).getValue();
+				cur = score.getValue();
 				if( prev == null || onlyBestPsmPerPrecursor.compare(cur,prev) > 0 ) {
 					map.put(psm.getCharge(), cur);
 					bests.put(psm.getCharge(), psm);
