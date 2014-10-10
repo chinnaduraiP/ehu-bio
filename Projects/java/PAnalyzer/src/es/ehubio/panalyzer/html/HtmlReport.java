@@ -20,6 +20,8 @@ import es.ehubio.io.CsvUtils;
 import es.ehubio.panalyzer.MainModel;
 import es.ehubio.proteomics.Peptide;
 import es.ehubio.proteomics.Protein;
+import es.ehubio.proteomics.Psm;
+import es.ehubio.proteomics.ScoreType;
 import es.ehubio.proteomics.pipeline.PAnalyzer;
 
 public class HtmlReport {
@@ -170,8 +172,8 @@ public class HtmlReport {
 		//table.setColStyle(0, "white-space: nowrap");
 		//table.setColStyle(1, "width: 99%");
 		table.setTitle(String.format("Protein %s", protein.getAccession()));
-		table.addRow("Name",protein.getName());
-		table.addRow("Description",protein.getDescription());
+		table.addRow("Name",protein.getName()==null?"":protein.getName());
+		table.addRow("Description",protein.getDescription()==null?"":protein.getDescription());
 		table.addRow("Sequence",String.format("<pre>%s</pre>", Fasta.formatSequence(protein.getSequence(), 10)));
 		table.addRow("Evidence",protein.getConfidence().toString());
 		table.addRow("Peptide list",getPeptideLinks(protein.getPeptides()));
@@ -210,8 +212,17 @@ public class HtmlReport {
 			peptide.getConfidence().toString());
 		table.addRow("Proteins",getProteinLinks(peptide.getProteins()));
 		table.addRow("Sequence",peptide.getSequence());
-		table.addRow("PTMs",CsvUtils.getCsv(SEP, peptide.getPtms().toArray()));
+		table.addRow("Modifications",peptide.getPtms().isEmpty()?"none":CsvUtils.getCsv(SEP, peptide.getPtms().toArray()));
+		table.addRow("PSMs",getPsmsDetails(peptide));
 		return table.render(odd,true);
+	}
+
+	private String getPsmsDetails(Peptide peptide) {
+		ScoreType psmScore = model.getConfig().getPsmScore();
+		List<Double> list = new ArrayList<>();
+		for( Psm psm : peptide.getPsms() )
+			list.add(psm.getScoreByType(psmScore).getValue());
+		return String.format("%s: %s", psmScore.getName(), CsvUtils.getCsv(", ", list.toArray()));
 	}
 
 	private String getProteinLinks(Set<Protein> proteins) {

@@ -17,7 +17,8 @@ public class PAnalyzerGui extends Application {
 			loader.setController(controller);
 			VBox root = (VBox)loader.load();
 			Scene scene = new Scene(root,640,480);
-			scene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
+			//setUserAgentStylesheet(STYLESHEET_CASPIAN);
+			scene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());			
 			stage.setTitle(String.format("%s - UPV/EHU", MainModel.SIGNATURE));
 			stage.setScene(scene);
 			stage.show();
