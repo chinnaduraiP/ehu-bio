@@ -1,6 +1,5 @@
 package es.ehubio.panalyzer;
 
-
 public class PAnalyzerCli {
 	public static void main( String[] args ) throws Exception {
 		if( args.length != 1 ) {

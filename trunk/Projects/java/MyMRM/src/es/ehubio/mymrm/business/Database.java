@@ -39,7 +39,6 @@ public class Database {
 	private static final int FRAGMENTS=10;
 	private static final int OKFRAGMENTS=3;
 	private static EntityManagerFactory emf;
-	private static EntityManager em;
 	private static BlockingQueue<ExperimentFeed> queue = new LinkedBlockingDeque<>();
 	private static Worker worker;
 	private static volatile boolean working = false;
@@ -48,7 +47,6 @@ public class Database {
 	
 	public static void connect() {
 		emf = Persistence.createEntityManagerFactory("MyMRM");
-		em = emf.createEntityManager();
 		working = true;
 		worker = new Worker();
 		worker.start();
@@ -57,51 +55,72 @@ public class Database {
 	public static void close() throws InterruptedException {
 		working = false;
 		worker.join(2000);
-		em.close();
 		emf.close();
 	}
 	
-	public static void beginTransaction() {
-		em.getTransaction().begin();
+	public static <T> List<T> findAll(final Class<T> c) {
+		return doTransaction(new Operation<List<T>>() {
+			@Override
+			public List<T> run(EntityManager em) throws Exception {
+				return em.createQuery(String.format("SELECT x FROM %s x",c.getSimpleName()),c).getResultList();
+			}
+		});
 	}
 	
-	public static void commitTransaction() {
-		em.getTransaction().commit();
+	public static <T> void add(final T item) {
+		doTransaction(new Operation<Void>() {
+			@Override
+			public Void run(EntityManager em) throws Exception {
+				em.persist(item);
+				return null;
+			}
+		});
 	}
 	
-	public static void rollbackTransaction() {
-		em.getTransaction().rollback();
+	public static <T> T findById(final Class<T> c, int id) {
+		final Integer fid = id; 
+		return doTransaction(new Operation<T>() {
+			@Override
+			public T run(EntityManager em) throws Exception {
+				return (T)em.find(c, fid);
+			}			
+		});		
 	}
 	
-	public static <T> List<T> findAll(Class<T> c) {
-		return em.createQuery(String.format("SELECT x FROM %s x",c.getSimpleName()),c).getResultList();
+	public static <T> boolean remove(final Class<T> c, int id) {
+		final Integer fid = id;
+		return doTransaction(new Operation<Boolean>() {
+			@Override
+			public Boolean run(EntityManager em) throws Exception {
+				T item = em.find(c, fid);
+				if( item == null )
+					return false;
+				em.remove(item);
+				return true;
+			}
+		});
 	}
 	
-	public static <T> void add(T item) {
-		em.persist(item);
-	}
-	
-	public static <T> T findById(Class<T> c, int id) {
-		return (T)em.find(c, id);
-	}
-	
-	public static <T> boolean remove(Class<T> c, int id) {		
-		T item = findById(c, id);
-		if( item == null )
-			return false;
-		em.remove(item);
-		return true;
-	}
-	
-	public static <T> void remove( T c ) {
-		em.remove(c);
+	public static <T> void remove( final T c ) {
+		doTransaction(new Operation<Void>() {
+			@Override
+			public Void run(EntityManager em) throws Exception {
+				em.remove(c);
+				return null;
+			}
+		});
 	}
 	
 	public static List<Experiment> findExperiments() {
-		List<Experiment> experiments = findAll(Experiment.class);
-		for( Experiment experiment : experiments )
-			experiment.setExperimentFiles(findExperimentFiles(experiment.getId()));
-		return experiments;
+		return doTransaction(new Operation<List<Experiment>>() {
+			@Override
+			public List<Experiment> run(EntityManager em) throws Exception {
+				List<Experiment> experiments = findAll(Experiment.class);
+				for( Experiment experiment : experiments )
+					experiment.setExperimentFiles(findExperimentFiles(experiment.getId()));			
+				return experiments;
+			}			
+		});		
 	}
 	
 	public static void removeExperiment( int experimentId ) {
@@ -112,23 +131,33 @@ public class Database {
 		Database.clearUnreferenced();
 	}
 	
-	public static int countPeptidesBySequence( String sequence ) {
-		Number res = em.createQuery("SELECT COUNT (p) FROM Peptide p WHERE p.sequence = :sequence",Number.class)
-			.setParameter("sequence", sequence)
-			.getSingleResult();
-		return res.intValue();
+	public static int countPeptidesBySequence( final String sequence ) {
+		return doTransaction(new Operation<Integer>() {
+			@Override
+			public Integer run(EntityManager em) throws Exception {
+				Number res = em.createQuery("SELECT COUNT (p) FROM Peptide p WHERE p.sequence = :sequence",Number.class)
+					.setParameter("sequence", sequence)
+					.getSingleResult();
+				return res.intValue();
+			}
+		});		
 	}
 	
-	public static List<Peptide> findBySequence( String sequence ) {
-		List<Peptide> list = null;
-		try {
-			list = em
-				.createQuery("SELECT p FROM Peptide p WHERE p.sequence = :sequence",Peptide.class)
-				.setParameter("sequence", sequence)
-				.getResultList();
-		} catch( NoResultException ex ) {			
-		}
-		return list == null ? new ArrayList<Peptide>() : list;
+	public static List<Peptide> findBySequence( final String sequence ) {
+		return doTransaction(new Operation<List<Peptide>>() {
+			@Override
+			public List<Peptide> run(EntityManager em) throws Exception {
+				List<Peptide> list = null;
+				try {
+					list = em
+						.createQuery("SELECT p FROM Peptide p WHERE p.sequence = :sequence",Peptide.class)
+						.setParameter("sequence", sequence)
+						.getResultList();
+				} catch( NoResultException ex ) {			
+				}
+				return list == null ? new ArrayList<Peptide>() : list;
+			}
+		});		
 	}	
 	
 	public static void feed( ExperimentFeed experiment ) throws InterruptedException {
@@ -164,66 +193,121 @@ public class Database {
 	}
 	
 	public static void clearUnreferenced() {
-		em.createQuery("DELETE FROM Peptide p WHERE p.id NOT IN (SELECT e.peptideBean.id FROM PeptideEvidence e)").executeUpdate();
-		em.createQuery("DELETE FROM Precursor p WHERE p.id NOT IN (SELECT e.precursorBean.id FROM PeptideEvidence e)").executeUpdate();
-		em.createQuery("DELETE FROM Fragment f WHERE f.id NOT IN (SELECT t.fragmentBean.id FROM Transition t)").executeUpdate();
+		doTransaction(new Operation<Void>() {
+			@Override
+			public Void run(EntityManager em) throws Exception {
+				em.createQuery("DELETE FROM Peptide p WHERE p.id NOT IN (SELECT e.peptideBean.id FROM PeptideEvidence e)").executeUpdate();
+				em.createQuery("DELETE FROM Precursor p WHERE p.id NOT IN (SELECT e.precursorBean.id FROM PeptideEvidence e)").executeUpdate();
+				em.createQuery("DELETE FROM Fragment f WHERE f.id NOT IN (SELECT t.fragmentBean.id FROM Transition t)").executeUpdate();
+				return null;
+			}
+		});		
 	}
 
 	private static List<PeptideEvidence> findEvidences(int idPeptide) {
-		List<PeptideEvidence> evidences = null;
-		try {
-			evidences = em
-				.createQuery("SELECT p FROM PeptideEvidence p WHERE p.peptideBean.id = :peptide", PeptideEvidence.class)
-				.setParameter("peptide", idPeptide)
-				.getResultList();
-		} catch( NoResultException ex ) {			
-		}
-		return evidences == null ? new ArrayList<PeptideEvidence>() : evidences;
+		final Integer id = idPeptide;
+		return doTransaction(new Operation<List<PeptideEvidence>>() {
+			@Override
+			public List<PeptideEvidence> run(EntityManager em) throws Exception {
+				List<PeptideEvidence> evidences = null;
+				try {
+					evidences = em
+						.createQuery("SELECT p FROM PeptideEvidence p WHERE p.peptideBean.id = :peptide", PeptideEvidence.class)
+						.setParameter("peptide", id)
+						.getResultList();
+				} catch( NoResultException ex ) {			
+				}
+				return evidences == null ? new ArrayList<PeptideEvidence>() : evidences;
+			}
+		});		
 	}
 
 	public static List<Fragment> findFragments(int idPrecursor) {
-		List<Fragment> fragments = new ArrayList<>();
-		try {
-			List<Transition> transitions = em
-				.createQuery("SELECT t FROM Transition t WHERE t.precursorBean.id = :precursor", Transition.class)
-				.setParameter("precursor", idPrecursor)
-				.getResultList();
-			for( Transition transition : transitions )
-				fragments.add(transition.getFragmentBean());
-		} catch( NoResultException ex ) {			
-		}
-		return fragments;
+		final Integer id = idPrecursor;
+		return doTransaction(new Operation<List<Fragment>>() {
+			@Override
+			public List<Fragment> run(EntityManager em) throws Exception {
+				List<Fragment> fragments = new ArrayList<>();
+				try {
+					List<Transition> transitions = em
+						.createQuery("SELECT t FROM Transition t WHERE t.precursorBean.id = :precursor", Transition.class)
+						.setParameter("precursor", id)
+						.getResultList();
+					for( Transition transition : transitions )
+						fragments.add(transition.getFragmentBean());
+				} catch( NoResultException ex ) {			
+				}
+				return fragments;
+			}
+		});		
 	}
 
 	public static List<es.ehubio.mymrm.data.Score> findScores(int evidenceId) {
-		List<es.ehubio.mymrm.data.Score> scores = null;
-		try {
-			scores = em
-				.createQuery("SELECT s FROM Score s WHERE s.peptideEvidenceBean.id = :evidence", es.ehubio.mymrm.data.Score.class)
-				.setParameter("evidence", evidenceId)
-				.getResultList();
-		} catch( NoResultException ex ) {			
-		}
-		return scores == null ? new ArrayList<es.ehubio.mymrm.data.Score>() : scores;
+		final Integer id = evidenceId;
+		return doTransaction(new Operation<List<es.ehubio.mymrm.data.Score>>() {
+			@Override
+			public List<es.ehubio.mymrm.data.Score> run(EntityManager em) throws Exception {
+				List<es.ehubio.mymrm.data.Score> scores = null;
+				try {
+					scores = em
+						.createQuery("SELECT s FROM Score s WHERE s.peptideEvidenceBean.id = :evidence", es.ehubio.mymrm.data.Score.class)
+						.setParameter("evidence", id)
+						.getResultList();
+				} catch( NoResultException ex ) {			
+				}
+				return scores == null ? new ArrayList<es.ehubio.mymrm.data.Score>() : scores;
+			}
+		});		
 	}
 	
 	public static List<ExperimentFile> findExperimentFiles( int idExperiment ) {
-		List<ExperimentFile> files = null;
-		try {
-			files = em
-				.createQuery("SELECT f FROM ExperimentFile f WHERE f.experimentBean.id = :exp", ExperimentFile.class)
-				.setParameter("exp", idExperiment)
-				.getResultList();
-		} catch( NoResultException ex ) {			
-		}
-		return files == null ? new ArrayList<ExperimentFile>() : files;
+		final Integer id = idExperiment;
+		return doTransaction(new Operation<List<ExperimentFile>>() {
+			@Override
+			public List<ExperimentFile> run(EntityManager em) throws Exception {
+				List<ExperimentFile> files = null;
+				try {
+					files = em
+						.createQuery("SELECT f FROM ExperimentFile f WHERE f.experimentBean.id = :exp", ExperimentFile.class)
+						.setParameter("exp", id)
+						.getResultList();
+				} catch( NoResultException ex ) {			
+				}
+				return files == null ? new ArrayList<ExperimentFile>() : files;
+			}
+		});		
 	}
 	
 	public static int countExperimentFiles( int idExperiment ) {
-		Number res = em.createQuery("SELECT COUNT (f) FROM ExperimentFile f WHERE f.experimentBean.id = :exp",Number.class)
-			.setParameter("exp", idExperiment)
-			.getSingleResult();
-		return res.intValue();
+		final Integer id = idExperiment;
+		return doTransaction(new Operation<Integer>() {			
+			@Override
+			public Integer run(EntityManager em) throws Exception {
+				Number res = em.createQuery("SELECT COUNT (f) FROM ExperimentFile f WHERE f.experimentBean.id = :exp",Number.class)
+					.setParameter("exp", id)
+					.getSingleResult();
+				return res.intValue();
+			}
+		});		
+	}
+	
+	private static <T> T doTransaction( Operation<T> op ) {
+		T res = null;
+		EntityManager em = emf.createEntityManager();
+		try {
+			em.getTransaction().begin();
+			res = op.run(em);
+			em.getTransaction().commit();
+			em.close();
+		} catch( Exception e ) {
+			e.printStackTrace();
+			em.getTransaction().rollback();
+		}
+		return res;
+	}
+	
+	private static abstract class Operation<T> {
+		public abstract T run( EntityManager em ) throws Exception;
 	}
 	
 	private static class Worker extends Thread {
@@ -236,16 +320,18 @@ public class Database {
 				try {
 					ExperimentFeed experiment = queue.take();
 					currentFeed = experiment;
+					em.getTransaction().begin();
 					feed( experiment );
+					em.getTransaction().commit();
 					currentFeed = null;
 				} catch( Exception e ) {
 					e.printStackTrace();
+					em.getTransaction().rollback();
 				}
 			}
 		}
 		
-		private void feed( ExperimentFeed e ) throws Exception {						
-			em.getTransaction().begin();
+		private void feed( ExperimentFeed e ) throws Exception {									
 			em.persist(e.getExperiment());
 			
 			e.setStatus("Analyzing ...");
@@ -299,8 +385,7 @@ public class Database {
 				if( ((int)(partial+0.5))%20 == 0 )					
 					logger.info(e.getStatus());
 			}
-			feedFiles(e.getExperiment(), e.getConfiguration());
-			em.getTransaction().commit();
+			feedFiles(e.getExperiment(), e.getConfiguration());			
 		}
 		
 		private static Peptide findByMassSequence( String massSequence ) {

@@ -10,6 +10,7 @@ import java.util.List;
 import javax.faces.bean.ApplicationScoped;
 import javax.faces.bean.ManagedBean;
 import javax.faces.context.FacesContext;
+
 import org.apache.commons.io.IOUtils;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.UploadedFile;
@@ -36,11 +37,8 @@ public class DatabaseMB {
 		Database.connect();
 	}
 	
-	public List<Instrument> getInstruments() {
-		Database.beginTransaction();
-		List<Instrument> list = Database.findAll(Instrument.class);
-		Database.commitTransaction();
-		return list;
+	public List<Instrument> getInstruments() {		
+		return Database.findAll(Instrument.class);
 	}
 	
 	public List<Instrument> getInstrumentsNull() {
@@ -49,25 +47,18 @@ public class DatabaseMB {
 		return list;
 	}
 	
-	public void removeInstrument( Instrument instrument ) {
-		Database.beginTransaction();
+	public void removeInstrument( final Instrument instrument ) {
 		Database.remove(Instrument.class, instrument.getId());
-		Database.commitTransaction();
 	}
 	
-	public void addInstrument( InstrumentMB bean ) {
+	public void addInstrument( final InstrumentMB bean ) {				
 		Instrument instrument = bean.getEntity();
-		Database.beginTransaction();
 		instrument.setInstrumentTypeBean(Database.findById(InstrumentType.class, Integer.parseInt(bean.getTypeId())));
 		Database.add(instrument);
-		Database.commitTransaction();
 	}
 	
 	public List<InstrumentType> getInstrumentTypes() {
-		Database.beginTransaction();
-		List<InstrumentType> list = Database.findAll(InstrumentType.class);
-		Database.commitTransaction();
-		return list;
+		return Database.findAll(InstrumentType.class);
 	}
 	
 	public List<InstrumentType> getInstrumentTypesNull() {
@@ -77,22 +68,15 @@ public class DatabaseMB {
 	}
 	
 	public void removeInstrumentType( InstrumentType type ) {
-		Database.beginTransaction();
 		Database.remove(InstrumentType.class, type.getId());
-		Database.commitTransaction();
 	}
 	
 	public void addInstrumentType( InstrumentTypeMB bean ) {
-		Database.beginTransaction();
 		Database.add(bean.getEntity());
-		Database.commitTransaction();
 	}
 	
 	public List<Chromatography> getChromatographies() {
-		Database.beginTransaction();
-		List<Chromatography> list = Database.findAll(Chromatography.class);
-		Database.commitTransaction();
-		return list;
+		return Database.findAll(Chromatography.class);
 	}
 	
 	public List<Chromatography> getChromatograhiesNull() {
@@ -102,26 +86,20 @@ public class DatabaseMB {
 	}
 	
 	public void removeChromatography( Chromatography chr ) {
-		Database.beginTransaction();
 		Database.remove(Chromatography.class, chr.getId());
-		Database.commitTransaction();
 	}
 	
 	public void addChromatography( ChromatographyMB bean ) {
-		Database.beginTransaction();
 		Database.add(bean.getEntity());
-		Database.commitTransaction();
 	}
 	
 	public List<ExperimentBean> getExperiments() {
 		List<ExperimentBean> list = new ArrayList<>();
-		//Database.beginTransaction();
 		for( Experiment experiment : Database.findExperiments() ) {
 			ExperimentBean bean = new ExperimentBean();
 			bean.setEntity(experiment);
 			list.add(bean);
 		}
-		//Database.commitTransaction();
 		for( ExperimentFeed feed : Database.getPendingExperiments() ) {
 			ExperimentBean bean = new ExperimentBean();
 			bean.setFeed(feed);
@@ -132,9 +110,7 @@ public class DatabaseMB {
 	
 	public void removeExperiment( ExperimentBean exp ) {
 		if( exp.getFeed() == null ) {
-			Database.beginTransaction();
 			Database.removeExperiment(exp.getEntity().getId());
-			Database.commitTransaction();
 		} else
 			try {
 				Database.cancelFeed(exp.getFeed());
@@ -144,10 +120,7 @@ public class DatabaseMB {
 	}
 	
 	public List<FragmentationType> getFragmentationTypes() {
-		Database.beginTransaction();
-		List<FragmentationType> list = Database.findAll(FragmentationType.class);
-		Database.commitTransaction();
-		return list;
+		return Database.findAll(FragmentationType.class);
 	}
 	
 	public List<FragmentationType> getFragmentationTypesNull() {
@@ -157,22 +130,15 @@ public class DatabaseMB {
 	}
 	
 	public void removeFragmentationType( FragmentationType type ) {
-		Database.beginTransaction();
 		Database.remove(FragmentationType.class, type.getId());
-		Database.commitTransaction();
 	}
 	
 	public void addFragmentationType( FragmentationTypeMB bean ) {
-		Database.beginTransaction();
 		Database.add(bean.getEntity());
-		Database.commitTransaction();
 	}
 	
 	public List<IonizationType> getIonizationTypes() {
-		Database.beginTransaction();
-		List<IonizationType> list = Database.findAll(IonizationType.class);
-		Database.commitTransaction();
-		return list;
+		return Database.findAll(IonizationType.class);
 	}
 	
 	public List<IonizationType> getIonizationTypesNull() {
@@ -182,15 +148,11 @@ public class DatabaseMB {
 	}
 	
 	public void removeIonizationType( IonizationType type ) {
-		Database.beginTransaction();
 		Database.remove(IonizationType.class, type.getId());
-		Database.commitTransaction();
 	}
 	
 	public void addIonizationType( IonizationTypeMB bean ) {
-		Database.beginTransaction();
 		Database.add(bean.getEntity());
-		Database.commitTransaction();
 	}
 	
 	public List<FastaFile> getFastas() {
@@ -223,24 +185,15 @@ public class DatabaseMB {
 	}
 	
 	public List<Fragment> getFragments( int idPrecursor ) {
-		Database.beginTransaction();
-		List<Fragment> list = Database.findFragments( idPrecursor );
-		Database.commitTransaction();
-		return list;
+		return Database.findFragments( idPrecursor );
 	}
 	
 	public List<Peptide> search( String pepSequence ) {
-		Database.beginTransaction();
-		List<Peptide> list = Database.findPeptides( pepSequence );
-		Database.commitTransaction();
-		return list;
+		return Database.findPeptides( pepSequence );
 	}
 	
 	public int checkPeptideAvailable( String pepSequence ) {
-		Database.beginTransaction();
-		int count = Database.countPeptidesBySequence(pepSequence);
-		Database.commitTransaction();
-		return count;
+		return Database.countPeptidesBySequence(pepSequence);
 	}
 	
 	@Override
@@ -250,20 +203,17 @@ public class DatabaseMB {
 	}
 
 	public List<Score> getScores(int evidenceId) {
-		Database.beginTransaction();
-		List<Score> list = Database.findScores(evidenceId);
-		Database.commitTransaction();
-		return list;
+		return Database.findScores(evidenceId);
 	}
 	
-	public List<String> getScoreTypes() {
+	public List<ScoreType> getScoreTypes() {
 		if( scoreTypes != null )
 			return scoreTypes;
 		scoreTypes = new ArrayList<>();
 		for( ScoreType type : ScoreType.class.getEnumConstants() ) {
 			if( type == ScoreType.OTHER_LARGER )
 				break;
-			scoreTypes.add(type.getName());
+			scoreTypes.add(type);
 		}
 		return scoreTypes;
 	}
@@ -276,22 +226,16 @@ public class DatabaseMB {
 	}
 	
 	public List<ExperimentFile> findExperimentFiles( int idExperiment ) {
-		Database.beginTransaction();
-		List<ExperimentFile> list = Database.findExperimentFiles(idExperiment);
-		Database.commitTransaction();
-		return list;
+		return Database.findExperimentFiles(idExperiment);
 	}
 	
 	public int countExperimentFiles( int idExperiment ) {
-		Database.beginTransaction();
-		int count = Database.countExperimentFiles(idExperiment);
-		Database.commitTransaction();
-		return count;
+		return Database.countExperimentFiles(idExperiment);
 	}
 	
 	public es.ehubio.proteomics.Peptide.Confidence[] getPeptideConfidences() {
 		return es.ehubio.proteomics.Peptide.Confidence.values();
-	}
+	}	
 	
-	private List<String> scoreTypes;
+	private List<ScoreType> scoreTypes;
 }
