@@ -5,6 +5,7 @@ import java.util.Set;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
 
 import es.ehubio.proteomics.ScoreType;
@@ -16,7 +17,16 @@ import es.ehubio.proteomics.ScoreType;
 	"proteinFdr","groupFdr",
 	"decoyRegex","inputs","filterDecoys","output"})
 @XmlRootElement
-public class Configuration {	
+public class Configuration {
+	@XmlTransient
+	public void initialize() {
+		setDecoyRegex("decoy");
+		setBestPsmPerPrecursor(true);
+		setMinPeptideLength(7);
+		setPeptideFdr(0.01);
+		setGroupFdr(0.01);
+	}
+	
 	public String getDescription() {
 		return description;
 	}

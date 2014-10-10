@@ -26,7 +26,6 @@ import es.ehubio.mymrm.data.Instrument;
 import es.ehubio.mymrm.data.IonizationType;
 import es.ehubio.panalyzer.Configuration;
 import es.ehubio.proteomics.Peptide;
-import es.ehubio.proteomics.ScoreType;
 
 @ManagedBean
 @SessionScoped
@@ -37,10 +36,14 @@ public class ExperimentMB implements Serializable {
 	private String ionization;
 	private String fragmentation;
 	private String chromatography;
-	private String decoyRegex = "decoy";
-	private String psmScore;
 	private final Set<String> files = new HashSet<>();
 	private Peptide.Confidence peptideConfidence = Peptide.Confidence.DISCRIMINATING;
+	private final Configuration cfg;
+	
+	public ExperimentMB() {
+		cfg = new Configuration();
+		cfg.initialize();
+	}
 
 	public Experiment getEntity() {
 		return entity;
@@ -103,13 +106,7 @@ public class ExperimentMB implements Serializable {
 
 		Configuration cfg = new Configuration();
 		cfg.setDescription(getEntity().getName());
-		cfg.setPsmScore(ScoreType.getByName(psmScore));
-		cfg.setDecoyRegex(decoyRegex);
-		cfg.setBestPsmPerPrecursor(true);
-		cfg.setMinPeptideLength(7);
 		cfg.setFilterDecoys(true);
-		cfg.setPeptideFdr(0.01);
-		cfg.setGroupFdr(0.01);
 		cfg.setInputs(new HashSet<String>());
 		for( String file : files )
 			cfg.getInputs().add(new File(getTmpDir(),file).getAbsolutePath());
@@ -128,22 +125,6 @@ public class ExperimentMB implements Serializable {
 		//return FacesContext.getCurrentInstance().getExternalContext().getInitParameter("MyMRM.fastaDir");
 		return System.getProperty("java.io.tmpdir");
 	}
-
-	public String getDecoyRegex() {
-		return decoyRegex;
-	}
-
-	public void setDecoyRegex(String decoyRegex) {
-		this.decoyRegex = decoyRegex;
-	}
-
-	public String getPsmScore() {
-		return psmScore;
-	}
-
-	public void setPsmScore(String psmScore) {
-		this.psmScore = psmScore;
-	}
 	
 	public String getFiles() {
 		return CsvUtils.getCsv(';', files.toArray());
@@ -159,5 +140,9 @@ public class ExperimentMB implements Serializable {
 
 	public void setPeptideConfidence(Peptide.Confidence peptideConfidence) {
 		this.peptideConfidence = peptideConfidence;
+	}
+
+	public Configuration getCfg() {
+		return cfg;
 	}	
 }

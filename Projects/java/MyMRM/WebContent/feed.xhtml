@@ -52,50 +52,69 @@
 			<h3>Upload a new shotgun experiment:</h3>
 			<h:form enctype="multipart/form-data">
 				<p:panelGrid columns="2">
-					<f:facet name="header">Experiment data</f:facet>
-					<h:outputText value="Name:" />
-					<h:panelGroup>					
-						<h:inputText id="name" value="#{experimentMB.entity.name}" required="true"/>
-						<h:message for="name" style="color:red"/>
-					</h:panelGroup>
-					<h:outputText value="Contact:" />
-					<h:inputText value="#{experimentMB.entity.contact}"/>
-					<h:outputText value="Instrument:" />
-					<p:selectOneMenu value="#{experimentMB.instrument}">
-						<f:selectItems value="#{databaseMB.instruments}" var="inst" itemLabel="#{inst.name}" itemValue="#{inst.id}"/>					
-					</p:selectOneMenu>
-					<h:outputText value="Ionization:" />
-					<p:selectOneMenu value="#{experimentMB.ionization}">
-						<f:selectItems value="#{databaseMB.ionizationTypes}" var="ion" itemLabel="#{ion.name}" itemValue="#{ion.id}"/>					
-					</p:selectOneMenu>
-					<h:outputText value="Fragmentation:" />
-					<p:selectOneMenu value="#{experimentMB.fragmentation}">
-						<f:selectItems value="#{databaseMB.fragmentationTypes}" var="frag" itemLabel="#{frag.name}" itemValue="#{frag.id}"/>					
-					</p:selectOneMenu>
-					<h:outputText value="Chromatography:" />
-					<p:selectOneMenu value="#{experimentMB.chromatography}">
-						<f:selectItems value="#{databaseMB.chromatographies}" var="chr" itemLabel="#{chr.name}" itemValue="#{chr.id}"/>					
-					</p:selectOneMenu>
-					<h:outputText value="Description:" />
-					<h:inputText value="#{experimentMB.entity.description}"/>										
-					<h:outputText value="Upload mzid files:" />
-					<h:panelGroup>
-						<p:fileUpload
-							fileUploadListener="#{experimentMB.uploadFile}"
-							allowTypes="/\.mzid(\.gz)?$/" multiple="true" auto="false"
-							mode="advanced" update="@all"/>
-						<h:outputText value="#{experimentMB.files}"/>
-					</h:panelGroup>
-					<h:outputText value="Decoy regex:" />
-					<h:inputText value="#{experimentMB.decoyRegex}"/>
-					<h:outputText value="PSM score:" />
-					<p:selectOneMenu value="#{experimentMB.psmScore}">
-						<f:selectItems value="#{databaseMB.scoreTypes}" var="score" itemLabel="#{score}" itemValue="#{score}"/>					
-					</p:selectOneMenu>
-					<h:outputText value="Minimum peptide confidence:" />
-					<p:selectOneMenu value="#{experimentMB.peptideConfidence}">
-						<f:selectItems value="#{databaseMB.peptideConfidences}" var="conf" itemLabel="#{conf}" itemValue="#{conf}"/>					
-					</p:selectOneMenu>
+					<p:panelGrid columns="2">
+						<f:facet name="header">Experiment data</f:facet>
+						<h:outputText value="mzIdentML files:" />
+						<h:panelGroup>
+							<p:fileUpload
+								fileUploadListener="#{experimentMB.uploadFile}"
+								allowTypes="/\.mzid(\.gz)?$/" multiple="true" auto="false"
+								mode="advanced" update="@all"/>
+							<h:outputText value="#{experimentMB.files}"/>
+						</h:panelGroup>
+						<h:outputText value="Name:" />
+						<h:panelGroup>					
+							<h:inputText id="name" value="#{experimentMB.entity.name}" required="true"/>
+							<h:message for="name" style="color:red"/>
+						</h:panelGroup>
+						<h:outputText value="Contact:" />
+						<h:inputText value="#{experimentMB.entity.contact}"/>
+						<h:outputText value="Description:" />
+						<h:inputText value="#{experimentMB.entity.description}"/>
+						<h:outputText value="Instrument:" />
+						<p:selectOneMenu value="#{experimentMB.instrument}">
+							<f:selectItems value="#{databaseMB.instruments}" var="inst" itemLabel="#{inst.name}" itemValue="#{inst.id}"/>					
+						</p:selectOneMenu>
+						<h:outputText value="Ionization:" />
+						<p:selectOneMenu value="#{experimentMB.ionization}">
+							<f:selectItems value="#{databaseMB.ionizationTypes}" var="ion" itemLabel="#{ion.name}" itemValue="#{ion.id}"/>					
+						</p:selectOneMenu>
+						<h:outputText value="Fragmentation:" />
+						<p:selectOneMenu value="#{experimentMB.fragmentation}">
+							<f:selectItems value="#{databaseMB.fragmentationTypes}" var="frag" itemLabel="#{frag.name}" itemValue="#{frag.id}"/>					
+						</p:selectOneMenu>
+						<h:outputText value="Chromatography:" />
+						<p:selectOneMenu value="#{experimentMB.chromatography}">
+							<f:selectItems value="#{databaseMB.chromatographies}" var="chr" itemLabel="#{chr.name}" itemValue="#{chr.id}"/>					
+						</p:selectOneMenu>																
+					</p:panelGrid>
+					<p:panelGrid columns="2">
+						<f:facet name="header">Filtering options</f:facet>
+						<h:outputText value="Decoy regex:" />
+						<h:inputText value="#{experimentMB.cfg.decoyRegex}"/>
+						<h:outputText value="PSM score:" />
+						<p:selectOneMenu value="#{experimentMB.cfg.psmScore}">
+							<f:selectItems value="#{databaseMB.scoreTypes}" var="score" itemLabel="#{score}" itemValue="#{score}"/>					
+						</p:selectOneMenu>
+						<h:outputText value="PSM rank threshold:" />
+						<h:inputText value="#{experimentMB.cfg.psmRankThreshold}" />
+						<h:outputText value="Best PSM per precursor:" />
+						<p:selectBooleanCheckbox itemLabel="Enabled" value="#{experimentMB.cfg.bestPsmPerPrecursor}"/>
+						<h:outputText value="PSM-level FDR"/>
+						<h:inputText value="#{experimentMB.cfg.psmFdr}" />
+						<h:outputText value="Minimum peptide length" />
+						<h:inputText value="#{experimentMB.cfg.minPeptideLength}" />
+						<h:outputText value="Peptide-level FDR" />
+						<h:inputText value="#{experimentMB.cfg.peptideFdr}" />
+						<h:outputText value="Protein-level FDR" />
+						<h:inputText value="#{experimentMB.cfg.proteinFdr}" />
+						<h:outputText value="Protein group-level FDR" />
+						<h:inputText value="#{experimentMB.cfg.groupFdr}" />
+						<h:outputText value="Minimum peptide confidence:" />
+						<p:selectOneMenu value="#{experimentMB.peptideConfidence}">
+							<f:selectItems value="#{databaseMB.peptideConfidences}" var="conf" itemLabel="#{conf}" itemValue="#{conf}"/>					
+						</p:selectOneMenu>
+					</p:panelGrid>
 				</p:panelGrid>
 				<br />
 				<p:commandButton value="Submit" actionListener="#{experimentMB.feed()}" ajax="false" />
