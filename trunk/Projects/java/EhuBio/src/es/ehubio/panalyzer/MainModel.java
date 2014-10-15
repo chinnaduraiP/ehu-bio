@@ -12,6 +12,8 @@ import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
 import es.ehubio.panalyzer.html.HtmlReport;
+import es.ehubio.proteomics.MsExperiment;
+import es.ehubio.proteomics.MsExperiment.Replicate;
 import es.ehubio.proteomics.MsMsData;
 import es.ehubio.proteomics.Psm;
 import es.ehubio.proteomics.Score;
@@ -37,15 +39,12 @@ public class MainModel {
 	private String status;
 	private String progressMessage="";
 	private int progressPercent = 0;
-	private MsMsData data;
+	private MsExperiment experiment;
 	private MsMsFile file;
 	private Configuration config;
 	private State state;
 	private Set<ScoreType> psmScoreTypes;
 	private File reportFile = null;
-	
-	private PAnalyzer pAnalyzer;
-	private Validator validator;
 	
 	public MainModel() {
 		resetTotal();	
@@ -65,7 +64,7 @@ public class MainModel {
 	}
 	
 	private void resetData() {
-		data = null;
+		experiment = null;
 		psmScoreTypes = null;
 		setState(State.CONFIGURED, "Experiment configured, you can now load the data");
 	}
@@ -109,23 +108,23 @@ public class MainModel {
 	public void loadData() throws Exception {
 		assertState(state==State.CONFIGURED);
 		try {
-			MsMsData tmp;
-			int step = 0;
-			for( String input : config.getInputs() ) {
-				setProgress(step++, config.getInputs().size(), String.format("Loading %s ...", new File(input).getName()));
-				file = new Mzid();		
-				tmp = file.load(input,config.getDecoyRegex());
-				if( data == null ) {
-					data = tmp;
-					logCounts("Loaded");
-				} else {
-					data.merge(tmp);
-					logCounts("Merged");
+			experiment = new MsExperiment();
+			int step = 0, steps = 0;
+			for( es.ehubio.panalyzer.Configuration.Replicate replicate : config.getReplicates() )
+				steps += replicate.getFractions().size();
+			for( es.ehubio.panalyzer.Configuration.Replicate replicate : config.getReplicates() ) {
+				logger.info(String.format("Loading replicate: %s ...", replicate.getName()));
+				Replicate rep = new Replicate(replicate.getName());
+				for( String fraction : replicate.getFractions() ) {
+					setProgress(step++, steps, String.format("Loading %s (%s) ...", new File(fraction).getName(), rep.getName()));
+					file = new Mzid();		
+					MsMsData data = file.load(fraction,config.getDecoyRegex());
+					rep.mergeFraction(data);
+					logCounts("Merged",rep.getData());
 				}
+				experiment.getReplicates().add(rep);
+				rebuildGroups(rep.getName(), rep.getData());
 			}
-			pAnalyzer = new PAnalyzer(data);
-			validator = new Validator(data);
-			rebuildGroups();
 			finishProgress(State.LOADED, "Data loaded, you can now apply a filter");
 		} catch( Exception e ) {
 			resetData();
@@ -137,7 +136,7 @@ public class MainModel {
 		assertState(state.ordinal()>=State.LOADED.ordinal());
 		if( psmScoreTypes == null ) {
 			psmScoreTypes = new HashSet<>();
-			for( Psm psm : data.getPsms() ) {
+			for( Psm psm : experiment.getReplicates().get(0).getData().getPsms() ) {
 				if( psm.getScores().isEmpty() )
 					continue;
 				for( Score score : psm.getScores() )
@@ -151,20 +150,29 @@ public class MainModel {
 	public void filterData() throws Exception {
 		assertState(state == State.LOADED || state == State.RESULTS);
 		try {
-			int step = 0, steps = 5;
-			setProgress(step++, steps, "Applying input filter ...");
-			inputFilter();
-			setProgress(step++, steps, "Applying PSM FDR filter ...");
-			processPsmFdr();
-			setProgress(step++, steps, "Applying peptide FDR filter ...");
-			processPeptideFdr();
-			setProgress(step++, steps, "Applying protein FDR filter ...");
-			processProteinFdr();
-			setProgress(step++, steps, "Applying protein group FDR filter ...");
-			processGroupFdr();
-			validator.logFdrs();
-			logCounts("Final counts");
-			logger.info(getCounts().toString());
+			int step = 0, steps = 5*experiment.getReplicates().size()+2;
+			for( Replicate replicate : experiment.getReplicates() ) {
+				setProgress(step++, steps, String.format("Applying input filter (%s) ...",replicate.getName()));
+				inputFilter(replicate.getData());
+				setProgress(step++, steps, String.format("Applying PSM FDR filter (%s) ...",replicate.getName()));
+				processPsmFdr(replicate.getData());
+				setProgress(step++, steps, String.format("Applying peptide FDR filter (%s) ...",replicate.getName()));
+				processPeptideFdr(replicate.getData());
+				setProgress(step++, steps, String.format("Applying protein FDR filter (%s) ...",replicate.getName()));
+				processProteinFdr(replicate.getData());
+				setProgress(step++, steps, String.format("Applying protein group FDR filter (%s) ...",replicate.getName()));
+				processGroupFdr(replicate.getData());
+				logFdrs(replicate.getData());
+				logCounts(String.format("Counts (%s)",replicate.getName()), replicate.getData());
+				logger.info(getCounts(replicate.getData()).toString());
+			}
+			setProgress(step++, steps, "Merging replicates ...");
+			experiment.merge();
+			setProgress(step++, steps, "Applying minimum replicate number filter ...");
+			replicateFilter();
+			logFdrs(experiment.getData());
+			logCounts("Final counts",experiment.getData());
+			logger.info(getCounts(experiment.getData()).toString());
 			finishProgress(State.RESULTS, "Data filtered, you can now save the results");
 		} catch( Exception e ) {
 			resetData();
@@ -177,7 +185,7 @@ public class MainModel {
 		assertState(state == State.RESULTS);
 		try {
 			if( Boolean.TRUE.equals(config.getFilterDecoys()) ) {
-				Filter filter = new Filter(data);
+				Filter filter = new Filter(experiment.getData());
 				filter.setFilterDecoyPeptides(true);
 				filterAndGroup(filter,"Decoy removal");
 			}
@@ -187,13 +195,13 @@ public class MainModel {
 			int steps = 3;
 			File dir = new File(config.getOutput());
 			dir.mkdir();
-			if( config.getInputs().size() == 1 ) {
+			if( config.getReplicates().size() == 1 && config.getReplicates().get(0).getFractions().size() == 1 ) {
 				steps++;
 				setProgress(step++, steps, "Saving in input format ...");
 				file.save(config.getOutput());
 			}
 			setProgress(step++, steps, "Saving csv files ...");
-			EhubioCsv csv = new EhubioCsv(data);
+			EhubioCsv csv = new EhubioCsv(experiment.getData());
 			csv.setPsmScoreType(config.getPsmScore());
 			csv.save(config.getOutput());
 			setProgress(step++, steps, "Saving configuration ...");
@@ -208,7 +216,7 @@ public class MainModel {
 	}	
 
 	public MsMsData getData() {
-		return data;
+		return experiment.getData();
 	}
 	
 	public String getStatus() {
@@ -216,31 +224,35 @@ public class MainModel {
 	}
 	
 	public PAnalyzer.Counts getCounts() {
-		return pAnalyzer.getCounts();
+		return getCounts(experiment.getData());
+	}
+	
+	private PAnalyzer.Counts getCounts(MsMsData data) {
+		return new PAnalyzer(data).getCounts();
 	}
 	
 	public PAnalyzer.Counts getTargetCounts() {
-		return pAnalyzer.getTargetCounts();
+		return new PAnalyzer(experiment.getData()).getTargetCounts();
 	}
 	
 	public PAnalyzer.Counts getDecoyCounts() {
-		return pAnalyzer.getDecoyCounts();
+		return new PAnalyzer(experiment.getData()).getDecoyCounts();
 	}
 	
 	public FdrResult getPsmFdr() {
-		return validator.getPsmFdr();
+		return new Validator(experiment.getData()).getPsmFdr();
 	}
 	
 	public FdrResult getPeptideFdr() {
-		return validator.getPeptideFdr();
+		return new Validator(experiment.getData()).getPeptideFdr();
 	}
 	
 	public FdrResult getProteinFdr() {
-		return validator.getProteinFdr();
+		return new Validator(experiment.getData()).getProteinFdr();
 	}
 	
 	public FdrResult getGroupFdr() {
-		return validator.getGroupFdr();
+		return new Validator(experiment.getData()).getGroupFdr();
 	}
 	
 	private void saveConfiguration() throws JAXBException {
@@ -257,9 +269,14 @@ public class MainModel {
 		html.create();
 		logger.info(String.format("HTML report available in '%s'", html.getHtmlFile().getName()));
 		return html.getHtmlFile();
-	}	
+	}
 	
-	private void logCounts( String title ) {
+	private void logFdrs( MsMsData data ) {
+		Validator validator = new Validator(data);
+		validator.logFdrs();
+	}
+	
+	private void logCounts( String title, MsMsData data ) {
 		logger.info(String.format("%s: %s", title, data.toString()));
 	}
 	
@@ -275,32 +292,52 @@ public class MainModel {
 		throw e;
 	}
 	
-	private void rebuildGroups() {
+	private void rebuildGroups(String title, MsMsData data) {
 		//logger.info("Updating protein groups ...");
+		PAnalyzer pAnalyzer = new PAnalyzer(data);
 		pAnalyzer.run();
-		logger.info("Re-grouped: "+getCounts().toString());
+		logger.info(String.format("%s: %s", title, pAnalyzer.getCounts().toString()));
 	}
 	
 	private void filterAndGroup( Filter filter, String title ) {
 		filter.run();
-		logCounts(title);
-		rebuildGroups();
+		logCounts(title,filter.getData());
+		rebuildGroups("Re-grouped", filter.getData());
 	}
 	
-	private void inputFilter() {
-		validator.logFdrs();
+	private void inputFilter(MsMsData data) {
+		logFdrs(data);
 		Filter filter = new Filter(data);
 		filter.setRankTreshold(config.getPsmRankThreshold()==null?0:config.getPsmRankThreshold());
 		filter.setOnlyBestPsmPerPrecursor(Boolean.TRUE.equals(config.getBestPsmPerPrecursor())?config.getPsmScore():null);
 		filter.setMinPeptideLength(config.getMinPeptideLength()==null?0:config.getMinPeptideLength());
 		filter.setFilterDecoyPeptides(false);
 		filterAndGroup(filter,"Input filter");
-		validator.logFdrs();
+		//validator.logFdrs();
 	}
 	
-	private void processPsmFdr() {
-		if( config.getPsmFdr() != null || config.getPeptideFdr() != null || config.getProteinFdr() != null || config.getGroupFdr() != null )
+	private void replicateFilter() {
+		Filter filter = new Filter(experiment.getData());
+		boolean run = false;
+		if( config.getMinPeptideReplicates() != null ) {
+			run = true;
+			filter.setMinPeptideReplicates(config.getMinPeptideReplicates());
+		}
+		if( config.getMinProteinReplicates() != null ) {
+			run = true;
+			filter.setMinProteinReplicates(config.getMinPeptideReplicates());
+		}
+		if( run )
+			filterAndGroup(filter, "Replicate number filter");
+		else
+			rebuildGroups("Re-grouped", experiment.getData());
+	}
+	
+	private void processPsmFdr(MsMsData data) {		
+		if( config.getPsmFdr() != null || config.getPeptideFdr() != null || config.getProteinFdr() != null || config.getGroupFdr() != null ) {
+			Validator validator = new Validator(data);
 			validator.updatePsmDecoyScores(config.getPsmScore());
+		}
 		if( config.getPsmFdr() == null )
 			return;
 		Filter filter = new Filter(data);
@@ -308,8 +345,9 @@ public class MainModel {
 		filterAndGroup(filter,String.format("PSM FDR=%s filter",config.getPsmFdr()));
 	}
 	
-	private void processPeptideFdr() {
+	private void processPeptideFdr(MsMsData data) {
 		if( config.getPeptideFdr() != null || config.getProteinFdr() != null || config.getGroupFdr() != null ) {
+			Validator validator = new Validator(data);
 			validator.updatePeptideProbabilities();
 			validator.updatePeptideDecoyScores(ScoreType.PEPTIDE_P_VALUE);
 		}
@@ -320,9 +358,10 @@ public class MainModel {
 		filterAndGroup(filter,String.format("Peptide FDR=%s filter",config.getPeptideFdr()));
 	}
 	
-	private void processProteinFdr() {
+	private void processProteinFdr(MsMsData data) {
 		if( config.getProteinFdr() == null )
 			return;
+		Validator validator = new Validator(data);
 		validator.updateProteinProbabilities();
 		validator.updateProteinDecoyScores(ScoreType.PROTEIN_P_VALUE);
 		Filter filter = new Filter(data);
@@ -330,11 +369,13 @@ public class MainModel {
 		filterAndGroup(filter,String.format("Protein FDR=%s filter",config.getProteinFdr()));
 	}
 	
-	private void processGroupFdr() {
+	private void processGroupFdr(MsMsData data) {
 		if( config.getGroupFdr() == null )
 			return;
 		
+		PAnalyzer pAnalyzer = new PAnalyzer(data);		
 		PAnalyzer.Counts curCount = pAnalyzer.getCounts(), prevCount;
+		Validator validator = new Validator(data);
 		int i = 0;
 		Filter filter = new Filter(data);
 		filter.setGroupScoreThreshold(new Score(ScoreType.GROUP_Q_VALUE, config.getGroupFdr()));

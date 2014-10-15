@@ -33,7 +33,7 @@ public class HomeBean implements Serializable {
 		page.setDescription(
 			"Search motifs in protein sequences provided as an input fasta file. " +
 			"The motif can be selected from a dropdown list or a custom motif can be provided by the user by " +
-			"entering a regular expression and an optional PSSM. This PSSM can be builded using the Training page." );
+			"entering a regular expression and an optional PSSM. This PSSM can be built using the Training page." );
 		page.setAction("search");
 		addPage(page);
 		

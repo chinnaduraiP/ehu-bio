@@ -25,6 +25,7 @@ import es.ehubio.mymrm.data.FragmentationType;
 import es.ehubio.mymrm.data.Instrument;
 import es.ehubio.mymrm.data.IonizationType;
 import es.ehubio.panalyzer.Configuration;
+import es.ehubio.panalyzer.Configuration.Replicate;
 import es.ehubio.proteomics.Peptide;
 
 @ManagedBean
@@ -107,9 +108,11 @@ public class ExperimentMB implements Serializable {
 		Configuration cfg = new Configuration();
 		cfg.setDescription(getEntity().getName());
 		cfg.setFilterDecoys(true);
-		cfg.setInputs(new HashSet<String>());
+		Replicate replicate = new Replicate();
+		replicate.setName("only");
+		cfg.getReplicates().add(replicate);
 		for( String file : files )
-			cfg.getInputs().add(new File(getTmpDir(),file).getAbsolutePath());
+			replicate.getFractions().add(new File(getTmpDir(),file).getAbsolutePath());
 
 		ExperimentFeed feed = new ExperimentFeed(experiment, cfg, peptideConfidence);
 		try {

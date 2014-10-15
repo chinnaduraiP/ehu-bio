@@ -178,4 +178,11 @@ public class Peptide extends DecoyBase {
 	public void setName(String name) {
 		this.name = name;
 	}
+	
+	public Set<String> getReplicates() {
+		Set<String> set = new HashSet<>();
+		for( Psm psm : getPsms() )
+			set.add(psm.getSpectrum().getRepName());
+		return set;
+	}
 }

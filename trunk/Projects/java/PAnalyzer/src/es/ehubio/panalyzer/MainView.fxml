@@ -34,7 +34,8 @@
                               <TreeView fx:id="treeExperiment" maxWidth="1.7976931348623157E308" prefHeight="409.0" prefWidth="448.0" HBox.hgrow="ALWAYS" />
                               <VBox maxWidth="1.7976931348623157E308" spacing="5.0">
                                  <children>
-                                    <Button fx:id="buttonAdd" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleAddFiles" text="Add files" />
+                                    <Button fx:id="buttonAddReplicate" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleAddReplicate" text="Add replicate" />
+                                    <Button fx:id="buttonAddFractions" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleAddFractions" text="Add fractions" />
                                     <Button fx:id="buttonClear" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleClearFiles" text="Clear" />
                                     <Button fx:id="buttonLoad" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleLoadFiles" text="Load" />
                                     <Label text="Decoy regex:" />
@@ -61,8 +62,8 @@
                            <children>
                               <GridPane hgap="10.0" vgap="5.0">
                                 <columnConstraints>
-                                  <ColumnConstraints hgrow="SOMETIMES" prefWidth="188.0" />
-                                  <ColumnConstraints hgrow="SOMETIMES" maxWidth="1.7976931348623157E308" prefWidth="422.0" />
+                                  <ColumnConstraints hgrow="SOMETIMES" maxWidth="196.0" minWidth="194.0" prefWidth="196.0" />
+                                  <ColumnConstraints hgrow="SOMETIMES" maxWidth="1.7976931348623157E308" minWidth="414.0" prefWidth="414.0" />
                                 </columnConstraints>
                                 <rowConstraints>
                                   <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
@@ -72,29 +73,35 @@
                                     <RowConstraints vgrow="SOMETIMES" />
                                     <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                                   <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                    <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                                     <RowConstraints vgrow="SOMETIMES" />
                                   <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                    <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                                     <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                                 </rowConstraints>
                                  <children>
                                     <Label text="PSM score type" />
                                     <Label fx:id="labelPeptideFdr" text="Peptide-level FDR" GridPane.rowIndex="6" />
-                                    <Label fx:id="labelProteinFdr" text="Protein level-FDR" GridPane.rowIndex="8" />
-                                    <Label fx:id="labelGroupFdr" text="Protein group-level FDR" GridPane.rowIndex="9" />
+                                    <Label fx:id="labelProteinFdr" text="Protein level-FDR" GridPane.rowIndex="9" />
+                                    <Label fx:id="labelGroupFdr" text="Protein group-level FDR" GridPane.rowIndex="11" />
                                     <ChoiceBox fx:id="choiceScoreType" maxWidth="1.7976931348623157E308" prefWidth="150.0" GridPane.columnIndex="1" />
                                     <TextField fx:id="textPeptideFdr" GridPane.columnIndex="1" GridPane.rowIndex="6" />
-                                    <TextField fx:id="textProteinFdr" GridPane.columnIndex="1" GridPane.rowIndex="8" />
-                                    <TextField fx:id="textGroupFdr" GridPane.columnIndex="1" GridPane.rowIndex="9" />
+                                    <TextField fx:id="textProteinFdr" GridPane.columnIndex="1" GridPane.rowIndex="9" />
+                                    <TextField fx:id="textGroupFdr" GridPane.columnIndex="1" GridPane.rowIndex="11" />
                                     <Label fx:id="labelPeptideLength" text="Minimim peptide length" GridPane.rowIndex="5" />
                                     <TextField fx:id="textPeptideLength" GridPane.columnIndex="1" GridPane.rowIndex="5" />
                                     <Label fx:id="labelRank" text="PSM rank threshold" GridPane.rowIndex="1" />
                                     <Label fx:id="labelPsmFdr" text="PSM-level FDR" GridPane.rowIndex="3" />
                                     <TextField fx:id="textPsmFdr" GridPane.columnIndex="1" GridPane.rowIndex="3" />
                                     <Separator prefWidth="200.0" GridPane.rowIndex="4" />
-                                    <Separator prefWidth="200.0" GridPane.rowIndex="7" />
+                                    <Separator prefWidth="200.0" GridPane.rowIndex="8" />
                                     <TextField fx:id="textRank" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                                     <Label text="Best PSM per precursor" GridPane.rowIndex="2" />
                                     <CheckBox fx:id="checkBestPsm" mnemonicParsing="false" text="Enabled" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                    <Label fx:id="labelPeptideReplicates" text="Minimum peptide replicates" GridPane.rowIndex="7" />
+                                    <TextField fx:id="textPeptideReplicates" GridPane.columnIndex="1" GridPane.rowIndex="7" />
+                                    <Label fx:id="labelProteinReplicates" text="Minimum protein replicates" GridPane.rowIndex="10" />
+                                    <TextField fx:id="textProteinReplicates" GridPane.columnIndex="1" GridPane.rowIndex="10" />
                                  </children>
                               </GridPane>
                               <HBox fillHeight="false" maxWidth="1.7976931348623157E308" prefHeight="0.0" prefWidth="620.0" spacing="10.0">

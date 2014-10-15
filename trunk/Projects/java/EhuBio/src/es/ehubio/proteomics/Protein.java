@@ -159,4 +159,11 @@ public class Protein extends DecoyBase {
 	public String getUniqueString() {
 		return getAccession();
 	}
+	
+	public Set<String> getReplicates() {
+		Set<String> set = new HashSet<>();
+		for( Peptide peptide : getPeptides() )
+			set.addAll(peptide.getReplicates());
+		return set;
+	}
 }

@@ -3,8 +3,8 @@
 	<name>wregex</name>
 	<comment></comment>
 	<projects>
-		<project>spHpp</project>
 		<project>EhuBio</project>
+		<project>spHpp</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

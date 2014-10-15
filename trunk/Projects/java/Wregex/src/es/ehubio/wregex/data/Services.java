@@ -9,11 +9,11 @@ import java.util.Map;
 
 import javax.faces.context.ExternalContext;
 
-import es.ehubio.db.Aminoacid;
 import es.ehubio.db.cosmic.Loci;
 import es.ehubio.db.cosmic.Locus;
 import es.ehubio.dbptm.ProteinPtms;
 import es.ehubio.dbptm.Ptm;
+import es.ehubio.model.Aminoacid;
 import es.ehubio.wregex.InputGroup;
 import es.ehubio.wregex.Pssm;
 import es.ehubio.wregex.PssmBuilder.PssmBuilderException;
