@@ -5,6 +5,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Method;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -53,6 +54,7 @@ import javafx.util.Callback;
 
 import org.controlsfx.dialog.Dialogs;
 
+import es.ehubio.panalyzer.Configuration.Replicate;
 import es.ehubio.proteomics.ScoreType;
 import es.ehubio.proteomics.pipeline.PAnalyzer;
 
@@ -64,7 +66,8 @@ public class MainController implements Initializable {
 	@FXML private Label labelSignature;
 	@FXML private Label labelStatus;
 	@FXML private TreeView<String> treeExperiment;
-	@FXML private Button buttonAdd;
+	@FXML private Button buttonAddReplicate;
+	@FXML private Button buttonAddFractions;
 	@FXML private Button buttonClear;
 	@FXML private Button buttonLoad;
 	@FXML private Button buttonFilter;
@@ -80,14 +83,18 @@ public class MainController implements Initializable {
 	@FXML private Label labelPsmFdr;
 	@FXML private Label labelPeptideLength;
 	@FXML private Label labelPeptideFdr;
+	@FXML private Label labelPeptideReplicates;
 	@FXML private Label labelProteinFdr;
+	@FXML private Label labelProteinReplicates;
 	@FXML private Label labelGroupFdr;
 	@FXML private TextField textRank;	
 	@FXML private CheckBox checkBestPsm;
 	@FXML private TextField textPsmFdr;
 	@FXML private TextField textPeptideLength;
 	@FXML private TextField textPeptideFdr;
+	@FXML private TextField textPeptideReplicates;
 	@FXML private TextField textProteinFdr;
+	@FXML private TextField textProteinReplicates;
 	@FXML private TextField textGroupFdr;
 	@FXML private TextArea textResults;
 	@FXML private TableView<CountBean> tableCounts;
@@ -108,7 +115,7 @@ public class MainController implements Initializable {
 	private final MainModel model;
 	private final Stage view;
 	
-	private final Set<String> files = new HashSet<>();
+	private final List<Set<String>> files = new ArrayList<>();
 	private final Map<MainModel.State, Set<Object>> mapNodes = new HashMap<>();
 	private final Set<Object> listNodes = new HashSet<>();
 	private final StringWriter logString = new StringWriter();	
@@ -118,20 +125,30 @@ public class MainController implements Initializable {
 		this.view = view;
 	}
 	
-	@FXML private void handleAddFiles( ActionEvent event ) {
+	@FXML private void handleAddReplicate( ActionEvent event ) {
+		int count = treeExperiment.getRoot().getChildren().size()+1;
+		TreeItem<String> rep = new TreeItem<String>(String.format("Replicate #%s", count));
+		rep.setExpanded(true);
+		treeExperiment.getRoot().getChildren().add(rep);
+		if( event != null )
+			updateView();
+	}
+	
+	@FXML private void handleAddFractions( ActionEvent event ) {
 		List<File> files = fileChooser.showOpenMultipleDialog(view);
 		if( files == null )
 			return;
+		Set<String> set = new HashSet<>();
 		for( File file : files ) {
-			if( !this.files.add(file.getAbsolutePath()) )
+			if( !set.add(file.getAbsolutePath()) )
 				continue;
 			TreeItem<String> item = new TreeItem<>(file.getName());
-			treeExperiment.getRoot().getChildren().add(item);			
+			int replicate = treeExperiment.getRoot().getChildren().size()-1;
+			treeExperiment.getRoot().getChildren().get(replicate).getChildren().add(item);			
 		}
+		this.files.add(set);
 		if( model.getConfig() == null )
 			model.setConfig(config);
-		config.setInputs(this.files);
-		config.setFilterDecoys(true);
 		updateView();
 	}
 	
@@ -139,11 +156,19 @@ public class MainController implements Initializable {
 		treeExperiment.getRoot().getChildren().clear();
 		files.clear();
 		model.reset();
-		updateView();
+		handleAddReplicate(event);
 	}
 	
 	@FXML private void handleLoadFiles( ActionEvent event ) {
 		logSeparator("Loading");
+		config.setFilterDecoys(true);
+		for( int i = 0; i < treeExperiment.getRoot().getChildren().size(); i++ ) {
+			Replicate replicate = new Replicate();
+			replicate.setName(treeExperiment.getRoot().getChildren().get(i).getValue());
+			for( String file : files.get(i) )
+				replicate.getFractions().add(file);
+			config.getReplicates().add(replicate);
+		}
 		String decoy = textDecoy.getText().trim();
 		textDecoy.setText(decoy);
 		config.setDecoyRegex(decoy.length()==0?null:decoy);
@@ -165,7 +190,7 @@ public class MainController implements Initializable {
 					choiceScoreType.setValue(ScoreType.MASCOT_EVALUE);
 				else
 					choiceScoreType.getSelectionModel().selectFirst();
-				resetFilter();
+				config.initialize();
 				tabPane.getSelectionModel().select(tabFilter);
 				updateView();
 			}
@@ -184,7 +209,9 @@ public class MainController implements Initializable {
 			config.setPsmFdr(tryDouble(textPsmFdr, labelPsmFdr));
 			config.setMinPeptideLength(tryInteger(textPeptideLength, labelPeptideLength));
 			config.setPeptideFdr(tryDouble(textPeptideFdr, labelPeptideFdr));
+			config.setMinPeptideReplicates(tryInteger(textPeptideReplicates, labelPeptideReplicates));
 			config.setProteinFdr(tryDouble(textProteinFdr, labelProteinFdr));
+			config.setMinProteinReplicates(tryInteger(textProteinReplicates, labelProteinReplicates));
 			config.setGroupFdr(tryDouble(textGroupFdr, labelGroupFdr));
 			Callable<Void> thread = new Callable<Void>() {
 				@Override
@@ -210,16 +237,9 @@ public class MainController implements Initializable {
 	}
 	
 	@FXML private void handleReset( ActionEvent event ) {
-		resetFilter();
+		config.initialize();
 		model.setConfig(config);
 		updateView();
-	}
-	
-	private void resetFilter() {
-		config.setBestPsmPerPrecursor(true);
-		config.setMinPeptideLength(7);
-		config.setPeptideFdr(0.01);
-		config.setGroupFdr(0.01);
 	}
 	
 	private void updateResults() {
@@ -313,7 +333,7 @@ public class MainController implements Initializable {
 		directoryChooser.setInitialDirectory(new File(System.getProperty("user.home")));
 		
 		config.setDescription("MyExperiment");
-		TreeItem<String> rootItem = new TreeItem<>(config.getDescription());
+		TreeItem<String> rootItem = new TreeItem<>(config.getDescription());		
 		rootItem.setExpanded(true);
 		treeExperiment.setEditable(true);
 		treeExperiment.setRoot(rootItem);
@@ -323,6 +343,7 @@ public class MainController implements Initializable {
 				return new TextFieldTreeCell();
 			}
 		});
+		handleAddReplicate(null);
 		
 		labelSignature.setText(MainModel.SIGNATURE);
 		textDecoy.setText("decoy");
@@ -336,7 +357,8 @@ public class MainController implements Initializable {
 		colFdrThreshold.setCellValueFactory(new PropertyValueFactory<FdrBean,Double>("threshold"));
 		
 		enableByStates(treeExperiment,MainModel.State.INIT,MainModel.State.CONFIGURED);
-		enableByStates(buttonAdd,MainModel.State.INIT,MainModel.State.CONFIGURED);
+		enableByStates(buttonAddFractions,MainModel.State.INIT,MainModel.State.CONFIGURED);
+		enableByStates(buttonAddReplicate,MainModel.State.INIT,MainModel.State.CONFIGURED);
 		enableByStates(buttonClear,MainModel.State.CONFIGURED,MainModel.State.LOADED,MainModel.State.RESULTS,MainModel.State.SAVED);
 		enableByStates(buttonLoad,MainModel.State.CONFIGURED);
 		enableByStates(textDecoy,MainModel.State.CONFIGURED);
@@ -380,13 +402,20 @@ public class MainController implements Initializable {
 		textPsmFdr.setText(valueOf(config.getPsmFdr()));
 		textPeptideLength.setText(valueOf(config.getMinPeptideLength()));
 		textPeptideFdr.setText(valueOf(config.getPeptideFdr()));
+		textPeptideReplicates.setText(valueOf(config.getMinPeptideReplicates()));
 		textProteinFdr.setText(valueOf(config.getProteinFdr()));
+		textProteinReplicates.setText(valueOf(config.getMinProteinReplicates()));
 		textGroupFdr.setText(valueOf(config.getGroupFdr()));
 		checkFilterDecoys.setSelected(Boolean.TRUE.equals(config.getFilterDecoys()));
 		for( Object node : listNodes )
 			disableObject(node,true);
 		for( Object node : mapNodes.get(model.getState()) )
-			disableObject(node,false);		
+			disableObject(node,false);
+		int last = treeExperiment.getRoot().getChildren().size()-1; 
+		if( treeExperiment.getRoot().getChildren().get(last).getChildren().isEmpty() )
+			buttonAddReplicate.setDisable(true);
+		else
+			buttonAddFractions.setDisable(true);
 	}
 	
 	private String valueOf( Object o ) {

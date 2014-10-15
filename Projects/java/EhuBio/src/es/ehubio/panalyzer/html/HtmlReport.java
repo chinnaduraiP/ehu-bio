@@ -17,6 +17,7 @@ import org.apache.commons.io.IOUtils;
 
 import es.ehubio.db.fasta.Fasta;
 import es.ehubio.io.CsvUtils;
+import es.ehubio.panalyzer.Configuration.Replicate;
 import es.ehubio.panalyzer.MainModel;
 import es.ehubio.proteomics.Peptide;
 import es.ehubio.proteomics.Protein;
@@ -110,10 +111,17 @@ public class HtmlReport {
 	}
 	
 	private String getInputsLinks() {
-		List<String> list = new ArrayList<>();
-		for( String input : model.getConfig().getInputs() )
-			list.add(String.format("<a href=\"file://%1$s\">%1$s</a>", input));
-		return CsvUtils.getCsv(SEP, list.toArray());
+		HtmlTable table = new HtmlTable();
+		table.setStyle("border:none; width:100%");
+		table.setColStyle(0, "white-space: nowrap");
+		table.setColStyle(1, "width: 99%");
+		for( Replicate replicate : model.getConfig().getReplicates() ) {
+			List<String> list = new ArrayList<>();
+			for( String input : replicate.getFractions() )
+				list.add(String.format("<a href=\"file://%1$s\">%1$s</a>", input));
+			table.addRow(replicate.getName(),CsvUtils.getCsv(SEP, list.toArray()));
+		}
+		return table.render(true,false);
 	}
 
 	private String getSummary() {
@@ -214,6 +222,7 @@ public class HtmlReport {
 		table.addRow("Sequence",peptide.getSequence());
 		table.addRow("Modifications",peptide.getPtms().isEmpty()?"none":CsvUtils.getCsv(SEP, peptide.getPtms().toArray()));
 		table.addRow("PSMs",getPsmsDetails(peptide));
+		table.addRow("Replicates",CsvUtils.getCsv(SEP, peptide.getReplicates().toArray()));
 		return table.render(odd,true);
 	}
 

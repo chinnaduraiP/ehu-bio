@@ -19,19 +19,29 @@ import es.ehubio.proteomics.psi.mzid11.UserParamType;
 public class Filter {
 	//private final static Logger logger = Logger.getLogger(Filter.class.getName());	
 	private Score psmScoreThreshold;
-	private Score peptideScoreThreshold;
-	private Score proteinScoreThreshold;
-	private Score groupScoreThreshold;
+	private ScoreType onlyBestPsmPerPrecursor;
 	private boolean passThreshold = false;
-	private int minPeptideLength = 0;
-	private Boolean filterDecoyPeptides;
 	private int rankTreshold = 0;
 	private Double ppmThreshold;
+	
+	private Score peptideScoreThreshold;
+	private int minPeptideLength = 0;
+	private Boolean filterDecoyPeptides;
+	private int minPeptideReplicates = 0;
+	
+	private Score proteinScoreThreshold;
+	private int minProteinReplicates = 0;
+	private Score groupScoreThreshold;
+		
 	private final MsMsData data;	
-	private ScoreType onlyBestPsmPerPrecursor;
+	
 	
 	public Filter( MsMsData data ) {
 		this.data = data;
+	}
+	
+	public MsMsData getData() {
+		return data;
 	}
 	
 	public Score getPsmScoreThreshold() {
@@ -112,6 +122,22 @@ public class Filter {
 
 	public void setOnlyBestPsmPerPrecursor(ScoreType scoreType) {
 		this.onlyBestPsmPerPrecursor = scoreType;
+	}
+	
+	public int getMinPeptideReplicates() {
+		return minPeptideReplicates;
+	}
+
+	public void setMinPeptideReplicates(int minPeptideReplicates) {
+		this.minPeptideReplicates = minPeptideReplicates;
+	}
+
+	public int getMinProteinReplicates() {
+		return minProteinReplicates;
+	}
+
+	public void setMinProteinReplicates(int minProteinReplicates) {
+		this.minProteinReplicates = minProteinReplicates;
 	}
 	
 	public void run() {
@@ -200,6 +226,10 @@ public class Filter {
 				unlinkPeptide(peptide);
 				continue;
 			}
+			if( getMinPeptideReplicates() > 1 && peptide.getReplicates().size() < getMinPeptideReplicates() ) {
+				unlinkPeptide(peptide);
+				continue;
+			}
 			if( getPeptideScoreThreshold() == null )
 				continue;
 			Score score = peptide.getScoreByType(getPeptideScoreThreshold().getType());
@@ -215,6 +245,10 @@ public class Filter {
 				continue;
 			}
 			if( isPassThreshold() && !protein.isPassThreshold() ) {
+				unlinkProtein(protein);
+				continue;
+			}
+			if( getMinProteinReplicates() > 1 && protein.getReplicates().size() < getMinProteinReplicates() ) {
 				unlinkProtein(protein);
 				continue;
 			}
@@ -401,5 +435,5 @@ public class Filter {
 			if( peptide.getPsms().isEmpty() )
 				unlinkPeptide(peptide);
 		}
-	}
+	}	
 }

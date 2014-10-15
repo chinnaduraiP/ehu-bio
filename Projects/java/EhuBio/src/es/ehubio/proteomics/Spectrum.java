@@ -22,6 +22,7 @@ public class Spectrum {
 	private Double rt;
 	private Double intensity;
 	private List<Peak> peaks = new ArrayList<>();
+	private String repName;
 	
 	public Spectrum() {
 		id = idCount++;
@@ -104,6 +105,14 @@ public class Spectrum {
 
 	public void setTitle(String title) {
 		this.title = title;
+	}
+
+	public String getRepName() {
+		return repName;
+	}
+
+	public void setRepName(String repName) {
+		this.repName = repName;
 	}
 
 	public static class Peak {

@@ -321,40 +321,34 @@ public class Database {
 					ExperimentFeed experiment = queue.take();
 					currentFeed = experiment;
 					em.getTransaction().begin();
-					feed( experiment );
-					em.getTransaction().commit();
+					if( feed(experiment) )
+						em.getTransaction().commit();
+					else {
+						em.getTransaction().rollback();
+						cancel = false;
+					}
 					currentFeed = null;
 				} catch( Exception e ) {
 					e.printStackTrace();
-					em.getTransaction().rollback();
+					em.getTransaction().rollback();					
 				}
 			}
 		}
 		
-		private void feed( ExperimentFeed e ) throws Exception {									
+		private boolean feed( ExperimentFeed e ) throws Exception {									
 			em.persist(e.getExperiment());
 			
 			e.setStatus("Analyzing ...");
 			MainModel panalyzer = new MainModel();
 			panalyzer.setConfig(e.getConfiguration());
-			try {
-				panalyzer.run();	
-			} catch (Exception ex) {
-				ex.printStackTrace();
-				em.getTransaction().rollback();
-				cancel = false;
-				return;
-			}
+			panalyzer.run();
 			MsMsData data = panalyzer.getData();
 
 			double total = data.getPeptides().size();
 			double partial = 0.0;
 			for( es.ehubio.proteomics.Peptide peptide : data.getPeptides() ) {
-				if( cancel == true ) {
-					em.getTransaction().rollback();
-					cancel = false;
-					return;
-				}
+				if( cancel == true )
+					return false;
 				partial += 1.0;
 				if( Boolean.TRUE.equals(peptide.getDecoy()) || peptide.getConfidence().getOrder() > e.getConfidence().getOrder() )
 					continue;
@@ -385,7 +379,8 @@ public class Database {
 				if( ((int)(partial+0.5))%20 == 0 )					
 					logger.info(e.getStatus());
 			}
-			feedFiles(e.getExperiment(), e.getConfiguration());			
+			feedFiles(e.getExperiment(), e.getConfiguration());
+			return true;
 		}
 		
 		private static Peptide findByMassSequence( String massSequence ) {
@@ -506,7 +501,7 @@ public class Database {
 		}
 		
 		private static void feedFiles( Experiment e, Configuration cfg ) {
-			for( String input : cfg.getInputs() ) {
+			for( String input : cfg.getReplicates().get(0).getFractions() ) {
 				ExperimentFile file = new ExperimentFile();
 				file.setExperimentBean(e);
 				file.setFileName(new File(input).getName());

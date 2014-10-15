@@ -1,6 +1,6 @@
 package es.ehubio.db.cosmic;
 
-import es.ehubio.db.Aminoacid;
+import es.ehubio.model.Aminoacid;
 
 public class Locus {
 	public int position;

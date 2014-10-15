@@ -37,6 +37,14 @@ public class HomeBean implements Serializable {
 		projects.add(project);
 		
 		project = new Project();
+		project.setName("MyMRM");
+		project.setDescription(
+			"MyMRM is a simple software tool to aid proteomic laboratories designing targeted proteomics methods " +
+			"for their own equipment by using the data of their shotgun experiments.");
+		project.setUrl("http://code.google.com/p/ehu-bio/wiki/MyMRM");
+		projects.add(project);
+		
+		project = new Project();
 		project.setName("spHPP");
 		project.setDescription(
 			"Contributions to the Spanish bioinformatics group of the Chromosome-centric Human Proteome Project (C-HPP).");

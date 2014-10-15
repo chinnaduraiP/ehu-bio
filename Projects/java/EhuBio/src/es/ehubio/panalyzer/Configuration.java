@@ -1,11 +1,13 @@
 package es.ehubio.panalyzer;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
+import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
 
 import es.ehubio.proteomics.ScoreType;
@@ -13,18 +15,24 @@ import es.ehubio.proteomics.ScoreType;
 @XmlType(propOrder={
 	"description",
 	"psmRankThreshold","bestPsmPerPrecursor","psmFdr","psmScore",
-	"minPeptideLength","peptideFdr",
-	"proteinFdr","groupFdr",
-	"decoyRegex","inputs","filterDecoys","output"})
+	"minPeptideLength","peptideFdr","minPeptideReplicates",
+	"proteinFdr","minProteinReplicates","groupFdr",
+	"decoyRegex","replicates","filterDecoys","output"})
 @XmlRootElement
 public class Configuration {
-	@XmlTransient
 	public void initialize() {
-		setDecoyRegex("decoy");
+		setPsmRankThreshold(null);		
 		setBestPsmPerPrecursor(true);
+		setPsmFdr(null);
+		setPsmScore(null);
 		setMinPeptideLength(7);
 		setPeptideFdr(0.01);
+		setMinPeptideReplicates(null);
+		setProteinFdr(null);
+		setMinProteinReplicates(null);
 		setGroupFdr(0.01);
+		setDecoyRegex("decoy");
+		setFilterDecoys(true);
 	}
 	
 	public String getDescription() {
@@ -107,15 +115,15 @@ public class Configuration {
 		this.groupFdr = groupFdr;
 	}			
 	
-	@XmlElement(name="input")
-	public Set<String> getInputs() {
-		if( inputs == null )
-			inputs = new HashSet<>();
-		return inputs;
+	@XmlElement(name="replicate")
+	public List<Replicate> getReplicates() {
+		if( replicates == null )
+			replicates = new ArrayList<>();
+		return replicates;
 	}
 	
-	public void setInputs(Set<String> inputs) {
-		this.inputs = inputs;
+	public void setReplicates(List<Replicate> replicates) {
+		this.replicates = replicates;
 	}
 	
 	public String getOutput() {
@@ -133,6 +141,47 @@ public class Configuration {
 	public void setFilterDecoys(Boolean filterDecoys) {
 		this.filterDecoys = filterDecoys;
 	}
+	
+	public Integer getMinPeptideReplicates() {
+		return minPeptideReplicates;
+	}
+
+	public void setMinPeptideReplicates(Integer minPeptideReplicates) {
+		this.minPeptideReplicates = minPeptideReplicates;
+	}
+
+	public Integer getMinProteinReplicates() {
+		return minProteinReplicates;
+	}
+
+	public void setMinProteinReplicates(Integer minProteinReplicates) {
+		this.minProteinReplicates = minProteinReplicates;
+	}
+
+	public static class Replicate {
+		private String name;
+		private Set<String> fractions;
+
+		@XmlAttribute
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		@XmlElement(name="fraction")
+		public Set<String> getFractions() {
+			if( fractions == null )
+				fractions = new HashSet<>();
+			return fractions;
+		}
+
+		public void setFractions(Set<String> fractions) {
+			this.fractions = fractions;
+		}		
+	}
 
 	private String description;
 	private ScoreType psmScore;
@@ -142,9 +191,11 @@ public class Configuration {
 	private Boolean bestPsmPerPrecursor;
 	private Integer minPeptideLength;
 	private Double peptideFdr;
+	private Integer minPeptideReplicates;
 	private Double proteinFdr;
+	private Integer minProteinReplicates;
 	private Double groupFdr;	
-	private Set<String> inputs;
+	private List<Replicate> replicates;
 	private String output;
 	private Boolean filterDecoys;
 }
