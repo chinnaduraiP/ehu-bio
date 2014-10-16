@@ -2,8 +2,8 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/EhuBio"/>
-	<classpathentry kind="lib" path="/home/gorka/Aplicaciones/libs/controlsfx-8.20.7/controlsfx-8.20.7.jar"/>
 	<classpathentry kind="lib" path="/home/gorka/Aplicaciones/libs/commons-io-2.4/commons-io-2.4.jar"/>
+	<classpathentry kind="lib" path="/home/gorka/Aplicaciones/libs/controlsfx-8.20.7/controlsfx-8.20.7.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

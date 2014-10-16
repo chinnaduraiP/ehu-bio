@@ -46,6 +46,8 @@ import javafx.scene.control.TreeCell;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.scene.web.WebView;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
@@ -74,6 +76,8 @@ public class MainController implements Initializable {
 	@FXML private Button buttonReset;
 	@FXML private Button buttonSave;
 	@FXML private TabPane tabPane;
+	@FXML private VBox vboxFilter;
+	@FXML private HBox hboxResults;
 	@FXML private Tab tabFilter;
 	@FXML private Tab tabResults;
 	@FXML private Tab tabBrowser;
@@ -118,11 +122,18 @@ public class MainController implements Initializable {
 	private final List<Set<String>> files = new ArrayList<>();
 	private final Map<MainModel.State, Set<Object>> mapNodes = new HashMap<>();
 	private final Set<Object> listNodes = new HashSet<>();
-	private final StringWriter logString = new StringWriter();	
+	private StringWriter logString;
+	private PrintWriter log;
 	
 	public MainController( MainModel model, Stage view ) {
+		resetLog();
 		this.model = model;
 		this.view = view;
+	}
+	
+	private void resetLog() {
+		logString = new StringWriter();
+		log = new PrintWriter(logString);
 	}
 	
 	@FXML private void handleAddReplicate( ActionEvent event ) {
@@ -155,12 +166,14 @@ public class MainController implements Initializable {
 	@FXML private void handleClearFiles( ActionEvent event ) {
 		treeExperiment.getRoot().getChildren().clear();
 		files.clear();
+		config.getReplicates().clear();
 		model.reset();
-		handleAddReplicate(event);
+		resetLog();
+		handleAddReplicate(event);		
 	}
 	
 	@FXML private void handleLoadFiles( ActionEvent event ) {
-		logSeparator("Loading");
+		logSeparator(false,"Loading");
 		config.setFilterDecoys(true);
 		for( int i = 0; i < treeExperiment.getRoot().getChildren().size(); i++ ) {
 			Replicate replicate = new Replicate();
@@ -200,7 +213,7 @@ public class MainController implements Initializable {
 	}
 	
 	@FXML private void handleApplyFilter( ActionEvent event ) {
-		logSeparator("Filtering");
+		logSeparator(true,"Filtering");
 		try {
 			config.setDescription(treeExperiment.getRoot().getValue());
 			config.setPsmScore(choiceScoreType.getValue());
@@ -238,7 +251,7 @@ public class MainController implements Initializable {
 	
 	@FXML private void handleReset( ActionEvent event ) {
 		config.initialize();
-		model.setConfig(config);
+		//model.setConfig(config);
 		updateView();
 	}
 	
@@ -295,8 +308,10 @@ public class MainController implements Initializable {
 	}
 	
 	@FXML private void handleSaveFiles( ActionEvent event ) {				
-		File dir = directoryChooser.showDialog(view);		
-		logSeparator("Saving");
+		File dir = directoryChooser.showDialog(view);	
+		if( dir == null )
+			return;
+		logSeparator(true,"Saving");
 		config.setFilterDecoys(checkFilterDecoys.isSelected());
 		config.setOutput(new File(dir,config.getDescription()).getAbsolutePath());
 		Callable<Void> thread = new Callable<Void>() {			
@@ -363,12 +378,10 @@ public class MainController implements Initializable {
 		enableByStates(buttonLoad,MainModel.State.CONFIGURED);
 		enableByStates(textDecoy,MainModel.State.CONFIGURED);
 		enableByStates(tabFilter,MainModel.State.LOADED,MainModel.State.RESULTS,MainModel.State.SAVED);
-		enableByStates(tabFilter.getContent(),MainModel.State.LOADED,MainModel.State.RESULTS);
+		enableByStates(vboxFilter,MainModel.State.LOADED);
 		enableByStates(tabResults,MainModel.State.RESULTS,MainModel.State.SAVED);
-		enableByStates(tabResults.getContent(),MainModel.State.RESULTS,MainModel.State.SAVED);
+		enableByStates(hboxResults,MainModel.State.RESULTS);
 		enableByStates(tabBrowser,MainModel.State.SAVED);
-		
-		showWelcome();
 		
 		updateView();		
 	}
@@ -394,7 +407,8 @@ public class MainController implements Initializable {
 	}
 	
 	private void updateView() {
-		textSummary.setText(logString.toString());
+		String log = logString.toString();
+		textSummary.setText(log.isEmpty()?getWelcome():log);
 		labelStatus.setText(model.getStatus());
 		//choiceScoreType.setValue(config.getPsmScore());
 		textRank.setText(valueOf(config.getPsmRankThreshold()));
@@ -422,7 +436,7 @@ public class MainController implements Initializable {
 		return o == null ? "" : o.toString();
 	}
 	
-	private static void showWelcome() {
+	private static String getWelcome() {
 		StringWriter string = new StringWriter();
 		PrintWriter pw = new PrintWriter(string);
 		pw.println(String.format("--- Welcome to %s ---\n", MainModel.SIGNATURE));
@@ -432,11 +446,11 @@ public class MainController implements Initializable {
 		pw.println("3. Check and export the results in the 'Results' tab");
 		pw.print("4. Browse the results using the integrated 'Browser' tab or your favorite web browser outside this application");
 		pw.close();
-		logger.info(string.toString());
+		return string.toString();
 	}
 	
-	private void logSeparator( String msg ) {
-		logger.info(msg==null?"":String.format("\n--- %s ---", msg));
+	private void logSeparator( boolean skip, String msg ) {
+		logger.info(msg==null?"":String.format("%s--- %s ---", skip?"\n":"", msg));
 	}
 	
 	private final class GuiService {
@@ -522,15 +536,17 @@ public class MainController implements Initializable {
 
 		@Override
 		public void flush() {
-			log.flush();
+			synchronized(log) {
+				log.flush();
+			}
 		}
 
 		@Override
 		public void close() throws SecurityException {
-			log.close();
-		}
-		
-		private final PrintWriter log = new PrintWriter(logString);
+			synchronized(log) {
+				log.close();
+			}
+		}		
 	}
 	
 	public static class CountBean {

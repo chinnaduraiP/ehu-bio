@@ -169,7 +169,7 @@ public class HtmlReport {
 				String.format("<a href=\"%1$s.html\">%1$s</a>", protein.getAccession()),
 				//protein.getName(),
 				protein.getConfidence().toString(),
-				CsvUtils.getCsv(SEP, protein.getPeptides().toArray()),
+				CsvUtils.getCsv(SEP, protein.getPeptides().toArray()),				
 				trim(protein.getDescription(),120));
 		}
 		return table.render();
@@ -242,6 +242,8 @@ public class HtmlReport {
 	}
 
 	private String trim( String str, int max ) {
+		if( str == null )
+			return "";
 		if( str.length() < max )
 			return str;
 		return String.format("%s...", str.substring(0,max-2));

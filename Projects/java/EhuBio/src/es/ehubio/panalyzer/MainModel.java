@@ -29,7 +29,7 @@ import es.ehubio.proteomics.pipeline.Validator.FdrResult;
 public class MainModel {
 	public enum State { WORKING, INIT, CONFIGURED, LOADED, RESULTS, SAVED}
 	public static final String NAME = "PAnalyzer";
-	public static final String VERSION = "v2.0-alpha4";
+	public static final String VERSION = "v2.0-alpha5";
 	public static final String SIGNATURE = String.format("%s (%s)", NAME, VERSION);
 	public static final String URL = "https://code.google.com/p/ehu-bio/wiki/PAnalyzer";
 
@@ -113,7 +113,7 @@ public class MainModel {
 			for( es.ehubio.panalyzer.Configuration.Replicate replicate : config.getReplicates() )
 				steps += replicate.getFractions().size();
 			for( es.ehubio.panalyzer.Configuration.Replicate replicate : config.getReplicates() ) {
-				logger.info(String.format("Loading replicate: %s ...", replicate.getName()));
+				logger.info(String.format("Loading replicate (%s) ...", replicate.getName()));
 				Replicate rep = new Replicate(replicate.getName());
 				for( String fraction : replicate.getFractions() ) {
 					setProgress(step++, steps, String.format("Loading %s (%s) ...", new File(fraction).getName(), rep.getName()));
@@ -152,6 +152,7 @@ public class MainModel {
 		try {
 			int step = 0, steps = 5*experiment.getReplicates().size()+2;
 			for( Replicate replicate : experiment.getReplicates() ) {
+				logger.info(String.format("Filtering replicate (%s) ...", replicate.getName()));
 				setProgress(step++, steps, String.format("Applying input filter (%s) ...",replicate.getName()));
 				inputFilter(replicate.getData());
 				setProgress(step++, steps, String.format("Applying PSM FDR filter (%s) ...",replicate.getName()));
@@ -302,6 +303,7 @@ public class MainModel {
 	private void filterAndGroup( Filter filter, String title ) {
 		filter.run();
 		logCounts(title,filter.getData());
+		//filter.getData().checkIntegrity();
 		rebuildGroups("Re-grouped", filter.getData());
 	}
 	
