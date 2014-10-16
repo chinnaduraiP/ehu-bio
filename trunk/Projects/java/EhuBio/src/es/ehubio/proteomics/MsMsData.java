@@ -1,5 +1,6 @@
 package es.ehubio.proteomics;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -26,8 +27,6 @@ public class MsMsData {
 	private Set<Peptide> peptides = new HashSet<>();
 	private Set<Protein> proteins = new HashSet<>();
 	private Set<ProteinGroup> groups = new HashSet<>();
-	private Map<String,Peptide> mapPeptide;
-	private Map<String,Protein> mapProtein;
 	
 	private OrganizationType organization;
 	private PersonType author;
@@ -180,51 +179,60 @@ public class MsMsData {
 	 */
 	public void merge( MsMsData data2 ) {
 		spectra.addAll(data2.getSpectra());
-		psms.addAll(data2.getPsms());		
+		psms.addAll(data2.getPsms());
+		mergePeptides(data2.getPeptides());
 		mergeProteins(data2.getProteins());
-		mergePeptides(data2.getPeptides());		
 		groups.clear();
-	}	
-
-	private void mergeProteins(Set<Protein> proteins2) {
-		if( mapProtein == null ) {
-			mapProtein = new HashMap<>();
-			for( Protein protein : proteins )
-				mapProtein.put(protein.getUniqueString(), protein);
+	}		
+	
+	private void mergePeptides(Set<Peptide> peptides2) {
+		List<Peptide> listPeptides = new ArrayList<>(peptides);
+		peptides.clear();
+		listPeptides.addAll(peptides2);		
+		Map<String,Peptide> mapPeptide = new HashMap<>();
+		for( Peptide peptide : listPeptides ) {
+			peptide.getPsms().clear();
+			mapPeptide.put(peptide.getUniqueString(), peptide);
+		}		
+				
+		for( Psm psm : psms ) {
+			if( psm.getPeptide() == null )
+				continue;
+			Peptide peptide = mapPeptide.get(psm.getPeptide().getUniqueString()); 
+			psm.linkPeptide(peptide);
+			peptides.add(peptide);
 		}
-		for( Protein protein2 : proteins2 ) {
-			Protein protein = mapProtein.get(protein2.getUniqueString());
-			if( protein == null ) {
-				mapProtein.put(protein2.getUniqueString(), protein2);
+	}
+	
+	private void mergeProteins(Set<Protein> proteins2) {
+		List<Protein> listProteins = new ArrayList<>(proteins);
+		proteins.clear();
+		listProteins.addAll(proteins2);
+		Map<String,Protein> mapProtein = new HashMap<>();
+		for( Protein protein : listProteins ) {
+			protein.getPeptides().clear();
+			protein.setGroup(null);
+			mapProtein.put(protein.getUniqueString(), protein);
+		}
+		
+		for( Peptide peptide : peptides ) {
+			List<Protein> tmp = new ArrayList<>(peptide.getProteins());
+			peptide.getProteins().clear();
+			for( Protein protein : tmp ) {
+				Protein protein2 = mapProtein.get(protein.getUniqueString());
+				peptide.addProtein(protein2);
 				proteins.add(protein2);
-			} else {
-				for( Peptide peptide2 : protein2.getPeptides() ) {
-					peptide2.getProteins().remove(protein2);
-					peptide2.addProtein(protein);
-				}
 			}
 		}
 	}
 	
-	private void mergePeptides(Set<Peptide> peptides2) {
-		if( mapPeptide == null ) {
-			mapPeptide = new HashMap<>();
-			for( Peptide peptide : peptides )
-				mapPeptide.put(peptide.getUniqueString(), peptide);
-		}
-		for( Peptide peptide2 : peptides2 ) {
-			Peptide peptide = mapPeptide.get(peptide2.getUniqueString());
-			if( peptide == null ) {
-				mapPeptide.put(peptide2.getUniqueString(), peptide2);
-				peptides.add(peptide2);
-			} else {
-				for( Psm psm2 : peptide2.getPsms() )
-					psm2.linkPeptide(peptide);
-				for( Protein protein2 : peptide2.getProteins() ) {
-					protein2.getPeptides().remove(peptide2);
-					protein2.addPeptide(peptide);
-				}
-			}
+	public void checkIntegrity() throws AssertionError {
+		for( Peptide peptide : getPeptides() ) {
+			if( peptide.getProteins().size() == 0 )
+				throw new AssertionError(String.format("Peptide %s not mapped no any protein", peptide.getSequence()));
+			for( Protein protein : peptide.getProteins() )
+				if( !protein.getPeptides().contains(peptide) )
+					throw new AssertionError(String.format("Peptide %s not present in protein %s", peptide.getSequence(), protein.getAccession()));
 		}
 	}
 }
