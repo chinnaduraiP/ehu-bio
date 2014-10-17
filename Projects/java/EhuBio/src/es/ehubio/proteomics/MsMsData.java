@@ -91,6 +91,15 @@ public class MsMsData {
 		loadFromSpectra(spectra);
 	}
 	
+	public void clear() {
+		spectra.clear();
+		psms.clear();
+		peptides.clear();
+		proteins.clear();
+		groups.clear();
+		clearMetaData();
+	}
+	
 	public void clearMetaData() {
 		organization = null;
 		author = null;
@@ -178,11 +187,13 @@ public class MsMsData {
 	 * @param data2
 	 */
 	public void merge( MsMsData data2 ) {
+		clearMetaData();
+		groups.clear();
 		spectra.addAll(data2.getSpectra());
 		psms.addAll(data2.getPsms());
 		mergePeptides(data2.getPeptides());
 		mergeProteins(data2.getProteins());
-		groups.clear();
+		data2.clear();
 	}		
 	
 	private void mergePeptides(Set<Peptide> peptides2) {
@@ -192,6 +203,7 @@ public class MsMsData {
 		Map<String,Peptide> mapPeptide = new HashMap<>();
 		for( Peptide peptide : listPeptides ) {
 			peptide.getPsms().clear();
+			peptide.getScores().clear();
 			mapPeptide.put(peptide.getUniqueString(), peptide);
 		}		
 				
@@ -212,6 +224,7 @@ public class MsMsData {
 		for( Protein protein : listProteins ) {
 			protein.getPeptides().clear();
 			protein.setGroup(null);
+			protein.getScores().clear();
 			mapProtein.put(protein.getUniqueString(), protein);
 		}
 		
