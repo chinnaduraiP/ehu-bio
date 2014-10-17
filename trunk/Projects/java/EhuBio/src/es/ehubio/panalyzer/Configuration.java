@@ -19,7 +19,7 @@ import es.ehubio.proteomics.ScoreType;
 	"proteinFdr","minProteinReplicates","groupFdr",
 	"decoyRegex","replicates","filterDecoys","output"})
 @XmlRootElement
-public class Configuration {
+public class Configuration {	
 	public void initialize() {
 		setPsmRankThreshold(null);		
 		setBestPsmPerPrecursor(true);
@@ -33,6 +33,11 @@ public class Configuration {
 		setGroupFdr(0.01);
 		setDecoyRegex("decoy");
 		setFilterDecoys(true);
+	}
+	
+	@XmlAttribute
+	public String getVersion() {
+		return version;
 	}
 	
 	public String getDescription() {
@@ -183,6 +188,7 @@ public class Configuration {
 		}		
 	}
 
+	private final static String version = "1.0";
 	private String description;
 	private ScoreType psmScore;
 	private String decoyRegex;
