@@ -221,16 +221,16 @@ public class HtmlReport {
 		table.addRow("Proteins",getProteinLinks(peptide.getProteins()));
 		table.addRow("Sequence",peptide.getSequence());
 		table.addRow("Modifications",peptide.getPtms().isEmpty()?"none":CsvUtils.getCsv(SEP, peptide.getPtms().toArray()));
-		table.addRow("PSMs",getPsmsDetails(peptide));
+		table.addRow("PSMs score (rank)",getPsmsDetails(peptide));
 		table.addRow("Replicates",CsvUtils.getCsv(SEP, peptide.getReplicates().toArray()));
 		return table.render(odd,true);
 	}
 
 	private String getPsmsDetails(Peptide peptide) {
 		ScoreType psmScore = model.getConfig().getPsmScore();
-		List<Double> list = new ArrayList<>();
+		List<String> list = new ArrayList<>();
 		for( Psm psm : peptide.getPsms() )
-			list.add(psm.getScoreByType(psmScore).getValue());
+			list.add(String.format("%s (%s)",psm.getScoreByType(psmScore).getValue(),psm.getRank()));
 		return String.format("%s: %s", psmScore.getName(), CsvUtils.getCsv(", ", list.toArray()));
 	}
 

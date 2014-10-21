@@ -205,25 +205,30 @@ public final class Fasta {
 		return description;
 	}
 	
-	public static String formatSequence( String seq, int cols ) {
+	public static String formatSequence( final String seq, final int cols ) {
 		if( seq == null || seq.isEmpty() )
 			return "";				
-		int colSize = 10;
+		final int colSize = 10;
 		int i = 0;
 		int len;
 		int col = 0;
-		int digits = (int)Math.log10(seq.length())+1;
-		StringBuilder builder = new StringBuilder();
+		final int digits = (int)Math.log10(seq.length())+1;
+		final StringBuilder builder = new StringBuilder();
 		
 		while( i < seq.length() ) {
 			if( col == 0 )
-				builder.append(String.format("%0"+digits+"d", i+1));
+				builder.append(String.format("%0"+digits+"d ", i+1));
 			len = (i+colSize) < seq.length() ? colSize : (seq.length()-i);
-			builder.append(seq.substring(i, len));
-			i += len;
-			if( ++col >= cols && i < seq.length() ) {
+			builder.append(seq.substring(i, i+len));
+			i += len;			
+			if( i >= seq.length() )
+				break;
+			if( ++col < cols ) {
+				builder.append(' ');
+			} else {
 				col = 0;
 				builder.append('\n');
+				//builder.append(String.format(" %0"+digits+"d\n", i));
 			}
 		}
 		
