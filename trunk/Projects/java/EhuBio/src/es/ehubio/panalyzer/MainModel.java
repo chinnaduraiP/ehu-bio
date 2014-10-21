@@ -29,7 +29,7 @@ import es.ehubio.proteomics.pipeline.Validator.FdrResult;
 public class MainModel {
 	public enum State { WORKING, INIT, CONFIGURED, LOADED, RESULTS, SAVED}
 	public static final String NAME = "PAnalyzer";
-	public static final String VERSION = "v2.0-alpha6";
+	public static final String VERSION = "v2.0-alpha7";
 	public static final String SIGNATURE = String.format("%s (%s)", NAME, VERSION);
 	public static final String URL = "https://code.google.com/p/ehu-bio/wiki/PAnalyzer";
 
@@ -211,6 +211,7 @@ public class MainModel {
 			reportFile = generateHtml();
 			finishProgress(State.SAVED, "Data saved, you can now browse the results");
 		} catch( Exception e ) {
+			state = State.RESULTS;
 			handleException(e, "Error saving data, correct your configuration");			
 		}
 		return reportFile;
