@@ -90,13 +90,13 @@ public class Services {
 			missense = 0;
 			invalid = false;
 			for( Locus locus : loci.getLoci().values() ) {
-				if( locus.position > result.getFasta().getSequence().length() ||
-					locus.aa != Aminoacid.parseLetter(result.getFasta().getSequence().charAt(locus.position-1)) ) {
+				if( locus.getPosition() > result.getFasta().getSequence().length() ||
+					locus.getOriginal() != Aminoacid.parseLetter(result.getFasta().getSequence().charAt(locus.getPosition()-1)) ) {
 					invalid = true;
 					break;
 				}
-				if( locus.position >= result.getStart() && locus.position <= result.getEnd() )
-					missense += locus.mutations;
+				if( locus.getPosition() >= result.getStart() && locus.getPosition() <= result.getEnd() )
+					missense += locus.getMutations();
 			}
 			if( invalid ) {
 				result.setCosmicUrl( String.format(

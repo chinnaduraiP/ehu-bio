@@ -1,6 +1,7 @@
 package es.ehubio.proteomics;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -55,12 +56,13 @@ public class MsMsData {
 		return groups;
 	}
 	
-	public void loadFromSpectra( Set<Spectrum> spectra ) {
+	public void loadFromSpectra( Collection<Spectrum> spectra ) {
 		psms.clear();
 		peptides.clear();
 		proteins.clear();
 		groups.clear();
-		this.spectra = spectra;		
+		this.spectra.clear();
+		this.spectra.addAll(spectra);		
 		for( Spectrum spectrum : spectra )			
 			for( Psm psm : spectrum.getPsms() ) {				
 				psms.add(psm);

@@ -1,9 +1,11 @@
 package es.ehubio.proteomics.io;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -82,6 +84,13 @@ public final class Mzid extends MsMsFile {
 	private MsMsData data;	
 	private ProteinDetectionListType proteinDetectionList;
 	private static final String PSIMS = "PSI-MS";	// PSI-MS id hardcoded for the momment
+	
+	@Override
+	public boolean checkSignature(InputStream input) throws Exception {
+		BufferedReader rd = new BufferedReader(new InputStreamReader(input));
+		String str = rd.readLine()+rd.readLine();
+		return str.contains("<MzIdentML");
+	}
 	
 	@Override
 	public MsMsData load( InputStream input, String decoyRegex ) throws Exception {

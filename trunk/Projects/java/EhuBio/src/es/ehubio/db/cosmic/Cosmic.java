@@ -1,24 +1,20 @@
 package es.ehubio.db.cosmic;
 
-import java.io.BufferedReader;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.zip.GZIPInputStream;
 
-public class Cosmic {
-	public void openTsvGz( String path ) throws FileNotFoundException, IOException {
-		db = new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(path))));
-		String line = db.readLine();
-		if( line == null )
-			return;
-		fieldNames = line.split("\\t");
+import es.ehubio.io.CsvReader;
+
+public class Cosmic {	
+	public void openTsvGz( String path ) throws IOException {
+		rd.open(new InputStreamReader(new GZIPInputStream(new FileInputStream(path))));
 	}
 	
 	public void closeDb() {
 		try {
-			db.close();
+			rd.close();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -26,50 +22,46 @@ public class Cosmic {
 	}
 	
 	public Entry nextEntry() throws IOException {
-		String line = db.readLine();
-		if( line == null )
+		if( rd.readLine() == null )
 			return null;
 		
-		String[] fields = line.split("\\t");
 		Entry entry = new Entry();
-		int i = 0;
-		entry.setGeneName(fields[i++]);
-		if( i < fields.length )
-			entry.setHgncId(fields[i++]);
-		if( i < fields.length )
-			entry.setSample(fields[i++]);
-		if( i < fields.length )
-			entry.setPrimarySite(fields[i++]);
-		if( i < fields.length )
-			entry.setSiteSubtype1(fields[i++]);
-		if( i < fields.length )
-			entry.setPrimaryHistology(fields[i++]);
-		if( i < fields.length )
-			entry.setHistologySubtype1(fields[i++]);
-		if( i < fields.length )
-			entry.setMutationId(fields[i++]);
-		if( i < fields.length )
-			entry.setMutationCds(fields[i++]);
-		if( i < fields.length )
-			entry.setMutationAa(fields[i++]);
-		if( i < fields.length )
-			entry.setMutationDescription(fields[i++]);
-		if( i < fields.length )
-			entry.setMutationZygosity(fields[i++]);
-		if( i < fields.length )
-			entry.setMutationNcbi36GenomePosition(fields[i++]);
-		if( i < fields.length )
-			entry.setMutationGrch37GenomePosition(fields[i++]);
-		if( i < fields.length )
-			entry.setPubmedId(fields[i++]);
+		entry.setGeneName(rd.getField("Gene name"));
+		entry.setAccession(rd.getField("Accession Number"));
+		entry.setGeneCdsLength(rd.getField("Gene CDS length"));
+		entry.setHgncId(rd.getField("HGNC ID"));
+		entry.setSampleName(rd.getField("Sample name"));
+		entry.setIdSample(rd.getField("ID_sample"));
+		entry.setIdTumour(rd.getField("ID_tumour"));
+		entry.setPrimarySite(rd.getField("Primary site"));
+		entry.setSiteSubtype1(rd.getField("Site subtype"));
+		entry.setPrimaryHistology(rd.getField("Primary histology"));
+		entry.setHistologySubtype1(rd.getField("Histology subtype"));
+		entry.setGws(rd.getField("Genome-wide screen"));
+		entry.setMutationId(rd.getField("Mutation ID"));
+		entry.setMutationCds(rd.getField("Mutation CDS"));
+		entry.setMutationAa(rd.getField("Mutation AA"));
+		entry.setMutationDescription(rd.getField("Mutation Description"));
+		entry.setMutationZygosity(rd.getField("Mutation zygosity"));
+		entry.setMutationNcbi36GenomePosition(rd.getField("Mutation NCBI36 genome position"));
+		entry.setMutationGrch37GenomePosition(rd.getField("Mutation GRCh37 genome position"));
+		entry.setMutationGrch37Strand(rd.getField("Mutation GRCh37 strand"));
+		entry.setSnp(rd.getField("SNP"));
+		entry.setFathmmPrediction(rd.getField("FATHMM prediction"));
+		entry.setMutationSomaticStatus(rd.getField("Mutation somatic status"));
+		entry.setPubmedId(rd.getField("Pubmed_PMID"));
+		entry.setIdStudy(rd.getField("ID_STUDY"));
+		entry.setSampleSource(rd.getField("Sample source"));
+		entry.setTumourOrigin(rd.getField("Tumour origin"));
+		entry.setAge(rd.getField("Age"));
+		entry.setComments(rd.getField("Comments"));
 		
 		return entry;
 	}
 	
 	public String[] getFieldNames() {
-		return fieldNames;
+		return rd.getHeaders();
 	}
 
-	private BufferedReader db;
-	private String[] fieldNames;
+	private CsvReader rd = new CsvReader("\\t", true);
 }

@@ -5,9 +5,6 @@
         <dependent-module archiveName="EhuBio.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/EhuBio/EhuBio">
             <dependency-type>uses</dependency-type>
         </dependent-module>
-        <dependent-module archiveName="spHpp.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/spHpp/spHpp">
-            <dependency-type>uses</dependency-type>
-        </dependent-module>
         <property name="java-output-path" value="/wregex/build/classes"/>
         <property name="context-root" value="/"/>
     </wb-module>
