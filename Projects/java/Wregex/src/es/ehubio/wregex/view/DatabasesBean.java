@@ -57,7 +57,7 @@ public class DatabasesBean implements Serializable {
 	private long lastModifiedElm;
 	private long lastModifiedDbPtm;
 	private String humanProteome;
-	private boolean initialized = false;	
+	private int initialized = 0;	
 	
 	private class FastaDb {
 		public long lastModified;
@@ -66,7 +66,6 @@ public class DatabasesBean implements Serializable {
 	
 	public DatabasesBean() throws IOException, InvalidSequenceException {
 		loadDatabases();
-		initialized = true;
 	}
 
 	private void loadDatabases() throws IOException, InvalidSequenceException {
@@ -116,6 +115,9 @@ public class DatabasesBean implements Serializable {
 			if( database.getName().contains("Human Proteome") )
 				humanProteome = database.getPath();
 		}
+		
+		refreshCosmic();
+		refreshDbPtm();
 	}
 	
 	private List<InputGroup> loadFasta( String path ) throws IOException, InvalidSequenceException {
@@ -215,7 +217,7 @@ public class DatabasesBean implements Serializable {
 	}	
 
 	public boolean isInitialized() {
-		return initialized;
+		return initialized == 0;
 	}	
 	
 	private boolean refreshElm() {		
@@ -317,15 +319,15 @@ public class DatabasesBean implements Serializable {
 		
 		@Override
 		public void run() {
-			initialized = false;
+			initialized--;
 			try { 
-				if( db.equals(elm.getName()) )
+				if( elm != null && db.equals(elm.getName()) )
 					loadElmMotifs();
-				else if( db.equals(cosmic.getName()) )
+				else if( cosmic != null && db.equals(cosmic.getName()) )
 					loadCosmic();
-				else if( db.equals(dbPtm.getName()) )
+				else if( dbPtm != null && db.equals(dbPtm.getName()) )
 					loadDbPtm();
-				initialized = true;
+				initialized++;
 			} catch( Exception e ) {
 				e.printStackTrace();
 			}

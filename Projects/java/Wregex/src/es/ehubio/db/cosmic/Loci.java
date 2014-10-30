@@ -49,14 +49,16 @@ public class Loci {
 				result.setGene(gene);
 				results.put(gene, result);
 			}
-			Locus locus = new Locus();
-			locus.position = mut.getPosition();
-			locus.aa = mut.getOriginal();
-			locus.mutations = 1;
-			if( result.getLoci().keySet().contains(locus.position) )
-				result.getLoci().get(locus.position).mutations++;
-			else
-				result.getLoci().put(locus.position, locus);
+			Locus locus = result.getLoci().get(mut.getPosition());
+			if( locus == null ) {
+				locus = new Locus();
+				locus.setPosition(mut.getPosition());
+				locus.setOriginal(mut.getOriginal());
+				locus.setMutated(mut.getMutated());
+				locus.setMutations(1);
+				result.getLoci().put(locus.getPosition(), locus);
+			} else
+				locus.incMutations();
 		}
 		cosmic.closeDb();
 		

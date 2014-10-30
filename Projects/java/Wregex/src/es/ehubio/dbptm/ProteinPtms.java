@@ -5,8 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.sphpp.dbptm.txt.Entry;
-import org.sphpp.dbptm.txt.TxtReader;
+import es.ehubio.db.dbptm.Entry;
+import es.ehubio.db.dbptm.TxtReader;
 
 public class ProteinPtms {
 	private Map<Integer,Ptm> ptms = new HashMap<>();
