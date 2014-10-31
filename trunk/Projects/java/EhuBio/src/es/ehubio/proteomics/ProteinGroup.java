@@ -110,7 +110,7 @@ public class ProteinGroup extends DecoyBase {
 	}
 	
 	@Override
-	public String getUniqueString() {
+	protected String buildUniqueString() {
 		return ""+id;
 	}
 	

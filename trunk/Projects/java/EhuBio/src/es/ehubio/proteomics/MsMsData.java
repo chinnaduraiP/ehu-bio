@@ -7,6 +7,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import es.ehubio.proteomics.psi.mzid11.AbstractParamType;
 import es.ehubio.proteomics.psi.mzid11.AnalysisSoftwareType;
@@ -14,6 +16,7 @@ import es.ehubio.proteomics.psi.mzid11.BibliographicReferenceType;
 import es.ehubio.proteomics.psi.mzid11.OrganizationType;
 import es.ehubio.proteomics.psi.mzid11.ParamListType;
 import es.ehubio.proteomics.psi.mzid11.PersonType;
+import es.ehubio.proteomics.psi.mzid11.UserParamType;
 
 /**
  * Mutable class for storing and processing data associated with
@@ -91,6 +94,21 @@ public class MsMsData {
 			spectra.add(spectrum);
 		}
 		loadFromSpectra(spectra);
+	}
+	
+	public MsMsData markDecoys( String decoyRegex ) {
+		if( decoyRegex == null || decoyRegex.isEmpty() )
+			return this;
+		Pattern pattern = Pattern.compile(decoyRegex);
+		for( Protein protein : getProteins() ) {
+			Matcher matcher = pattern.matcher(protein.getAccession());
+			protein.setDecoy(matcher.find());
+		}
+		UserParamType param = new UserParamType();
+		param.setName("PAnalyzer:Decoy regex");
+		param.setValue(decoyRegex);
+		setAnalysisParam(param);
+		return this;
 	}
 	
 	public void clear() {

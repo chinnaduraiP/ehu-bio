@@ -7,6 +7,7 @@ public abstract class DecoyBase implements Decoyable {
 	private Boolean decoy = null;
 	private Set<Score> scores = new HashSet<>();
 	private boolean passThreshold = true;
+	private String uniqueString;
 
 	@Override
 	public boolean addScore(Score score) {
@@ -61,5 +62,13 @@ public abstract class DecoyBase implements Decoyable {
 		return passThreshold;
 	}
 	
-	public abstract String getUniqueString();
+	public void setUniqueString( String unique ) {
+		uniqueString = unique;
+	}
+	
+	public String getUniqueString() {
+		return uniqueString == null ? buildUniqueString() : uniqueString;
+	}
+	
+	abstract protected String buildUniqueString();
 }

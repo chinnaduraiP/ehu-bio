@@ -35,7 +35,7 @@ public class EhubioCsv extends MsMsFile {
 	}
 
 	@Override
-	public MsMsData load(InputStream input, String decoyRegex) throws Exception {
+	public MsMsData load(InputStream input) throws Exception {
 		throw new UnsupportedOperationException();
 	}
 

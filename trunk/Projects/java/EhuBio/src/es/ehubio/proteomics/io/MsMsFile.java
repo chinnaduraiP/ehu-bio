@@ -27,18 +27,25 @@ public abstract class MsMsFile {
 		return null;
 	}
 	
-	public MsMsData load( String path, String decoyRegex ) throws Exception {
+	public static MsMsData autoLoad( String path ) throws Exception {
+		MsMsFile file = autoDetect(path);
+		if( file == null )
+			return null;
+		return file.load(path);
+	}
+	
+	public MsMsData load( String path ) throws Exception {
 		logger.info(String.format("Loading '%s' ...", path));
 		InputStream input = new FileInputStream(path);
 		if( path.endsWith(".gz") )
 			input = new GZIPInputStream(input);
-		data = load(input, decoyRegex);
+		data = load(input);
 		input.close();
 		originalFile = new File(path);
 		return data;
-	}
+	}	
 	
-	public abstract MsMsData load( InputStream input, String decoyRegex ) throws Exception;	
+	public abstract MsMsData load( InputStream input ) throws Exception;	
 
 	public void save( String path ) throws Exception {
 		File file = new File(path);

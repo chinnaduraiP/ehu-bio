@@ -109,7 +109,7 @@ public class Psm extends DecoyBase {
 	}
 	
 	@Override
-	public String getUniqueString() {
+	protected String buildUniqueString() {
 		return toString();
 	}
 

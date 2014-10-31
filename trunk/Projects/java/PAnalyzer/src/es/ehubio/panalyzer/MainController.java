@@ -57,8 +57,9 @@ import javafx.util.Callback;
 import org.controlsfx.dialog.Dialogs;
 
 import es.ehubio.panalyzer.Configuration.Replicate;
+import es.ehubio.panalyzer.MainModel.CountReport;
+import es.ehubio.panalyzer.MainModel.FdrReport;
 import es.ehubio.proteomics.ScoreType;
-import es.ehubio.proteomics.pipeline.PAnalyzer;
 
 @SuppressWarnings("deprecation")
 public class MainController implements Initializable {
@@ -101,15 +102,15 @@ public class MainController implements Initializable {
 	@FXML private TextField textProteinReplicates;
 	@FXML private TextField textGroupFdr;
 	@FXML private TextArea textResults;
-	@FXML private TableView<CountBean> tableCounts;
-	@FXML private TableColumn<CountBean, String> colCountType;
-	@FXML private TableColumn<CountBean, Integer> colTargetCount;
-	@FXML private TableColumn<CountBean, Integer> colDecoyCount;
-	@FXML private TableColumn<CountBean, Integer> colTotalCount;
-	@FXML private TableView<FdrBean> tableFdr;
-	@FXML private TableColumn<FdrBean, String> colFdrLevel;
-	@FXML private TableColumn<FdrBean, Double> colFdrValue;
-	@FXML private TableColumn<FdrBean, Double> colFdrThreshold;
+	@FXML private TableView<CountReport> tableCounts;
+	@FXML private TableColumn<CountReport,String> colCountType;
+	@FXML private TableColumn<CountReport,Integer> colTargetCount;
+	@FXML private TableColumn<CountReport,Integer> colDecoyCount;
+	@FXML private TableColumn<CountReport,Integer> colTotalCount;
+	@FXML private TableView<FdrReport> tableFdr;
+	@FXML private TableColumn<FdrReport,String> colFdrLevel;
+	@FXML private TableColumn<FdrReport,Double> colFdrValue;
+	@FXML private TableColumn<FdrReport,Double> colFdrThreshold;
 	@FXML private CheckBox checkFilterDecoys;
 	@FXML private WebView webBrowser;
 	private final FileChooser fileChooser = new FileChooser();
@@ -256,29 +257,8 @@ public class MainController implements Initializable {
 	}
 	
 	private void updateResults() {
-		PAnalyzer.Counts target = model.getTargetCounts();
-		PAnalyzer.Counts decoy = model.getDecoyCounts();
-		tableCounts.setItems(FXCollections.observableArrayList(
-			new CountBean("Minimum proteins (grouped)",target.getMinimum(),decoy.getMinimum()),
-			new CountBean("Maximum proteins (un-grouped)",target.getMaximum(),decoy.getMaximum()),
-			new CountBean("Conclusive proteins",target.getConclusive(),decoy.getConclusive()),
-			new CountBean("Indistinguishable proteins (grouped)",target.getIndistinguishableGroups(),decoy.getIndistinguishableGroups()),
-			new CountBean("Indistinguishable proteins (un-grouped)",target.getIndistinguishable(),decoy.getIndistinguishable()),
-			new CountBean("Ambigous proteins (grouped)",target.getAmbiguousGroups(),decoy.getAmbiguousGroups()),
-			new CountBean("Ambigous proteins (un-grouped)",target.getAmbiguous(),decoy.getAmbiguous()),
-			new CountBean("Non-conclusive proteins",target.getNonConclusive(),decoy.getNonConclusive()),
-			new CountBean("Total peptides",target.getPeptides(),decoy.getPeptides()),
-			new CountBean("Unique peptides",target.getUnique(),decoy.getUnique()),
-			new CountBean("Discriminating peptides",target.getDiscriminating(),decoy.getDiscriminating()),
-			new CountBean("Non-discriminating peptides",target.getNonDiscriminating(),decoy.getNonDiscriminating()),
-			new CountBean("Total PSMs",target.getPsms(),decoy.getPsms())
-			));
-		tableFdr.setItems(FXCollections.observableArrayList(
-			new FdrBean("Protein group", model.getGroupFdr().getRatio(), config.getGroupFdr()),
-			new FdrBean("Protein", model.getProteinFdr().getRatio(), config.getProteinFdr()),
-			new FdrBean("Peptide", model.getPeptideFdr().getRatio(), config.getPeptideFdr()),
-			new FdrBean("PSM", model.getPsmFdr().getRatio(), config.getPsmFdr())			
-			));
+		tableCounts.setItems(FXCollections.observableArrayList(model.getCountReport()));
+		tableFdr.setItems(FXCollections.observableArrayList(model.getFdrReport()));
 	}
 
 	private Integer tryInteger(TextField field, Label label) throws Exception {
@@ -342,7 +322,10 @@ public class MainController implements Initializable {
 		fileChooser.setTitle("Load identification files");
 		fileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
 		fileChooser.getExtensionFilters().addAll(
-			new FileChooser.ExtensionFilter("mzIdentML", "*.mzid", "*.mzid.gz"));
+			new FileChooser.ExtensionFilter("Supported files", "*.mzid", "*.mzid.gz", "*.txt", "*.txt.gz"),
+			new FileChooser.ExtensionFilter("mzIdentML", "*.mzid", "*.mzid.gz"),
+			new FileChooser.ExtensionFilter("PD text export", "*.txt", "*.txt.gz"),			
+			new FileChooser.ExtensionFilter("All files", "*"));
 		
 		directoryChooser.setTitle("Select destination directory");
 		directoryChooser.setInitialDirectory(new File(System.getProperty("user.home")));
@@ -363,13 +346,13 @@ public class MainController implements Initializable {
 		labelSignature.setText(MainModel.SIGNATURE);
 		textDecoy.setText("decoy");
 		
-		colCountType.setCellValueFactory(new PropertyValueFactory<CountBean,String>("type"));
-		colTargetCount.setCellValueFactory(new PropertyValueFactory<CountBean,Integer>("target"));
-		colDecoyCount.setCellValueFactory(new PropertyValueFactory<CountBean,Integer>("decoy"));
-		colTotalCount.setCellValueFactory(new PropertyValueFactory<CountBean,Integer>("total"));
-		colFdrLevel.setCellValueFactory(new PropertyValueFactory<FdrBean,String>("level"));
-		colFdrValue.setCellValueFactory(new PropertyValueFactory<FdrBean,Double>("value"));
-		colFdrThreshold.setCellValueFactory(new PropertyValueFactory<FdrBean,Double>("threshold"));
+		colCountType.setCellValueFactory(new PropertyValueFactory<CountReport,String>("title"));
+		colTargetCount.setCellValueFactory(new PropertyValueFactory<CountReport,Integer>("target"));
+		colDecoyCount.setCellValueFactory(new PropertyValueFactory<CountReport,Integer>("decoy"));
+		colTotalCount.setCellValueFactory(new PropertyValueFactory<CountReport,Integer>("total"));
+		colFdrLevel.setCellValueFactory(new PropertyValueFactory<FdrReport,String>("title"));
+		colFdrValue.setCellValueFactory(new PropertyValueFactory<FdrReport,Double>("value"));
+		colFdrThreshold.setCellValueFactory(new PropertyValueFactory<FdrReport,Double>("threshold"));
 		
 		enableByStates(treeExperiment,MainModel.State.INIT,MainModel.State.CONFIGURED);
 		enableByStates(buttonAddFractions,MainModel.State.INIT,MainModel.State.CONFIGURED);
@@ -547,50 +530,5 @@ public class MainController implements Initializable {
 				log.close();
 			}
 		}		
-	}
-	
-	public static class CountBean {
-		public CountBean( String type, int target, int decoy ) {
-			this.type = type;
-			this.target = target;
-			this.decoy = decoy;
-			total = target+decoy;
-		}
-		public String getType() {
-			return type;
-		}
-		public int getTarget() {
-			return target;
-		}
-		public int getDecoy() {
-			return decoy;
-		}
-		public int getTotal() {
-			return total;
-		}
-		private final String type;
-		private final int target;
-		private final int decoy;
-		private final int total;
-	}
-	
-	public static class FdrBean {
-		public FdrBean( String level, double value, Double threshold ) {
-			this.level = level;
-			this.value = value;
-			this.threshold = threshold;
-		}
-		public String getLevel() {
-			return level;
-		}
-		public double getValue() {
-			return value;
-		}
-		public Double getThreshold() {
-			return threshold;
-		}
-		private final String level;
-		private final double value;
-		private final Double threshold;		
 	}
 }
