@@ -93,7 +93,7 @@ public final class Mzid extends MsMsFile {
 	}
 	
 	@Override
-	public MsMsData load( InputStream input, String decoyRegex ) throws Exception {
+	public MsMsData load( InputStream input ) throws Exception {
 		//logger.info("Parsing XML ...");
 		JAXBContext jaxbContext = JAXBContext.newInstance(MzIdentML.class);
 		Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
@@ -102,13 +102,6 @@ public final class Mzid extends MsMsFile {
 		//logger.info("Building model ...");
 		data = new MsMsData();
 		loadProteins();
-		if( decoyRegex != null ) {
-			markDecoys(decoyRegex);
-			UserParamType param = new UserParamType();
-			param.setName("PAnalyzer:Decoy regex");
-			param.setValue(decoyRegex);
-			data.setAnalysisParam(param);
-		}
 		loadPeptides();
 		loadRelations();
 		loadGroups();
@@ -126,6 +119,7 @@ public final class Mzid extends MsMsFile {
 		updateProteinDetectionList();
 		updateProteinDetectionProtocol();
 		updateSpectrumIdentificationLists();
+		updateDecoys();
 		updateReferences();
 		
 		//logger.info("Serializing to XML ...");
@@ -236,14 +230,10 @@ public final class Mzid extends MsMsFile {
 						pdh.setDBSequenceRef(mapSequenceIds.get(pdh.getDBSequenceRef()));
 	}
 	
-	private void markDecoys(String decoyRegex) {
-		Pattern pattern = Pattern.compile(decoyRegex);
-		for( PeptideEvidenceType peptideEvidence : mzid.getSequenceCollection().getPeptideEvidences() ) {
-			peptideEvidence.setIsDecoy(false);
+	private void updateDecoys() {
+		for( PeptideEvidenceType peptideEvidence : mzid.getSequenceCollection().getPeptideEvidences() ) {			
 			Protein protein = mapProteins.get(peptideEvidence.getDBSequenceRef());
-			Matcher matcher = pattern.matcher(protein.getAccession());
-			if( matcher.find() )
-				peptideEvidence.setIsDecoy(true);			
+			peptideEvidence.setIsDecoy(protein.getDecoy());
 		}
 	}
 	

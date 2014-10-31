@@ -2,7 +2,9 @@ package es.ehubio.panalyzer;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -117,8 +119,10 @@ public class MainModel {
 				Replicate rep = new Replicate(replicate.getName());
 				for( String fraction : replicate.getFractions() ) {
 					setProgress(step++, steps, String.format("Loading %s (%s) ...", new File(fraction).getName(), rep.getName()));
-					file = new Mzid();		
-					MsMsData data = file.load(fraction,config.getDecoyRegex());
+					file = MsMsFile.autoDetect(fraction);
+					if( file == null )
+						throw new Exception(String.format("File format not supported: %s", fraction));
+					MsMsData data = file.load(fraction).markDecoys(config.getDecoyRegex());
 					rep.mergeFraction(data);
 					logCounts("Merged",rep.getData());
 				}
@@ -196,9 +200,9 @@ public class MainModel {
 			int steps = 3;
 			File dir = new File(config.getOutput());
 			dir.mkdir();
-			if( config.getReplicates().size() == 1 && config.getReplicates().get(0).getFractions().size() == 1 ) {
+			if( config.getReplicates().size() == 1 && config.getReplicates().get(0).getFractions().size() == 1 && file instanceof Mzid ) {
 				steps++;
-				setProgress(step++, steps, "Saving in input format ...");
+				setProgress(step++, steps, "Saving in mzid format ...");
 				file.save(config.getOutput());
 			}
 			setProgress(step++, steps, "Saving csv files ...");
@@ -241,6 +245,26 @@ public class MainModel {
 		return new PAnalyzer(experiment.getData()).getDecoyCounts();
 	}
 	
+	public List<CountReport> getCountReport() {
+		List<CountReport> list = new ArrayList<>();
+		PAnalyzer.Counts target = getTargetCounts();
+		PAnalyzer.Counts decoy = getDecoyCounts();
+		list.add(new CountReport("Minimum proteins (grouped)",target.getMinimum(),decoy.getMinimum()));
+		list.add(new CountReport("Maximum proteins (un-grouped)",target.getMaximum(),decoy.getMaximum()));
+		list.add(new CountReport("Conclusive proteins",target.getConclusive(),decoy.getConclusive()));
+		list.add(new CountReport("Indistinguishable proteins (grouped)",target.getIndistinguishableGroups(),decoy.getIndistinguishableGroups()));
+		list.add(new CountReport("Indistinguishable proteins (un-grouped)",target.getIndistinguishable(),decoy.getIndistinguishable()));
+		list.add(new CountReport("Ambigous proteins (grouped)",target.getAmbiguousGroups(),decoy.getAmbiguousGroups()));
+		list.add(new CountReport("Ambigous proteins (un-grouped)",target.getAmbiguous(),decoy.getAmbiguous()));
+		list.add(new CountReport("Non-conclusive proteins",target.getNonConclusive(),decoy.getNonConclusive()));
+		list.add(new CountReport("Total peptides",target.getPeptides(),decoy.getPeptides()));
+		list.add(new CountReport("Unique peptides",target.getUnique(),decoy.getUnique()));
+		list.add(new CountReport("Discriminating peptides",target.getDiscriminating(),decoy.getDiscriminating()));
+		list.add(new CountReport("Non-discriminating peptides",target.getNonDiscriminating(),decoy.getNonDiscriminating()));
+		list.add(new CountReport("Total PSMs",target.getPsms(),decoy.getPsms()));
+		return list;
+	}
+	
 	public FdrResult getPsmFdr() {
 		return new Validator(experiment.getData()).getPsmFdr();
 	}
@@ -255,6 +279,15 @@ public class MainModel {
 	
 	public FdrResult getGroupFdr() {
 		return new Validator(experiment.getData()).getGroupFdr();
+	}
+	
+	public List<FdrReport> getFdrReport() {
+		List<FdrReport> list = new ArrayList<>();
+		list.add(new FdrReport("Protein group", getGroupFdr().getRatio(), config.getGroupFdr()));
+		list.add(new FdrReport("Protein", getProteinFdr().getRatio(), config.getProteinFdr()));
+		list.add(new FdrReport("Peptide", getPeptideFdr().getRatio(), config.getPeptideFdr()));
+		list.add(new FdrReport("PSM", getPsmFdr().getRatio(), config.getPsmFdr()));
+		return list;
 	}
 	
 	private void saveConfiguration() throws JAXBException {
@@ -426,5 +459,52 @@ public class MainModel {
 
 	public File getReportFile() {
 		return reportFile;
+	}
+	
+	public static class CountReport {		
+		private final String title;
+		private final int target;
+		private final int decoy;
+		private final int total;
+		
+		public CountReport(String title, int target, int decoy) {
+			this.title = title;
+			this.target = target;
+			this.decoy = decoy;
+			total = target+decoy;
+		}		
+		public String getTitle() {
+			return title;
+		}
+		public int getTarget() {
+			return target;
+		}
+		public int getDecoy() {
+			return decoy;
+		}
+		public int getTotal() {
+			return total;
+		}
+	}
+	
+	public static class FdrReport {
+		private final String title;
+		private final String value;
+		private final String threshold;
+		
+		public FdrReport( String title, double value, Double threshold ) {
+			this.title = title;
+			this.value = String.format("%.5f",value);
+			this.threshold = threshold == null ? "" : String.format("%.5f",threshold);
+		}		
+		public String getTitle() {
+			return title;
+		}
+		public String getValue() {
+			return value;
+		}
+		public String getThreshold() {
+			return threshold;
+		}
 	}
 }

@@ -167,7 +167,7 @@ public class Peptide extends DecoyBase {
 	}
 	
 	@Override
-	public String getUniqueString() {
+	protected String buildUniqueString() {
 		return getMassSequence();
 	}
 

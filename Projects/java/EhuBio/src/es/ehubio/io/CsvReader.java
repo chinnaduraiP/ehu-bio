@@ -35,7 +35,7 @@ public class CsvReader {
 		if( useHeader ) {			
 			readLine();			
 			for( int i = 0; i < fields.length; i++ )
-				header.put(fields[i], i);
+				header.put(parseField(fields[i]), i);
 		}
 		fields = null;
 	}
@@ -65,16 +65,14 @@ public class CsvReader {
 	public String getField( int i ) {
 		if( i >= fields.length )
 			return null;
-		if( filterMarks )
-			if( fields[i].length() >= 2 && fields[i].startsWith("\"") && fields[i].endsWith("\"") )
-				return fields[i].substring(1, fields[i].length());
-		return fields[i];
+		return parseField(fields[i]);
 	}
 	
 	public Integer getIntField( int i ) {
 		String field = getField(i);
 		if( field == null )
 			return null;
+		field = formatNumber(field);
 		return Integer.parseInt(field);
 	}
 	
@@ -82,6 +80,7 @@ public class CsvReader {
 		String field = getField(i);
 		if( field == null )
 			return null;
+		field = formatNumber(field);
 		return Double.parseDouble(field);
 	}
 	
@@ -96,6 +95,7 @@ public class CsvReader {
 		String field = getField(name);
 		if( field == null )
 			return null;
+		field = formatNumber(field);
 		return Integer.parseInt(field);
 	}
 	
@@ -103,6 +103,7 @@ public class CsvReader {
 		String field = getField(name);
 		if( field == null )
 			return null;
+		field = formatNumber(field);
 		return Double.parseDouble(field);
 	}
 	
@@ -115,5 +116,16 @@ public class CsvReader {
 	
 	public String[] getHeaders() {
 		return header.keySet().toArray(new String[0]);
+	}
+	
+	private String parseField( String field ) {
+		if( filterMarks )
+			if( field.length() >= 2 && field.startsWith("\"") && field.endsWith("\"") )
+				return field.substring(1, field.length()-1);
+		return field;
+	}
+	
+	private String formatNumber( String field ) {
+		return field.replace(',', '.');
 	}
 }

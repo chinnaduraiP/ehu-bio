@@ -29,7 +29,7 @@ public class ProteomeDiscovererTxt extends MsMsFile {
 	}
 
 	@Override
-	public MsMsData load(InputStream input, String decoyRegex) throws Exception {
+	public MsMsData load(InputStream input) throws Exception {
 		Map<String,Spectrum> scans = new HashMap<>();
 		Map<String,Peptide> peptides = new HashMap<>();
 		Map<String,Protein> proteins = new HashMap<>();
@@ -66,14 +66,15 @@ public class ProteomeDiscovererTxt extends MsMsFile {
 		spectrum.setScan(scan);
 		spectrum.setFileId(scan);
 		spectrum.setFileName(csv.getField("Spectrum File"));
-		spectrum.setRt(Double.parseDouble(csv.getField("RT [min]")));
+		spectrum.setRt(csv.getDoubleField("RT [min]"));
 		return spectrum;
 	}
 	
-	private Peptide loadPeptide(CsvReader csv) {
+	private Peptide loadPeptide(CsvReader csv) throws Exception {
 		Peptide peptide = new Peptide();
 		peptide.setSequence(csv.getField("Annotated Sequence"));
 		String modString = csv.getField("Modifications");
+		peptide.setUniqueString(peptide.getSequence()+modString);
 		if( !modString.isEmpty() ) {
 			String[] mods = modString.split("; ");
 			for( String mod : mods ) {
@@ -81,11 +82,17 @@ public class ProteomeDiscovererTxt extends MsMsFile {
 				Matcher matcher = ptmPattern.matcher(mod);
 				if( matcher.find() ) {
 					ptm.setResidues(matcher.group(1));
-					ptm.setPosition(Integer.parseInt(matcher.group(2)));
+					if( !matcher.group(2).isEmpty() )
+						ptm.setPosition(Integer.parseInt(matcher.group(2)));
 					ptm.setName(matcher.group(3));
 					ProteinModificationType type = ProteinModificationType.getByName(ptm.getName());
-					ptm.setMassDelta(type.getMass());
-				}
+					if( type != null ) { 
+						ptm.setMassDelta(type.getMass());
+						ptm.setType(type);
+					}
+				} else
+					ptm.setName(mod);
+				peptide.addPtm(ptm);
 			}
 		}
 		return peptide;

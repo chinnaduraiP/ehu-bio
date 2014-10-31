@@ -8,7 +8,7 @@ import es.ehubio.proteomics.MsMsData;
 public final class Plgs extends MsMsFile {
 
 	@Override
-	public MsMsData load(InputStream input, String decoyRegex) throws Exception {
+	public MsMsData load(InputStream input) throws Exception {
 		// TODO Auto-generated method stub
 		return null;
 	}

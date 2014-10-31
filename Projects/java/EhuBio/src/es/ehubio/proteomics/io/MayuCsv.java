@@ -21,7 +21,7 @@ import es.ehubio.proteomics.Spectrum;
 public class MayuCsv extends MsMsFile {
 
 	@Override
-	public MsMsData load(InputStream input, String decoyRegex) throws Exception {
+	public MsMsData load(InputStream input) throws Exception {
 		data = new MsMsData();
 		BufferedReader rd = new BufferedReader(new InputStreamReader(input));
 		String line;
@@ -61,10 +61,7 @@ public class MayuCsv extends MsMsFile {
 				mapProtein.put(fields[2], protein);
 				protein.setAccession(fields[2]);
 			}
-			protein.addPeptide(peptide);			
-			if( decoyRegex == null )
-				continue;
-			peptide.setDecoy(protein.getAccession().contains(decoyRegex));
+			protein.addPeptide(peptide);
 		}
 		data.loadFromSpectra(spectra);
 		return data;

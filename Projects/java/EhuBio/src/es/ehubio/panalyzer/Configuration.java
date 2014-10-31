@@ -21,7 +21,7 @@ import es.ehubio.proteomics.ScoreType;
 @XmlRootElement
 public class Configuration {	
 	public void initialize() {
-		setPsmRankThreshold(null);		
+		setPsmRankThreshold(1);		
 		setBestPsmPerPrecursor(true);
 		setPsmFdr(null);
 		setPsmScore(null);

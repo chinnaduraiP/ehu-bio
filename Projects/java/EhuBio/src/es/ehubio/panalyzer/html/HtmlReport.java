@@ -19,11 +19,12 @@ import es.ehubio.db.fasta.Fasta;
 import es.ehubio.io.CsvUtils;
 import es.ehubio.panalyzer.Configuration.Replicate;
 import es.ehubio.panalyzer.MainModel;
+import es.ehubio.panalyzer.MainModel.CountReport;
+import es.ehubio.panalyzer.MainModel.FdrReport;
 import es.ehubio.proteomics.Peptide;
 import es.ehubio.proteomics.Protein;
 import es.ehubio.proteomics.Psm;
 import es.ehubio.proteomics.ScoreType;
-import es.ehubio.proteomics.pipeline.PAnalyzer;
 
 public class HtmlReport {
 	private static final String DATA = "html";
@@ -125,24 +126,24 @@ public class HtmlReport {
 	}
 
 	private String getSummary() {
-		PAnalyzer.Counts counts = model.getCounts();
-		HtmlTable table = new HtmlTable();
-		table.setTitle("Counts");
-		table.setColStyle(1, "text-align: right");
-		table.addRow("Minimum proteins (grouped)",String.format("<b>%d</b>", counts.getMinimum()));
-		table.addRow("Maximum proteins (un-grouped)",counts.getMaximum()+"");
-		table.addRow("Conclusive proteins",counts.getConclusive()+"");
-		table.addRow("Indistinguishable proteins (grouped)",counts.getIndistinguishableGroups()+"");
-		table.addRow("Indistinguishable proteins (un-grouped)",counts.getIndistinguishable()+"");
-		table.addRow("Ambigous proteins (grouped)",counts.getAmbiguousGroups()+"");
-		table.addRow("Ambigous proteins (un-grouped)",counts.getAmbiguous()+"");
-		table.addRow("Non-conclusive proteins",counts.getNonConclusive()+"");
-		table.addRow("Total peptides",counts.getPeptides()+"");
-		table.addRow("Unique peptides",counts.getUnique()+"");
-		table.addRow("Discriminating peptides",counts.getDiscriminating()+"");
-		table.addRow("Non-discriminating peptides",counts.getNonDiscriminating()+"");
-		table.addRow("Total PSMs",counts.getPsms()+"");
-		return table.render();
+		HtmlTable counts = new HtmlTable();
+		counts.setTitle("Counts");
+		counts.setHeader("Type","Target","Decoy","Total");
+		counts.setColStyle(1, "text-align: right");
+		counts.setColStyle(2, "text-align: right");
+		counts.setColStyle(3, "text-align: right");
+		for( CountReport count : model.getCountReport() )
+			counts.addRow(count.getTitle(),count.getTarget()+"",count.getDecoy()+"",count.getTotal()+"");
+		
+		HtmlTable fdrs = new HtmlTable();
+		fdrs.setTitle("Global FDRs");
+		fdrs.setHeader("Level","Value","Threshold");
+		fdrs.setColStyle(1, "text-align: right");
+		fdrs.setColStyle(2, "text-align: right");
+		for( FdrReport fdr : model.getFdrReport() )
+			fdrs.addRow(fdr.getTitle(),fdr.getValue(),fdr.getThreshold());
+		
+		return counts.render()+"\n<br/>\n"+fdrs.render();
 	}
 	
 	private String getProteinList() {

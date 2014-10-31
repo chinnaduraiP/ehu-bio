@@ -156,7 +156,7 @@ public class Protein extends DecoyBase {
 	}
 	
 	@Override
-	public String getUniqueString() {
+	protected String buildUniqueString() {
 		return getAccession();
 	}
 	
