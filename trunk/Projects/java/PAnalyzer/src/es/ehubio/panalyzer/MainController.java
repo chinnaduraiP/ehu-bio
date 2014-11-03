@@ -205,6 +205,7 @@ public class MainController implements Initializable {
 				else
 					choiceScoreType.getSelectionModel().selectFirst();
 				config.initialize();
+				config.setFilterDecoys(false);
 				tabPane.getSelectionModel().select(tabFilter);
 				updateView();
 			}
