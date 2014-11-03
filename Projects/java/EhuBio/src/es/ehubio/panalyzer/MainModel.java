@@ -23,10 +23,10 @@ import es.ehubio.proteomics.ScoreType;
 import es.ehubio.proteomics.io.EhubioCsv;
 import es.ehubio.proteomics.io.MsMsFile;
 import es.ehubio.proteomics.io.Mzid;
+import es.ehubio.proteomics.pipeline.FdrCalculator.FdrResult;
 import es.ehubio.proteomics.pipeline.Filter;
 import es.ehubio.proteomics.pipeline.PAnalyzer;
 import es.ehubio.proteomics.pipeline.Validator;
-import es.ehubio.proteomics.pipeline.Validator.FdrResult;
 
 public class MainModel {
 	public enum State { WORKING, INIT, CONFIGURED, LOADED, RESULTS, SAVED}
@@ -157,6 +157,8 @@ public class MainModel {
 			int step = 0, steps = 5*experiment.getReplicates().size()+2;
 			for( Replicate replicate : experiment.getReplicates() ) {
 				logger.info(String.format("Filtering replicate (%s) ...", replicate.getName()));
+				/*setProgress(step++, steps, String.format("Updating PSM ranks (%s) ...",replicate.getName()));
+				replicate.getData().updateRanks(config.getPsmScore());*/
 				setProgress(step++, steps, String.format("Applying input filter (%s) ...",replicate.getName()));
 				inputFilter(replicate.getData());
 				setProgress(step++, steps, String.format("Applying PSM FDR filter (%s) ...",replicate.getName()));

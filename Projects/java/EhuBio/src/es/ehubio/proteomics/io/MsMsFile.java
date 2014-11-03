@@ -13,18 +13,22 @@ import java.util.zip.GZIPOutputStream;
 import es.ehubio.proteomics.MsMsData;
 
 public abstract class MsMsFile {
-	private final Logger logger = Logger.getLogger(MsMsFile.class.getName());
+	private final static Logger logger = Logger.getLogger(MsMsFile.class.getName());
 	private File originalFile;
 	protected MsMsData data;
 	
 	public static MsMsFile autoDetect( String path ) throws Exception {
-		Mzid mzid = new Mzid();
-		if( mzid.checkSignature(path) )
-			return mzid;
-		ProteomeDiscovererTxt pd = new ProteomeDiscovererTxt();
-		if( pd.checkSignature(path) )
-			return pd;
-		return null;
+		MsMsFile file = new Mzid();
+		if( !file.checkSignature(path) ) {
+			file = new ProteomeDiscovererTxt();
+			if( !file.checkSignature(path) )
+				file = null;
+		}
+		if( file == null )
+			logger.warning("File format not detected");
+		else
+			logger.info(String.format("Detected %s",file.getClass().getName()));
+		return file;
 	}
 	
 	public static MsMsData autoLoad( String path ) throws Exception {

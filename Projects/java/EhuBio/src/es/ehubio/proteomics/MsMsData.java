@@ -2,6 +2,8 @@ package es.ehubio.proteomics;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -111,6 +113,18 @@ public class MsMsData {
 		return this;
 	}
 	
+	public MsMsData markTarget() {
+		for( Peptide peptide : peptides )
+			peptide.setDecoy(false);
+		return this;
+	}
+	
+	public MsMsData markDecoy() {
+		for( Peptide peptide : peptides )
+			peptide.setDecoy(true);
+		return this;
+	}
+	
 	public void clear() {
 		spectra.clear();
 		psms.clear();
@@ -209,13 +223,44 @@ public class MsMsData {
 	public void merge( MsMsData data2 ) {
 		clearMetaData();
 		groups.clear();
+		//mergeSpectra(data2.getSpectra());
 		spectra.addAll(data2.getSpectra());
 		psms.addAll(data2.getPsms());
 		mergePeptides(data2.getPeptides());
 		mergeProteins(data2.getProteins());
 		data2.clear();
-	}		
+	}
 	
+	public void updateRanks( final ScoreType type ) {
+		for( Spectrum spectrum : spectra ) {
+			List<Psm> list = new ArrayList<>(spectrum.getPsms());
+			Collections.sort(list,new Comparator<Psm>() {
+				@Override
+				public int compare(Psm o1, Psm o2) {
+					return o2.getScoreByType(type).compare(o1.getScoreByType(type).getValue());
+				}
+			});
+			int rank = 1;
+			for( Psm psm : list )
+				psm.setRank(rank++);
+		}
+	}
+	
+	/*private void mergeSpectra(Set<Spectrum> spectra2) {
+		Map<String,Spectrum> map = new HashMap<>();
+		for( Spectrum spectrum : spectra )
+			map.put(spectrum.getUniqueString(), spectrum);
+		for( Spectrum spectrum2 : spectra2 ) {
+			Spectrum spectrum = map.get(spectrum2.getUniqueString());
+			if( spectrum == null ) {
+				map.put(spectrum2.getUniqueString(), spectrum2);
+				spectra.add(spectrum2);
+			} else
+				for( Psm psm : spectrum2.getPsms() )
+					psm.linkSpectrum(spectrum);
+		}
+	}*/
+
 	private void mergePeptides(Set<Peptide> peptides2) {
 		List<Peptide> listPeptides = new ArrayList<>(peptides);
 		peptides.clear();
