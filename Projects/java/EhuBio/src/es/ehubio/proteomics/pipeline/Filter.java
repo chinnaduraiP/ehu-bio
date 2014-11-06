@@ -155,10 +155,7 @@ public class Filter {
 		updateMetaData();
 	}
 	
-	private void filterPsms() {
-		if( isOnlyBestPsmPerPrecursor() )
-			filterPsmsByPrecursor();
-		
+	private void filterPsms() {				
 		for( Psm psm : data.getPsms() ) {
 			if( psm.getPeptide() == null ) {
 				unlinkPsm(psm);
@@ -182,6 +179,9 @@ public class Filter {
 			if( score == null || getPsmScoreThreshold().compare(score.getValue()) > 0 )
 				unlinkPsm(psm);
 		}
+		
+		if( isOnlyBestPsmPerPrecursor() )
+			filterPsmsByPrecursor();
 	}
 
 	private void filterPsmsByPrecursor() {

@@ -49,7 +49,7 @@ public class ProteomeDiscovererTxt extends MsMsFile {
 			if( peptide == null ) {
 				peptides.put(newPeptide.getUniqueString(), newPeptide);
 				peptide = newPeptide;
-			}
+			}			
 			Psm psm = loadPsm(csv);
 			psm.linkSpectrum(spectrum);
 			psm.linkPeptide(peptide);

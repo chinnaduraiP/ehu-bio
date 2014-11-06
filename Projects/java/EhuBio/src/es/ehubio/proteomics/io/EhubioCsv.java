@@ -8,11 +8,13 @@ import java.io.PrintWriter;
 import java.util.logging.Logger;
 
 import es.ehubio.io.CsvUtils;
+import es.ehubio.proteomics.DecoyBase;
 import es.ehubio.proteomics.MsMsData;
 import es.ehubio.proteomics.Peptide;
 import es.ehubio.proteomics.Protein;
 import es.ehubio.proteomics.ProteinGroup;
 import es.ehubio.proteomics.Psm;
+import es.ehubio.proteomics.Score;
 import es.ehubio.proteomics.ScoreType;
 
 public class EhubioCsv extends MsMsFile {
@@ -68,11 +70,11 @@ public class EhubioCsv extends MsMsFile {
 			pw.println(CsvUtils.getCsv(SEP,
 				psm.getId(), Boolean.TRUE.equals(psm.getDecoy()), psm.getCalcMz(), psm.getExpMz(), psm.getCharge(),
 				psm.getSpectrum().getFileName(), psm.getSpectrum().getFileId(),
-				psm.getScoreByType(psmScoreType),
-				psm.getScoreByType(ScoreType.PSM_P_VALUE),
-				psm.getScoreByType(ScoreType.PSM_LOCAL_FDR),
-				psm.getScoreByType(ScoreType.PSM_Q_VALUE),
-				psm.getScoreByType(ScoreType.PSM_FDR_SCORE),
+				getScore(psm,psmScoreType),
+				getScore(psm,ScoreType.PSM_P_VALUE),
+				getScore(psm,ScoreType.PSM_LOCAL_FDR),
+				getScore(psm,ScoreType.PSM_Q_VALUE),
+				getScore(psm,ScoreType.PSM_FDR_SCORE),
 				psm.isPassThreshold()
 				));
 		pw.close();
@@ -92,10 +94,10 @@ public class EhubioCsv extends MsMsFile {
 			pw.println(CsvUtils.getCsv(SEP,
 				peptide.getId(), Boolean.TRUE.equals(peptide.getDecoy()), peptide.getConfidence(), peptide.getSequence(), peptide.getMassSequence(),
 				CsvUtils.getCsv(INTER, peptide.getPsms().toArray()),
-				peptide.getScoreByType(ScoreType.PEPTIDE_P_VALUE),
-				peptide.getScoreByType(ScoreType.PEPTIDE_LOCAL_FDR),
-				peptide.getScoreByType(ScoreType.PEPTIDE_Q_VALUE),
-				peptide.getScoreByType(ScoreType.PEPTIDE_FDR_SCORE),
+				getScore(peptide,ScoreType.PEPTIDE_P_VALUE),
+				getScore(peptide,ScoreType.PEPTIDE_LOCAL_FDR),
+				getScore(peptide,ScoreType.PEPTIDE_Q_VALUE),
+				getScore(peptide,ScoreType.PEPTIDE_FDR_SCORE),
 				peptide.isPassThreshold()
 				));
 		pw.close();
@@ -115,10 +117,10 @@ public class EhubioCsv extends MsMsFile {
 			pw.println(CsvUtils.getCsv(SEP,
 				protein.getAccession(), Boolean.TRUE.equals(protein.getDecoy()), protein.getConfidence(),
 				CsvUtils.getCsv(INTER, protein.getPeptides().toArray()),
-				protein.getScoreByType(ScoreType.PROTEIN_P_VALUE),
-				protein.getScoreByType(ScoreType.PROTEIN_LOCAL_FDR),
-				protein.getScoreByType(ScoreType.PROTEIN_Q_VALUE),
-				protein.getScoreByType(ScoreType.PROTEIN_FDR_SCORE),
+				getScore(protein,ScoreType.PROTEIN_P_VALUE),
+				getScore(protein,ScoreType.PROTEIN_LOCAL_FDR),
+				getScore(protein,ScoreType.PROTEIN_Q_VALUE),
+				getScore(protein,ScoreType.PROTEIN_FDR_SCORE),
 				protein.isPassThreshold()
 				));
 		pw.close();
@@ -138,13 +140,20 @@ public class EhubioCsv extends MsMsFile {
 			pw.println(CsvUtils.getCsv(SEP,
 				group.getId(), group.buildName(), Boolean.TRUE.equals(group.getDecoy()), group.getConfidence(),
 				CsvUtils.getCsv(INTER, group.getProteins().toArray()),
-				group.getScoreByType(ScoreType.GROUP_P_VALUE),
-				group.getScoreByType(ScoreType.GROUP_LOCAL_FDR),
-				group.getScoreByType(ScoreType.GROUP_Q_VALUE),
-				group.getScoreByType(ScoreType.GROUP_FDR_SCORE),
+				getScore(group,ScoreType.GROUP_P_VALUE),
+				getScore(group,ScoreType.GROUP_LOCAL_FDR),
+				getScore(group,ScoreType.GROUP_Q_VALUE),
+				getScore(group,ScoreType.GROUP_FDR_SCORE),
 				group.isPassThreshold()
 				));
 		pw.close();
+	}
+	
+	private static Object getScore( DecoyBase item, ScoreType type ) {
+		Score score = item.getScoreByType(type);
+		if( score == null )
+			return "";
+		return score.getValue();
 	}
 
 	@Override
