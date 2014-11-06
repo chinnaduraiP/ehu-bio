@@ -27,7 +27,7 @@ public abstract class MsMsFile {
 		if( file == null )
 			logger.warning("File format not detected");
 		else
-			logger.info(String.format("Detected %s",file.getClass().getName()));
+			logger.info(String.format("Detected %s file format",file.getClass().getSimpleName()));
 		return file;
 	}
 	
