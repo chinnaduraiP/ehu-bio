@@ -101,7 +101,7 @@ public class ProteomeDiscovererTxt extends MsMsFile {
 	private Psm loadPsm( CsvReader csv ) {
 		Psm psm = new Psm();
 		psm.setCharge(csv.getIntField("Charge"));
-		psm.setCalcMz(csv.getDoubleField("m/z [Da]"));
+		psm.setExpMz(csv.getDoubleField("m/z [Da]"));
 		psm.setRank(csv.getIntField("Rank"));
 		Score score = new Score(ScoreType.SEQUEST_XCORR, csv.getDoubleField("XCorr"));
 		psm.addScore(score);

@@ -410,8 +410,8 @@ public class SearchBean implements Serializable {
 		if( count == 0 )
 			return "No matches (if a match was expected, try relaxing the regular expression)";
 		if( count == 1 )
-			return "1 match!!";
-		return count + " matches!";
+			return "1 result!";
+		return count + " results!";
 	}
 
 	public boolean isUsingPssm() {

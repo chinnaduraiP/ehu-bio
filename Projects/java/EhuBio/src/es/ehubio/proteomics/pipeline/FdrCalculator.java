@@ -37,6 +37,9 @@ public class FdrCalculator {
 	}
 	
 	public void updateDecoyScores( Collection<? extends Decoyable> items, ScoreType type, ScoreType pValue, ScoreType localFdr, ScoreType qValue, ScoreType fdrScore ) {
+		if( items.isEmpty() )
+			return;
+		
 		List<Decoyable> list = new ArrayList<>();
 		for( Decoyable item : items )
 			if( !item.skipFdr() )
@@ -95,24 +98,32 @@ public class FdrCalculator {
 					totalDecoys++;
 
 		// Traverse from best to worst to calculate local FDRs and p-values
-		int decoy = 0;
-		int target = 0;
+		int decoy = 0, target = 0;
 		Decoyable item;
 		double pOff;
+		Double score;
+		ScoreGroup scoreGroup;
 		for( int i = list.size()-1; i >= 0; i-- ) {
 			item = list.get(i);
+			score = item.getScoreByType(type).getValue();
+			scoreGroup = mapScores.get(score);
 			if( Boolean.TRUE.equals(item.getDecoy()) ) {
 				decoy++;
 				pOff = -0.5;
 			} else {
 				target++;
-				pOff = 0.5;
+				pOff = (scoreGroup == null || scoreGroup.isDecoy() == false) ? 0.5 : -0.5;
 			}
-			ScoreGroup scoreGroup = new ScoreGroup();
+			if( scoreGroup == null ) {
+				scoreGroup = new ScoreGroup();
+				mapScores.put(score, scoreGroup);
+			}
 			scoreGroup.setFdr(getFdr(decoy,target));
-			if( pValue )
+			if( pValue ) {
 				scoreGroup.setpValue(totalDecoys==0?0:(decoy+pOff)/totalDecoys);
-			mapScores.put(item.getScoreByType(type).getValue(), scoreGroup);
+				if( pOff < 0 )
+					scoreGroup.setDecoy(true);
+			}
 		}
 	}
 	
@@ -181,6 +192,7 @@ public class FdrCalculator {
 		private double fdr;
 		private double qValue;
 		private double fdrScore;
+		private boolean decoy = false;
 		public double getFdr() {
 			return fdr;
 		}
@@ -204,6 +216,12 @@ public class FdrCalculator {
 		}
 		public void setpValue(double pValue) {
 			this.pValue = pValue;
+		}
+		public boolean isDecoy() {
+			return decoy;
+		}
+		public void setDecoy(boolean decoy) {
+			this.decoy = decoy;
 		}
 	}
 }

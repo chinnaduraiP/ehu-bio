@@ -103,7 +103,7 @@
 					<p:commandButton value="Search!" actionListener="#{searchBean.search}" rendered="#{searchBean.configError == null}" ajax="false"/>
 					<h:outputText id="search" value="#{searchBean.searchError}" rendered="#{searchBean.searchError != null}" style="color:red"/>
 					<h:panelGroup rendered="#{searchBean.results != null and searchBean.configError == null}">
-						<h:outputText value="#{searchBean.numberOfResults}"/>
+						<h:outputText value="#{searchBean.numberOfResults}"/>&nbsp;
 						<p:commandButton value="Download as CSV" rendered="#{not empty searchBean.results}" actionListener="#{searchBean.downloadCsv}" ajax="false"/>
 						<p:commandButton value="Download as ALN" rendered="#{not empty searchBean.results}" actionListener="#{searchBean.downloadAln}" ajax="false"/>
 					</h:panelGroup>
@@ -135,6 +135,10 @@
 						<f:facet name="header">Sequence</f:facet>
 						<h:outputText value="#{item.alignment}"/>
 					</p:column>
+					<p:column rendered="#{searchBean.cosmic and searchBean.usingPssm}">
+						<f:facet name="header">Mutant</f:facet>
+						N/A
+					</p:column>
 					<p:column styleClass="trn_pos">
 						<f:facet name="header">"!"</f:facet>
 						<h:outputText value="#{item.combinations}"/>
@@ -156,6 +160,10 @@
 						<f:facet name="header">COSMIC missense</f:facet>
 						<h:outputText rendered="#{item.cosmicUrl == null}" value="#{item.cosmicMissenseAsString}"/>
 						<h:outputLink rendered="#{item.cosmicUrl != null}" value="#{item.cosmicUrl}" target="_blank">#{item.cosmicMissenseAsString}&nbsp;<h:graphicImage name="images/link.png" height="15"/></h:outputLink>
+					</p:column>
+					<p:column rendered="#{searchBean.cosmic and searchBean.usingPssm}" width="80" style="text-align:center;">
+						<f:facet name="header">Mutation effect</f:facet>
+						N/A
 					</p:column>
 					<p:column rendered="#{searchBean.dbPtm}" width="80" style="text-align:center;">
 						<f:facet name="header">dbPTM entries</f:facet>

@@ -18,6 +18,8 @@ public class ResultEx implements Comparable<ResultEx> {
 	private String dbPtmUrl;
 	private String motif;
 	private String motifUrl;
+	private String mutSequence;
+	private Double mutScore;
 	private static final char separator = ',';
 
 	public int compareTo(ResultEx o) {
@@ -251,5 +253,21 @@ public class ResultEx implements Comparable<ResultEx> {
 
 	public void setDbPtmUrl(String dbPtmUrl) {
 		this.dbPtmUrl = dbPtmUrl;
+	}
+
+	public String getMutSequence() {
+		return mutSequence;
+	}
+
+	public void setMutSequence(String mutSequence) {
+		this.mutSequence = mutSequence;
+	}
+
+	public Double getMutScore() {
+		return mutScore;
+	}
+
+	public void setMutScore(Double mutScore) {
+		this.mutScore = mutScore;
 	}
 }

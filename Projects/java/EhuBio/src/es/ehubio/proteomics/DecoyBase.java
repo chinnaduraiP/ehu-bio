@@ -1,5 +1,6 @@
 package es.ehubio.proteomics;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -71,4 +72,17 @@ public abstract class DecoyBase implements Decoyable {
 	}
 	
 	abstract protected String buildUniqueString();
+	
+	public static <T extends DecoyBase> T getBest( Collection<T> list, ScoreType type ) {
+		T best = null;
+		for( T item : list ) {
+			Score score = item.getScoreByType(type);
+			if( score == null )
+				continue;
+			if( best != null && best.getScoreByType(type).compare(score.getValue()) >= 0 )
+				continue;
+			best = item;				
+		}
+		return best;
+	}
 }

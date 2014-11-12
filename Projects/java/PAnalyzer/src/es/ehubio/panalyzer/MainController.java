@@ -204,7 +204,6 @@ public class MainController implements Initializable {
 					choiceScoreType.setValue(ScoreType.MASCOT_EVALUE);
 				else
 					choiceScoreType.getSelectionModel().selectFirst();
-				config.initialize();
 				config.setFilterDecoys(false);
 				tabPane.getSelectionModel().select(tabFilter);
 				updateView();
@@ -252,7 +251,7 @@ public class MainController implements Initializable {
 	}
 	
 	@FXML private void handleReset( ActionEvent event ) {
-		config.initialize();
+		config.initializeFilter();
 		//model.setConfig(config);
 		updateView();
 	}
@@ -331,6 +330,7 @@ public class MainController implements Initializable {
 		directoryChooser.setTitle("Select destination directory");
 		directoryChooser.setInitialDirectory(new File(System.getProperty("user.home")));
 		
+		config.initializeFilter();
 		config.setDescription("MyExperiment");
 		TreeItem<String> rootItem = new TreeItem<>(config.getDescription());		
 		rootItem.setExpanded(true);

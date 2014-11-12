@@ -129,7 +129,7 @@ public class EhubioCsv extends MsMsFile {
 	private void saveGroups(String path) throws IOException {
 		PrintWriter pw = new PrintWriter(path);
 		pw.println(CsvUtils.getCsv(SEP,
-			"id","name","decoy","confidence","proteins",
+			"id","name","decoy","confidence","proteins","peptides",
 			ScoreType.GROUP_P_VALUE.getName(),
 			ScoreType.GROUP_LOCAL_FDR.getName(),
 			ScoreType.GROUP_Q_VALUE.getName(),
@@ -140,6 +140,7 @@ public class EhubioCsv extends MsMsFile {
 			pw.println(CsvUtils.getCsv(SEP,
 				group.getId(), group.buildName(), Boolean.TRUE.equals(group.getDecoy()), group.getConfidence(),
 				CsvUtils.getCsv(INTER, group.getProteins().toArray()),
+				CsvUtils.getCsv(INTER, group.getPeptides().toArray()),
 				getScore(group,ScoreType.GROUP_P_VALUE),
 				getScore(group,ScoreType.GROUP_LOCAL_FDR),
 				getScore(group,ScoreType.GROUP_Q_VALUE),

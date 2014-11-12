@@ -20,6 +20,7 @@ public class Filter {
 	//private final static Logger logger = Logger.getLogger(Filter.class.getName());	
 	private Score psmScoreThreshold;
 	private ScoreType onlyBestPsmPerPrecursor;
+	private ScoreType onlyBestPsmPerPeptide;
 	private boolean passThreshold = false;
 	private int rankTreshold = 0;
 	private Double ppmThreshold;
@@ -124,6 +125,14 @@ public class Filter {
 		this.onlyBestPsmPerPrecursor = scoreType;
 	}
 	
+	public boolean isOnlyBestPsmPerPeptide() {
+		return onlyBestPsmPerPeptide != null;
+	}
+
+	public void setOnlyBestPsmPerPeptide(ScoreType onlyBestPsmPerPeptide) {
+		this.onlyBestPsmPerPeptide = onlyBestPsmPerPeptide;
+	}	
+	
 	public int getMinPeptideReplicates() {
 		return minPeptideReplicates;
 	}
@@ -180,8 +189,19 @@ public class Filter {
 				unlinkPsm(psm);
 		}
 		
-		if( isOnlyBestPsmPerPrecursor() )
+		if( isOnlyBestPsmPerPeptide() )
+			filterPsmsByPeptide();		
+		else if( isOnlyBestPsmPerPrecursor() )
 			filterPsmsByPrecursor();
+	}
+
+	private void filterPsmsByPeptide() {
+		for( Peptide peptide : data.getPeptides() ) {
+			Psm best = peptide.getBestPsm(onlyBestPsmPerPeptide);
+			for( Psm psm : peptide.getPsms().toArray(new Psm[0]) )
+				if( psm != best )
+					unlinkPsm(psm);
+		}
 	}
 
 	private void filterPsmsByPrecursor() {
@@ -435,5 +455,5 @@ public class Filter {
 			if( peptide.getPsms().isEmpty() )
 				unlinkPeptide(peptide);
 		}
-	}	
+	}
 }
