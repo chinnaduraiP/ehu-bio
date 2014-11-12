@@ -348,6 +348,7 @@ public class MainModel {
 		Filter filter = new Filter(data);
 		filter.setRankTreshold(config.getPsmRankThreshold()==null?0:config.getPsmRankThreshold());
 		filter.setOnlyBestPsmPerPrecursor(Boolean.TRUE.equals(config.getBestPsmPerPrecursor())?config.getPsmScore():null);
+		filter.setOnlyBestPsmPerPeptide(Boolean.TRUE.equals(config.getBestPsmPerPeptide())?config.getPsmScore():null);
 		filter.setMinPeptideLength(config.getMinPeptideLength()==null?0:config.getMinPeptideLength());
 		filter.setFilterDecoyPeptides(false);
 		filterAndGroup(filter,"Input filter");
@@ -355,6 +356,9 @@ public class MainModel {
 	}
 	
 	private void replicateFilter() {
+		if( experiment.getReplicates().size() <= 1 )
+			return;
+		
 		Filter filter = new Filter(experiment.getData());
 		boolean run = false;
 		if( config.getMinPeptideReplicates() != null ) {

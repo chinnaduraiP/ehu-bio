@@ -14,15 +14,16 @@ import es.ehubio.proteomics.ScoreType;
 
 @XmlType(propOrder={
 	"description",
-	"psmRankThreshold","bestPsmPerPrecursor","psmFdr","psmScore",
+	"psmRankThreshold","bestPsmPerPrecursor","bestPsmPerPeptide", "psmFdr","psmScore",
 	"minPeptideLength","peptideFdr","minPeptideReplicates",
 	"proteinFdr","minProteinReplicates","groupFdr",
 	"decoyRegex","replicates","filterDecoys","output"})
 @XmlRootElement
 public class Configuration {	
-	public void initialize() {
+	public void initializeFilter() {
 		setPsmRankThreshold(1);		
-		setBestPsmPerPrecursor(true);
+		setBestPsmPerPrecursor(false);
+		setBestPsmPerPeptide(true);
 		setPsmFdr(null);
 		setPsmScore(null);
 		setMinPeptideLength(7);
@@ -31,8 +32,7 @@ public class Configuration {
 		setProteinFdr(null);
 		setMinProteinReplicates(null);
 		setGroupFdr(0.01);
-		setDecoyRegex("decoy");
-		setFilterDecoys(true);
+		setFilterDecoys(false);
 	}
 	
 	@XmlAttribute
@@ -78,6 +78,14 @@ public class Configuration {
 
 	public void setBestPsmPerPrecursor(Boolean bestPsmPerPrecursor) {
 		this.bestPsmPerPrecursor = bestPsmPerPrecursor;
+	}
+	
+	public Boolean getBestPsmPerPeptide() {
+		return bestPsmPerPeptide;
+	}
+
+	public void setBestPsmPerPeptide(Boolean bestPsmPerPeptide) {
+		this.bestPsmPerPeptide = bestPsmPerPeptide;
 	}
 	
 	public Double getPsmFdr() {
@@ -161,7 +169,7 @@ public class Configuration {
 
 	public void setMinProteinReplicates(Integer minProteinReplicates) {
 		this.minProteinReplicates = minProteinReplicates;
-	}
+	}	
 
 	public static class Replicate {
 		private String name;
@@ -195,6 +203,7 @@ public class Configuration {
 	private Double psmFdr;
 	private Integer psmRankThreshold;
 	private Boolean bestPsmPerPrecursor;
+	private Boolean bestPsmPerPeptide;
 	private Integer minPeptideLength;
 	private Double peptideFdr;
 	private Integer minPeptideReplicates;

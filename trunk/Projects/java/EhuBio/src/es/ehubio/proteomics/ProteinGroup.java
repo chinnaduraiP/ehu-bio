@@ -72,17 +72,8 @@ public class ProteinGroup extends DecoyBase {
 		return id;
 	}
 	
-	public Protein getBestProtein( ScoreType type ) {		
-		Protein best = null;
-		for( Protein protein : getProteins() ) {
-			Score score = protein.getScoreByType(type);
-			if( score == null )
-				continue;
-			if( best != null && best.getScoreByType(type).compare(score.getValue()) >= 0 )
-				continue;
-			best = protein;				
-		}
-		return best;
+	public Protein getBestProtein( ScoreType type ) {
+		return getBest(getProteins(), type);
 	}
 
 	@Override
@@ -91,10 +82,19 @@ public class ProteinGroup extends DecoyBase {
 		if( score != null )
 			return score;
 		
-		Protein best = getBestProtein(type);
-		if( best == null )
-			return null;
-		return best.getScoreByType(type);
+		DecoyBase best = getBestOwnPsm(type);
+		if( best != null )
+			return best.getScoreByType(type);
+		
+		best = getBestOwnPeptide(type);
+		if( best != null )
+			return best.getScoreByType(type);
+		
+		best = getBestProtein(type);
+		if( best != null )
+			return best.getScoreByType(type);
+		
+		return null;
 	}
 	
 	@Override
@@ -117,8 +117,46 @@ public class ProteinGroup extends DecoyBase {
 	public Set<Peptide> getPeptides() {
 		Set<Peptide> peptides = new HashSet<>();
 		for( Protein protein : getProteins() )
-			for( Peptide peptide : protein.getPeptides() )
-				peptides.add(peptide);
+			peptides.addAll(protein.getPeptides());
 		return peptides;
+	}
+	
+	public Set<Psm> getPsms() {
+		Set<Psm> psms = new HashSet<>();
+		for( Peptide peptide : getPeptides() )
+			psms.addAll(peptide.getPsms());
+		return psms;
+	}
+	
+	public Peptide getBestPeptide( ScoreType type ) {
+		return getBest(getPeptides(), type);
+	}
+	
+	public Psm getBestPsm( ScoreType type ) {
+		return getBest(getPsms(), type);
+	}
+	
+	public Set<Peptide> getOwnPeptides() {
+		Set<Peptide> peptides = new HashSet<>();
+		for( Protein protein : getProteins() )
+			for( Peptide peptide : protein.getPeptides() )
+				if( peptide.getConfidence() != Peptide.Confidence.NON_DISCRIMINATING )
+					peptides.add(peptide);
+		return peptides;
+	}
+	
+	public Set<Psm> getOwnPsms() {
+		Set<Psm> psms = new HashSet<>();
+		for( Peptide peptide : getOwnPeptides() )
+			psms.addAll(peptide.getPsms());
+		return psms;
+	}
+	
+	public Peptide getBestOwnPeptide( ScoreType type ) {
+		return getBest(getOwnPeptides(), type);
+	}
+	
+	public Psm getBestOwnPsm( ScoreType type ) {
+		return getBest(getOwnPsms(), type);
 	}
 }

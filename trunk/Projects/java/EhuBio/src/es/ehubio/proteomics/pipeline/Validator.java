@@ -1,7 +1,5 @@
 package es.ehubio.proteomics.pipeline;
 
-import java.util.HashSet;
-import java.util.Set;
 import java.util.logging.Logger;
 
 import es.ehubio.proteomics.MsMsData;
@@ -66,19 +64,14 @@ public final class Validator {
 	
 	public void updateGroupProbabilities() {
 		double p;
-		Set<Peptide> peptides = new HashSet<>();
 		for( ProteinGroup group : data.getGroups() ) {
 			if( group.getConfidence() == Protein.Confidence.NON_CONCLUSIVE )
 				continue;
-			peptides.clear();
 			p = 1;			
-			for( Protein protein : group.getProteins() )
-				for( Peptide peptide : protein.getPeptides() )				
-					if( peptide.getConfidence() != Peptide.Confidence.NON_DISCRIMINATING )
-						peptides.add(peptide);
-			for( Peptide peptide : peptides )
+			for( Peptide peptide : group.getOwnPeptides() )
 				p *= peptide.getScoreByType(ScoreType.PEPTIDE_P_VALUE).getValue();
 			group.setScore(new Score(ScoreType.GROUP_P_VALUE, p));
+			//group.setScore(new Score(ScoreType.GROUP_P_VALUE, group.getBestOwnPeptide(ScoreType.PEPTIDE_P_VALUE).getScoreByType(ScoreType.PEPTIDE_P_VALUE).getValue()));
 		}
 	}
 	

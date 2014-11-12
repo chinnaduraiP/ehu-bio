@@ -83,16 +83,7 @@ public class Peptide extends DecoyBase {
 	}
 	
 	public Psm getBestPsm( ScoreType type ) {		
-		Psm bestPsm = null;
-		for( Psm psm : getPsms() ) {
-			Score score = psm.getScoreByType(type);
-			if( score == null )
-				continue;
-			if( bestPsm != null && bestPsm.getScoreByType(type).compare(score.getValue()) >= 0 )
-				continue;
-			bestPsm = psm;				
-		}
-		return bestPsm;
+		return getBest(getPsms(), type);
 	}
 	
 	@Override
@@ -102,9 +93,10 @@ public class Peptide extends DecoyBase {
 			return score;
 		
 		Psm bestPsm = getBestPsm(type);
-		if( bestPsm == null )
-			return null;
-		return bestPsm.getScoreByType(type);
+		if( bestPsm != null )
+			return bestPsm.getScoreByType(type);
+		
+		return null;
 	}
 	
 	public boolean addPsm(Psm psm) {

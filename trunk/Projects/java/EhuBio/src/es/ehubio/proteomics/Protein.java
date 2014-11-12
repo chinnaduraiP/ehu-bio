@@ -126,16 +126,18 @@ public class Protein extends DecoyBase {
 	}
 	
 	public Peptide getBestPeptide( ScoreType type ) {		
-		Peptide best = null;
-		for( Peptide peptide : getPeptides() ) {
-			Score score = peptide.getScoreByType(type);
-			if( score == null )
-				continue;
-			if( best != null && best.getScoreByType(type).compare(score.getValue()) >= 0 )
-				continue;
-			best = peptide;				
-		}
-		return best;
+		return getBest(getPeptides(), type);
+	}
+	
+	public Psm getBestPsm( ScoreType type ) {		
+		return getBest(getPsms(), type);
+	}
+
+	public Set<Psm> getPsms() {
+		Set<Psm> psms = new HashSet<>();
+		for( Peptide peptide : getPeptides() )
+			psms.addAll(peptide.getPsms());
+		return psms;
 	}
 
 	@Override
@@ -145,9 +147,10 @@ public class Protein extends DecoyBase {
 			return score;
 		
 		Peptide best = getBestPeptide(type);
-		if( best == null )
-			return null;
-		return best.getScoreByType(type);
+		if( best != null )
+			return best.getScoreByType(type);
+		
+		return null;
 	}
 	
 	@Override
