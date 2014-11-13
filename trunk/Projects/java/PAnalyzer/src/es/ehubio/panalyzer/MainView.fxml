@@ -96,12 +96,22 @@
                                     <Separator prefWidth="200.0" GridPane.rowIndex="4" />
                                     <Separator prefWidth="200.0" GridPane.rowIndex="8" />
                                     <TextField fx:id="textRank" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                                    <Label text="Best PSM per precursor" GridPane.rowIndex="2" />
-                                    <CheckBox fx:id="checkBestPsm" mnemonicParsing="false" text="Enabled" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                    <Label text="PSM refinement" GridPane.rowIndex="2" />
                                     <Label fx:id="labelPeptideReplicates" text="Minimum peptide replicates" GridPane.rowIndex="7" />
                                     <TextField fx:id="textPeptideReplicates" GridPane.columnIndex="1" GridPane.rowIndex="7" />
                                     <Label fx:id="labelProteinReplicates" text="Minimum protein replicates" GridPane.rowIndex="10" />
                                     <TextField fx:id="textProteinReplicates" GridPane.columnIndex="1" GridPane.rowIndex="10" />
+                                    <HBox maxWidth="1.7976931348623157E308" prefHeight="100.0" prefWidth="200.0" spacing="10.0" GridPane.columnIndex="1" GridPane.rowIndex="2">
+                                       <children>
+                                          <RadioButton fx:id="radioPsmNone" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" selected="true" text="None">
+                                             <toggleGroup>
+                                                <ToggleGroup fx:id="psmRefinement" />
+                                             </toggleGroup>
+                                          </RadioButton>
+                                          <RadioButton fx:id="radioPsmBest" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Best PSM/peptide" toggleGroup="$psmRefinement" />
+                                          <RadioButton fx:id="radioPsmFeature" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Best PSM/precursor" toggleGroup="$psmRefinement" />
+                                       </children>
+                                    </HBox>
                                  </children>
                               </GridPane>
                               <HBox fillHeight="false" maxWidth="1.7976931348623157E308" prefHeight="0.0" prefWidth="620.0" spacing="10.0">
