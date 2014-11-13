@@ -24,10 +24,10 @@ public class Configuration {
 		setPsmRankThreshold(1);		
 		setBestPsmPerPrecursor(false);
 		setBestPsmPerPeptide(true);
-		setPsmFdr(null);
+		setPsmFdr(0.01);
 		setPsmScore(null);
 		setMinPeptideLength(7);
-		setPeptideFdr(0.01);
+		setPeptideFdr(null);
 		setMinPeptideReplicates(null);
 		setProteinFdr(null);
 		setMinProteinReplicates(null);

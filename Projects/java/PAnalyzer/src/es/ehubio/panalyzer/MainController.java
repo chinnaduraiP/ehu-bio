@@ -36,6 +36,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.RadioButton;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TableColumn;
@@ -93,7 +94,9 @@ public class MainController implements Initializable {
 	@FXML private Label labelProteinReplicates;
 	@FXML private Label labelGroupFdr;
 	@FXML private TextField textRank;	
-	@FXML private CheckBox checkBestPsm;
+	@FXML private RadioButton radioPsmNone;
+	@FXML private RadioButton radioPsmBest;
+	@FXML private RadioButton radioPsmFeature;
 	@FXML private TextField textPsmFdr;
 	@FXML private TextField textPeptideLength;
 	@FXML private TextField textPeptideFdr;
@@ -219,7 +222,8 @@ public class MainController implements Initializable {
 			config.setDescription(treeExperiment.getRoot().getValue());
 			config.setPsmScore(choiceScoreType.getValue());
 			config.setPsmRankThreshold(tryInteger(textRank, labelRank));
-			config.setBestPsmPerPrecursor(checkBestPsm.isSelected());
+			config.setBestPsmPerPrecursor(radioPsmFeature.isSelected());
+			config.setBestPsmPerPeptide(radioPsmBest.isSelected());
 			config.setPsmFdr(tryDouble(textPsmFdr, labelPsmFdr));
 			config.setMinPeptideLength(tryInteger(textPeptideLength, labelPeptideLength));
 			config.setPeptideFdr(tryDouble(textPeptideFdr, labelPeptideFdr));
@@ -396,7 +400,12 @@ public class MainController implements Initializable {
 		labelStatus.setText(model.getStatus());
 		//choiceScoreType.setValue(config.getPsmScore());
 		textRank.setText(valueOf(config.getPsmRankThreshold()));
-		checkBestPsm.setSelected(Boolean.TRUE.equals(config.getBestPsmPerPrecursor()));
+		if( Boolean.TRUE.equals(config.getBestPsmPerPrecursor()) )
+			radioPsmFeature.setSelected(true);
+		else if( Boolean.TRUE.equals(config.getBestPsmPerPeptide()) )
+			radioPsmBest.setSelected(true);
+		else
+			radioPsmNone.setSelected(true);
 		textPsmFdr.setText(valueOf(config.getPsmFdr()));
 		textPeptideLength.setText(valueOf(config.getMinPeptideLength()));
 		textPeptideFdr.setText(valueOf(config.getPeptideFdr()));
