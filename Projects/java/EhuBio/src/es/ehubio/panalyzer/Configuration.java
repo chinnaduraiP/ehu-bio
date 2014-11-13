@@ -15,7 +15,7 @@ import es.ehubio.proteomics.ScoreType;
 @XmlType(propOrder={
 	"description",
 	"psmRankThreshold","bestPsmPerPrecursor","bestPsmPerPeptide", "psmFdr","psmScore",
-	"minPeptideLength","peptideFdr","minPeptideReplicates",
+	"minPeptideLength","uniquePeptides","peptideFdr","minPeptideReplicates",
 	"proteinFdr","minProteinReplicates","groupFdr",
 	"decoyRegex","replicates","filterDecoys","output"})
 @XmlRootElement
@@ -27,6 +27,7 @@ public class Configuration {
 		setPsmFdr(0.01);
 		setPsmScore(null);
 		setMinPeptideLength(7);
+		setUniquePeptides(null);
 		setPeptideFdr(null);
 		setMinPeptideReplicates(null);
 		setProteinFdr(null);
@@ -171,6 +172,14 @@ public class Configuration {
 		this.minProteinReplicates = minProteinReplicates;
 	}	
 
+	public Boolean getUniquePeptides() {
+		return uniquePeptides;
+	}
+
+	public void setUniquePeptides(Boolean uniquePeptides) {
+		this.uniquePeptides = uniquePeptides;
+	}
+
 	public static class Replicate {
 		private String name;
 		private Set<String> fractions;
@@ -205,6 +214,7 @@ public class Configuration {
 	private Boolean bestPsmPerPrecursor;
 	private Boolean bestPsmPerPeptide;
 	private Integer minPeptideLength;
+	private Boolean uniquePeptides;
 	private Double peptideFdr;
 	private Integer minPeptideReplicates;
 	private Double proteinFdr;

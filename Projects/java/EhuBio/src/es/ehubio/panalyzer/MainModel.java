@@ -350,6 +350,7 @@ public class MainModel {
 		filter.setOnlyBestPsmPerPrecursor(Boolean.TRUE.equals(config.getBestPsmPerPrecursor())?config.getPsmScore():null);
 		filter.setOnlyBestPsmPerPeptide(Boolean.TRUE.equals(config.getBestPsmPerPeptide())?config.getPsmScore():null);
 		filter.setMinPeptideLength(config.getMinPeptideLength()==null?0:config.getMinPeptideLength());
+		filter.setUniquePeptides(Boolean.TRUE.equals(config.getUniquePeptides()));
 		filter.setFilterDecoyPeptides(false);
 		filterAndGroup(filter,"Input filter");
 		//validator.logFdrs();
