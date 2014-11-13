@@ -28,11 +28,12 @@ public class Filter {
 	private Score peptideScoreThreshold;
 	private int minPeptideLength = 0;
 	private Boolean filterDecoyPeptides;
-	private int minPeptideReplicates = 0;
+	private boolean uniquePeptides = false;
+	private int minPeptideReplicates = 0;	
 	
 	private Score proteinScoreThreshold;
-	private int minProteinReplicates = 0;
-	private Score groupScoreThreshold;
+	private int minProteinReplicates = 0;	
+	private Score groupScoreThreshold;	
 		
 	private final MsMsData data;	
 	
@@ -75,6 +76,14 @@ public class Filter {
 
 	public void setGroupScoreThreshold(Score groupScoreThreshold) {
 		this.groupScoreThreshold = groupScoreThreshold;
+	}
+	
+	public boolean isUniquePeptides() {
+		return uniquePeptides;
+	}
+
+	public void setUniquePeptides(boolean uniquePeptides) {
+		this.uniquePeptides = uniquePeptides;
 	}
 	
 	public int getMinPeptideLength() {
@@ -243,6 +252,10 @@ public class Filter {
 				continue;
 			}
 			if( isPassThreshold() && !peptide.isPassThreshold() ) {
+				unlinkPeptide(peptide);
+				continue;
+			}
+			if( isUniquePeptides() && peptide.getProteins().size() != 1 ) {
 				unlinkPeptide(peptide);
 				continue;
 			}
@@ -455,5 +468,5 @@ public class Filter {
 			if( peptide.getPsms().isEmpty() )
 				unlinkPeptide(peptide);
 		}
-	}
+	}	
 }

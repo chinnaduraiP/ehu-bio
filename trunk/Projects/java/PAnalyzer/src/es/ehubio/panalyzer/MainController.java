@@ -99,6 +99,7 @@ public class MainController implements Initializable {
 	@FXML private RadioButton radioPsmFeature;
 	@FXML private TextField textPsmFdr;
 	@FXML private TextField textPeptideLength;
+	@FXML private CheckBox checkUnique;
 	@FXML private TextField textPeptideFdr;
 	@FXML private TextField textPeptideReplicates;
 	@FXML private TextField textProteinFdr;
@@ -226,6 +227,7 @@ public class MainController implements Initializable {
 			config.setBestPsmPerPeptide(radioPsmBest.isSelected());
 			config.setPsmFdr(tryDouble(textPsmFdr, labelPsmFdr));
 			config.setMinPeptideLength(tryInteger(textPeptideLength, labelPeptideLength));
+			config.setUniquePeptides(checkUnique.isSelected()?true:null);
 			config.setPeptideFdr(tryDouble(textPeptideFdr, labelPeptideFdr));
 			config.setMinPeptideReplicates(tryInteger(textPeptideReplicates, labelPeptideReplicates));
 			config.setProteinFdr(tryDouble(textProteinFdr, labelProteinFdr));
@@ -408,6 +410,7 @@ public class MainController implements Initializable {
 			radioPsmNone.setSelected(true);
 		textPsmFdr.setText(valueOf(config.getPsmFdr()));
 		textPeptideLength.setText(valueOf(config.getMinPeptideLength()));
+		checkUnique.setSelected(Boolean.TRUE.equals(config.getUniquePeptides()));
 		textPeptideFdr.setText(valueOf(config.getPeptideFdr()));
 		textPeptideReplicates.setText(valueOf(config.getMinPeptideReplicates()));
 		textProteinFdr.setText(valueOf(config.getProteinFdr()));
