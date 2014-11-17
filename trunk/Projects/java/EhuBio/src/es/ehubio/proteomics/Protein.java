@@ -35,6 +35,8 @@ public class Protein extends DecoyBase {
 	}
 	
 	public void setFasta( Fasta fasta ) {
+		if( fasta == null )
+			return;
 		setAccession(fasta.getAccession());
 		setDescription(fasta.getDescription());
 		setName(fasta.getProteinName());
