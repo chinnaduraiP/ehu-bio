@@ -64,6 +64,7 @@ public class EhubioCsv extends MsMsFile {
 			ScoreType.PSM_LOCAL_FDR.getName(),
 			ScoreType.PSM_Q_VALUE.getName(),
 			ScoreType.PSM_FDR_SCORE.getName(),
+			ScoreType.PSM_SPHPP_SCORE.getName(),
 			"passThreshold"
 			));
 		for( Psm psm : data.getPsms() )
@@ -75,6 +76,7 @@ public class EhubioCsv extends MsMsFile {
 				getScore(psm,ScoreType.PSM_LOCAL_FDR),
 				getScore(psm,ScoreType.PSM_Q_VALUE),
 				getScore(psm,ScoreType.PSM_FDR_SCORE),
+				getScore(psm,ScoreType.PSM_SPHPP_SCORE),
 				psm.isPassThreshold()
 				));
 		pw.close();
@@ -88,6 +90,7 @@ public class EhubioCsv extends MsMsFile {
 			ScoreType.PEPTIDE_LOCAL_FDR.getName(),
 			ScoreType.PEPTIDE_Q_VALUE.getName(),
 			ScoreType.PEPTIDE_FDR_SCORE.getName(),
+			ScoreType.PEPTIDE_SPHPP_SCORE.getName(),
 			"passThreshold"
 			));
 		for( Peptide peptide : data.getPeptides() )
@@ -98,6 +101,7 @@ public class EhubioCsv extends MsMsFile {
 				getScore(peptide,ScoreType.PEPTIDE_LOCAL_FDR),
 				getScore(peptide,ScoreType.PEPTIDE_Q_VALUE),
 				getScore(peptide,ScoreType.PEPTIDE_FDR_SCORE),
+				getScore(peptide,ScoreType.PEPTIDE_SPHPP_SCORE),
 				peptide.isPassThreshold()
 				));
 		pw.close();
@@ -111,6 +115,7 @@ public class EhubioCsv extends MsMsFile {
 			ScoreType.PROTEIN_LOCAL_FDR.getName(),
 			ScoreType.PROTEIN_Q_VALUE.getName(),
 			ScoreType.PROTEIN_FDR_SCORE.getName(),
+			ScoreType.PROTEIN_SPHPP_SCORE.getName(),
 			"passThreshold"
 			));
 		for( Protein protein : data.getProteins() )
@@ -121,6 +126,7 @@ public class EhubioCsv extends MsMsFile {
 				getScore(protein,ScoreType.PROTEIN_LOCAL_FDR),
 				getScore(protein,ScoreType.PROTEIN_Q_VALUE),
 				getScore(protein,ScoreType.PROTEIN_FDR_SCORE),
+				getScore(protein,ScoreType.PROTEIN_SPHPP_SCORE),
 				protein.isPassThreshold()
 				));
 		pw.close();
@@ -134,6 +140,7 @@ public class EhubioCsv extends MsMsFile {
 			ScoreType.GROUP_LOCAL_FDR.getName(),
 			ScoreType.GROUP_Q_VALUE.getName(),
 			ScoreType.GROUP_FDR_SCORE.getName(),
+			ScoreType.GROUP_SPHPP_SCORE.getName(),
 			"passThreshold"
 			));
 		for( ProteinGroup group : data.getGroups() )
@@ -145,6 +152,7 @@ public class EhubioCsv extends MsMsFile {
 				getScore(group,ScoreType.GROUP_LOCAL_FDR),
 				getScore(group,ScoreType.GROUP_Q_VALUE),
 				getScore(group,ScoreType.GROUP_FDR_SCORE),
+				getScore(group,ScoreType.GROUP_SPHPP_SCORE),
 				group.isPassThreshold()
 				));
 		pw.close();

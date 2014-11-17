@@ -1,5 +1,6 @@
 package es.ehubio.proteomics;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -12,6 +13,9 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import es.ehubio.db.fasta.Fasta;
+import es.ehubio.db.fasta.Fasta.InvalidSequenceException;
+import es.ehubio.db.fasta.Fasta.SequenceType;
 import es.ehubio.proteomics.psi.mzid11.AbstractParamType;
 import es.ehubio.proteomics.psi.mzid11.AnalysisSoftwareType;
 import es.ehubio.proteomics.psi.mzid11.BibliographicReferenceType;
@@ -312,5 +316,14 @@ public class MsMsData {
 				if( !protein.getPeptides().contains(peptide) )
 					throw new AssertionError(String.format("Peptide %s not present in protein %s", peptide.getSequence(), protein.getAccession()));
 		}
+	}
+	
+	public void updateProteinInformation( String fastaPath ) throws IOException, InvalidSequenceException {
+		List<Fasta> list = Fasta.readEntries(fastaPath, SequenceType.PROTEIN);
+		Map<String,Fasta> map = new HashMap<>();
+		for( Fasta fasta : list )
+			map.put(fasta.getAccession(), fasta);
+		for( Protein protein : getProteins() )
+			protein.setFasta(map.get(protein.getAccession()));
 	}
 }

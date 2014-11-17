@@ -24,9 +24,10 @@ import es.ehubio.proteomics.io.EhubioCsv;
 import es.ehubio.proteomics.io.MsMsFile;
 import es.ehubio.proteomics.io.Mzid;
 import es.ehubio.proteomics.pipeline.FdrCalculator.FdrResult;
+import es.ehubio.proteomics.pipeline.FdrCalculator;
 import es.ehubio.proteomics.pipeline.Filter;
 import es.ehubio.proteomics.pipeline.PAnalyzer;
-import es.ehubio.proteomics.pipeline.Validator;
+import es.ehubio.proteomics.pipeline.ScoreIntegrator;
 
 public class MainModel {
 	public enum State { WORKING, INIT, CONFIGURED, LOADED, RESULTS, SAVED}
@@ -47,6 +48,7 @@ public class MainModel {
 	private State state;
 	private Set<ScoreType> psmScoreTypes;
 	private File reportFile = null;
+	private final FdrCalculator calculator = new FdrCalculator(false);
 	
 	public MainModel() {
 		resetTotal();	
@@ -268,19 +270,19 @@ public class MainModel {
 	}
 	
 	public FdrResult getPsmFdr() {
-		return new Validator(experiment.getData()).getPsmFdr();
+		return calculator.getFdr(getData().getPsms());
 	}
 	
 	public FdrResult getPeptideFdr() {
-		return new Validator(experiment.getData()).getPeptideFdr();
+		return calculator.getFdr(getData().getPeptides());
 	}
 	
 	public FdrResult getProteinFdr() {
-		return new Validator(experiment.getData()).getProteinFdr();
+		return calculator.getFdr(getData().getProteins());
 	}
 	
 	public FdrResult getGroupFdr() {
-		return new Validator(experiment.getData()).getGroupFdr();
+		return calculator.getFdr(getData().getGroups());
 	}
 	
 	public List<FdrReport> getFdrReport() {
@@ -309,8 +311,7 @@ public class MainModel {
 	}
 	
 	private void logFdrs( MsMsData data ) {
-		Validator validator = new Validator(data);
-		validator.logFdrs();
+		calculator.logFdrs(data);
 	}
 	
 	private void logCounts( String title, MsMsData data ) {
@@ -378,8 +379,8 @@ public class MainModel {
 	
 	private void processPsmFdr(MsMsData data) {		
 		if( config.getPsmFdr() != null || config.getPeptideFdr() != null || config.getProteinFdr() != null || config.getGroupFdr() != null ) {
-			Validator validator = new Validator(data);
-			validator.updatePsmDecoyScores(config.getPsmScore());
+			calculator.updatePsmScores(data.getPsms(), config.getPsmScore(), true);
+			ScoreIntegrator.updatePsmScores(data.getPsms());
 		}
 		if( config.getPsmFdr() == null )
 			return;
@@ -389,10 +390,9 @@ public class MainModel {
 	}
 	
 	private void processPeptideFdr(MsMsData data) {
-		if( config.getPeptideFdr() != null || config.getProteinFdr() != null || config.getGroupFdr() != null ) {
-			Validator validator = new Validator(data);
-			validator.updatePeptideProbabilities();
-			validator.updatePeptideDecoyScores(ScoreType.PEPTIDE_P_VALUE);
+		if( config.getPeptideFdr() != null || config.getProteinFdr() != null || config.getGroupFdr() != null ) {			
+			ScoreIntegrator.updatePeptideScores(data.getPeptides());
+			calculator.updatePeptideScores(data.getPeptides(), ScoreType.PEPTIDE_SPHPP_SCORE, false);
 		}
 		if( config.getPeptideFdr() == null )
 			return;
@@ -404,9 +404,8 @@ public class MainModel {
 	private void processProteinFdr(MsMsData data) {
 		if( config.getProteinFdr() == null )
 			return;
-		Validator validator = new Validator(data);
-		validator.updateProteinProbabilities();
-		validator.updateProteinDecoyScores(ScoreType.PROTEIN_P_VALUE);
+		ScoreIntegrator.updateProteinScores(data.getProteins());
+		calculator.updateProteinScores(data.getProteins(), ScoreType.PROTEIN_SPHPP_SCORE, false);
 		Filter filter = new Filter(data);
 		filter.setProteinScoreThreshold(new Score(ScoreType.PROTEIN_Q_VALUE, config.getProteinFdr()));
 		filterAndGroup(filter,String.format("Protein FDR=%s filter",config.getProteinFdr()));
@@ -418,14 +417,13 @@ public class MainModel {
 		
 		PAnalyzer pAnalyzer = new PAnalyzer(data);		
 		PAnalyzer.Counts curCount = pAnalyzer.getCounts(), prevCount;
-		Validator validator = new Validator(data);
 		int i = 0;
 		Filter filter = new Filter(data);
 		filter.setGroupScoreThreshold(new Score(ScoreType.GROUP_Q_VALUE, config.getGroupFdr()));
 		do {
 			i++;
-			validator.updateGroupProbabilities();
-			validator.updateGroupDecoyScores(ScoreType.GROUP_P_VALUE);
+			ScoreIntegrator.updateGroupScores(data.getGroups());
+			calculator.updateGroupScores(data.getGroups(), ScoreType.GROUP_SPHPP_SCORE, false);
 			filterAndGroup(filter,String.format("Group FDR=%s filter, iteration %s",config.getGroupFdr(),i));
 			prevCount = curCount;
 			curCount = pAnalyzer.getCounts();
@@ -433,8 +431,8 @@ public class MainModel {
 		if( i >= MAXITER )
 			logger.warning("Maximum number of iterations reached!");
 		
-		validator.updateGroupProbabilities();
-		validator.updateGroupDecoyScores(ScoreType.GROUP_P_VALUE);
+		ScoreIntegrator.updateGroupScores(data.getGroups());
+		calculator.updateGroupScores(data.getGroups(), ScoreType.GROUP_SPHPP_SCORE, false);
 	}
 
 	public String getProgressMessage() {

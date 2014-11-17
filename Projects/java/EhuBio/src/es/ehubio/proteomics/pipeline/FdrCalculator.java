@@ -7,25 +7,36 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import es.ehubio.proteomics.Decoyable;
+import es.ehubio.proteomics.MsMsData;
+import es.ehubio.proteomics.Peptide;
+import es.ehubio.proteomics.Protein;
+import es.ehubio.proteomics.ProteinGroup;
+import es.ehubio.proteomics.Psm;
 import es.ehubio.proteomics.Score;
 import es.ehubio.proteomics.ScoreType;
 
 public class FdrCalculator {
-	private boolean countDecoy = false;
-
-	public boolean isCountDecoy() {
-		return countDecoy;
-	}
-
+	private static final Logger logger = Logger.getLogger(FdrCalculator.class.getName());
+	private final boolean countDecoy;
+	
 	/**
 	 * If true uses FDR=2*D/(T+D), else FDR=D/T
 	 * 
 	 * @param countDecoy
 	 */
-	public void setCountDecoy(boolean countDecoy) {
+	public FdrCalculator( boolean countDecoy ) {
 		this.countDecoy = countDecoy;
+	}
+	
+	public FdrCalculator() {
+		this(false);
+	}
+
+	public boolean isCountDecoy() {
+		return countDecoy;
 	}
 	
 	public double getFdr( int decoy, int target ) {
@@ -36,17 +47,66 @@ public class FdrCalculator {
 		return ((double)decoy)/target;
 	}
 	
-	public void updateDecoyScores( Collection<? extends Decoyable> items, ScoreType type, ScoreType pValue, ScoreType localFdr, ScoreType qValue, ScoreType fdrScore ) {
+	public void updatePsmScores( Collection<Psm> psms, ScoreType type, boolean updatePvalues ) {
+		updateDecoyScores(psms, type, updatePvalues ? ScoreType.PSM_P_VALUE : null,
+			ScoreType.PSM_LOCAL_FDR, ScoreType.PSM_Q_VALUE, ScoreType.PSM_FDR_SCORE);
+	}
+	
+	public void updatePsmScores( Collection<Psm> target, Collection<Psm> decoy, ScoreType type, boolean updatePvalues ) {
+		List<Psm> list = new ArrayList<>();
+		list.addAll(target);
+		list.addAll(decoy);
+		updatePsmScores(list, type, updatePvalues);
+	}
+	
+	public void updatePeptideScores( Collection<Peptide> peptides, ScoreType type, boolean updatePvalues ) {
+		updateDecoyScores(peptides, type, updatePvalues ? ScoreType.PEPTIDE_P_VALUE : null,
+			ScoreType.PEPTIDE_LOCAL_FDR, ScoreType.PEPTIDE_Q_VALUE, ScoreType.PEPTIDE_FDR_SCORE);
+	}
+	
+	public void updatePeptideScores( Collection<Peptide> target, Collection<Peptide> decoy, ScoreType type, boolean updatePvalues ) {
+		List<Peptide> list = new ArrayList<>();
+		list.addAll(target);
+		list.addAll(decoy);
+		updatePeptideScores(list, type, updatePvalues);
+	}
+	
+	public void updateProteinScores( Collection<Protein> proteins, ScoreType type, boolean updatePvalues ) {
+		updateDecoyScores(proteins, type, updatePvalues ? ScoreType.PROTEIN_P_VALUE : null,
+			ScoreType.PROTEIN_LOCAL_FDR, ScoreType.PROTEIN_Q_VALUE, ScoreType.PROTEIN_FDR_SCORE);
+	}
+	
+	public void updateProteinScores( Collection<Protein> target, Collection<Protein> decoy, ScoreType type, boolean updatePvalues ) {
+		List<Protein> list = new ArrayList<>();
+		list.addAll(target);
+		list.addAll(decoy);
+		updateProteinScores(list, type, updatePvalues);
+	}
+		
+	public void updateGroupScores( Collection<ProteinGroup> groups, ScoreType type, boolean updatePvalues ) {
+		updateDecoyScores(groups, type, updatePvalues ? ScoreType.GROUP_P_VALUE : null,
+			ScoreType.GROUP_LOCAL_FDR, ScoreType.GROUP_Q_VALUE, ScoreType.GROUP_FDR_SCORE);
+	}
+	
+	public void updateGroupScores( Collection<ProteinGroup> target, Collection<ProteinGroup> decoy, ScoreType type, boolean updatePvalues ) {
+		List<ProteinGroup> list = new ArrayList<>();
+		list.addAll(target);
+		list.addAll(decoy);
+		updateGroupScores(list, type, updatePvalues);
+	}
+	
+	private void updateDecoyScores( Collection<? extends Decoyable> items, ScoreType type, ScoreType pValue, ScoreType localFdr, ScoreType qValue, ScoreType fdrScore ) {
 		if( items.isEmpty() )
 			return;
 		
+		// Sort items from worst to best
 		List<Decoyable> list = new ArrayList<>();
 		for( Decoyable item : items )
 			if( !item.skipFdr() )
 				list.add(item);
 		sort(list,type);
+		
 		Map<Double,ScoreGroup> mapScores = new HashMap<>();
-
 		getLocalFdr(list,type,pValue!=null,mapScores);
 		getQValues(list,type,mapScores);
 		if( fdrScore != null )
@@ -77,6 +137,14 @@ public class FdrCalculator {
 				target++;
 		}
 		return new FdrResult(decoy, target);
+	}
+	
+	public void logFdrs(MsMsData data) {
+		logger.info(String.format("FDR -> PSM: %s, Peptide: %s, Protein: %s, Group: %s",
+			getFdr(data.getPsms()).getRatio(),
+			getFdr(data.getPeptides()).getRatio(),
+			getFdr(data.getProteins()).getRatio(),
+			getFdr(data.getGroups()).getRatio()));
 	}
 	
 	private void sort( List<? extends Decoyable> list, final ScoreType type ) {
