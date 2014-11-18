@@ -1,17 +1,14 @@
 package es.ehubio.db.cosmic;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import es.ehubio.model.Aminoacid;
 
-public class Locus {	
+public class Locus {
 	private int position;
 	private Aminoacid original;
-	private Aminoacid mutated;
-	private int mutations;
-	
-	@Override
-	public String toString() {
-		return original.letter + "@" + position + ":" + mutations;
-	}
+	private Map<Aminoacid, Integer> counts = new HashMap<>();
 	
 	public int getPosition() {
 		return position;
@@ -20,7 +17,7 @@ public class Locus {
 	public void setPosition(int position) {
 		this.position = position;
 	}
-
+	
 	public Aminoacid getOriginal() {
 		return original;
 	}
@@ -29,23 +26,24 @@ public class Locus {
 		this.original = aa;
 	}
 
-	public int getMutations() {
-		return mutations;
+	public int getMutations(Aminoacid aa) {
+		Integer count = counts.get(aa);
+		return count == null ? 0 : count.intValue();
 	}
 
-	public void setMutations(int mutations) {
-		this.mutations = mutations;
+	public void incMutations(Aminoacid aa) {
+		Integer count = counts.get(aa);
+		if( count == null )
+			count = 1;
+		else
+			count = count+1;
+		counts.put(aa, count);
 	}
 	
-	public void incMutations() {
-		mutations++;
-	}
-
-	public Aminoacid getMutated() {
-		return mutated;
-	}
-
-	public void setMutated(Aminoacid mutated) {
-		this.mutated = mutated;
+	public int getMutations() {
+		int count = 0;
+		for( Integer mut : counts.values() )
+			count += mut.intValue();
+		return count;
 	}
 }

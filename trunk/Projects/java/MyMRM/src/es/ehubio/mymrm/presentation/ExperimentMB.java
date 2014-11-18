@@ -39,11 +39,10 @@ public class ExperimentMB implements Serializable {
 	private String chromatography;
 	private final Set<String> files = new HashSet<>();
 	private Peptide.Confidence peptideConfidence = Peptide.Confidence.DISCRIMINATING;
-	private final Configuration cfg;
+	private Configuration cfg;
 	
 	public ExperimentMB() {
-		cfg = new Configuration();
-		cfg.initialize();
+		resetConfig();
 	}
 
 	public Experiment getEntity() {
@@ -104,17 +103,17 @@ public class ExperimentMB implements Serializable {
 		experiment.setIonizationTypeBean(Database.findById(IonizationType.class, Integer.parseInt(getIonization())));
 		experiment.setFragmentationTypeBean(Database.findById(FragmentationType.class, Integer.parseInt(getFragmentation())));
 		experiment.setChromatographyBean(Database.findById(Chromatography.class, Integer.parseInt(getChromatography())));
-
-		Configuration cfg = new Configuration();
+		
 		cfg.setDescription(getEntity().getName());
 		cfg.setFilterDecoys(true);
 		Replicate replicate = new Replicate();
-		replicate.setName("only");
+		replicate.setName("single");
 		cfg.getReplicates().add(replicate);
 		for( String file : files )
 			replicate.getFractions().add(new File(getTmpDir(),file).getAbsolutePath());
 
 		ExperimentFeed feed = new ExperimentFeed(experiment, cfg, peptideConfidence);
+		resetConfig();
 		try {
 			Database.feed(feed);
 		} catch (InterruptedException e) {
@@ -147,5 +146,10 @@ public class ExperimentMB implements Serializable {
 
 	public Configuration getCfg() {
 		return cfg;
-	}	
+	}
+	
+	private void resetConfig() {
+		cfg = new Configuration();
+		cfg.initializeFilter();
+	}
 }
