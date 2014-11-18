@@ -19,7 +19,7 @@ import javax.faces.bean.ApplicationScoped;
 import javax.faces.bean.ManagedBean;
 import javax.faces.context.FacesContext;
 
-import es.ehubio.db.cosmic.Loci;
+import es.ehubio.db.cosmic.CosmicStats;
 import es.ehubio.db.fasta.Fasta.InvalidSequenceException;
 import es.ehubio.dbptm.ProteinPtms;
 import es.ehubio.io.UnixCfgReader;
@@ -51,7 +51,7 @@ public class DatabasesBean implements Serializable {
 	private DatabaseInformation dbPtm;
 	private DatabaseInformation dbWregex;
 	private Map<String,FastaDb> mapFasta;
-	private Map<String,Loci> mapCosmic;
+	private Map<String,CosmicStats> mapCosmic;
 	private Map<String, ProteinPtms> mapDbPtm;
 	private long lastModifiedCosmic;
 	private long lastModifiedElm;
@@ -204,7 +204,7 @@ public class DatabasesBean implements Serializable {
 		return dbWregex;
 	}
 	
-	public Map<String,Loci> getMapCosmic() throws ReloadException {
+	public Map<String,CosmicStats> getMapCosmic() throws ReloadException {
 		if( !isInitialized() || refreshCosmic() )
 			throw new ReloadException(cosmic.getFullName());
 		return mapCosmic;
@@ -298,7 +298,7 @@ public class DatabasesBean implements Serializable {
 	
 	private void loadCosmic() throws FileNotFoundException, IOException {
 		logger.info("Loading DB: " + cosmic.getFullName());
-		mapCosmic = Loci.load(cosmic.getPath());
+		mapCosmic = CosmicStats.load(cosmic.getPath());
 		lastModifiedCosmic = new File(cosmic.getPath()).lastModified();
 		logger.info("Loaded!");
 	}

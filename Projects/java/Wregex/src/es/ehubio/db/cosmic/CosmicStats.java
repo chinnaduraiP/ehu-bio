@@ -7,9 +7,8 @@ import java.util.Map;
 
 import es.ehubio.org.hgvs.Hgvs;
 import es.ehubio.org.hgvs.ProteinMutation;
-import es.ehubio.db.cosmic.Locus;
 
-public class Loci {
+public class CosmicStats {
 	private Map<Integer,Locus> loci = new HashMap<>();
 	private String gene;
 
@@ -29,9 +28,9 @@ public class Loci {
 		this.gene = gene;
 	}
 	
-	public static Map<String,Loci> load( String path ) throws FileNotFoundException, IOException {
-		Map<String,Loci> results = new HashMap<>();
-		Loci result = null;
+	public static Map<String,CosmicStats> load( String path ) throws FileNotFoundException, IOException {
+		Map<String,CosmicStats> results = new HashMap<>();
+		CosmicStats result = null;
 		String gene = null;
 		
 		Cosmic cosmic = new Cosmic();
@@ -45,7 +44,7 @@ public class Loci {
 				continue;
 			if( gene == null || !entry.getGeneName().equals(gene) ) {				
 				gene = entry.getGeneName();
-				result = new Loci();
+				result = new CosmicStats();
 				result.setGene(gene);
 				results.put(gene, result);
 			}
@@ -54,11 +53,9 @@ public class Loci {
 				locus = new Locus();
 				locus.setPosition(mut.getPosition());
 				locus.setOriginal(mut.getOriginal());
-				locus.setMutated(mut.getMutated());
-				locus.setMutations(1);
 				result.getLoci().put(locus.getPosition(), locus);
-			} else
-				locus.incMutations();
+			}
+			locus.incMutations(mut.getMutated());
 		}
 		cosmic.closeDb();
 		

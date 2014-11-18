@@ -9,8 +9,8 @@ import java.util.Map;
 
 import javax.faces.context.ExternalContext;
 
-import es.ehubio.db.cosmic.Loci;
-import es.ehubio.db.cosmic.Locus;
+import es.ehubio.db.cosmic.CosmicStats;
+import es.ehubio.db.cosmic.MutationCount;
 import es.ehubio.dbptm.ProteinPtms;
 import es.ehubio.dbptm.Ptm;
 import es.ehubio.model.Aminoacid;
@@ -80,23 +80,23 @@ public class Services {
 		return results;
 	}
 	
-	public static void searchCosmic(Map<String,Loci> cosmic, List<ResultEx> results) {
+	public static void searchCosmic(Map<String,CosmicStats> cosmic, List<ResultEx> results) {
 		int missense;
 		boolean invalid;
 		for( ResultEx result : results ) {
-			Loci loci = cosmic.get(result.getGene());
+			CosmicStats loci = cosmic.get(result.getGene());
 			if( loci == null )
 				continue;			
 			missense = 0;
 			invalid = false;
-			for( Locus locus : loci.getLoci().values() ) {
+			for( MutationCount locus : loci.getLoci().values() ) {
 				if( locus.getPosition() > result.getFasta().getSequence().length() ||
 					locus.getOriginal() != Aminoacid.parseLetter(result.getFasta().getSequence().charAt(locus.getPosition()-1)) ) {
 					invalid = true;
 					break;
 				}
 				if( locus.getPosition() >= result.getStart() && locus.getPosition() <= result.getEnd() )
-					missense += locus.getMutations();
+					missense += locus.getCount();
 			}
 			if( invalid ) {
 				result.setCosmicUrl( String.format(

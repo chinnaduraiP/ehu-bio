@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
@@ -18,17 +19,34 @@ public abstract class MsMsFile {
 	protected MsMsData data;
 	
 	public static MsMsFile autoDetect( String path ) throws Exception {
-		MsMsFile file = new Mzid();
-		if( !file.checkSignature(path) ) {
-			file = new ProteomeDiscovererTxt();
-			if( !file.checkSignature(path) )
-				file = null;
-		}
-		if( file == null )
+		MsMsFile result = null;
+		for( MsMsFile file : getParsers() )
+			if( file.checkSignature(path) ) {
+				result = file;
+				break;
+			}
+		if( result == null )
 			logger.warning("File format not detected");
 		else
-			logger.info(String.format("Detected %s file format",file.getClass().getSimpleName()));
-		return file;
+			logger.info(String.format("Detected %s file format",result.getClass().getSimpleName()));
+		return result;
+	}
+	
+	private static List<MsMsFile> getParsers() {
+		List<MsMsFile> list = new ArrayList<>();
+		File dir = new File(MsMsFile.class.getResource("/es/ehubio/proteomics/io").getFile());
+		for( String name : dir.list() ) {
+			if( !name.endsWith(".class") )
+				continue;
+			try {
+				Class<?> cls = Class.forName("es.ehubio.proteomics.io."+name.substring(0, name.length()-6));
+				if( MsMsFile.class.isAssignableFrom(cls) )
+					list.add((MsMsFile)cls.newInstance());
+			} catch (Exception e) {
+				continue;
+			}			
+		}		
+		return list;
 	}
 	
 	public static MsMsData autoLoad( String path ) throws Exception {
