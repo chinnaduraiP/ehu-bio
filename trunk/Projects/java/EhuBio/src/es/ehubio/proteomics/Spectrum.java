@@ -118,6 +118,9 @@ public class Spectrum {
 	public static class Peak {
 		private double mz;
 		private double intensity;
+		private int charge;
+		public Peak() {			
+		}
 		public Peak( double mz, double intensity ) {
 			this.mz = mz;
 			this.intensity = intensity;
@@ -133,6 +136,12 @@ public class Spectrum {
 		}
 		public void setIntensity(double intensity) {
 			this.intensity = intensity;
+		}
+		public int getCharge() {
+			return charge;
+		}
+		public void setCharge(int charge) {
+			this.charge = charge;
 		}
 	}
 }

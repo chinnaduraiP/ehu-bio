@@ -243,6 +243,10 @@ public class Filter {
 				unlinkPeptide(peptide);
 				continue;
 			}
+			if( peptide.getProteins().isEmpty() ) {
+				unlinkPeptide(peptide);
+				continue;
+			}
 			if( peptide.getSequence().length() < getMinPeptideLength() ) {
 				unlinkPeptide(peptide);
 				continue;

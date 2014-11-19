@@ -90,6 +90,12 @@ public class Psm extends DecoyBase {
 			peptide.addPsm(this);
 	}
 	
+	public void guessIons() {
+		if( !getIons().isEmpty() )
+			return;
+		
+	}
+	
 	@Override
 	public Boolean getDecoy() {
 		if( peptide == null )
