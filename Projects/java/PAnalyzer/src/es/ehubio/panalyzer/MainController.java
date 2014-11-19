@@ -328,9 +328,10 @@ public class MainController implements Initializable {
 		fileChooser.setTitle("Load identification files");
 		fileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
 		fileChooser.getExtensionFilters().addAll(
-			new FileChooser.ExtensionFilter("Supported files", "*.mzid", "*.mzid.gz", "*.txt", "*.txt.gz"),
+			new FileChooser.ExtensionFilter("Supported files", "*.mzid", "*.mzid.gz", "*.txt", "*.txt.gz", "*.msf"),
 			new FileChooser.ExtensionFilter("mzIdentML", "*.mzid", "*.mzid.gz"),
-			new FileChooser.ExtensionFilter("PD text export", "*.txt", "*.txt.gz"),			
+			new FileChooser.ExtensionFilter("PD text export", "*.txt", "*.txt.gz"),
+			new FileChooser.ExtensionFilter("PD MSF", "*.msf"),
 			new FileChooser.ExtensionFilter("All files", "*"));
 		
 		directoryChooser.setTitle("Select destination directory");

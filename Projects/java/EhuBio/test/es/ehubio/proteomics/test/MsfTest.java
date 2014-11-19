@@ -22,7 +22,7 @@ public class MsfTest {
 	@Test
 	public void test() throws Exception {
 		MsMsData data = MsMsFile.autoLoad("/home/gorka/Bio/Proyectos/Proteómica/spHPP/Work/Sequest/ProteomeDiscoverer/PD14.msf");
-		assertNotNull(data);
+		assertEquals(data.getProteins().size(), 623);
 	}
 
 }
