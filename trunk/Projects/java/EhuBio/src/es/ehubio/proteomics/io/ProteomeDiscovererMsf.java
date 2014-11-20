@@ -26,6 +26,7 @@ import es.ehubio.proteomics.ScoreType;
 import es.ehubio.proteomics.Spectrum;
 import es.ehubio.proteomics.Spectrum.Peak;
 import es.ehubio.proteomics.pipeline.Filter;
+import es.ehubio.proteomics.pipeline.Fragmenter;
 
 public class ProteomeDiscovererMsf extends MsMsFile {
 	private final static Logger logger = Logger.getLogger(ProteomeDiscovererMsf.class.getName());
@@ -54,20 +55,23 @@ public class ProteomeDiscovererMsf extends MsMsFile {
 		
 		return data;
 	}
+	
+	@Override
+	public MsMsData load(InputStream input) throws Exception {		
+		return null;
+	}
+	
+	@Override
+	public boolean checkSignature(InputStream input) throws Exception {
+		byte[] sig = new byte[SIG.length()];
+		input.read(sig);
+		String sigStr = new String(sig);
+		return sigStr.equals(SIG);		
+	}
 
-	private void loadPeaks(Connection con, Set<Spectrum> spectra) throws SQLException {
-		for( Spectrum spectrum : spectra ) {
-			Statement statement = con.createStatement();
-			ResultSet peaks = statement.executeQuery(String.format(
-					"SELECT * FROM MassPeaks WHERE ScanNumbers=\"%s\";", spectrum.getScan()));
-			while( peaks.next() ) {
-				Peak peak = new Peak();
-				peak.setIntensity(peaks.getDouble("Intensity"));
-				peak.setCharge(peaks.getInt("Charge"));
-				peak.setMz(peaks.getDouble("Mass")/peak.getCharge());
-			}
-		}
-		
+	@Override
+	public String getFilenameExtension() {
+		return "msf";
 	}
 
 	private void loadRelations(Connection con, Map<Integer, Peptide> peptides, Map<Integer, Protein> proteins) throws SQLException {
@@ -224,23 +228,61 @@ public class ProteomeDiscovererMsf extends MsMsFile {
 		}		
 		return result;
 	}
-
-	@Override
-	public MsMsData load(InputStream input) throws Exception {		
-		return null;
+	
+	private void loadPeaks(Connection con, Set<Spectrum> spectra) throws SQLException {
+		boolean a = checkIons(con, 'a');
+		boolean b = checkIons(con, 'b');
+		boolean c = checkIons(con, 'c');
+		boolean d = checkIons(con, 'd');
+		boolean v = checkIons(con, 'v');
+		boolean w = checkIons(con, 'w');
+		boolean x = checkIons(con, 'x');
+		boolean y = checkIons(con, 'y');
+		boolean z = checkIons(con, 'z');
+		double error = getFragmentError(con);
+		
+		for( Spectrum spectrum : spectra ) {
+			Statement statement = con.createStatement();
+			ResultSet peaks = statement.executeQuery(String.format(
+					"SELECT * FROM MassPeaks WHERE ScanNumbers=\"%s\";", spectrum.getScan()));
+			while( peaks.next() ) {
+				Peak peak = new Peak();
+				peak.setIntensity(peaks.getDouble("Intensity"));
+				peak.setCharge(peaks.getInt("Charge"));
+				peak.setMz(peaks.getDouble("Mass")/peak.getCharge());
+				spectrum.getPeaks().add(peak);
+			}
+			for( Psm psm : spectrum.getPsms() ) {
+				Fragmenter frag = new Fragmenter(psm);
+				frag.addPrecursorIons();
+				if( a ) frag.addAIons();
+				if( b ) frag.addBIons();
+				if( c ) frag.addCIons();
+				if( d ) frag.addDIons();
+				if( v ) frag.addVIons();
+				if( w ) frag.addWIons();
+				if( x ) frag.addXIons();
+				if( y ) frag.addYIons();
+				if( z ) frag.addZIons();
+				psm.setIons(frag.match(error));
+			}
+		}
 	}
 	
-	@Override
-	public boolean checkSignature(InputStream input) throws Exception {
-		byte[] sig = new byte[SIG.length()];
-		input.read(sig);
-		String sigStr = new String(sig);
-		return sigStr.equals(SIG);		
+	private boolean checkIons( Connection con, Character ch ) throws SQLException {
+		Statement statement = con.createStatement();
+		ResultSet ions = statement.executeQuery(String.format(
+			"SELECT ParameterValue FROM ProcessingNodeParameters WHERE ParameterName=\"IonSerie%c\";",
+			Character.toUpperCase(ch)));
+		ions.next();
+		return ions.getString(1).equals("1");
 	}
-
-	@Override
-	public String getFilenameExtension() {
-		return "msf";
+	
+	private double getFragmentError( Connection con ) throws SQLException {
+		Statement statement = con.createStatement();
+		ResultSet error = statement.executeQuery("SELECT ParameterValue FROM ProcessingNodeParameters WHERE ParameterName=\"FragmentTolerance\";");
+		error.next();
+		return Double.parseDouble(error.getString(1).split(" ")[0]);
 	}
 
 	private static final String SIG = "SQLite format";

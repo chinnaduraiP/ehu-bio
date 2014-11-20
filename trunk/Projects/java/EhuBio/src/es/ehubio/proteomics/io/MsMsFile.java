@@ -35,17 +35,23 @@ public abstract class MsMsFile {
 	private static List<MsMsFile> getParsers() {
 		List<MsMsFile> list = new ArrayList<>();
 		File dir = new File(MsMsFile.class.getResource("/es/ehubio/proteomics/io").getFile());
-		for( String name : dir.list() ) {
-			if( !name.endsWith(".class") )
-				continue;
-			try {
-				Class<?> cls = Class.forName("es.ehubio.proteomics.io."+name.substring(0, name.length()-6));
-				if( MsMsFile.class.isAssignableFrom(cls) )
-					list.add((MsMsFile)cls.newInstance());
-			} catch (Exception e) {
-				continue;
-			}			
-		}		
+		if( !dir.exists() ) { // Inside jar ...
+			list.add(new Mzid());
+			list.add(new ProteomeDiscovererMsf());
+			list.add(new ProteomeDiscovererTxt());
+		} else {
+			for( String name : dir.list() ) {
+				if( !name.endsWith(".class") )
+					continue;
+				try {
+					Class<?> cls = Class.forName("es.ehubio.proteomics.io."+name.substring(0, name.length()-6));
+					if( MsMsFile.class.isAssignableFrom(cls) )
+						list.add((MsMsFile)cls.newInstance());
+				} catch (Exception e) {
+					continue;
+				}			
+			}
+		}
 		return list;
 	}
 	

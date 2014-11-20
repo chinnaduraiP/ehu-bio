@@ -38,6 +38,16 @@ public enum Masses {
     Y('Y',163.06332),
     Z('Z',128.550590);
 	
+	public static final double Hydrogen = 1.007825;
+    public static final double Carbon = 12.000000;
+    public static final double Nitrogen = 14.003070;
+    public static final double Oxygen = 15.994910;
+    public static final double Electron = 0.005490;
+    public static final double C_term = Oxygen+Hydrogen;
+    public static final double N_term = Hydrogen;    
+    public static final double H2O = 2*Hydrogen+Oxygen;
+    public static final double NH3 = Nitrogen+3*Hydrogen;
+	
 	private Masses( char letter, double mass ) {
 		this.letter = letter;
 		this.mass = mass;
@@ -52,35 +62,5 @@ public enum Masses {
 	}
 
 	private final char letter;
-	private final double mass;
-    
-    
-    /**
-     * The mass of Hydrogen
-     */
-    public static final double Hydrogen = 1.007825;
-    /**
-     * The mass of Carbon
-     */
-    public static final double Carbon = 12.000000;
-    /**
-     * The mass of Nitrogen
-     */
-    public static final double Nitrogen = 14.003070;
-    /**
-     * The mass of Oxygen
-     */
-    public static final double Oxygen = 15.994910;
-    /**
-     * The mass of an electron
-     */
-    public static final double Electron = 0.005490;
-    /**
-     * The mass of the C Terminus = Oxygen + Hydrogen
-     */
-    public static final double C_term = 17.002735;
-    /**
-     * The mass of the N Terminus = Hydrogen
-     */
-    public static final double N_term = 1.007825;
+	private final double mass;    
 }

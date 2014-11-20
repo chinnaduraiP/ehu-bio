@@ -1,5 +1,6 @@
 package es.ehubio.panalyzer;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -19,7 +20,9 @@ import es.ehubio.proteomics.ScoreType;
 	"proteinFdr","minProteinReplicates","groupFdr",
 	"decoyRegex","replicates","filterDecoys","output"})
 @XmlRootElement
-public class Configuration {	
+public class Configuration implements Serializable {	
+	private static final long serialVersionUID = 1L;
+	
 	public void initializeFilter() {
 		setPsmRankThreshold(1);		
 		setBestPsmPerPrecursor(false);
