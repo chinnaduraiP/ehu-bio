@@ -33,6 +33,9 @@ public class ProteomeDiscovererMsf extends MsMsFile {
 	
 	@Override
 	public MsMsData load(String path) throws Exception {
+		if( path != null )
+			throw new UnsupportedOperationException("MSF support still not finished");
+		
 		Class.forName("org.sqlite.JDBC");
 		Connection con = DriverManager.getConnection("jdbc:sqlite:"+path);
 		logger.info("Connected to MSF file using SQLite");

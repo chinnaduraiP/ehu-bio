@@ -1,6 +1,8 @@
 package es.ehubio.proteomics.pipeline;
 
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 import es.ehubio.proteomics.DecoyBase;
 import es.ehubio.proteomics.Peptide;
@@ -29,12 +31,28 @@ public class ScoreIntegrator {
 		}
 	}
 	
-	// TO-DO normalize scores
 	public static void updateProteinScores( Collection<Protein> proteins ) {
 		for( Protein protein : proteins ) {
 			basicIntegrator(
 				protein.getPeptides(), ScoreType.PEPTIDE_P_VALUE, ScoreType.PEPTIDE_SPHPP_SCORE,
 				protein, ScoreType.PROTEIN_P_VALUE, ScoreType.PROTEIN_SPHPP_SCORE);
+		}
+	}
+	
+	public static void updateProteinScores( Collection<Protein> proteins, String decoyPrefix ) {
+		Map<String, Protein> mapDecoys = new HashMap<>();
+		for( Protein protein : proteins )
+			if( Boolean.TRUE.equals(protein.getDecoy()) )
+				mapDecoys.put(protein.getAccession(), protein);
+		for( Protein protein : proteins ) {
+			basicIntegrator(
+				protein.getPeptides(), ScoreType.PEPTIDE_P_VALUE, ScoreType.PEPTIDE_SPHPP_SCORE,
+				protein, ScoreType.PROTEIN_P_VALUE, ScoreType.PROTEIN_SPHPP_SCORE);
+			Protein decoy = mapDecoys.get(decoyPrefix+protein.getAccession());
+			if( decoy == null )
+				continue;
+			Score score = protein.getScoreByType(ScoreType.PROTEIN_SPHPP_SCORE);
+			score.setValue(score.getValue()/decoy.getPeptides().size());
 		}
 	}
 	
