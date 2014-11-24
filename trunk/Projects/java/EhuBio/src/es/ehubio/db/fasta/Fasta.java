@@ -98,7 +98,10 @@ public final class Fasta {
 		parser = new NextprotParser();
 		if( parser.parse(header) )
 			return parser;
-		return null;
+		
+		parser = new DefaultParser();
+		parser.parse(header);		
+		return parser;
 	}
 	
 	public static void checkSequence( String sequence, SequenceType type ) throws InvalidSequenceException {

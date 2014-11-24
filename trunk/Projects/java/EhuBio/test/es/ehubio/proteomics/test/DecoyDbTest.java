@@ -14,6 +14,11 @@ public class DecoyDbTest {
 		String ok = "GFEDCAKMLIHRWVGGTSKSWGLL";
 		String decoy = DecoyDb.getDecoy(target, DecoyDb.Strategy.PSEUDO_REVERSE, Enzyme.TRYPSIN);
 		assertEquals(ok, decoy);
+		
+		target = "ACDEFGKHILMRSTGGVWKLLGWSK";
+		ok = "GFEDCAKMLIHRWVGGTSKSWGLLK";
+		decoy = DecoyDb.getDecoy(target, DecoyDb.Strategy.PSEUDO_REVERSE, Enzyme.TRYPSIN);
+		assertEquals(ok, decoy);
 	}
 
 }

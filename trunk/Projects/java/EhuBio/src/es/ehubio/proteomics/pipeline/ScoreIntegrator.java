@@ -18,7 +18,7 @@ public class ScoreIntegrator {
 	public static void updatePsmScores( Collection<Psm> psms ) {
 		for( Psm psm : psms ) {
 			Score pValue = psm.getScoreByType(ScoreType.PSM_P_VALUE);
-			Score spHpp = new Score(ScoreType.PSM_SPHPP_SCORE, -Math.log10(pValue.getValue()));
+			Score spHpp = new Score(ScoreType.PSM_SPHPP_SCORE, -Math.log(pValue.getValue()));
 			psm.addScore(spHpp);
 		}
 	}
@@ -31,7 +31,10 @@ public class ScoreIntegrator {
 		}
 	}
 	
-	public static void updateProteinScores( Collection<Protein> proteins ) {
+	/**
+	 * Multiplies the p-values of the peptides.
+	 */
+	public static void updateProteinScoresBasic( Collection<Protein> proteins ) {
 		for( Protein protein : proteins ) {
 			basicIntegrator(
 				protein.getPeptides(), ScoreType.PEPTIDE_P_VALUE, ScoreType.PEPTIDE_SPHPP_SCORE,
@@ -39,7 +42,13 @@ public class ScoreIntegrator {
 		}
 	}
 	
-	public static void updateProteinScores( Collection<Protein> proteins, String decoyPrefix ) {
+	/**
+	 * Normalizes by the number of peptides in the corresponding decoy.
+	 * 
+	 * @param proteins
+	 * @param decoyPrefix the decoy accession should be this prefix followed by the target accession.
+	 */
+	public static void updateProteinScoresAprox( Collection<Protein> proteins, String decoyPrefix ) {
 		Map<String, Protein> mapDecoys = new HashMap<>();
 		for( Protein protein : proteins )
 			if( Boolean.TRUE.equals(protein.getDecoy()) )
@@ -48,16 +57,44 @@ public class ScoreIntegrator {
 			basicIntegrator(
 				protein.getPeptides(), ScoreType.PEPTIDE_P_VALUE, ScoreType.PEPTIDE_SPHPP_SCORE,
 				protein, ScoreType.PROTEIN_P_VALUE, ScoreType.PROTEIN_SPHPP_SCORE);
-			Protein decoy = mapDecoys.get(decoyPrefix+protein.getAccession());
-			if( decoy == null )
+			int N = 1;
+			if( Boolean.TRUE.equals(protein.getDecoy()) )
+				N = protein.getPeptides().size();
+			else {
+				Protein decoy = mapDecoys.get(decoyPrefix+protein.getAccession());
+				if( decoy != null )
+					N = decoy.getPeptides().size();
+			}
+			if( N == 1 )
 				continue;
 			Score score = protein.getScoreByType(ScoreType.PROTEIN_SPHPP_SCORE);
-			score.setValue(score.getValue()/decoy.getPeptides().size());
+			score.setValue(score.getValue()/N);
+			protein.setScore(new Score(ScoreType.PROTEIN_P_VALUE, Math.exp(-score.getValue())));
 		}
 	}
 	
-	// TO-DO normalize scores	
-	public static void updateGroupScores( Collection<ProteinGroup> groups ) {
+	/**
+	 * Normalizes by the number of tryptic peptides.
+	 * 
+	 * @param proteins
+	 * @param enzyme
+	 */
+	/*public static void updateProteinScoresAprox( Collection<Protein> proteins, Enzyme enzyme ) {
+		for( Protein protein : proteins ) {
+			basicIntegrator(
+				protein.getPeptides(), ScoreType.PEPTIDE_P_VALUE, ScoreType.PEPTIDE_SPHPP_SCORE,
+				protein, ScoreType.PROTEIN_P_VALUE, ScoreType.PROTEIN_SPHPP_SCORE);
+			Score score = protein.getScoreByType(ScoreType.PROTEIN_SPHPP_SCORE);
+			score.setValue(score.getValue()/Digester.digestSequence(protein.getSequence(), enzyme).length);
+			protein.setScore(new Score(ScoreType.PROTEIN_P_VALUE, Math.exp(-score.getValue())));
+		}
+	}*/
+	
+	/**
+	 * Multiplies the p-values of the peptides specific to the group (as returned by 
+	 * {@link ProteinGroup#getOwnPeptides()}).
+	 */	
+	public static void updateGroupScoresBasic( Collection<ProteinGroup> groups ) {
 		for( ProteinGroup group : groups ) {
 			if( group.getConfidence() == Protein.Confidence.NON_CONCLUSIVE )
 				continue;
