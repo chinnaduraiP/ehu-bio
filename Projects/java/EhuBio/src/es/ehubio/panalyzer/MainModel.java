@@ -405,7 +405,7 @@ public class MainModel {
 		if( config.getProteinFdr() == null )
 			return;
 		//ScoreIntegrator.updateProteinScores(data.getProteins());
-		ScoreIntegrator.updateProteinScores(data.getProteins(),config.getDecoyRegex());
+		ScoreIntegrator.updateProteinScoresAprox(data.getProteins(),config.getDecoyRegex());
 		fdrCalc.updateProteinScores(data.getProteins(), ScoreType.PROTEIN_SPHPP_SCORE, false);
 		Filter filter = new Filter(data);
 		filter.setProteinScoreThreshold(new Score(ScoreType.PROTEIN_Q_VALUE, config.getProteinFdr()));
@@ -423,7 +423,7 @@ public class MainModel {
 		filter.setGroupScoreThreshold(new Score(ScoreType.GROUP_Q_VALUE, config.getGroupFdr()));
 		do {
 			i++;
-			ScoreIntegrator.updateGroupScores(data.getGroups());
+			ScoreIntegrator.updateGroupScoresBasic(data.getGroups());
 			fdrCalc.updateGroupScores(data.getGroups(), ScoreType.GROUP_SPHPP_SCORE, false);
 			filterAndGroup(filter,String.format("Group FDR=%s filter, iteration %s",config.getGroupFdr(),i));
 			prevCount = curCount;
@@ -432,7 +432,7 @@ public class MainModel {
 		if( i >= MAXITER )
 			logger.warning("Maximum number of iterations reached!");
 		
-		ScoreIntegrator.updateGroupScores(data.getGroups());
+		ScoreIntegrator.updateGroupScoresBasic(data.getGroups());
 		fdrCalc.updateGroupScores(data.getGroups(), ScoreType.GROUP_SPHPP_SCORE, false);
 	}
 

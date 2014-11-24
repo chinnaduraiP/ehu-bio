@@ -12,6 +12,7 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import es.ehubio.proteomics.MsMsData;
+import es.ehubio.proteomics.Protein;
 
 public abstract class MsMsFile {
 	private final static Logger logger = Logger.getLogger(MsMsFile.class.getName());
@@ -70,8 +71,20 @@ public abstract class MsMsFile {
 		data = load(input);
 		input.close();
 		originalFile = new File(path);
+		solveIssues();
 		return data;
-	}	
+	}
+	
+	private void solveIssues() {
+		for( Protein protein : data.getProteins() ) {
+			int i = protein.getAccession().indexOf(' ');
+			if( i == -1 )
+				continue;
+			String acc = protein.getAccession();
+			protein.setAccession(acc.substring(0,i));
+			protein.setDescription(acc.substring(i+1, acc.length()));
+		}
+	}
 	
 	public abstract MsMsData load( InputStream input ) throws Exception;	
 

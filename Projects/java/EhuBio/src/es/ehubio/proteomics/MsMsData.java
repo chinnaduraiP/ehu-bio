@@ -102,18 +102,23 @@ public class MsMsData {
 		loadFromSpectra(spectra);
 	}
 	
-	public MsMsData markDecoys( String decoyRegex ) {
+	public MsMsData markDecoys( String decoyRegex ) throws DecoyException {
 		if( decoyRegex == null || decoyRegex.isEmpty() )
 			return this;
 		Pattern pattern = Pattern.compile(decoyRegex);
+		int count = 0;
 		for( Protein protein : getProteins() ) {
 			Matcher matcher = pattern.matcher(protein.getAccession());
 			protein.setDecoy(matcher.find());
+			if( Boolean.TRUE.equals(protein.getDecoy()) )
+				count++;
 		}
 		UserParamType param = new UserParamType();
 		param.setName("PAnalyzer:Decoy regex");
 		param.setValue(decoyRegex);
 		setAnalysisParam(param);
+		if( count == 0 )
+			throw new DecoyException(String.format("No decoys found using %s regex", decoyRegex));
 		return this;
 	}
 	
@@ -318,12 +323,13 @@ public class MsMsData {
 		}
 	}
 	
-	public void updateProteinInformation( String fastaPath ) throws IOException, InvalidSequenceException {
+	public MsMsData updateProteinInformation( String fastaPath ) throws IOException, InvalidSequenceException {
 		List<Fasta> list = Fasta.readEntries(fastaPath, SequenceType.PROTEIN);
 		Map<String,Fasta> map = new HashMap<>();
 		for( Fasta fasta : list )
 			map.put(fasta.getAccession(), fasta);
 		for( Protein protein : getProteins() )
 			protein.setFasta(map.get(protein.getAccession()));
-	}
+		return this;
+	}	
 }
