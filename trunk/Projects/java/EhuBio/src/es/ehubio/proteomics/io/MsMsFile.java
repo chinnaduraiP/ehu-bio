@@ -77,10 +77,10 @@ public abstract class MsMsFile {
 	
 	private void solveIssues() {
 		for( Protein protein : data.getProteins() ) {
-			int i = protein.getAccession().indexOf(' ');
-			if( i == -1 )
-				continue;
 			String acc = protein.getAccession();
+			int i = acc.indexOf(' ');
+			if( i == -1 )
+				continue;			
 			protein.setAccession(acc.substring(0,i));
 			protein.setDescription(acc.substring(i+1, acc.length()));
 		}

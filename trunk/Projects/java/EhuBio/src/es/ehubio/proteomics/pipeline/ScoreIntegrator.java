@@ -80,12 +80,29 @@ public class ScoreIntegrator {
 	 * @param enzyme
 	 */
 	/*public static void updateProteinScoresAprox( Collection<Protein> proteins, Enzyme enzyme ) {
+		Set<Peptide> decoySet = new HashSet<>();
+		int tryptic = 0;		
+		for( Protein protein : proteins ) {
+			boolean isDecoy = false;
+			for( Peptide peptide : protein.getPeptides() )
+				if( Boolean.TRUE.equals(peptide.getDecoy()) ) {
+					decoySet.add(peptide);
+					isDecoy = true;
+				}
+			if( !isDecoy )
+				tryptic += Digester.digestSequence(protein.getSequence(), enzyme).length;
+		}
+		int decoys = decoySet.size();
+				
 		for( Protein protein : proteins ) {
 			basicIntegrator(
 				protein.getPeptides(), ScoreType.PEPTIDE_P_VALUE, ScoreType.PEPTIDE_SPHPP_SCORE,
 				protein, ScoreType.PROTEIN_P_VALUE, ScoreType.PROTEIN_SPHPP_SCORE);
+			long n = Math.round(Digester.digestSequence(protein.getSequence(),enzyme).length/((double)tryptic)*decoys);
+			if( n == 0 )
+				n = 1;
 			Score score = protein.getScoreByType(ScoreType.PROTEIN_SPHPP_SCORE);
-			score.setValue(score.getValue()/Digester.digestSequence(protein.getSequence(), enzyme).length);
+			score.setValue(score.getValue()/n);
 			protein.setScore(new Score(ScoreType.PROTEIN_P_VALUE, Math.exp(-score.getValue())));
 		}
 	}*/
