@@ -1,6 +1,10 @@
 package es.ehubio.proteomics.io;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringReader;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -13,6 +17,11 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.logging.Logger;
+import java.util.zip.ZipInputStream;
+
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
 
 import es.ehubio.db.fasta.Fasta;
 import es.ehubio.db.fasta.HeaderParser;
@@ -27,15 +36,21 @@ import es.ehubio.proteomics.Spectrum;
 import es.ehubio.proteomics.Spectrum.Peak;
 import es.ehubio.proteomics.pipeline.Filter;
 import es.ehubio.proteomics.pipeline.Fragmenter;
+import es.ehubio.proteomics.thermo.MassSpectrum;
 
+/**
+ * TODO:
+ * Tomar SpectrumHeaders como PSM
+ * Masa y carga de SpectrumHeaders como teórica
+ * MassPeak como experimental del precursor, además aunque pone masa es m/z
+ * Leer picos de Spectra (XML comprimido?)
+ *
+ */
 public class ProteomeDiscovererMsf extends MsMsFile {
 	private final static Logger logger = Logger.getLogger(ProteomeDiscovererMsf.class.getName());
 	
 	@Override
 	public MsMsData load(String path) throws Exception {
-		if( path != null )
-			throw new UnsupportedOperationException("MSF support still not finished");
-		
 		Class.forName("org.sqlite.JDBC");
 		Connection con = DriverManager.getConnection("jdbc:sqlite:"+path);
 		logger.info("Connected to MSF file using SQLite");
@@ -52,7 +67,7 @@ public class ProteomeDiscovererMsf extends MsMsFile {
 		Filter filter = new Filter(data);
 		filter.run();
 		
-		loadPeaks(con,data.getSpectra());
+		matchFragments(con,data.getSpectra());
 		
 		con.close();
 		
@@ -125,16 +140,44 @@ public class ProteomeDiscovererMsf extends MsMsFile {
 		fileInfos.next();
 		String fileName = fileInfos.getString(1);
 		statement = con.createStatement();
-		ResultSet spectra = statement.executeQuery("SELECT * FROM SpectrumHeaders;");
+		//ResultSet spectra = statement.executeQuery("SELECT * FROM SpectrumHeaders;");
+		ResultSet spectra = statement.executeQuery("SELECT SpectrumID, FirstScan, RetentionTime, Spectrum  FROM SpectrumHeaders, Spectra WHERE Spectra.UniqueSpectrumID=SpectrumHeaders.UniqueSpectrumID;");
 		while( spectra.next() ) {
 			Spectrum spectrum = new Spectrum();
 			spectrum.setFileName(fileName);
 			spectrum.setScan(spectra.getInt("FirstScan")+"");
 			spectrum.setFileId(spectrum.getScan());
 			spectrum.setRt(spectra.getDouble("RetentionTime"));
+			/*try {
+				loadPeaks(spectrum, spectra.getBytes("Spectrum"));
+			} catch (IOException | JAXBException e) {
+				e.printStackTrace();
+			}*/
 			result.put(spectra.getInt("SpectrumID"), spectrum);
 		}
 		return result;
+	}
+	
+	@SuppressWarnings("unused")
+	private void loadPeaks( Spectrum spectrum, byte[] bytes ) throws IOException, JAXBException {
+		ZipInputStream is = new ZipInputStream(new ByteArrayInputStream(bytes));
+		ByteArrayOutputStream os = new ByteArrayOutputStream();
+		while( is.getNextEntry() != null ) {
+			int count;
+			byte[] data = new byte[50];
+			while( (count = is.read(data, 0, 50)) != -1 ) {
+				os.write(data, 0, count);
+			}
+		}
+		JAXBContext jaxbContext = JAXBContext.newInstance(MassSpectrum.class);
+		Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();		
+		MassSpectrum msf = (MassSpectrum)unmarshaller.unmarshal(new StringReader(os.toString("UTF-8")));
+		for( MassSpectrum.PeakCentroids.Peak centroid : msf.getPeakCentroids().getPeak() ) {
+			Peak peak = new Peak();
+			peak.setCharge(centroid.getZ());
+			peak.setMz(centroid.getX());
+			peak.setIntensity(centroid.getY());
+		}
 	}
 
 	private Map<Integer,Peptide> loadPeptides(Connection con, Map<Integer, Ptm> ptmTypes, Map<Integer,Spectrum> spectra) throws SQLException {
@@ -152,7 +195,8 @@ public class ProteomeDiscovererMsf extends MsMsFile {
 		scores.next();
 		int xcorr = scores.getInt(1);
 		statement = con.createStatement();
-		ResultSet entries = statement.executeQuery(String.format("SELECT * FROM Peptides%s;", decoy?"_decoy":""));
+		//ResultSet entries = statement.executeQuery(String.format("SELECT * FROM Peptides%s;", decoy?"_decoy":""));
+		ResultSet entries = statement.executeQuery(String.format("SELECT PeptideID, Sequence, %1$s.SpectrumID, SearchEngineRank, SpectrumHeaders.Charge AS zCalc, SpectrumHeaders.Mass AS mCalc, MassPeaks.Charge AS zExp, MassPeaks.Mass AS mzExp FROM %1$s, SpectrumHeaders, MassPeaks WHERE SpectrumHeaders.SpectrumID=%1$s.SpectrumID AND MassPeaks.MassPeakID=SpectrumHeaders.MassPeakID;", decoy?"Peptides_decoy":"Peptides"));
 		while( entries.next() ) {
 			int id = entries.getInt("PeptideID");
 			Peptide newPeptide = new Peptide();			
@@ -171,6 +215,9 @@ public class ProteomeDiscovererMsf extends MsMsFile {
 			psm.linkSpectrum(spectrum);
 			psm.linkPeptide(peptide);
 			psm.setRank(entries.getInt("SearchEngineRank"));
+			psm.setCharge(entries.getInt("zCalc"));
+			psm.setCalcMz(entries.getDouble("mCalc")/psm.getCharge());
+			psm.setExpMz(entries.getDouble("mzExp"));
 			psm.addScore(new Score(ScoreType.SEQUEST_XCORR, loadXcorr(con, xcorr, id,decoy)));
 		}
 		return result;
@@ -232,7 +279,7 @@ public class ProteomeDiscovererMsf extends MsMsFile {
 		return result;
 	}
 	
-	private void loadPeaks(Connection con, Set<Spectrum> spectra) throws SQLException {
+	private void matchFragments(Connection con, Set<Spectrum> spectra) throws SQLException {
 		boolean a = checkIons(con, 'a');
 		boolean b = checkIons(con, 'b');
 		boolean c = checkIons(con, 'c');
@@ -245,16 +292,6 @@ public class ProteomeDiscovererMsf extends MsMsFile {
 		double error = getFragmentError(con);
 		
 		for( Spectrum spectrum : spectra ) {
-			Statement statement = con.createStatement();
-			ResultSet peaks = statement.executeQuery(String.format(
-					"SELECT * FROM MassPeaks WHERE ScanNumbers=\"%s\";", spectrum.getScan()));
-			while( peaks.next() ) {
-				Peak peak = new Peak();
-				peak.setIntensity(peaks.getDouble("Intensity"));
-				peak.setCharge(peaks.getInt("Charge"));
-				peak.setMz(peaks.getDouble("Mass")/peak.getCharge());
-				spectrum.getPeaks().add(peak);
-			}
 			for( Psm psm : spectrum.getPsms() ) {
 				Fragmenter frag = new Fragmenter(psm);
 				frag.addPrecursorIons();

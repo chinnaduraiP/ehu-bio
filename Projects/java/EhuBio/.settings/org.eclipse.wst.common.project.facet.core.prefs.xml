@@ -1,7 +1,7 @@
 <root>
   <facet id="jpt.jaxb">
     <node name="classgen">
-      <attribute name="package" value="es.ehubio.proteomics.waters.plgs"/>
+      <attribute name="package" value="es.ehubio.proteomics.thermo"/>
     </node>
   </facet>
 </root>
