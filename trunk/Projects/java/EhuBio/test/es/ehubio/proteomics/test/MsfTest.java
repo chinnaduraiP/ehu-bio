@@ -7,7 +7,10 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import es.ehubio.proteomics.MsMsData;
+import es.ehubio.proteomics.Score;
+import es.ehubio.proteomics.ScoreType;
 import es.ehubio.proteomics.io.MsMsFile;
+import es.ehubio.proteomics.pipeline.Filter;
 
 public class MsfTest {
 
@@ -22,7 +25,11 @@ public class MsfTest {
 	@Test
 	public void test() throws Exception {
 		MsMsData data = MsMsFile.autoLoad("/home/gorka/Bio/Proyectos/Proteómica/spHPP/Work/Sequest/ProteomeDiscoverer/PD14.msf");
-		assertEquals(data.getProteins().size(), 623);
+		/*Filter filter = new Filter(data);
+		filter.setPeptideScoreThreshold(new Score(ScoreType.PEPTIDE_MSF_CONFIDENCE, 2.5));
+		filter.run();*/
+		System.out.println(data.getProteins().size());
+		assertEquals(data.getProteins().size(), 22);
 	}
 
 }

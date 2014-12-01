@@ -22,6 +22,7 @@ public enum ScoreType {
 	PEPTIDE_Q_VALUE(null,"peptide-level q-value","Estimation of the q-value for peptides",false),
 	PEPTIDE_FDR_SCORE("MS:1002360","distinct peptide-level FDRScore","FDRScore for distinct peptides once redundant identifications of the same peptide have been removed (id est multiple PSMs have been collapsed to one entry)",false),
 	PEPTIDE_SPHPP_SCORE(null,"peptide-level spHPP score","Sum of PSM-level spHPP scores",true),
+	PEPTIDE_MSF_CONFIDENCE(null,"msf peptide confidence level","Peptide confidence level in MSF",true),
 	PROTEIN_P_VALUE("MS:1001871","protein-level p-value","Estimation of the p-value for proteins",false),
 	PROTEIN_LOCAL_FDR("MS:1002364","protein-level local FDR","Estimation of the local false discovery rate of proteins",false),
 	PROTEIN_Q_VALUE("MS:1001869","protein-level q-value","Estimation of the q-value for proteins",false),
