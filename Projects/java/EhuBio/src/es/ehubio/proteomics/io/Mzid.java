@@ -93,7 +93,7 @@ public final class Mzid extends MsMsFile {
 	}
 	
 	@Override
-	public MsMsData load( InputStream input ) throws Exception {
+	public MsMsData load( InputStream input, boolean loadFragments ) throws Exception {
 		//logger.info("Parsing XML ...");
 		JAXBContext jaxbContext = JAXBContext.newInstance(MzIdentML.class);
 		Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();

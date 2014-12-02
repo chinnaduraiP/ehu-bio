@@ -18,7 +18,7 @@ import es.ehubio.proteomics.ScoreType;
 	"psmRankThreshold","bestPsmPerPrecursor","bestPsmPerPeptide", "psmFdr","psmScore",
 	"minPeptideLength","uniquePeptides","peptideFdr","minPeptideReplicates",
 	"proteinFdr","minProteinReplicates","groupFdr",
-	"decoyRegex","replicates","filterDecoys","output"})
+	"decoyRegex","replicates","useFragmentIons","filterDecoys","output"})
 @XmlRootElement
 public class Configuration implements Serializable {	
 	private static final long serialVersionUID = 1L;
@@ -183,6 +183,14 @@ public class Configuration implements Serializable {
 		this.uniquePeptides = uniquePeptides;
 	}
 
+	public Boolean getUseFragmentIons() {
+		return useFragmentIons;
+	}
+
+	public void setUseFragmentIons(Boolean useFragmentIons) {
+		this.useFragmentIons = useFragmentIons;
+	}
+
 	public static class Replicate {
 		private String name;
 		private Set<String> fractions;
@@ -224,6 +232,7 @@ public class Configuration implements Serializable {
 	private Integer minProteinReplicates;
 	private Double groupFdr;	
 	private List<Replicate> replicates;
+	private Boolean useFragmentIons;
 	private String output;
 	private Boolean filterDecoys;
 }

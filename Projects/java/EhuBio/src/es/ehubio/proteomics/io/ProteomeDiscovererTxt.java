@@ -29,7 +29,7 @@ public class ProteomeDiscovererTxt extends MsMsFile {
 	}
 
 	@Override
-	public MsMsData load(InputStream input) throws Exception {
+	public MsMsData load(InputStream input, boolean loadFragments) throws Exception {
 		Map<String,Spectrum> scans = new HashMap<>();
 		Map<String,Peptide> peptides = new HashMap<>();
 		Map<String,Protein> proteins = new HashMap<>();

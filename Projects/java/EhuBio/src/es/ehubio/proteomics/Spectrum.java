@@ -143,5 +143,9 @@ public class Spectrum {
 		public void setCharge(int charge) {
 			this.charge = charge;
 		}
+		@Override
+		public String toString() {
+			return String.format("%.4f(%.2f)", mz, intensity);
+		}
 	}
 }

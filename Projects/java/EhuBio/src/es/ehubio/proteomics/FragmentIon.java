@@ -44,6 +44,10 @@ public class FragmentIon implements Serializable {
 	public double getMzError() {
 		return mzError;
 	}
+	
+	public double getPpms() {
+		return mzError/getMzCalc()*1000000;
+	}
 
 	public void setMzError(double mzError) {
 		this.mzError = mzError;
@@ -55,6 +59,17 @@ public class FragmentIon implements Serializable {
 
 	public void setType(IonType type) {
 		this.type = type;
+	}
+	
+	@Override
+	public String toString() {
+		StringBuilder str = new StringBuilder();
+		for( int i = 1; i < charge; i++ )
+			str.append('+');
+		return String.format("%s%s%s%s (%.3f ppm)",
+			type.getCode(), index==0?"":""+index, str.toString(),
+			type.getLoss()==null?"":String.format("-%s", type.getLoss()),
+			getPpms());
 	}
 
 	private double mzExp;

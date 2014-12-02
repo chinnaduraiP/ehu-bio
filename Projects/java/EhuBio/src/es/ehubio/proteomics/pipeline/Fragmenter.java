@@ -52,41 +52,45 @@ public class Fragmenter {
 		ion.setType(base);
 		totalIons.add(ion);
 		
-		ion = new FragmentIon();
-		ion.setCharge(charge);
-		ion.setMzExp((baseMass-Masses.H2O)/charge);
-		ion.setMzError(0.0);
-		ion.setIndex(pos);
-		ion.setType(h20);
-		totalIons.add(ion);
+		if( h20 != null ) {
+			ion = new FragmentIon();
+			ion.setCharge(charge);
+			ion.setMzExp((baseMass-Masses.H2O)/charge);
+			ion.setMzError(0.0);
+			ion.setIndex(pos);
+			ion.setType(h20);
+			totalIons.add(ion);
+		}
 		
-		ion = new FragmentIon();
-		ion.setCharge(charge);
-		ion.setMzExp((baseMass-Masses.NH3)/charge);
-		ion.setMzError(0.0);
-		ion.setIndex(pos);
-		ion.setType(nh3);
-		totalIons.add(ion);
+		if( nh3 != null ) {
+			ion = new FragmentIon();
+			ion.setCharge(charge);
+			ion.setMzExp((baseMass-Masses.NH3)/charge);
+			ion.setMzError(0.0);
+			ion.setIndex(pos);
+			ion.setType(nh3);
+			totalIons.add(ion);
+		}
 	}
 	
-	public void addPrecursorIons() {
+	public void addPrecursorIons( boolean h20, boolean nh3 ) {
 		double mh = psm.getCalcMz()*psm.getCharge();
 		for( int charge = 1; charge <= psm.getCharge(); charge++ )
-			addIons(mh+(charge-1)*Masses.Hydrogen, charge, 0, IonType.PRECURSOR, IonType.PRECURSOR_H2O, IonType.PRECURSOR_NH3);
+			addIons(mh+(charge-1)*Masses.Hydrogen, charge, 0, IonType.PRECURSOR, h20 ? IonType.PRECURSOR_H2O : null, nh3 ? IonType.PRECURSOR_NH3 : null);
 	}
 	
-	public void addAIons() {
+	public void addAIons( boolean h20, boolean nh3 ) {
 		throw new UnsupportedOperationException("a ions not supported");
 	}
 	
-	public void addBIons() {
+	public void addBIons( boolean h20, boolean nh3 ) {
 		int len = psm.getPeptide().getSequence().length();
 		for( int charge = 1; charge <= psm.getCharge(); charge++ )
 			for( int i = 0; i < len; i++ ) {
 				double mass = 0.0;                
                 for( int j = 0; j <= i; j++ )
                 	mass += partialMasses[j];
-                addIons(mass+charge*Masses.Hydrogen, charge, i+1, IonType.B, IonType.B_H2O, IonType.B_NH3);
+                addIons(mass+charge*Masses.Hydrogen, charge, i+1, IonType.B, h20 ? IonType.B_H2O : null, nh3 ? IonType.B_NH3 : null);
 			}
 	}
 	
@@ -110,7 +114,7 @@ public class Fragmenter {
 		throw new UnsupportedOperationException("x ions not supported");
 	}
 	
-	public void addYIons() {
+	public void addYIons( boolean h20, boolean nh3 ) {
 		int len = psm.getPeptide().getSequence().length();
 		for( int charge = 1; charge <= psm.getCharge(); charge++ )
 			for( int i = 0; i < len; i++ ) {
@@ -118,7 +122,7 @@ public class Fragmenter {
                 for( int j = 0; j <= i; j++ )
                 	mass += partialMasses[len-1-j];
                 mass += Masses.C_term+Masses.Hydrogen;
-                addIons(mass+charge*Masses.Hydrogen, charge, i+1, IonType.Y, IonType.Y_H2O, IonType.Y_NH3);
+                addIons(mass+charge*Masses.Hydrogen, charge, i+1, IonType.Y, h20 ? IonType.Y_H2O : null, nh3 ? IonType.Y_NH3 : null);
 			}
 	}
 	
@@ -126,23 +130,42 @@ public class Fragmenter {
 		throw new UnsupportedOperationException("z ions not supported");
 	}
 	
-	public List<FragmentIon> match( double mzError ) {
-		List<FragmentIon> results = new ArrayList<>();
-		for( FragmentIon ion : totalIons )
+	public List<FragmentIon> match( double mzError, boolean sameCharge ) {
+		List<FragmentIon> results = new ArrayList<>();		
+		for( FragmentIon ion : totalIons ) {
+			double bestError = mzError*10.0;
+			FragmentIon result = null;
 			for( Peak peak : psm.getSpectrum().getPeaks() ) {
+				if( sameCharge && peak.getCharge() != ion.getCharge() )
+					continue;
 				double error = peak.getMz()-ion.getMzCalc();
-				if( error >= -mzError && error <= mzError ) {
-					FragmentIon result = new FragmentIon();
+				double absError = Math.abs(error);
+				if( absError <= mzError && absError <= bestError ) {
+					result = new FragmentIon();
 					result.setCharge(ion.getCharge());
 					result.setIndex(ion.getIndex());
 					result.setType(ion.getType());					
 					result.setMzExp(peak.getMz());
 					result.setMzError(error);
 					result.setIntensity(peak.getIntensity());
-					results.add(result);					
-					break;
+					bestError = absError;
 				}
 			}
+			if( result != null )
+				results.add(result);
+		}
+		filter(results);
 		return results;
+	}
+	
+	private void filter( List<FragmentIon> ions ) {
+		Map<Integer, FragmentIon> map = new HashMap<>();
+		for( FragmentIon ion : ions ) {
+			FragmentIon prev = map.get(ion.getIndex());
+			if( prev == null || ion.getMzError() < prev.getMzError() )
+				map.put(ion.getIndex(), ion);
+		}
+		ions.clear();
+		ions.addAll(map.values());
 	}
 }

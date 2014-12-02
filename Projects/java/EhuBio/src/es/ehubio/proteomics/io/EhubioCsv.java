@@ -37,7 +37,7 @@ public class EhubioCsv extends MsMsFile {
 	}
 
 	@Override
-	public MsMsData load(InputStream input) throws Exception {
+	public MsMsData load(InputStream input, boolean loadFragments) throws Exception {
 		throw new UnsupportedOperationException();
 	}
 

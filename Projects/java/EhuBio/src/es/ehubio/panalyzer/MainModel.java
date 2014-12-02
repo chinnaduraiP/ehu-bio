@@ -124,7 +124,7 @@ public class MainModel {
 					file = MsMsFile.autoDetect(fraction);
 					if( file == null )
 						throw new Exception(String.format("File format not supported: %s", fraction));
-					MsMsData data = file.load(fraction).markDecoys(config.getDecoyRegex());
+					MsMsData data = file.load(fraction,Boolean.TRUE.equals(config.getUseFragmentIons())).markDecoys(config.getDecoyRegex());
 					rep.mergeFraction(data);
 					logCounts("Merged",rep.getData());
 				}

@@ -21,7 +21,7 @@ import es.ehubio.proteomics.Spectrum;
 public class MayuCsv extends MsMsFile {
 
 	@Override
-	public MsMsData load(InputStream input) throws Exception {
+	public MsMsData load(InputStream input, boolean loadFragments) throws Exception {
 		data = new MsMsData();
 		BufferedReader rd = new BufferedReader(new InputStreamReader(input));
 		String line;
