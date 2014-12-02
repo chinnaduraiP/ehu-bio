@@ -1,6 +1,6 @@
 package es.ehubio.proteomics.test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -24,12 +24,10 @@ public class MsfTest {
 
 	@Test
 	public void test() throws Exception {
-		MsMsData data = MsMsFile.autoLoad("/home/gorka/Bio/Proyectos/Proteómica/spHPP/Work/Sequest/ProteomeDiscoverer/PD14.msf");
-		/*Filter filter = new Filter(data);
+		MsMsData data = MsMsFile.autoLoad("/home/gorka/Bio/Proyectos/Proteómica/spHPP/Work/Sequest/ProteomeDiscoverer/PD14.msf",false);
+		Filter filter = new Filter(data);
 		filter.setPeptideScoreThreshold(new Score(ScoreType.PEPTIDE_MSF_CONFIDENCE, 2.5));
-		filter.run();*/
-		System.out.println(data.getProteins().size());
+		filter.run();		
 		assertEquals(data.getProteins().size(), 22);
 	}
-
 }

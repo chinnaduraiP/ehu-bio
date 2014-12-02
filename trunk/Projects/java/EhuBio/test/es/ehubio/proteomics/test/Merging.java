@@ -18,7 +18,7 @@ public class Merging {
 	@Test
 	public void testSame() throws Exception {		
 		MsMsFile file1 = new Mzid();
-		MsMsData data1 = file1.load(PATH1).markDecoys("decoy");
+		MsMsData data1 = file1.load(PATH1,false).markDecoys("decoy");
 		int spectra1 = data1.getSpectra().size();
 		int psms1 = data1.getPsms().size();
 		int peptides1 = data1.getPeptides().size();
@@ -26,7 +26,7 @@ public class Merging {
 		logger.info("Data1: "+data1.toString());		
 		
 		MsMsFile file2 = new Mzid();
-		MsMsData data2 = file2.load(PATH1).markDecoys("decoy");
+		MsMsData data2 = file2.load(PATH1,false).markDecoys("decoy");
 		logger.info("Data2: "+data2.toString());
 		
 		data1.merge(data2);
@@ -45,7 +45,7 @@ public class Merging {
 	@Test
 	public void testDifferent() throws Exception {		
 		MsMsFile file1 = new Mzid();
-		MsMsData data1 = file1.load(PATH1).markDecoys("decoy");
+		MsMsData data1 = file1.load(PATH1,false).markDecoys("decoy");
 		int spectra1 = data1.getSpectra().size();
 		int psms1 = data1.getPsms().size();
 		int peptides1 = data1.getPeptides().size();
@@ -53,7 +53,7 @@ public class Merging {
 		logger.info("Data1: "+data1.toString());		
 		
 		MsMsFile file2 = new Mzid();
-		MsMsData data2 = file2.load(PATH2).markDecoys("decoy");
+		MsMsData data2 = file2.load(PATH2,false).markDecoys("decoy");
 		int spectra2 = data2.getSpectra().size();
 		int psms2 = data2.getPsms().size();
 		int peptides2 = data2.getPeptides().size();

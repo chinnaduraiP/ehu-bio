@@ -56,19 +56,19 @@ public abstract class MsMsFile {
 		return list;
 	}
 	
-	public static MsMsData autoLoad( String path ) throws Exception {
+	public static MsMsData autoLoad( String path, boolean loadFragments ) throws Exception {
 		MsMsFile file = autoDetect(path);
 		if( file == null )
 			return null;
-		return file.load(path);
+		return file.load(path, loadFragments);
 	}
 	
-	public MsMsData load( String path ) throws Exception {
+	public MsMsData load( String path, boolean loadFragments ) throws Exception {
 		logger.info(String.format("Loading '%s' ...", path));
 		InputStream input = new FileInputStream(path);
 		if( path.endsWith(".gz") )
 			input = new GZIPInputStream(input);
-		data = load(input);
+		data = load(input, loadFragments);
 		input.close();
 		originalFile = new File(path);
 		solveIssues();
@@ -86,7 +86,7 @@ public abstract class MsMsFile {
 		}
 	}
 	
-	public abstract MsMsData load( InputStream input ) throws Exception;	
+	public abstract MsMsData load( InputStream input, boolean loadFragments ) throws Exception;	
 
 	public void save( String path ) throws Exception {
 		File file = new File(path);

@@ -23,6 +23,8 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
+import org.apache.commons.io.IOUtils;
+
 import es.ehubio.db.fasta.Fasta;
 import es.ehubio.db.fasta.HeaderParser;
 import es.ehubio.proteomics.MsMsData;
@@ -38,24 +40,16 @@ import es.ehubio.proteomics.pipeline.Filter;
 import es.ehubio.proteomics.pipeline.Fragmenter;
 import es.ehubio.proteomics.thermo.MassSpectrum;
 
-/**
- * TODO:
- * Tomar SpectrumHeaders como PSM
- * Masa y carga de SpectrumHeaders como teórica
- * MassPeak como experimental del precursor, además aunque pone masa es m/z
- * Leer picos de Spectra (XML comprimido?)
- *
- */
 public class ProteomeDiscovererMsf extends MsMsFile {
 	private final static Logger logger = Logger.getLogger(ProteomeDiscovererMsf.class.getName());
 	
 	@Override
-	public MsMsData load(String path) throws Exception {
+	public MsMsData load(String path, boolean loadFragments) throws Exception {
 		Class.forName("org.sqlite.JDBC");
 		Connection con = DriverManager.getConnection("jdbc:sqlite:"+path);
 		logger.info("Connected to MSF file using SQLite");
 				 			
-		Map<Integer,Spectrum> spectra = loadSpectra(con);
+		Map<Integer,Spectrum> spectra = loadSpectra(con, loadFragments);
 		Map<Integer,Ptm> ptms = loadPtmTypes(con);
 		Map<Integer,Peptide> peptides = loadPeptides(con, ptms, spectra);
 		Map<Integer,Protein> proteins = loadProteins(con);
@@ -67,7 +61,8 @@ public class ProteomeDiscovererMsf extends MsMsFile {
 		Filter filter = new Filter(data);
 		filter.run();
 		
-		matchFragments(con,data.getSpectra());
+		if( loadFragments )
+			matchFragments(con,data.getSpectra());
 		
 		con.close();
 		
@@ -75,8 +70,8 @@ public class ProteomeDiscovererMsf extends MsMsFile {
 	}
 	
 	@Override
-	public MsMsData load(InputStream input) throws Exception {		
-		return null;
+	public MsMsData load(InputStream input, boolean loadFragments) throws Exception {		
+		throw new UnsupportedOperationException("Reading MSF from a stream is not supported");
 	}
 	
 	@Override
@@ -128,7 +123,7 @@ public class ProteomeDiscovererMsf extends MsMsFile {
 		return result;
 	}
 
-	private Map<Integer,Spectrum> loadSpectra(Connection con) throws SQLException {
+	private Map<Integer,Spectrum> loadSpectra(Connection con, boolean loadFragments) throws SQLException {
 		Map<Integer,Spectrum> result = new HashMap<>();
 		Statement statement = con.createStatement();
 		ResultSet fileInfos;
@@ -148,27 +143,25 @@ public class ProteomeDiscovererMsf extends MsMsFile {
 			spectrum.setScan(spectra.getInt("FirstScan")+"");
 			spectrum.setFileId(spectrum.getScan());
 			spectrum.setRt(spectra.getDouble("RetentionTime"));
-			/*try {
-				loadPeaks(spectrum, spectra.getBytes("Spectrum"));
-			} catch (IOException | JAXBException e) {
-				e.printStackTrace();
-			}*/
+			if( loadFragments )
+				try {
+					loadPeaks(spectrum, spectra.getBytes("Spectrum"));
+				} catch (IOException | JAXBException e) {
+					e.printStackTrace();
+				}
 			result.put(spectra.getInt("SpectrumID"), spectrum);
 		}
 		return result;
 	}
 	
-	@SuppressWarnings("unused")
 	private void loadPeaks( Spectrum spectrum, byte[] bytes ) throws IOException, JAXBException {
 		ZipInputStream is = new ZipInputStream(new ByteArrayInputStream(bytes));
+		if( is.getNextEntry() == null )
+			return;
 		ByteArrayOutputStream os = new ByteArrayOutputStream();
-		while( is.getNextEntry() != null ) {
-			int count;
-			byte[] data = new byte[50];
-			while( (count = is.read(data, 0, 50)) != -1 ) {
-				os.write(data, 0, count);
-			}
-		}
+		IOUtils.copy(is, os);
+		is.close();
+		os.close();
 		JAXBContext jaxbContext = JAXBContext.newInstance(MassSpectrum.class);
 		Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();		
 		MassSpectrum msf = (MassSpectrum)unmarshaller.unmarshal(new StringReader(os.toString("UTF-8")));
@@ -177,6 +170,7 @@ public class ProteomeDiscovererMsf extends MsMsFile {
 			peak.setCharge(centroid.getZ());
 			peak.setMz(centroid.getX());
 			peak.setIntensity(centroid.getY());
+			spectrum.getPeaks().add(peak);
 		}
 	}
 
@@ -195,8 +189,7 @@ public class ProteomeDiscovererMsf extends MsMsFile {
 		scores.next();
 		int xcorr = scores.getInt(1);
 		statement = con.createStatement();
-		//ResultSet entries = statement.executeQuery(String.format("SELECT * FROM Peptides%s;", decoy?"_decoy":""));
-		ResultSet entries = statement.executeQuery(String.format("SELECT PeptideID, Sequence, %1$s.SpectrumID, SearchEngineRank, SpectrumHeaders.Charge AS zCalc, SpectrumHeaders.Mass AS mCalc, MassPeaks.Charge AS zExp, MassPeaks.Mass AS mzExp FROM %1$s, SpectrumHeaders, MassPeaks WHERE SpectrumHeaders.SpectrumID=%1$s.SpectrumID AND MassPeaks.MassPeakID=SpectrumHeaders.MassPeakID;", decoy?"Peptides_decoy":"Peptides"));
+		ResultSet entries = statement.executeQuery(String.format("SELECT PeptideID, Sequence, %1$s.SpectrumID, SearchEngineRank, ConfidenceLevel, SpectrumHeaders.Charge AS zExp, SpectrumHeaders.Mass AS mExp, MassPeaks.Charge AS zCalc, MassPeaks.Mass AS mzCalc FROM %1$s, SpectrumHeaders, MassPeaks WHERE SpectrumHeaders.SpectrumID=%1$s.SpectrumID AND MassPeaks.MassPeakID=SpectrumHeaders.MassPeakID;", decoy?"Peptides_decoy":"Peptides"));
 		while( entries.next() ) {
 			int id = entries.getInt("PeptideID");
 			Peptide newPeptide = new Peptide();			
@@ -216,9 +209,10 @@ public class ProteomeDiscovererMsf extends MsMsFile {
 			psm.linkPeptide(peptide);
 			psm.setRank(entries.getInt("SearchEngineRank"));
 			psm.setCharge(entries.getInt("zCalc"));
-			psm.setCalcMz(entries.getDouble("mCalc")/psm.getCharge());
-			psm.setExpMz(entries.getDouble("mzExp"));
+			psm.setCalcMz(entries.getDouble("mzCalc"));
+			psm.setExpMz(entries.getDouble("mExp")/psm.getCharge());
 			psm.addScore(new Score(ScoreType.SEQUEST_XCORR, loadXcorr(con, xcorr, id,decoy)));
+			psm.addScore(new Score(ScoreType.PEPTIDE_MSF_CONFIDENCE, entries.getInt("ConfidenceLevel")));
 		}
 		return result;
 	}
@@ -290,21 +284,24 @@ public class ProteomeDiscovererMsf extends MsMsFile {
 		boolean y = checkIons(con, 'y');
 		boolean z = checkIons(con, 'z');
 		double error = getFragmentError(con);
+		boolean lossesA = a ? checkNeutralLosses(con, 'a') : false;
+		boolean lossesB = b ? checkNeutralLosses(con, 'b') : false;
+		boolean lossesY = y ? checkNeutralLosses(con, 'y') : false;
 		
 		for( Spectrum spectrum : spectra ) {
 			for( Psm psm : spectrum.getPsms() ) {
 				Fragmenter frag = new Fragmenter(psm);
-				frag.addPrecursorIons();
-				if( a ) frag.addAIons();
-				if( b ) frag.addBIons();
+				frag.addPrecursorIons(false,false);
+				if( a ) frag.addAIons(lossesA,lossesA);
+				if( b ) frag.addBIons(lossesB,lossesB);
 				if( c ) frag.addCIons();
 				if( d ) frag.addDIons();
 				if( v ) frag.addVIons();
 				if( w ) frag.addWIons();
 				if( x ) frag.addXIons();
-				if( y ) frag.addYIons();
+				if( y ) frag.addYIons(lossesY,lossesY);
 				if( z ) frag.addZIons();
-				psm.setIons(frag.match(error));
+				psm.setIons(frag.match(error,true));
 			}
 		}
 	}
@@ -316,6 +313,15 @@ public class ProteomeDiscovererMsf extends MsMsFile {
 			Character.toUpperCase(ch)));
 		ions.next();
 		return ions.getString(1).equals("1");
+	}
+	
+	private boolean checkNeutralLosses( Connection con, Character ch ) throws SQLException {
+		Statement statement = con.createStatement();
+		ResultSet losses = statement.executeQuery(String.format(
+			"SELECT ParameterValue FROM ProcessingNodeParameters WHERE ParameterName=\"UseNeutral%cIons\";",
+			Character.toUpperCase(ch)));
+		losses.next();
+		return losses.getString(1).equalsIgnoreCase("True");
 	}
 	
 	private double getFragmentError( Connection con ) throws SQLException {
