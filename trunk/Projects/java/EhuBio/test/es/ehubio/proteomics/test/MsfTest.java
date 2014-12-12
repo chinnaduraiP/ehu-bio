@@ -25,9 +25,11 @@ public class MsfTest {
 	@Test
 	public void test() throws Exception {
 		MsMsData data = MsMsFile.autoLoad("/home/gorka/Bio/Proyectos/Proteómica/spHPP/Work/Sequest/ProteomeDiscoverer/PD14.msf",false);
+		//MsMsData data = MsMsFile.autoLoad("/home/gorka/Bio/Proyectos/Proteómica/spHPP/Work/Sequest/ProteomeDiscoverer/PME10/PME10_120MIN_MSMS_141106_001.msf",true);
+		//MsMsData data = MsMsFile.autoLoad("/home/gorka/Bio/Proyectos/Proteómica/spHPP/Work/Sequest/ProteomeDiscoverer/PME10/PME10_120MIN_MSMS_141106_001.msf",false);
 		Filter filter = new Filter(data);
-		filter.setPeptideScoreThreshold(new Score(ScoreType.PEPTIDE_MSF_CONFIDENCE, 2.5));
-		filter.run();		
+		filter.setPeptideScoreThreshold(new Score(ScoreType.PEPTIDE_MSF_CONFIDENCE, 3));		
+		filter.run();
 		assertEquals(data.getProteins().size(), 22);
 	}
 }

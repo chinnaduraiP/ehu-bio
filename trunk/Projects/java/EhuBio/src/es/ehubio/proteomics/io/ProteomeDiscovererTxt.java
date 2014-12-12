@@ -22,14 +22,14 @@ import es.ehubio.proteomics.Spectrum;
 
 public class ProteomeDiscovererTxt extends MsMsFile {
 	@Override
-	public boolean checkSignature(InputStream input) throws Exception {
+	public boolean checkSignatureStream(InputStream input) throws Exception {
 		BufferedReader rd = new BufferedReader(new InputStreamReader(input));
 		String str = rd.readLine();
 		return str.contains("Annotated Sequence") && str.contains("Protein Accessions");
 	}
 
 	@Override
-	public MsMsData load(InputStream input, boolean loadFragments) throws Exception {
+	public MsMsData loadStream(InputStream input, boolean loadFragments) throws Exception {
 		Map<String,Spectrum> scans = new HashMap<>();
 		Map<String,Peptide> peptides = new HashMap<>();
 		Map<String,Protein> proteins = new HashMap<>();

@@ -2,10 +2,7 @@ package es.ehubio.proteomics.io;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.PrintWriter;
-import java.util.logging.Logger;
 
 import es.ehubio.io.CsvUtils;
 import es.ehubio.proteomics.DecoyBase;
@@ -18,7 +15,7 @@ import es.ehubio.proteomics.Score;
 import es.ehubio.proteomics.ScoreType;
 
 public class EhubioCsv extends MsMsFile {
-	private final static Logger logger = Logger.getLogger(EhubioCsv.class.getName());
+	//private final static Logger logger = Logger.getLogger(EhubioCsv.class.getName());
 	private final MsMsData data;
 	private final static char SEP = '\t';
 	private final static char INTER = ',';
@@ -37,22 +34,16 @@ public class EhubioCsv extends MsMsFile {
 	}
 
 	@Override
-	public MsMsData load(InputStream input, boolean loadFragments) throws Exception {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public void save(OutputStream output) throws Exception {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public void save(String dir) throws Exception {
-		logger.info(String.format("Saving CSVs to '%s' ...", dir));
+	protected boolean savePath(String dir) throws Exception {
+		File file = new File(dir);
+		if( !file.isDirectory() )
+			dir = file.getParent();
+		//logger.info(String.format("Saving CSVs to '%s' ...", dir));
 		savePsms(new File(dir,"psms.csv").getAbsolutePath());
 		savePeptides(new File(dir,"peptides.csv").getAbsolutePath());
 		saveProteins(new File(dir,"proteins.csv").getAbsolutePath());
-		saveGroups(new File(dir,"groups.csv").getAbsolutePath());		
+		saveGroups(new File(dir,"groups.csv").getAbsolutePath());
+		return true;
 	}	
 
 	private void savePsms( String path ) throws IOException {		

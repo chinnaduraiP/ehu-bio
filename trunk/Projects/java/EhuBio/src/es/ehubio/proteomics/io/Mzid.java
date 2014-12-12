@@ -86,14 +86,14 @@ public final class Mzid extends MsMsFile {
 	private static final String PSIMS = "PSI-MS";	// PSI-MS id hardcoded for the momment
 	
 	@Override
-	public boolean checkSignature(InputStream input) throws Exception {
+	protected boolean checkSignatureStream(InputStream input) throws Exception {
 		BufferedReader rd = new BufferedReader(new InputStreamReader(input));
 		String str = rd.readLine()+rd.readLine();
 		return str.contains("<MzIdentML");
 	}
 	
 	@Override
-	public MsMsData load( InputStream input, boolean loadFragments ) throws Exception {
+	protected MsMsData loadStream( InputStream input, boolean loadFragments ) throws Exception {
 		//logger.info("Parsing XML ...");
 		JAXBContext jaxbContext = JAXBContext.newInstance(MzIdentML.class);
 		Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
@@ -111,7 +111,7 @@ public final class Mzid extends MsMsFile {
 	}		
 	
 	@Override
-	public void save( OutputStream output ) throws Exception {
+	protected boolean saveStream( OutputStream output ) throws Exception {
 		//logger.info("Updating mzid data ...");
 		updateOrganization();
 		updateAuthor();
@@ -128,10 +128,12 @@ public final class Mzid extends MsMsFile {
 		marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
 		marshaller.marshal(mzid, output);
 		//logger.info("finished!");
+		
+		return true;
 	}
 	
 	@Override
-	public List<File> loadPeaks(String optionalPath) throws Exception {
+	public List<File> getPeakRefs(String optionalPath) throws Exception {
 		List<File> files = new ArrayList<>();
 		for( SpectraDataType spectrum : mzid.getDataCollection().getInputs().getSpectraDatas() ) {
 			if( !spectrum.getFileFormat().getCvParam().getAccession().equals("MS:1001062") ||
