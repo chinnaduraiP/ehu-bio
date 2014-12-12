@@ -1,16 +1,13 @@
 package es.ehubio.proteomics.io;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
 
+import es.ehubio.io.Streams;
 import es.ehubio.proteomics.MsMsData;
 import es.ehubio.proteomics.Protein;
 
@@ -63,16 +60,29 @@ public abstract class MsMsFile {
 		return file.load(path, loadFragments);
 	}
 	
-	public MsMsData load( String path, boolean loadFragments ) throws Exception {
+	public final MsMsData load( String path, boolean loadFragments ) throws Exception {
 		logger.info(String.format("Loading '%s' ...", path));
-		InputStream input = new FileInputStream(path);
-		if( path.endsWith(".gz") )
-			input = new GZIPInputStream(input);
-		data = load(input, loadFragments);
-		input.close();
+		data = loadPath(path, loadFragments);
+		if( data == null ) {
+			InputStream input = Streams.getBinReader(path);
+			data = loadStream(input, loadFragments);
+			input.close();
+		}
 		originalFile = new File(path);
 		solveIssues();
+		if( data == null )
+			logger.warning("Not loaded!");
+		else
+			logger.info("Loaded!");
 		return data;
+	}
+	
+	protected MsMsData loadStream( InputStream input, boolean loadFragments ) throws Exception {
+		return null;
+	}
+	
+	protected MsMsData loadPath( String path, boolean loadFragments ) throws Exception {
+		return null;
 	}
 	
 	private void solveIssues() {
@@ -84,44 +94,62 @@ public abstract class MsMsFile {
 			protein.setAccession(acc.substring(0,i));
 			protein.setDescription(acc.substring(i+1, acc.length()));
 		}
-	}
-	
-	public abstract MsMsData load( InputStream input, boolean loadFragments ) throws Exception;	
+	}	
 
-	public void save( String path ) throws Exception {
+	public final void save( String path ) throws Exception {
 		File file = new File(path);
+		boolean addExt = true;
 		if( file.isDirectory() )
-			path = new File(file,originalFile.getName()).getAbsolutePath();
-		if( path.indexOf('.') == -1 )
+			if( originalFile != null )
+				path = new File(file,originalFile.getName()).getAbsolutePath();
+			else
+				addExt = false;
+		if( addExt && path.indexOf('.') == -1 )
 			path = String.format("%s.%s", path, getFilenameExtension());
-		logger.info(String.format("Saving '%s' ...", path));
-		OutputStream output = new FileOutputStream(path);
-		if( path.endsWith(".gz") )
-			output = new GZIPOutputStream(output);
-		save(output);
-		output.close();
+		logger.info(String.format("Saving into '%s' ...", path));
+		
+		boolean ok = savePath(path); 
+		if( !ok ) {
+			OutputStream output = Streams.getBinWriter(path);
+			ok = saveStream(output);
+			output.close();
+		}
+		
+		if( !ok )
+			logger.warning("Not saved!");
+		else
+			logger.info("Saved!");
 	}
 	
-	public void save( OutputStream output ) throws Exception {
-		throw new UnsupportedOperationException();
+	protected boolean saveStream( OutputStream output ) throws Exception {
+		return false;
 	}
 	
-	public List<File> loadPeaks( String optionalPath ) throws Exception {
+	protected boolean savePath( String path ) throws Exception {
+		return false;
+	}
+	
+	public List<File> getPeakRefs( String optionalPath ) throws Exception {
 		return null;
 	}
 	
 	public abstract String getFilenameExtension();
 	
-	public boolean checkSignature( String path ) throws Exception {
-		InputStream input = new FileInputStream(path);
-		if( path.endsWith(".gz") )
-			input = new GZIPInputStream(input);
-		boolean res = checkSignature(input);
+	public final boolean checkSignature( String path ) throws Exception {
+		if( checkSignaturePath(path) )
+			return true;
+		
+		InputStream input = Streams.getBinReader(path);
+		boolean res = checkSignatureStream(input);
 		input.close();
 		return res;
 	}
 
-	public boolean checkSignature(InputStream input) throws Exception {
+	protected boolean checkSignatureStream(InputStream input) throws Exception {
+		return false;
+	}
+	
+	protected boolean checkSignaturePath(String path) throws Exception {
 		return false;
 	}
 }

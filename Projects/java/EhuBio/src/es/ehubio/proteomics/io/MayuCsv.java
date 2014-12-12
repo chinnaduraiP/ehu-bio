@@ -3,7 +3,6 @@ package es.ehubio.proteomics.io;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -21,7 +20,7 @@ import es.ehubio.proteomics.Spectrum;
 public class MayuCsv extends MsMsFile {
 
 	@Override
-	public MsMsData load(InputStream input, boolean loadFragments) throws Exception {
+	protected MsMsData loadStream(InputStream input, boolean loadFragments) throws Exception {
 		data = new MsMsData();
 		BufferedReader rd = new BufferedReader(new InputStreamReader(input));
 		String line;
@@ -65,11 +64,6 @@ public class MayuCsv extends MsMsFile {
 		}
 		data.loadFromSpectra(spectra);
 		return data;
-	}
-
-	@Override
-	public void save(OutputStream output) throws Exception {
-		throw new UnsupportedOperationException();		
 	}
 
 	@Override

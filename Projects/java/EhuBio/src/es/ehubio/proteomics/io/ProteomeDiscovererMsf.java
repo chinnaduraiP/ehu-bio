@@ -44,13 +44,16 @@ public class ProteomeDiscovererMsf extends MsMsFile {
 	private final static Logger logger = Logger.getLogger(ProteomeDiscovererMsf.class.getName());
 	
 	@Override
-	public MsMsData load(String path, boolean loadFragments) throws Exception {
+	protected MsMsData loadPath(String path, boolean loadFragments) throws Exception {
 		Class.forName("org.sqlite.JDBC");
 		Connection con = DriverManager.getConnection("jdbc:sqlite:"+path);
 		logger.info("Connected to MSF file using SQLite");
+		
+		JAXBContext jaxbContext = JAXBContext.newInstance(MassSpectrum.class);
+		peakReader = jaxbContext.createUnmarshaller();
 				 			
 		Map<Integer,Spectrum> spectra = loadSpectra(con, loadFragments);
-		Map<Integer,Ptm> ptms = loadPtmTypes(con);
+		Map<Integer,List<Ptm>> ptms = loadPtms(con);
 		Map<Integer,Peptide> peptides = loadPeptides(con, ptms, spectra);
 		Map<Integer,Protein> proteins = loadProteins(con);
 		loadRelations(con,peptides,proteins);		
@@ -70,12 +73,7 @@ public class ProteomeDiscovererMsf extends MsMsFile {
 	}
 	
 	@Override
-	public MsMsData load(InputStream input, boolean loadFragments) throws Exception {		
-		throw new UnsupportedOperationException("Reading MSF from a stream is not supported");
-	}
-	
-	@Override
-	public boolean checkSignature(InputStream input) throws Exception {
+	protected boolean checkSignatureStream(InputStream input) throws Exception {
 		byte[] sig = new byte[SIG.length()];
 		input.read(sig);
 		String sigStr = new String(sig);
@@ -107,19 +105,6 @@ public class ProteomeDiscovererMsf extends MsMsFile {
 			"SELECT ProteinID FROM PeptidesProteins%s WHERE PeptideID=%d;", decoy?"_decoy":"", peptide));
 		while( relations.next() )
 			result.add(relations.getInt(1));
-		return result;
-	}
-
-	private Map<Integer, Ptm> loadPtmTypes(Connection con) throws SQLException {
-		Map<Integer, Ptm> result = new HashMap<>();
-		Statement statement = con.createStatement();
-		ResultSet ptms = statement.executeQuery("SELECT * FROM AminoAcidModifications;");
-		while( ptms.next() ) {
-			Ptm ptm = new Ptm();
-			ptm.setMassDelta(ptms.getDouble("DeltaMass"));
-			ptm.setName(ptms.getString("ModificationName"));
-			result.put(ptms.getInt("AminoAcidModificationID"), ptm);
-		}
 		return result;
 	}
 
@@ -162,9 +147,7 @@ public class ProteomeDiscovererMsf extends MsMsFile {
 		IOUtils.copy(is, os);
 		is.close();
 		os.close();
-		JAXBContext jaxbContext = JAXBContext.newInstance(MassSpectrum.class);
-		Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();		
-		MassSpectrum msf = (MassSpectrum)unmarshaller.unmarshal(new StringReader(os.toString("UTF-8")));
+		MassSpectrum msf = (MassSpectrum)peakReader.unmarshal(new StringReader(os.toString("UTF-8")));
 		for( MassSpectrum.PeakCentroids.Peak centroid : msf.getPeakCentroids().getPeak() ) {
 			Peak peak = new Peak();
 			peak.setCharge(centroid.getZ());
@@ -174,28 +157,35 @@ public class ProteomeDiscovererMsf extends MsMsFile {
 		}
 	}
 
-	private Map<Integer,Peptide> loadPeptides(Connection con, Map<Integer, Ptm> ptmTypes, Map<Integer,Spectrum> spectra) throws SQLException {
-		Map<Integer,Peptide> target = loadPeptides(con,false,ptmTypes,spectra); 
-		/*Map<Integer,Peptide> decoy = loadPeptides(con,true,ptmTypes,spectra); 
+	private Map<Integer,Peptide> loadPeptides(Connection con, Map<Integer,List<Ptm>> ptms, Map<Integer,Spectrum> spectra) throws SQLException {
+		Map<Integer,Peptide> target = loadPeptides(con,false,ptms,spectra); 
+		/*Map<Integer,Peptide> decoy = loadPeptides(con,true,ptms,spectra); 
 		target.putAll(decoy);*/
 		return target;
 	}
 
-	private Map<Integer, Peptide> loadPeptides(Connection con, boolean decoy, Map<Integer, Ptm> ptmTypes, Map<Integer,Spectrum> spectra) throws SQLException {
+	private Map<Integer, Peptide> loadPeptides(Connection con, boolean decoy, Map<Integer,List<Ptm>> ptms, Map<Integer,Spectrum> spectra) throws SQLException {
 		Map<Integer,Peptide> result = new HashMap<>();
 		Map<String,Peptide> mapPeptides = new HashMap<>();
 		Statement statement = con.createStatement();
 		ResultSet scores = statement.executeQuery("SELECT ScoreID FROM ProcessingNodeScores WHERE ScoreName=\"XCorr\";");
 		scores.next();
 		int xcorr = scores.getInt(1);
+		
 		statement = con.createStatement();
-		ResultSet entries = statement.executeQuery(String.format("SELECT PeptideID, Sequence, %1$s.SpectrumID, SearchEngineRank, ConfidenceLevel, SpectrumHeaders.Charge AS zExp, SpectrumHeaders.Mass AS mExp, MassPeaks.Charge AS zCalc, MassPeaks.Mass AS mzCalc FROM %1$s, SpectrumHeaders, MassPeaks WHERE SpectrumHeaders.SpectrumID=%1$s.SpectrumID AND MassPeaks.MassPeakID=SpectrumHeaders.MassPeakID;", decoy?"Peptides_decoy":"Peptides"));
+		ResultSet entries = statement.executeQuery(String.format(
+			"SELECT Peptides%1$s.PeptideID AS id, Sequence, Peptides%1$s.SpectrumID, SearchEngineRank, ConfidenceLevel, SpectrumHeaders.Charge AS zExp, SpectrumHeaders.Mass AS mExp, MassPeaks.Charge AS zCalc, MassPeaks.Mass AS mzCalc, ScoreValue AS xcorr "+
+			"FROM Peptides%1$s, SpectrumHeaders, MassPeaks, PeptideScores%1$s "+
+			"WHERE SpectrumHeaders.SpectrumID=Peptides%1$s.SpectrumID AND MassPeaks.MassPeakID=SpectrumHeaders.MassPeakID AND PeptideScores%1$s.PeptideID=Peptides%1$s.PeptideID AND ScoreID=%2$d;",
+			decoy?"_decoy":"",xcorr));
 		while( entries.next() ) {
-			int id = entries.getInt("PeptideID");
+			int id = entries.getInt("id");
 			Peptide newPeptide = new Peptide();			
 			newPeptide.setSequence(entries.getString("Sequence"));
 			newPeptide.setDecoy(decoy);
-			newPeptide.getPtms().addAll(loadPtms(con,id,newPeptide.getSequence(),decoy,ptmTypes));
+			List<Ptm> list = ptms.get(id);
+			if( list != null )
+				newPeptide.getPtms().addAll(list);
 			String idStr = newPeptide.getUniqueString();
 			Peptide peptide = mapPeptides.get(idStr);
 			if( peptide == null ) {
@@ -211,35 +201,52 @@ public class ProteomeDiscovererMsf extends MsMsFile {
 			psm.setCharge(entries.getInt("zCalc"));
 			psm.setCalcMz(entries.getDouble("mzCalc"));
 			psm.setExpMz(entries.getDouble("mExp")/psm.getCharge());
-			psm.addScore(new Score(ScoreType.SEQUEST_XCORR, loadXcorr(con, xcorr, id,decoy)));
+			psm.addScore(new Score(ScoreType.SEQUEST_XCORR, entries.getDouble("xcorr")));
 			psm.addScore(new Score(ScoreType.PEPTIDE_MSF_CONFIDENCE, entries.getInt("ConfidenceLevel")));
 		}
 		return result;
 	}
-
-	private double loadXcorr(Connection con, int xcorr, int peptide, boolean decoy) throws SQLException {
+	
+	private Map<Integer,List<Ptm>> loadPtms(Connection con) throws SQLException {
+		Map<Integer, Ptm> ptmTypes = new HashMap<>();
 		Statement statement = con.createStatement();
-		ResultSet scores = statement.executeQuery(String.format(
-			"SELECT ScoreValue FROM PeptideScores%s WHERE PeptideID=%d AND ScoreID=%d;", decoy?"_decoy":"", peptide, xcorr));
-		scores.next();
-		return scores.getDouble(1);
+		ResultSet ptms = statement.executeQuery("SELECT * FROM AminoAcidModifications;");
+		while( ptms.next() ) {
+			Ptm ptm = new Ptm();
+			ptm.setMassDelta(ptms.getDouble("DeltaMass"));
+			ptm.setName(ptms.getString("ModificationName"));
+			ptmTypes.put(ptms.getInt("AminoAcidModificationID"), ptm);
+		}
+		
+		Map<Integer,List<Ptm>> map = loadPtms(con, false, ptmTypes);
+		map.putAll(loadPtms(con, true, ptmTypes));
+		return map;
 	}
 
-	private List<Ptm> loadPtms(Connection con, int peptide, String seq, boolean decoy, Map<Integer,Ptm> ptmTypes) throws SQLException {
-		List<Ptm> result = new ArrayList<>();
+	private Map<Integer,List<Ptm>> loadPtms(Connection con, boolean decoy, Map<Integer,Ptm> ptmTypes) throws SQLException {
+		Map<Integer,List<Ptm>> map = new HashMap<>();		
 		Statement statement = con.createStatement();
 		ResultSet ptms = statement.executeQuery(String.format(
-			"SELECT * FROM PeptidesAminoAcidModifications%s WHERE PeptideID=%d;", decoy?"_decoy":"", peptide));
+			"SELECT PeptidesAminoAcidModifications%1$s.PeptideID AS id, AminoAcidModificationID, Position, Sequence "+
+			"FROM PeptidesAminoAcidModifications%1$s, Peptides%1$s "+
+			"WHERE Peptides%1$s.PeptideID=PeptidesAminoAcidModifications%1$s.PeptideID;",
+			decoy?"_decoy":""));		
 		while( ptms.next() ) {
 			Ptm ptm = new Ptm();
 			Ptm type = ptmTypes.get(ptms.getInt("AminoAcidModificationID"));
 			ptm.setMassDelta(type.getMassDelta());
 			ptm.setName(type.getName());
 			ptm.setPosition(ptms.getInt("Position")+1);
-			ptm.setResidues(seq.charAt(ptm.getPosition()-1)+"");
-			result.add(ptm);
+			ptm.setResidues(ptms.getString("Sequence").charAt(ptm.getPosition()-1)+"");
+			int id = ptms.getInt("id");
+			List<Ptm> list = map.get(id);
+			if( list == null ) {
+				list = new ArrayList<>();
+				map.put(id, list);
+			}
+			list.add(ptm);
 		}
-		return result;
+		return map;
 	}
 
 	private Map<Integer,Protein> loadProteins(Connection con) throws SQLException {
@@ -332,4 +339,5 @@ public class ProteomeDiscovererMsf extends MsMsFile {
 	}
 
 	private static final String SIG = "SQLite format";
+	private Unmarshaller peakReader;
 }
