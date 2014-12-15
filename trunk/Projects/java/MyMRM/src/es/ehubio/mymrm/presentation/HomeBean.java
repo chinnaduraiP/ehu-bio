@@ -59,8 +59,9 @@ public class HomeBean implements Serializable {
 		addPage(page);
 		
 		news = new ArrayList<>();
-		news.add(new LatestNew("Oct 02, 2014", "MyMRM v1.0 ready for HUPO 2014"));
+		news.add(new LatestNew("Dec 15, 2014", "MyMRM v1.2 with MSF support"));
 		news.add(new LatestNew("Oct 10, 2014", "MyMRM v1.1 with extended options in experiment feed page"));
+		news.add(new LatestNew("Oct 02, 2014", "MyMRM v1.0 ready for HUPO 2014"));				
 	}
 	
 	public List<PageSummary> getPages() {
@@ -87,7 +88,7 @@ public class HomeBean implements Serializable {
 	}
 	
 	public String getSignature() {
-		return "MyMRM (v1.1)";
+		return "MyMRM (v1.2)";
 	}
 	
 	public String getLastUpdated() {

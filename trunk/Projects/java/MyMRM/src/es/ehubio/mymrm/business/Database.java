@@ -483,7 +483,7 @@ public class Database {
 				es.ehubio.mymrm.data.Score dbScore = new es.ehubio.mymrm.data.Score();
 				dbScore.setScoreType(scoreType);
 				dbScore.setPeptideEvidenceBean(evidence);
-				dbScore.setValue(score.getValue());
+				dbScore.setValue(score.getValue());		
 				em.persist(dbScore);
 			}
 		}

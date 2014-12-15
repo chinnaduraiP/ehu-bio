@@ -43,6 +43,28 @@ import es.ehubio.proteomics.thermo.MassSpectrum;
 public class ProteomeDiscovererMsf extends MsMsFile {
 	private final static Logger logger = Logger.getLogger(ProteomeDiscovererMsf.class.getName());
 	
+	public enum PeptideConfidenceLevel {
+		HIGH(3,0.01),
+		MIDDLE(2,0.05),
+		LOW(1,1.0);
+		
+		private PeptideConfidenceLevel( int level, double fdr ) {
+			this.level = level;
+			this.fdr = fdr;
+		}
+		
+		public int getLevel() {
+			return level;
+		}
+
+		public double getFdr() {
+			return fdr;
+		}
+
+		private final int level;
+		private final double fdr;
+	}
+	
 	@Override
 	protected MsMsData loadPath(String path, boolean loadFragments) throws Exception {
 		Class.forName("org.sqlite.JDBC");

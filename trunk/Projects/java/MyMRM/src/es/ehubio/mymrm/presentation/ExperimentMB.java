@@ -27,6 +27,10 @@ import es.ehubio.mymrm.data.IonizationType;
 import es.ehubio.panalyzer.Configuration;
 import es.ehubio.panalyzer.Configuration.Replicate;
 import es.ehubio.proteomics.Peptide;
+import es.ehubio.proteomics.Score;
+import es.ehubio.proteomics.ScoreType;
+import es.ehubio.proteomics.io.ProteomeDiscovererMsf;
+import es.ehubio.proteomics.io.ProteomeDiscovererMsf.PeptideConfidenceLevel;
 
 @ManagedBean
 @SessionScoped
@@ -39,6 +43,7 @@ public class ExperimentMB implements Serializable {
 	private String chromatography;
 	private final Set<String> files = new HashSet<>();
 	private Peptide.Confidence peptideConfidence = Peptide.Confidence.DISCRIMINATING;
+	private ProteomeDiscovererMsf.PeptideConfidenceLevel msfConfidence = PeptideConfidenceLevel.HIGH;
 	private Configuration cfg;
 	
 	public ExperimentMB() {
@@ -90,6 +95,8 @@ public class ExperimentMB implements Serializable {
 			is.close();
 			os.close();
 			files.add(file.getFileName());
+			if( isUsingMsf() )
+				getCfg().setPsmScore(ScoreType.SEQUEST_XCORR);
 		} catch( Exception e ) {			
 		}
 	}
@@ -104,13 +111,7 @@ public class ExperimentMB implements Serializable {
 		experiment.setFragmentationTypeBean(Database.findById(FragmentationType.class, Integer.parseInt(getFragmentation())));
 		experiment.setChromatographyBean(Database.findById(Chromatography.class, Integer.parseInt(getChromatography())));
 		
-		cfg.setDescription(getEntity().getName());
-		cfg.setFilterDecoys(true);
-		Replicate replicate = new Replicate();
-		replicate.setName("single");
-		cfg.getReplicates().add(replicate);
-		for( String file : files )
-			replicate.getFractions().add(new File(getTmpDir(),file).getAbsolutePath());
+		updateConfig();
 
 		ExperimentFeed feed = new ExperimentFeed(experiment, cfg, peptideConfidence);
 		resetConfig();
@@ -121,6 +122,29 @@ public class ExperimentMB implements Serializable {
 		}
 
 		FacesContext.getCurrentInstance().getExternalContext().getSessionMap().remove("experimentMB");
+	}
+	
+	private void updateConfig() {
+		cfg.setDescription(getEntity().getName());
+		cfg.setUseFragmentIons(true);
+		cfg.setFilterDecoys(true);
+		Replicate replicate = new Replicate();
+		replicate.setName("single");
+		cfg.getReplicates().add(replicate);
+		for( String file : files )
+			replicate.getFractions().add(new File(getTmpDir(),file).getAbsolutePath());
+		if( isUsingMsf() )
+			cfg.setPeptideScoreThreshold(new Score(ScoreType.PEPTIDE_MSF_CONFIDENCE, getMsfConfidence().getLevel()));
+		else
+			cfg.setPeptideScoreThreshold(null);
+		if( cfg.getPsmFdr() != null && cfg.getPsmFdr() <= 0.0 )
+			cfg.setPsmFdr(null);
+		if( cfg.getPeptideFdr() != null && cfg.getPeptideFdr() <= 0.0 )
+			cfg.setPeptideFdr(null);
+		if( cfg.getProteinFdr() != null && cfg.getProteinFdr() <= 0.0 )
+			cfg.setProteinFdr(null);
+		if( cfg.getGroupFdr() != null && cfg.getGroupFdr() <= 0.0 )
+			cfg.setGroupFdr(null);
 	}
 	
 	public static String getTmpDir() {
@@ -143,6 +167,21 @@ public class ExperimentMB implements Serializable {
 	public void setPeptideConfidence(Peptide.Confidence peptideConfidence) {
 		this.peptideConfidence = peptideConfidence;
 	}
+	
+	public ProteomeDiscovererMsf.PeptideConfidenceLevel getMsfConfidence() {
+		return msfConfidence;
+	}
+
+	public void setMsfConfidence(ProteomeDiscovererMsf.PeptideConfidenceLevel msfConfidence) {
+		this.msfConfidence = msfConfidence;
+	}
+	
+	public boolean isUsingMsf() {
+		if( files.isEmpty() )
+			//return ScoreType.SEQUEST_XCORR.equals(cfg.getPsmScore());
+			return false;
+		return files.iterator().next().toLowerCase().contains("msf");
+	}
 
 	public Configuration getCfg() {
 		return cfg;
@@ -151,5 +190,10 @@ public class ExperimentMB implements Serializable {
 	private void resetConfig() {
 		cfg = new Configuration();
 		cfg.initializeFilter();
-	}
+		
+		cfg.setPsmFdr(null);
+		cfg.setPeptideFdr(null);
+		cfg.setProteinFdr(null);
+		cfg.setGroupFdr(null);
+	}	
 }

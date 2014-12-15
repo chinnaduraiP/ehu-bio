@@ -350,9 +350,13 @@ public class MainModel {
 		filter.setRankTreshold(config.getPsmRankThreshold()==null?0:config.getPsmRankThreshold());
 		filter.setOnlyBestPsmPerPrecursor(Boolean.TRUE.equals(config.getBestPsmPerPrecursor())?config.getPsmScore():null);
 		filter.setOnlyBestPsmPerPeptide(Boolean.TRUE.equals(config.getBestPsmPerPeptide())?config.getPsmScore():null);
+		filter.setPsmScoreThreshold(config.getPsmScoreThreshold());
 		filter.setMinPeptideLength(config.getMinPeptideLength()==null?0:config.getMinPeptideLength());
 		filter.setUniquePeptides(Boolean.TRUE.equals(config.getUniquePeptides()));
 		filter.setFilterDecoyPeptides(false);
+		filter.setPeptideScoreThreshold(config.getPeptideScoreThreshold());
+		filter.setProteinScoreThreshold(config.getProteinScoreThreshold());
+		filter.setGroupScoreThreshold(config.getGroupScoreThreshold());
 		filterAndGroup(filter,"Input filter");
 		//validator.logFdrs();
 	}
