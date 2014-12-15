@@ -31,14 +31,13 @@ public class ScoreIntegrator {
 		}
 	}
 	
-	/**
-	 * Multiplies the p-values of the peptides.
-	 */
-	public static void updateProteinScoresBasic( Collection<Protein> proteins ) {
+	public static void updateProteinScoresBasic( Collection<Protein> proteins ) {		
 		for( Protein protein : proteins ) {
-			basicIntegrator(
-				protein.getPeptides(), ScoreType.PEPTIDE_P_VALUE, ScoreType.PEPTIDE_SPHPP_SCORE,
-				protein, ScoreType.PROTEIN_P_VALUE, ScoreType.PROTEIN_SPHPP_SCORE);
+			double s = 0.0;
+			for( Peptide peptide : protein.getPeptides() )
+				s += peptide.getScoreByType(ScoreType.PEPTIDE_SPHPP_SCORE).getValue()/peptide.getProteins().size();
+			protein.setScore(new Score(ScoreType.PROTEIN_SPHPP_SCORE, s));
+			protein.setScore(new Score(ScoreType.PROTEIN_P_VALUE, Math.exp(-s)));
 		}
 	}
 	
@@ -49,14 +48,13 @@ public class ScoreIntegrator {
 	 * @param decoyPrefix the decoy accession should be this prefix followed by the target accession.
 	 */
 	public static void updateProteinScoresAprox( Collection<Protein> proteins, String decoyPrefix ) {
+		updateProteinScoresBasic(proteins);
+		
 		Map<String, Protein> mapDecoys = new HashMap<>();
 		for( Protein protein : proteins )
 			if( Boolean.TRUE.equals(protein.getDecoy()) )
 				mapDecoys.put(protein.getAccession(), protein);
 		for( Protein protein : proteins ) {
-			basicIntegrator(
-				protein.getPeptides(), ScoreType.PEPTIDE_P_VALUE, ScoreType.PEPTIDE_SPHPP_SCORE,
-				protein, ScoreType.PROTEIN_P_VALUE, ScoreType.PROTEIN_SPHPP_SCORE);
 			int N = 1;
 			if( Boolean.TRUE.equals(protein.getDecoy()) )
 				N = protein.getPeptides().size();
@@ -73,18 +71,11 @@ public class ScoreIntegrator {
 		}
 	}	
 	
-	/**
-	 * Multiplies the p-values of the peptides specific to the group (as returned by 
-	 * {@link ProteinGroup#getOwnPeptides()}).
-	 */	
 	public static void updateGroupScoresBasic( Collection<ProteinGroup> groups ) {
 		for( ProteinGroup group : groups ) {
-			if( group.getConfidence() == Protein.Confidence.NON_CONCLUSIVE )
-				continue;
 			basicIntegrator(
-				group.getOwnPeptides(), ScoreType.PEPTIDE_P_VALUE, ScoreType.PEPTIDE_SPHPP_SCORE,
-				group, ScoreType.GROUP_P_VALUE, ScoreType.GROUP_SPHPP_SCORE);			
-			//group.setScore(new Score(ScoreType.GROUP_P_VALUE, group.getBestOwnPeptide(ScoreType.PEPTIDE_P_VALUE).getScoreByType(ScoreType.PEPTIDE_P_VALUE).getValue()));
+				group.getProteins(), ScoreType.PROTEIN_P_VALUE, ScoreType.PROTEIN_SPHPP_SCORE,
+				group, ScoreType.GROUP_P_VALUE, ScoreType.GROUP_SPHPP_SCORE);
 		}
 	}
 	
