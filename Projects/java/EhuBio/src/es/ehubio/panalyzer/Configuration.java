@@ -11,16 +11,17 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
+import es.ehubio.proteomics.Score;
 import es.ehubio.proteomics.ScoreType;
 
 @XmlType(propOrder={
-	"description",
-	"psmRankThreshold","bestPsmPerPrecursor","bestPsmPerPeptide", "psmFdr","psmScore",
-	"minPeptideLength","uniquePeptides","peptideFdr","minPeptideReplicates",
-	"proteinFdr","minProteinReplicates","groupFdr",
+	"description", "psmScore",
+	"psmRankThreshold","bestPsmPerPrecursor","bestPsmPerPeptide", "psmFdr", "psmScoreThreshold",
+	"minPeptideLength","uniquePeptides","peptideFdr","peptideScoreThreshold","minPeptideReplicates",
+	"proteinFdr","proteinScoreThreshold","minProteinReplicates","groupFdr","groupScoreThreshold",
 	"decoyRegex","replicates","useFragmentIons","filterDecoys","output"})
 @XmlRootElement
-public class Configuration implements Serializable {	
+public class Configuration implements Serializable {		
 	private static final long serialVersionUID = 1L;
 	
 	public void initializeFilter() {
@@ -190,6 +191,38 @@ public class Configuration implements Serializable {
 	public void setUseFragmentIons(Boolean useFragmentIons) {
 		this.useFragmentIons = useFragmentIons;
 	}
+	
+	public Score getPsmScoreThreshold() {
+		return psmScoreThreshold;
+	}
+
+	public void setPsmScoreThreshold(Score psmScoreThreshold) {
+		this.psmScoreThreshold = psmScoreThreshold;
+	}
+
+	public Score getPeptideScoreThreshold() {
+		return peptideScoreThreshold;
+	}
+
+	public void setPeptideScoreThreshold(Score peptideScoreThreshold) {
+		this.peptideScoreThreshold = peptideScoreThreshold;
+	}
+
+	public Score getProteinScoreThreshold() {
+		return proteinScoreThreshold;
+	}
+
+	public void setProteinScoreThreshold(Score proteinScoreThreshold) {
+		this.proteinScoreThreshold = proteinScoreThreshold;
+	}
+
+	public Score getGroupScoreThreshold() {
+		return groupScoreThreshold;
+	}
+
+	public void setGroupScoreThreshold(Score groupScoreThreshold) {
+		this.groupScoreThreshold = groupScoreThreshold;
+	}
 
 	public static class Replicate {
 		private String name;
@@ -220,17 +253,26 @@ public class Configuration implements Serializable {
 	private String description;
 	private ScoreType psmScore;
 	private String decoyRegex;
+	
 	private Double psmFdr;
 	private Integer psmRankThreshold;
 	private Boolean bestPsmPerPrecursor;
 	private Boolean bestPsmPerPeptide;
+	private Score psmScoreThreshold;
+	
 	private Integer minPeptideLength;
 	private Boolean uniquePeptides;
 	private Double peptideFdr;
+	private Score peptideScoreThreshold;
 	private Integer minPeptideReplicates;
-	private Double proteinFdr;
+	
+	private Double proteinFdr;	
+	private Score proteinScoreThreshold;
 	private Integer minProteinReplicates;
-	private Double groupFdr;	
+	
+	private Double groupFdr;
+	private Score groupScoreThreshold;
+	
 	private List<Replicate> replicates;
 	private Boolean useFragmentIons;
 	private String output;

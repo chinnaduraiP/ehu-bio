@@ -29,6 +29,7 @@ import es.ehubio.mymrm.data.IonizationType;
 import es.ehubio.mymrm.data.Peptide;
 import es.ehubio.mymrm.data.Score;
 import es.ehubio.proteomics.ScoreType;
+import es.ehubio.proteomics.io.ProteomeDiscovererMsf;
 
 @ManagedBean
 @ApplicationScoped
@@ -235,7 +236,11 @@ public class DatabaseMB {
 	
 	public es.ehubio.proteomics.Peptide.Confidence[] getPeptideConfidences() {
 		return es.ehubio.proteomics.Peptide.Confidence.values();
-	}	
+	}
+	
+	public ProteomeDiscovererMsf.PeptideConfidenceLevel[] getMsfConfidences() {
+		return ProteomeDiscovererMsf.PeptideConfidenceLevel.values();
+	}
 	
 	private List<ScoreType> scoreTypes;
 }

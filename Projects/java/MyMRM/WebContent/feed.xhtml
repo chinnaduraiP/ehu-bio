@@ -94,7 +94,8 @@
 						<h:inputText value="#{experimentMB.cfg.decoyRegex}"/>
 						<h:outputText value="PSM score:" />
 						<p:selectOneMenu value="#{experimentMB.cfg.psmScore}">
-							<f:selectItems value="#{databaseMB.scoreTypes}" var="score" itemLabel="#{score}" itemValue="#{score}"/>					
+							<f:selectItems value="#{databaseMB.scoreTypes}" var="score" itemLabel="#{score}" itemValue="#{score}"/>
+							<p:ajax event="change" update="@form" />
 						</p:selectOneMenu>
 						<h:outputText value="PSM rank threshold:" />
 						<h:inputText value="#{experimentMB.cfg.psmRankThreshold}" />
@@ -106,10 +107,14 @@
 						<h:inputText value="#{experimentMB.cfg.minPeptideLength}" />
 						<h:outputText value="Peptide-level FDR" />
 						<h:inputText value="#{experimentMB.cfg.peptideFdr}" />
+						<h:outputText value="MSF peptide confidence:" rendered="#{experimentMB.usingMsf}"/>
+						<p:selectOneMenu value="#{experimentMB.msfConfidence}" rendered="#{experimentMB.usingMsf}">
+							<f:selectItems value="#{databaseMB.msfConfidences}" var="conf" itemLabel="#{conf}" itemValue="#{conf}"/>					
+						</p:selectOneMenu>
 						<h:outputText value="Protein-level FDR" />
 						<h:inputText value="#{experimentMB.cfg.proteinFdr}" />
 						<h:outputText value="Protein group-level FDR" />
-						<h:inputText value="#{experimentMB.cfg.groupFdr}" />
+						<h:inputText value="#{experimentMB.cfg.groupFdr}" />						
 						<h:outputText value="Minimum peptide confidence:" />
 						<p:selectOneMenu value="#{experimentMB.peptideConfidence}">
 							<f:selectItems value="#{databaseMB.peptideConfidences}" var="conf" itemLabel="#{conf}" itemValue="#{conf}"/>					
