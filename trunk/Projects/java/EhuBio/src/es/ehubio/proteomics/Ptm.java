@@ -1,6 +1,7 @@
 package es.ehubio.proteomics;
 
 import es.ehubio.model.ProteinModification;
+import es.ehubio.model.ProteinModificationType;
 
 /**
  * Post-Translational Mofidication in a MS/MS proteomics experiment.
@@ -17,6 +18,15 @@ public class Ptm extends ProteinModification {
 
 	public void setMassDelta(Double massDelta) {
 		this.massDelta = massDelta;
+	}
+	
+	public void guessMissing( String seq ) {
+		if( getType() == null && getName() != null )
+			setType(ProteinModificationType.guessFromName(getName()));
+		if( getMassDelta() == null && getType() != null )
+			setMassDelta(getType().getMass());
+		if( getResidues() == null && seq != null && getFrom() != null && getTo() != null )
+			setResidues(seq.substring(getFrom()-1, getTo()));
 	}
 	
 	@Override

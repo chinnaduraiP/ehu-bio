@@ -3,6 +3,7 @@ package es.ehubio.panalyzer;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -14,17 +15,17 @@ import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
 import es.ehubio.panalyzer.html.HtmlReport;
+import es.ehubio.proteomics.DecoyBase;
 import es.ehubio.proteomics.MsExperiment;
 import es.ehubio.proteomics.MsExperiment.Replicate;
 import es.ehubio.proteomics.MsMsData;
-import es.ehubio.proteomics.Psm;
 import es.ehubio.proteomics.Score;
 import es.ehubio.proteomics.ScoreType;
 import es.ehubio.proteomics.io.EhubioCsv;
 import es.ehubio.proteomics.io.MsMsFile;
 import es.ehubio.proteomics.io.Mzid;
-import es.ehubio.proteomics.pipeline.FdrCalculator.FdrResult;
 import es.ehubio.proteomics.pipeline.FdrCalculator;
+import es.ehubio.proteomics.pipeline.FdrCalculator.FdrResult;
 import es.ehubio.proteomics.pipeline.Filter;
 import es.ehubio.proteomics.pipeline.PAnalyzer;
 import es.ehubio.proteomics.pipeline.ScoreIntegrator;
@@ -46,7 +47,7 @@ public class MainModel {
 	private MsMsFile file;
 	private Configuration config;
 	private State state;
-	private Set<ScoreType> psmScoreTypes;
+	private Set<ScoreType> psmScoreTypes, peptideScoreTypes, proteinScoreTypes;
 	private File reportFile = null;
 	private final FdrCalculator fdrCalc = new FdrCalculator(false);
 	
@@ -138,19 +139,35 @@ public class MainModel {
 		}
 	}
 	
-	public Set<ScoreType> getPsmScoreTypes() {
+	private Set<ScoreType> getScoreTypes(Collection<? extends DecoyBase> items) {
 		assertState(state.ordinal()>=State.LOADED.ordinal());
-		if( psmScoreTypes == null ) {
-			psmScoreTypes = new HashSet<>();
-			for( Psm psm : experiment.getReplicates().get(0).getData().getPsms() ) {
-				if( psm.getScores().isEmpty() )
-					continue;
-				for( Score score : psm.getScores() )
-					psmScoreTypes.add(score.getType());
-				break;
-			}
+		Set<ScoreType> scoreTypes = new HashSet<>();
+		for( DecoyBase item : items ) {
+			if( item.getScores().isEmpty() )
+				continue;
+			for( Score score : item.getScores() )
+				scoreTypes.add(score.getType());
+			break;
 		}
+		return scoreTypes;
+	}
+	
+	public Set<ScoreType> getPsmScoreTypes() {
+		if( psmScoreTypes == null )
+			psmScoreTypes = getScoreTypes(experiment.getReplicates().get(0).getData().getPsms());
 		return psmScoreTypes;
+	}
+	
+	public Set<ScoreType> getPeptideScoreTypes() {
+		if( peptideScoreTypes == null )
+			peptideScoreTypes = getScoreTypes(experiment.getReplicates().get(0).getData().getPeptides());
+		return peptideScoreTypes;
+	}
+	
+	public Set<ScoreType> getProteinScoreTypes() {
+		if( proteinScoreTypes == null )
+			proteinScoreTypes = getScoreTypes(experiment.getReplicates().get(0).getData().getProteins());
+		return proteinScoreTypes;
 	}
 	
 	public void filterData() throws Exception {

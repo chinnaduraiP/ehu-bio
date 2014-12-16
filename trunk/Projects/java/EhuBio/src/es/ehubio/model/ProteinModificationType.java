@@ -25,6 +25,13 @@ public enum ProteinModificationType {
 	public static ProteinModificationType getByName( String name ) {
 		return map.get(name);
 	}
+	
+	public static ProteinModificationType guessFromName( String name ) {
+		for( ProteinModificationType item : values() )
+			if( name.toUpperCase().contains(item.getName().toUpperCase()) )
+				return item;
+		return null;
+	}
 
 	private final String name;
 	private final double mass;

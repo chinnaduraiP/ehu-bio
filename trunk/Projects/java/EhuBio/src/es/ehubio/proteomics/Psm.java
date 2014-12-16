@@ -14,7 +14,9 @@ public class Psm extends DecoyBase {
 	private final int id;
 	private int charge;
 	private Double calcMz;
-	private double expMz;
+	private Double expMz;
+	private Double massError;
+	private Double massPpm;
 	private Integer rank;
 	private Spectrum spectrum;
 	private Peptide peptide;
@@ -37,25 +39,61 @@ public class Psm extends DecoyBase {
 	}
 	
 	public Double getCalcMz() {
-		return calcMz;
+		if( calcMz != null )
+			return calcMz;
+		if( expMz == null )
+			return null;
+		Double error = getMassError();
+		if( error == null )
+			return null;
+		return expMz-error;
 	}
 
-	public void setCalcMz(Double calcMz) {
+	public void setCalcMz(double calcMz) {
 		this.calcMz = calcMz;
 	}
 
-	public double getExpMz() {
-		return expMz;
+	public Double getExpMz() {
+		if( expMz != null )
+			return expMz;
+		if( calcMz == null )
+			return null;
+		Double error = getMassError();
+		if( error == null )
+			return null;
+		return calcMz+error;
 	}
 
 	public void setExpMz(double expMz) {
 		this.expMz = expMz;
 	}
 	
-	public Double getPpm() {
-		if( getCalcMz() == null )
-			return null;
-		return Math.abs((getExpMz()-getCalcMz())/getCalcMz()*1000000);
+	public Double getMassError() {
+		if( massError != null )
+			return massError;
+		if( massPpm != null && calcMz != null )
+			return massPpm*calcMz/1000000;
+		if( calcMz != null || expMz != null )
+			return expMz-calcMz;
+		return null;
+	}
+
+	public void setMassError(double massError) {
+		this.massError = massError;
+	}
+
+	public Double getMassPpm() {
+		if( massPpm != null )
+			return massPpm;
+		if( massError != null && calcMz != null )
+			return massError/calcMz*1000000;
+		if( calcMz != null || expMz != null )
+			return (expMz-calcMz)/calcMz*1000000;
+		return null;
+	}
+
+	public void setMassPpm(double massPpm) {
+		this.massPpm = massPpm;
 	}
 	
 	public Integer getRank() {
@@ -125,5 +163,5 @@ public class Psm extends DecoyBase {
 
 	public void setIons(List<FragmentIon> ions) {
 		this.ions = ions;
-	}
+	}	
 }

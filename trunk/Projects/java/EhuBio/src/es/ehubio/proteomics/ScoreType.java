@@ -14,6 +14,8 @@ public enum ScoreType {
 	PSM_Q_VALUE("MS:1002354","PSM-level q-value","Estimation of the q-value for peptide spectrum matches",false),
 	PSM_FDR_SCORE("MS:1002355","PSM-level FDRScore","FDRScore for peptide spectrum matches",false),
 	PSM_SPHPP_SCORE(null,"PSM-level spHPP score","Cologarithm of PSM-level p-value",true),
+	PSM_PLGS_SCORE(null,"PSM-level PLGS score","PSM-level PLGS score",true),
+	PSM_PLGS_COLOR(null,"PSM-level PLGS color number","PSM-level PLGS color number: red(1), yellow(2), green(3)",true),
 	OTHER_LARGER(null,"other:larger","Other, larger values are better",true),
 	OTHER_SMALLER(null,"other:smaller","Other, smaller values are better",false),
 	PROPHET_PROBABILITY(null,"PeptideProphet:probability","PeptideProphet probability score",true),
@@ -22,12 +24,13 @@ public enum ScoreType {
 	PEPTIDE_Q_VALUE(null,"peptide-level q-value","Estimation of the q-value for peptides",false),
 	PEPTIDE_FDR_SCORE("MS:1002360","distinct peptide-level FDRScore","FDRScore for distinct peptides once redundant identifications of the same peptide have been removed (id est multiple PSMs have been collapsed to one entry)",false),
 	PEPTIDE_SPHPP_SCORE(null,"peptide-level spHPP score","Sum of PSM-level spHPP scores",true),
-	PEPTIDE_MSF_CONFIDENCE(null,"msf peptide confidence level","Peptide confidence level in MSF",true),
+	PEPTIDE_MSF_CONFIDENCE(null,"msf peptide confidence level number","Peptide confidence level in MSF: low(1), middle(2), high(3)",true),
 	PROTEIN_P_VALUE("MS:1001871","protein-level p-value","Estimation of the p-value for proteins",false),
 	PROTEIN_LOCAL_FDR("MS:1002364","protein-level local FDR","Estimation of the local false discovery rate of proteins",false),
 	PROTEIN_Q_VALUE("MS:1001869","protein-level q-value","Estimation of the q-value for proteins",false),
 	PROTEIN_FDR_SCORE(null,"protein-level FDRScore","FDRScore for proteins",false),
 	PROTEIN_SPHPP_SCORE(null,"protein-level spHPP score","Normalized sum of peptide-level spHPP scores",true),
+	PROTEIN_PLGS_SCORE(null,"protein-level PLGS score","Protein-level PLGS score",true),
 	GROUP_P_VALUE("MS:1002371","protein group-level p-value","Estimation of the p-value for protein groups",false),
 	GROUP_LOCAL_FDR("MS:1002370","protein group-level local FDR","Estimation of the local false discovery rate of protein groups", false),
 	GROUP_Q_VALUE("MS:1002373","protein group-level q-value","Estimation of the q-value for protein groups",false),
@@ -91,6 +94,7 @@ public enum ScoreType {
 	
 	@Override
 	public String toString() {
-		return getName();
+		//return getName();
+		return getDescription();
 	}
 }
