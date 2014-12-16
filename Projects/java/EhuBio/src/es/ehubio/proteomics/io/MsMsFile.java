@@ -37,6 +37,7 @@ public abstract class MsMsFile {
 			list.add(new Mzid());
 			list.add(new ProteomeDiscovererMsf());
 			list.add(new ProteomeDiscovererTxt());
+			list.add(new Plgs());
 		} else {
 			for( String name : dir.list() ) {
 				if( !name.endsWith(".class") )

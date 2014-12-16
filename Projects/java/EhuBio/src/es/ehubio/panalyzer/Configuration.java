@@ -28,7 +28,7 @@ public class Configuration implements Serializable {
 		setPsmRankThreshold(1);		
 		setBestPsmPerPrecursor(false);
 		setBestPsmPerPeptide(true);
-		setPsmFdr(0.01);
+		setPsmFdr(null);
 		setPsmScore(null);
 		setMinPeptideLength(7);
 		setUniquePeptides(null);

@@ -183,7 +183,7 @@ public class Filter {
 				unlinkPsm(psm);
 				continue;
 			}
-			if( getPpmThreshold() != null && (psm.getPpm() == null || psm.getPpm() > getPpmThreshold()) ) {
+			if( getPpmThreshold() != null && (psm.getMassPpm() == null || psm.getMassPpm() > getPpmThreshold()) ) {
 				unlinkPsm(psm);
 				continue;
 			}
