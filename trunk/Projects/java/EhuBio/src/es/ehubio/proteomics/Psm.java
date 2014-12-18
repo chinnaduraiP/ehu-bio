@@ -73,7 +73,7 @@ public class Psm extends DecoyBase {
 			return massError;
 		if( massPpm != null && calcMz != null )
 			return massPpm*calcMz/1000000;
-		if( calcMz != null || expMz != null )
+		if( calcMz != null && expMz != null )
 			return expMz-calcMz;
 		return null;
 	}
@@ -87,7 +87,7 @@ public class Psm extends DecoyBase {
 			return massPpm;
 		if( massError != null && calcMz != null )
 			return massError/calcMz*1000000;
-		if( calcMz != null || expMz != null )
+		if( calcMz != null && expMz != null )
 			return (expMz-calcMz)/calcMz*1000000;
 		return null;
 	}

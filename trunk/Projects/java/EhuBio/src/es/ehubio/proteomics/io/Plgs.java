@@ -52,8 +52,10 @@ public final class Plgs extends MsMsFile {
 			loadThresholds(txtFile);
 		
 		Reader rd = Streams.getTextReader(path);
-		MsMsData data = loadData(rd, loadFragments);
+		MsMsData data = loadData(rd, loadFragments);		
 		rd.close();
+		data.mergeDuplicatedPeptides();
+		data.updateRanks(ScoreType.PSM_PLGS_SCORE);
 		
 		return data;
 	}
@@ -92,9 +94,10 @@ public final class Plgs extends MsMsFile {
 			protein.addPeptide(peptide);
 			for( MATCHMODIFIER mod : p.getMATCHMODIFIER() ) {
 				Ptm ptm = new Ptm();
-				ptm.setName(mod.getNAME());
+				int i = mod.getNAME().indexOf('+');
+				ptm.setName(i<0?mod.getNAME():mod.getNAME().substring(0, i));
 				ptm.setPosition(mod.getPOS().intValue());
-				ptm.guessMissing(protein.getSequence());
+				ptm.guessMissing(peptide.getSequence());
 				peptide.addPtm(ptm);
 			}
 		}

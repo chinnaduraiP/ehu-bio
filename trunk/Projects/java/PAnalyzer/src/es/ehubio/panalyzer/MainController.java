@@ -60,7 +60,9 @@ import org.controlsfx.dialog.Dialogs;
 import es.ehubio.panalyzer.Configuration.Replicate;
 import es.ehubio.panalyzer.MainModel.CountReport;
 import es.ehubio.panalyzer.MainModel.FdrReport;
+import es.ehubio.proteomics.Score;
 import es.ehubio.proteomics.ScoreType;
+import es.ehubio.proteomics.io.Plgs;
 
 @SuppressWarnings("deprecation")
 public class MainController implements Initializable {
@@ -84,7 +86,14 @@ public class MainController implements Initializable {
 	@FXML private Tab tabResults;
 	@FXML private Tab tabBrowser;
 	@FXML private TextField textDecoy;
-	@FXML private ChoiceBox<ScoreType> choiceScoreType;
+	@FXML private ChoiceBox<ScoreType> choicePsmFdrScoreType;
+	@FXML private ChoiceBox<ScoreType> choicePsmThScoreType;
+	@FXML private ChoiceBox<ScoreType> choicePeptideFdrScoreType;
+	@FXML private ChoiceBox<ScoreType> choicePeptideThScoreType;
+	@FXML private ChoiceBox<ScoreType> choiceProteinFdrScoreType;
+	@FXML private ChoiceBox<ScoreType> choiceProteinThScoreType;
+	@FXML private ChoiceBox<ScoreType> choiceGroupFdrScoreType;
+	@FXML private ChoiceBox<ScoreType> choiceGroupsThScoreType;
 	@FXML private Label labelRank;
 	@FXML private Label labelPsmFdr;
 	@FXML private Label labelPeptideLength;
@@ -93,17 +102,20 @@ public class MainController implements Initializable {
 	@FXML private Label labelProteinFdr;
 	@FXML private Label labelProteinReplicates;
 	@FXML private Label labelGroupFdr;
-	@FXML private TextField textRank;	
+	@FXML private ChoiceBox<Integer> choiceRank;	
 	@FXML private RadioButton radioPsmNone;
 	@FXML private RadioButton radioPsmBest;
 	@FXML private RadioButton radioPsmFeature;
 	@FXML private TextField textPsmFdr;
-	@FXML private TextField textPeptideLength;
+	@FXML private TextField textPsmTh;
+	@FXML private ChoiceBox<Integer> choicePeptideLength;
 	@FXML private CheckBox checkUnique;
 	@FXML private TextField textPeptideFdr;
-	@FXML private TextField textPeptideReplicates;
+	@FXML private TextField textPeptideTh;
+	@FXML private ChoiceBox<Integer> choicePeptideReplicates;
 	@FXML private TextField textProteinFdr;
-	@FXML private TextField textProteinReplicates;
+	@FXML private TextField textProteinTh;
+	@FXML private ChoiceBox<Integer> choiceProteinReplicates;
 	@FXML private TextField textGroupFdr;
 	@FXML private TextArea textResults;
 	@FXML private TableView<CountReport> tableCounts;
@@ -200,15 +212,8 @@ public class MainController implements Initializable {
 		Runnable gui = new Runnable() {			
 			@Override
 			public void run() {
-				choiceScoreType.getItems().clear();
-				choiceScoreType.getItems().addAll(model.getPsmScoreTypes());		
-				if( model.getPsmScoreTypes().contains(ScoreType.XTANDEM_EVALUE) )
-					choiceScoreType.setValue(ScoreType.XTANDEM_EVALUE);
-				else if( model.getPsmScoreTypes().contains(ScoreType.MASCOT_EVALUE) )
-					choiceScoreType.setValue(ScoreType.MASCOT_EVALUE);
-				else
-					choiceScoreType.getSelectionModel().selectFirst();
-				config.setFilterDecoys(false);
+				loadScores();
+				updateConfig();
 				tabPane.getSelectionModel().select(tabFilter);
 				updateView();
 			}
@@ -217,21 +222,118 @@ public class MainController implements Initializable {
 		service.start("Loading files ...");
 	}
 	
+	private void updateConfig() {
+		if( config.getDecoyRegex() == null || config.getDecoyRegex().isEmpty() ) {
+			config.setPsmFdr(null);
+			config.setPeptideFdr(null);
+			config.setProteinFdr(null);
+			config.setGroupFdr(null);
+		}
+		config.setFilterDecoys(false);
+	}
+	
+	private void loadScores() {
+		loadPsmScores();
+		loadPeptideScores();
+		loadProteinScores();
+		loadGroupScores();
+		loadReplicateChoices();
+	}
+	
+	private void loadReplicateChoices() {
+		choicePeptideReplicates.getItems().clear();
+		choiceProteinReplicates.getItems().clear();
+		int max = config.getReplicates().size();
+		for( int i = 1; i <= max; i++ ) {
+			choicePeptideReplicates.getItems().add(i);
+			choiceProteinReplicates.getItems().add(i);
+		}
+		choicePeptideReplicates.setValue(1);
+		choiceProteinReplicates.setValue(1);
+	}
+	
+	private void loadPsmScores() {
+		choicePsmFdrScoreType.getItems().clear();
+		choicePsmFdrScoreType.getItems().addAll(model.getPsmScoreTypes());		
+		if( model.getPsmScoreTypes().contains(ScoreType.XTANDEM_EVALUE) )
+			choicePsmFdrScoreType.setValue(ScoreType.XTANDEM_EVALUE);
+		else if( model.getPsmScoreTypes().contains(ScoreType.MASCOT_EVALUE) )
+			choicePsmFdrScoreType.setValue(ScoreType.MASCOT_EVALUE);
+		else if( model.getPsmScoreTypes().contains(ScoreType.SEQUEST_XCORR) )
+			choicePsmFdrScoreType.setValue(ScoreType.SEQUEST_XCORR);
+		else if( model.getPsmScoreTypes().contains(ScoreType.PSM_PLGS_SCORE) )
+			choicePsmFdrScoreType.setValue(ScoreType.PSM_PLGS_SCORE);
+		else
+			choicePsmFdrScoreType.getSelectionModel().selectFirst();
+		
+		choicePsmThScoreType.getItems().clear();
+		choicePsmThScoreType.getItems().addAll(model.getPsmScoreTypes());		
+		if( model.getPsmScoreTypes().contains(ScoreType.PEPTIDE_MSF_CONFIDENCE) ) {
+			choicePsmThScoreType.setValue(ScoreType.PEPTIDE_MSF_CONFIDENCE);
+			if( !isUsingDecoys() )
+				textPsmTh.setText("3");
+		}
+		else if( model.getPsmScoreTypes().contains(ScoreType.PSM_PLGS_COLOR) ) {
+			choicePsmThScoreType.setValue(ScoreType.PSM_PLGS_COLOR);
+			if( !isUsingDecoys() )
+				textPsmTh.setText("3");
+		} else
+			choicePsmThScoreType.getSelectionModel().selectFirst();
+	}
+	
+	private void loadPeptideScores() {
+		choicePeptideFdrScoreType.getItems().clear();		
+		choicePeptideFdrScoreType.getItems().add(ScoreType.PEPTIDE_SPHPP_SCORE);
+		choicePeptideFdrScoreType.getSelectionModel().selectFirst();
+		
+		choicePeptideThScoreType.getItems().clear();
+		choicePeptideThScoreType.getItems().addAll(model.getPeptideScoreTypes());
+		choicePeptideThScoreType.getSelectionModel().selectFirst();		
+	}
+	
+	private void loadProteinScores() {
+		choiceProteinFdrScoreType.getItems().clear();
+		choiceProteinFdrScoreType.getItems().add(ScoreType.PROTEIN_SPHPP_SCORE);
+		choiceProteinFdrScoreType.getSelectionModel().selectFirst();
+		
+		choiceProteinThScoreType.getItems().clear();
+		choiceProteinThScoreType.getItems().addAll(model.getProteinScoreTypes());
+		choiceProteinThScoreType.getSelectionModel().selectFirst();	
+	}
+	
+	private void loadGroupScores() {
+		choiceGroupFdrScoreType.getItems().clear();
+		choiceGroupFdrScoreType.getItems().add(ScoreType.GROUP_SPHPP_SCORE);
+		choiceGroupFdrScoreType.getSelectionModel().selectFirst();	
+	}
+	
 	@FXML private void handleApplyFilter( ActionEvent event ) {
 		logSeparator(true,"Filtering");
 		try {
 			config.setDescription(treeExperiment.getRoot().getValue());
-			config.setPsmScore(choiceScoreType.getValue());
-			config.setPsmRankThreshold(tryInteger(textRank, labelRank));
+			config.setPsmScore(choicePsmFdrScoreType.getValue());
+			config.setPsmRankThreshold(integerFrom(choiceRank.getValue()));
 			config.setBestPsmPerPrecursor(radioPsmFeature.isSelected());
 			config.setBestPsmPerPeptide(radioPsmBest.isSelected());
+			Score score = null;
+			if( !textPsmTh.getText().isEmpty() )
+				score = new Score(choicePsmThScoreType.getValue(), Double.parseDouble(textPsmTh.getText()));
+			config.setPsmScoreThreshold(score);
 			config.setPsmFdr(tryDouble(textPsmFdr, labelPsmFdr));
-			config.setMinPeptideLength(tryInteger(textPeptideLength, labelPeptideLength));
+			config.setMinPeptideLength(integerFrom(choicePeptideLength.getValue()));
 			config.setUniquePeptides(checkUnique.isSelected()?true:null);
+			score = null;
+			if( !textPeptideTh.getText().isEmpty() )
+				score = new Score(choicePeptideThScoreType.getValue(), Double.parseDouble(textPeptideTh.getText()));
+			config.setPeptideScoreThreshold(score);
 			config.setPeptideFdr(tryDouble(textPeptideFdr, labelPeptideFdr));
-			config.setMinPeptideReplicates(tryInteger(textPeptideReplicates, labelPeptideReplicates));
+			config.setMinPeptideReplicates(integerRepFrom(choicePeptideReplicates.getValue()));
+			score = null;
+			if( !textProteinTh.getText().isEmpty() )
+				score = new Score(choiceProteinThScoreType.getValue(), Double.parseDouble(textProteinTh.getText()));
+			config.setProteinScoreThreshold(score);
 			config.setProteinFdr(tryDouble(textProteinFdr, labelProteinFdr));
-			config.setMinProteinReplicates(tryInteger(textProteinReplicates, labelProteinReplicates));
+			config.setMinProteinReplicates(integerRepFrom(choiceProteinReplicates.getValue()));
 			config.setGroupFdr(tryDouble(textGroupFdr, labelGroupFdr));
 			Callable<Void> thread = new Callable<Void>() {
 				@Override
@@ -257,7 +359,7 @@ public class MainController implements Initializable {
 	}
 	
 	@FXML private void handleReset( ActionEvent event ) {
-		config.initializeFilter();
+		config.initializeFilter();		
 		//model.setConfig(config);
 		updateView();
 	}
@@ -267,6 +369,7 @@ public class MainController implements Initializable {
 		tableFdr.setItems(FXCollections.observableArrayList(model.getFdrReport()));
 	}
 
+	@SuppressWarnings("unused")
 	private Integer tryInteger(TextField field, Label label) throws Exception {
 		Integer result = null;
 		String str = field.getText().trim();
@@ -323,15 +426,17 @@ public class MainController implements Initializable {
 	public void initialize(URL location, ResourceBundle resources) {
 		Handler handler = new LogHandler();
 		Logger.getLogger(MainModel.class.getName()).addHandler(handler);
+		Logger.getLogger(Plgs.class.getName()).addHandler(handler);
 		logger.addHandler(handler);
 		
 		fileChooser.setTitle("Load identification files");
 		fileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
 		fileChooser.getExtensionFilters().addAll(
-			new FileChooser.ExtensionFilter("Supported files", "*.mzid", "*.mzid.gz", "*.txt", "*.txt.gz", "*.msf"),
+			new FileChooser.ExtensionFilter("Supported files", "*.mzid", "*.mzid.gz", "*.txt", "*.txt.gz", "*.msf", "*workflow.xml", "*workflow.xml.gz"),
 			new FileChooser.ExtensionFilter("mzIdentML", "*.mzid", "*.mzid.gz"),
 			new FileChooser.ExtensionFilter("PD text export", "*.txt", "*.txt.gz"),
 			new FileChooser.ExtensionFilter("PD MSF", "*.msf"),
+			new FileChooser.ExtensionFilter("PLGS XML", "*workflow.xml", "*workflow.xml.gz"),
 			new FileChooser.ExtensionFilter("All files", "*"));
 		
 		directoryChooser.setTitle("Select destination directory");
@@ -352,7 +457,14 @@ public class MainController implements Initializable {
 		handleAddReplicate(null);
 		
 		labelSignature.setText(MainModel.SIGNATURE);
-		textDecoy.setText("decoy");
+		//textDecoy.setText("decoy");
+		
+		for( int i = 0; i < 5; i++ )
+			choiceRank.getItems().add(i);
+		choiceRank.setValue(0);
+		for( int i = 0; i < 15; i++ )
+			choicePeptideLength.getItems().add(i);
+		choiceRank.setValue(0);
 		
 		colCountType.setCellValueFactory(new PropertyValueFactory<CountReport,String>("title"));
 		colTargetCount.setCellValueFactory(new PropertyValueFactory<CountReport,Integer>("target"));
@@ -401,23 +513,62 @@ public class MainController implements Initializable {
 		String log = logString.toString();
 		textSummary.setText(log.isEmpty()?getWelcome():log);
 		labelStatus.setText(model.getStatus());
+		
 		//choiceScoreType.setValue(config.getPsmScore());
-		textRank.setText(valueOf(config.getPsmRankThreshold()));
+		choiceRank.setValue(intFrom(config.getPsmRankThreshold()));
 		if( Boolean.TRUE.equals(config.getBestPsmPerPrecursor()) )
 			radioPsmFeature.setSelected(true);
 		else if( Boolean.TRUE.equals(config.getBestPsmPerPeptide()) )
 			radioPsmBest.setSelected(true);
 		else
 			radioPsmNone.setSelected(true);
-		textPsmFdr.setText(valueOf(config.getPsmFdr()));
-		textPeptideLength.setText(valueOf(config.getMinPeptideLength()));
+		Score score;
+		if( (score=config.getPsmScoreThreshold()) != null ) {
+			choicePsmThScoreType.setValue(score.getType());
+			textPsmTh.setText(score.getValue()+"");
+		}
+		textPsmFdr.setText(stringFrom(config.getPsmFdr()));
+		choicePeptideLength.setValue(intFrom(config.getMinPeptideLength()));
 		checkUnique.setSelected(Boolean.TRUE.equals(config.getUniquePeptides()));
-		textPeptideFdr.setText(valueOf(config.getPeptideFdr()));
-		textPeptideReplicates.setText(valueOf(config.getMinPeptideReplicates()));
-		textProteinFdr.setText(valueOf(config.getProteinFdr()));
-		textProteinReplicates.setText(valueOf(config.getMinProteinReplicates()));
-		textGroupFdr.setText(valueOf(config.getGroupFdr()));
+		if( (score=config.getPeptideScoreThreshold()) != null ) {
+			choicePeptideThScoreType.setValue(score.getType());
+			textPeptideTh.setText(score.getValue()+"");
+		}
+		textPeptideFdr.setText(stringFrom(config.getPeptideFdr()));
+		choicePeptideReplicates.setValue(intRepFrom(config.getMinPeptideReplicates()));
+		if( (score=config.getProteinScoreThreshold()) != null ) {
+			choiceProteinThScoreType.setValue(score.getType());
+			textProteinTh.setText(score.getValue()+"");
+		}
+		textProteinFdr.setText(stringFrom(config.getProteinFdr()));
+		choiceProteinReplicates.setValue(intRepFrom(config.getMinProteinReplicates()));
+		textGroupFdr.setText(stringFrom(config.getGroupFdr()));
 		checkFilterDecoys.setSelected(Boolean.TRUE.equals(config.getFilterDecoys()));
+		textPeptideTh.setDisable(choicePeptideThScoreType.getSelectionModel().isEmpty());
+		choicePeptideThScoreType.setDisable(choicePeptideThScoreType.getSelectionModel().isEmpty());
+		textProteinTh.setDisable(choiceProteinThScoreType.getSelectionModel().isEmpty());
+		choiceProteinThScoreType.setDisable(choiceProteinThScoreType.getSelectionModel().isEmpty());
+		
+		boolean disableReplicates = config.getReplicates().size() <= 1;
+		labelPeptideReplicates.setDisable(disableReplicates);
+		choicePeptideReplicates.setDisable(disableReplicates);
+		labelProteinReplicates.setDisable(disableReplicates);
+		choiceProteinReplicates.setDisable(disableReplicates);
+		
+		boolean disableDecoy = !isUsingDecoys();
+		labelPsmFdr.setDisable(disableDecoy);
+		textPsmFdr.setDisable(disableDecoy);
+		//choicePsmFdrScoreType.setDisable(disableDecoy);
+		labelPeptideFdr.setDisable(disableDecoy);
+		textPeptideFdr.setDisable(disableDecoy);
+		choicePeptideFdrScoreType.setDisable(disableDecoy);
+		labelProteinFdr.setDisable(disableDecoy);
+		textProteinFdr.setDisable(disableDecoy);
+		choiceProteinFdrScoreType.setDisable(disableDecoy);
+		labelGroupFdr.setDisable(disableDecoy);
+		textGroupFdr.setDisable(disableDecoy);
+		choiceGroupFdrScoreType.setDisable(disableDecoy);
+		
 		for( Object node : listNodes )
 			disableObject(node,true);
 		for( Object node : mapNodes.get(model.getState()) )
@@ -429,8 +580,28 @@ public class MainController implements Initializable {
 			buttonAddFractions.setDisable(true);
 	}
 	
-	private String valueOf( Object o ) {
+	private boolean isUsingDecoys() {
+		return config.getDecoyRegex() != null && !config.getDecoyRegex().isEmpty();
+	}
+	
+	private String stringFrom( Object o ) {
 		return o == null ? "" : o.toString();
+	}
+	
+	private int intFrom( Number num ) {
+		return num == null ? 0 : num.intValue();
+	}
+	
+	private Integer integerFrom( int num ) {
+		return num == 0 ? null : num;
+	}
+	
+	private int intRepFrom( Number num ) {
+		return num == null ? 1 : num.intValue();
+	}
+	
+	private Integer integerRepFrom( int num ) {
+		return num <= 1 ? null : num;
 	}
 	
 	private static String getWelcome() {

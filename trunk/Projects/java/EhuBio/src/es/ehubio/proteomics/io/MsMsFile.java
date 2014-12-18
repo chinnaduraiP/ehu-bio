@@ -32,13 +32,13 @@ public abstract class MsMsFile {
 	
 	private static List<MsMsFile> getParsers() {
 		List<MsMsFile> list = new ArrayList<>();
-		File dir = new File(MsMsFile.class.getResource("/es/ehubio/proteomics/io").getFile());
-		if( !dir.exists() ) { // Inside jar ...
+		//File dir = new File(MsMsFile.class.getResource("/es/ehubio/proteomics/io").getFile());
+		//if( !dir.exists() ) { // Inside jar ...
 			list.add(new Mzid());
 			list.add(new ProteomeDiscovererMsf());
 			list.add(new ProteomeDiscovererTxt());
 			list.add(new Plgs());
-		} else {
+		/*} else {
 			for( String name : dir.list() ) {
 				if( !name.endsWith(".class") )
 					continue;
@@ -50,7 +50,7 @@ public abstract class MsMsFile {
 					continue;
 				}			
 			}
-		}
+		}*/
 		return list;
 	}
 	

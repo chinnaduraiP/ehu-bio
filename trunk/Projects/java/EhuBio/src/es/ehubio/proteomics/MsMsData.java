@@ -331,5 +331,26 @@ public class MsMsData {
 		for( Protein protein : getProteins() )
 			protein.setFasta(map.get(protein.getAccession()));
 		return this;
-	}	
+	}
+	
+	public void mergeDuplicatedPeptides() {
+		Map<String, Peptide> map = new HashMap<>();
+		
+		for( Peptide peptide : peptides ) {
+			Peptide prev = map.get(peptide.getUniqueString());
+			if( prev == null ) {
+				map.put(peptide.getUniqueString(), peptide);
+				continue;
+			}
+			for( Psm psm : peptide.getPsms() )
+				psm.linkPeptide(prev);
+			for( Protein protein : peptide.getProteins() ) {
+				protein.getPeptides().remove(peptide);
+				protein.addPeptide(prev);
+			}
+		}
+		
+		peptides.clear();
+		peptides.addAll(map.values());
+	}
 }
