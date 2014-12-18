@@ -100,9 +100,9 @@ public class HtmlReport {
 		table.addRow("Software",String.format("<a href=\"%s\">%s</a>", MainModel.URL, MainModel.SIGNATURE));
 		table.addRow("Experiment",model.getConfig().getDescription());
 		table.addPropertyRow(model.getConfig(),
-			"psmRankThreshold","bestPsmPerPrecursor","psmFdr","psmScore",
-			"minPeptideLength","peptideFdr",
-			"proteinFdr","groupFdr",
+			"psmRankThreshold","psmScore","bestPsmPerPrecursor","bestPsmPerPeptide","psmFdr","psmScoreThreshold",
+			"minPeptideLength","uniquePeptides","peptideFdr","peptideScoreThreshold","minPeptideReplicates",
+			"proteinFdr","proteinScoreThreshold","minProteinReplicates","groupFdr","groupScoreThreshold",
 			"decoyRegex");
 		table.addRow("inputs",getInputsLinks());		
 		table.addPropertyRow(model.getConfig(),"filterDecoys");
