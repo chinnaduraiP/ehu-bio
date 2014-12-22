@@ -250,8 +250,15 @@ public class MsMsData {
 				}
 			});
 			int rank = 1;
-			for( Psm psm : list )
-				psm.setRank(rank++);
+			Double lastScore = null;
+			double newScore;
+			for( Psm psm : list ) {
+				newScore = psm.getScoreByType(type).getValue();
+				if( lastScore != null && newScore != lastScore )
+					rank++;
+				lastScore = newScore;
+				psm.setRank(rank);
+			}
 		}
 	}
 	
