@@ -67,6 +67,7 @@ public class HomeBean implements Serializable {
 		addPage(page);
 		
 		news = new ArrayList<>();
+		news.add(new LatestNew("Dec 29, 2014", "Included mutation effect score"));
 		news.add(new LatestNew("Apr 16, 2014", "Made more robust the training page to avoid denial of service to another users"));
 		news.add(new LatestNew("Apr 08, 2014", "Updated site template"));
 		news.add(new LatestNew("Apr 03, 2014", "Included PTM chart"));
@@ -114,7 +115,7 @@ public class HomeBean implements Serializable {
 	}
 	
 	public String getSignature() {
-		return "Wregex (v2.0-alpha3)";
+		return "Wregex (v2.0-alpha4)";
 		//return "Wregex (v1.1)";
 	}
 	

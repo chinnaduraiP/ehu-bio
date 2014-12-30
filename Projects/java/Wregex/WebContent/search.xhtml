@@ -137,7 +137,7 @@
 					</p:column>
 					<p:column rendered="#{searchBean.cosmic and searchBean.usingPssm}">
 						<f:facet name="header">Mutant</f:facet>
-						N/A
+						<h:outputText value="#{item.mutSequence}"/>
 					</p:column>
 					<p:column styleClass="trn_pos">
 						<f:facet name="header">"!"</f:facet>
@@ -163,7 +163,10 @@
 					</p:column>
 					<p:column rendered="#{searchBean.cosmic and searchBean.usingPssm}" width="80" style="text-align:center;">
 						<f:facet name="header">Mutation effect</f:facet>
-						N/A
+						<h:outputText value="NA" rendered="#{item.mutScore == null}"/>
+						<h:outputText value="#{item.mutScoreAsString}" rendered="#{item.mutScore != null and item.mutScore lt 0}" style="color:red"/>
+						<h:outputText value="#{item.mutScoreAsString}" rendered="#{item.mutScore != null and item.mutScore gt 0}" style="color:blue"/>
+						<h:outputText value="#{item.mutScoreAsString}" rendered="#{item.mutScore != null and item.mutScore == 0}"/>						
 					</p:column>
 					<p:column rendered="#{searchBean.dbPtm}" width="80" style="text-align:center;">
 						<f:facet name="header">dbPTM entries</f:facet>

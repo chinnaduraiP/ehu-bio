@@ -8,6 +8,7 @@ import java.util.Map;
 
 import es.ehubio.wregex.Result;
 import es.ehubio.wregex.ResultGroup;
+import es.ehubio.wregex.Wregex;
 
 public class ResultGroupEx implements Iterable<ResultEx> {
 	private final ResultGroup resultGroup;	
@@ -68,5 +69,14 @@ public class ResultGroupEx implements Iterable<ResultEx> {
 		this.motifUrl = motifUrl;
 		for( ResultEx result : list )
 			result.setMotifUrl(motifUrl);
+	}
+
+	public Wregex getWregex() {
+		return iterator().next().getWregex();
+	}
+
+	public void setWregex(Wregex wregex) {
+		for( ResultEx result : this )
+			result.setWregex(wregex);
 	}
 }

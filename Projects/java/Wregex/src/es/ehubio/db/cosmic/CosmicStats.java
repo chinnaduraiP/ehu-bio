@@ -55,7 +55,7 @@ public class CosmicStats {
 				locus.setOriginal(mut.getOriginal());
 				result.getLoci().put(locus.getPosition(), locus);
 			}
-			locus.incMutations(mut.getMutated());
+			locus.incMutationCount(mut.getMutated());
 		}
 		cosmic.closeDb();
 		

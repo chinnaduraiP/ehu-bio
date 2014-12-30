@@ -23,7 +23,7 @@ public final class Result implements Comparable<Result> {
 	private double score = -1.0;
 	private double assay = -1.0;
 	private ResultGroup group = null;
-	private int combinations = 0;
+	private int combinations = 0;	
 	
 	Result( Fasta fasta, int start, String match, Collection<String> groups ) {
 		assert groups.size() > 0;
