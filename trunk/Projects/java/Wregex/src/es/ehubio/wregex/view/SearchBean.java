@@ -332,7 +332,7 @@ public class SearchBean implements Serializable {
 	}
 
 	private void searchCosmic() throws ReloadException {
-		Services.searchCosmic(databases.getMapCosmic(), results);
+		Services.searchCosmic(databases.getMapCosmic(), results, isUsingPssm());
 	}
 	
 	private void searchDbPtm() throws ReloadException {

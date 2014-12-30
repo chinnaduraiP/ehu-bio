@@ -191,7 +191,7 @@ public class StatisticsBean {
 			retry = false;
 			try {
 				switch( db ) {
-					case "COSMIC": Services.searchCosmic(databases.getMapCosmic(), results); break;
+					case "COSMIC": Services.searchCosmic(databases.getMapCosmic(), results, false); break;
 					case "dbPTM": Services.searchDbPtm(databases.getMapDbPtm(), results); break;
 				}				
 			} catch( DatabasesBean.ReloadException e ) {

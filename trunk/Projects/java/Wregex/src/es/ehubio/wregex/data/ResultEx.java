@@ -9,6 +9,7 @@ import java.util.List;
 import es.ehubio.db.fasta.Fasta;
 import es.ehubio.io.CsvUtils;
 import es.ehubio.wregex.Result;
+import es.ehubio.wregex.Wregex;
 
 public class ResultEx implements Comparable<ResultEx> {
 	private final Result result;
@@ -20,30 +21,42 @@ public class ResultEx implements Comparable<ResultEx> {
 	private String motifUrl;
 	private String mutSequence;
 	private Double mutScore;
+	private Wregex wregex;
 	private static final char separator = ',';
 
 	public int compareTo(ResultEx o) {
-		// 1. COSMIC
+		// 1. Mutation effect
+		if( mutScore == null && o.mutScore != null )
+			return 1;
+		if( mutScore != null && o.mutScore == null )
+			return -1;
+		if( mutScore != null && o.mutScore != null ) {
+			if( Math.abs(mutScore) > Math.abs(o.mutScore) )
+				return -1;
+			if( Math.abs(mutScore) < Math.abs(o.mutScore) )
+				return 1;
+		}
+		// 2. Mutation count
 		if( cosmicMissense > o.cosmicMissense )
 			return -1;
 		if( cosmicMissense < o.cosmicMissense )
 			return 1;
-		// 2. Wregex Score
+		// 3. Wregex Score
 		if( getScore() > o.getScore() )
 			return -1;
 		if( getScore() < o.getScore() )
 			return 1;		
-		// 3. PTMs
+		// 4. PTMs
 		if( dbPtms > o.dbPtms )
 			return -1;
 		if( dbPtms < o.dbPtms )
 			return 1;
-		// 4. Wregex Combinations
+		// 5. Wregex Combinations
 		if( getCombinations() > o.getCombinations() )
 			return -1;
 		if( getCombinations() < o.getCombinations() )
 			return 1;
-		// 5. Match length
+		// 6. Match length
 		if( getMatch().length() > o.getMatch().length() )
 			return -1;
 		if( getMatch().length() < o.getMatch().length() )
@@ -266,8 +279,26 @@ public class ResultEx implements Comparable<ResultEx> {
 	public Double getMutScore() {
 		return mutScore;
 	}
+	
+	public String getMutScoreAsString() {
+		if( mutScore == null )
+			return "?";
+		return String.format("%+.1f", getMutScore());
+	}
 
 	public void setMutScore(Double mutScore) {
 		this.mutScore = mutScore;
+	}
+
+	public Wregex getWregex() {
+		return wregex;
+	}
+
+	public void setWregex(Wregex wregex) {
+		this.wregex = wregex;
+	}
+	
+	public Result getResult() {
+		return result;
 	}
 }
