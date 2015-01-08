@@ -426,7 +426,7 @@ public class MainModel {
 		if( config.getProteinFdr() == null )
 			return;
 		//ScoreIntegrator.updateProteinScores(data.getProteins());
-		ScoreIntegrator.updateProteinScoresAprox(data.getProteins(),config.getDecoyRegex());
+		ScoreIntegrator.updateProteinScoresPrefix(data.getProteins(),config.getDecoyRegex());
 		fdrCalc.updateProteinScores(data.getProteins(), ScoreType.PROTEIN_SPHPP_SCORE, false);
 		Filter filter = new Filter(data);
 		filter.setProteinScoreThreshold(new Score(ScoreType.PROTEIN_Q_VALUE, config.getProteinFdr()));
