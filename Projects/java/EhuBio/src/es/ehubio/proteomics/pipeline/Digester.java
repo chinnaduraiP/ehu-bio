@@ -1,6 +1,8 @@
 package es.ehubio.proteomics.pipeline;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -30,6 +32,26 @@ public class Digester {
 		return list;*/
 	}
 	
+	public static List<String> digestSequence( String sequence, Enzyme enzyme, int missedCleavages ) {
+		String[] orig = digestSequence(sequence, enzyme);
+		List<String> list = new ArrayList<>(Arrays.asList(orig));
+		for( int i = 1; i <= missedCleavages; i++ )
+			list.addAll(getMissed(orig,i));
+		return list;		
+	}
+	
+	private static List<String> getMissed(String[] orig, int num) {
+		List<String> list = new ArrayList<>();
+		int stop = orig.length-num;
+		for( int i = 0; i < stop; i++ ) {
+			StringBuilder str = new StringBuilder();
+			for( int j = 0; j <= num; j++ )
+				str.append(orig[i+j]);
+			list.add(str.toString());
+		}
+		return list;
+	}
+
 	public static Set<Peptide> digestDatabase( String path, Enzyme enzyme, int minLength ) throws IOException, InvalidSequenceException {
 		List<Fasta> database = Fasta.readEntries(path, SequenceType.PROTEIN);
 		Map<String,Peptide> peptides = new HashMap<>();
