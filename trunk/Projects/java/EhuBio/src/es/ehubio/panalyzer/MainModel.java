@@ -24,10 +24,12 @@ import es.ehubio.proteomics.ScoreType;
 import es.ehubio.proteomics.io.EhubioCsv;
 import es.ehubio.proteomics.io.MsMsFile;
 import es.ehubio.proteomics.io.Mzid;
+import es.ehubio.proteomics.pipeline.DecoyMatcher;
 import es.ehubio.proteomics.pipeline.FdrCalculator;
 import es.ehubio.proteomics.pipeline.FdrCalculator.FdrResult;
 import es.ehubio.proteomics.pipeline.Filter;
 import es.ehubio.proteomics.pipeline.PAnalyzer;
+import es.ehubio.proteomics.pipeline.RandomMatcher;
 import es.ehubio.proteomics.pipeline.ScoreIntegrator;
 
 public class MainModel {
@@ -412,7 +414,7 @@ public class MainModel {
 	
 	private void processPeptideFdr(MsMsData data) {
 		if( config.getPeptideFdr() != null || config.getProteinFdr() != null || config.getGroupFdr() != null ) {			
-			ScoreIntegrator.updatePeptideScores(data.getPeptides());
+			ScoreIntegrator.psmToPeptide(data.getPeptides());
 			fdrCalc.updatePeptideScores(data.getPeptides(), ScoreType.PEPTIDE_SPHPP_SCORE, false);
 		}
 		if( config.getPeptideFdr() == null )
@@ -426,7 +428,10 @@ public class MainModel {
 		if( config.getProteinFdr() == null )
 			return;
 		//ScoreIntegrator.updateProteinScores(data.getProteins());
-		ScoreIntegrator.updateProteinScoresPrefix(data.getProteins(),config.getDecoyRegex());
+		//ScoreIntegrator.updateProteinScoresPrefix(data.getProteins(),config.getDecoyRegex());
+		ScoreIntegrator.peptideToProteinEquitative(data.getProteins());
+		RandomMatcher random = new DecoyMatcher(data.getProteins(), config.getDecoyRegex());
+		ScoreIntegrator.divideRandom(data.getProteins(), random);
 		fdrCalc.updateProteinScores(data.getProteins(), ScoreType.PROTEIN_SPHPP_SCORE, false);
 		Filter filter = new Filter(data);
 		filter.setProteinScoreThreshold(new Score(ScoreType.PROTEIN_Q_VALUE, config.getProteinFdr()));
@@ -437,6 +442,10 @@ public class MainModel {
 		if( config.getGroupFdr() == null )
 			return;
 		
+		ScoreIntegrator.peptideToProteinEquitative(data.getProteins());
+		RandomMatcher random = new DecoyMatcher(data.getProteins(), config.getDecoyRegex());
+		ScoreIntegrator.divideRandom(data.getProteins(), random);
+		
 		PAnalyzer pAnalyzer = new PAnalyzer(data);		
 		PAnalyzer.Counts curCount = pAnalyzer.getCounts(), prevCount;
 		int i = 0;
@@ -444,7 +453,7 @@ public class MainModel {
 		filter.setGroupScoreThreshold(new Score(ScoreType.GROUP_Q_VALUE, config.getGroupFdr()));
 		do {
 			i++;
-			ScoreIntegrator.updateGroupScoresBasic(data.getGroups());
+			ScoreIntegrator.proteinToGroup(data.getGroups());
 			fdrCalc.updateGroupScores(data.getGroups(), ScoreType.GROUP_SPHPP_SCORE, false);
 			filterAndGroup(filter,String.format("Group FDR=%s filter, iteration %s",config.getGroupFdr(),i));
 			prevCount = curCount;
@@ -453,7 +462,7 @@ public class MainModel {
 		if( i >= MAXITER )
 			logger.warning("Maximum number of iterations reached!");
 		
-		ScoreIntegrator.updateGroupScoresBasic(data.getGroups());
+		ScoreIntegrator.proteinToGroup(data.getGroups());
 		fdrCalc.updateGroupScores(data.getGroups(), ScoreType.GROUP_SPHPP_SCORE, false);
 	}
 
