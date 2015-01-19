@@ -5,6 +5,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import org.apache.commons.math3.distribution.GammaDistribution;
+import org.apache.commons.math3.distribution.PoissonDistribution;
+
 import es.ehubio.proteomics.DecoyBase;
 import es.ehubio.proteomics.Peptide;
 import es.ehubio.proteomics.Protein;
@@ -24,64 +27,59 @@ public class ScoreIntegrator {
 		}
 	}
 	
-	public static void updatePeptideScores( Collection<Peptide> peptides ) {
-		for( Peptide peptide : peptides ) {
-			basicIntegrator(
-				peptide.getPsms(), ScoreType.PSM_SPHPP_SCORE,
-				peptide, ScoreType.PEPTIDE_P_VALUE, ScoreType.PEPTIDE_SPHPP_SCORE);
-		}
+	public static void psmToPeptide( Collection<Peptide> peptides ) {
+		for( Peptide peptide : peptides )
+			sumIntegrator(peptide, peptide.getPsms(), ScoreType.PSM_SPHPP_SCORE, ScoreType.PEPTIDE_SPHPP_SCORE);
 	}
 	
-	public static void updateProteinScoresBasic( Collection<Protein> proteins ) {		
+	public static void peptideToProteinEquitative( Collection<Protein> proteins ) {		
 		for( Protein protein : proteins ) {
 			double s = 0.0;
 			for( Peptide peptide : protein.getPeptides() )
 				s += peptide.getScoreByType(ScoreType.PEPTIDE_SPHPP_SCORE).getValue()/peptide.getProteins().size();
 			protein.setScore(new Score(ScoreType.PROTEIN_SPHPP_SCORE, s));
-			protein.setScore(new Score(ScoreType.PROTEIN_P_VALUE, Math.exp(-s)));
+			//protein.setScore(new Score(ScoreType.PROTEIN_P_VALUE, Math.exp(-s)));
 		}
 	}
 	
-	/**
-	 * Normalizes by the number of peptides in the corresponding decoy.
-	 * 
-	 * @param proteins
-	 * @param decoyPrefix the decoy accession should be this prefix followed by the target accession.
-	 */
-	public static void updateProteinScoresPrefix( Collection<Protein> proteins, String decoyPrefix ) {
-		updateProteinScoresBasic(proteins);
-		normalizeProteinScores(proteins, decoyPrefix);
-	}
-	
-	private static void normalizeProteinScores( Collection<Protein> proteins, String decoyPrefix ) {
-		Map<String, Protein> mapDecoys = new HashMap<>();
-		for( Protein protein : proteins )
-			if( Boolean.TRUE.equals(protein.getDecoy()) )
-				mapDecoys.put(protein.getAccession(), protein);
-		for( Protein protein : proteins ) {
-			int N = 1;
-			if( Boolean.TRUE.equals(protein.getDecoy()) )
-				N = protein.getPeptides().size();
-			else {
-				Protein decoy = mapDecoys.get(decoyPrefix+protein.getAccession());
-				if( decoy != null )
-					N = decoy.getPeptides().size();
-			}
-			if( N == 1 )
-				continue;
-			Score score = protein.getScoreByType(ScoreType.PROTEIN_SPHPP_SCORE);
-			score.setValue(score.getValue()/N);
-			protein.setScore(new Score(ScoreType.PROTEIN_P_VALUE, Math.exp(-score.getValue())));
-		}
-	}
-	
-	public static int updateProteinScoresIter( Collection<Protein> proteins, String decoyPrefix, double epsilon, int maxIters ) {
+	public static int peptideToProteinIterative( Collection<Protein> proteins, double epsilon, int maxIters ) {
 		Map<Protein, Map<Peptide,Double>> mapFactors = initFactors(proteins);
 		int iteration = 0;
 		while( iteration < maxIters && updateProteinScoresStep(proteins,mapFactors,epsilon) )
 			logger.info(String.format("Iteration = %d",++iteration));
-		normalizeProteinScores(proteins, decoyPrefix);
 		return iteration;
+	}
+	
+	public static void proteinToGroup( Collection<ProteinGroup> groups ) {
+		for( ProteinGroup group : groups )
+			sumIntegrator(group, group.getProteins(), ScoreType.PROTEIN_SPHPP_SCORE, ScoreType.GROUP_SPHPP_SCORE);
+	}
+	
+	public static void divideRandom( Collection<Protein> proteins, RandomMatcher random ) {
+		for( Protein protein : proteins ) {
+			double Nq = random.getNq(protein);
+			Score score = protein.getScoreByType(ScoreType.PROTEIN_SPHPP_SCORE);
+			score.setValue(score.getValue()/Nq);
+			//protein.setScore(new Score(ScoreType.PROTEIN_P_VALUE, Math.exp(-score.getValue())));
+		}
+	}
+	
+	public static void modelRandom( Collection<Protein> proteins, RandomMatcher random ) {
+		for( Protein protein : proteins ) {
+			double Nq = random.getNq(protein);
+			PoissonDistribution pois = new PoissonDistribution(Nq);
+			//ExponentialDistribution exp = new ExponentialDistribution(Nq);
+			Score score = protein.getScoreByType(ScoreType.PROTEIN_SPHPP_SCORE);
+			double pep = score.getValue();
+			double sum = 0.0;
+			for( int n = 1; n <= 50; n++ ) {
+				GammaDistribution gamma = new GammaDistribution(n, 1);
+				sum += pois.probability(n)*(1-gamma.cumulativeProbability(pep));
+				//sum += exp.density(n)*(1-gamma.cumulativeProbability(pep));
+			}
+			score.setValue(-Math.log(sum));
+			//protein.setScore(new Score(ScoreType.PROTEIN_P_VALUE, sum));
+		}
 	}
 	
 	private static Map<Protein, Map<Peptide,Double>> initFactors( Collection<Protein> proteins ) {
@@ -127,23 +125,16 @@ public class ScoreIntegrator {
 				mapFactors.get(protein).put(peptide, num/den);
 			}
 		}
-	}
+	}	
 	
-	public static void updateGroupScoresBasic( Collection<ProteinGroup> groups ) {
-		for( ProteinGroup group : groups ) {
-			basicIntegrator(
-				group.getProteins(), ScoreType.PROTEIN_SPHPP_SCORE,
-				group, ScoreType.GROUP_P_VALUE, ScoreType.GROUP_SPHPP_SCORE);
-		}
-	}
-	
-	private static void basicIntegrator(Collection<? extends DecoyBase> subitems, ScoreType lowS, DecoyBase item, ScoreType upP, ScoreType upS) {
+	//private static void basicIntegrator(Collection<? extends DecoyBase> subitems, ScoreType lowS, DecoyBase item, ScoreType upP, ScoreType upS) {
+	private static void sumIntegrator(DecoyBase item, Collection<? extends DecoyBase> subitems, ScoreType lowScore, ScoreType upScore) {
 		double s = 0.0;
 		for( DecoyBase subitem : subitems )
-			s += subitem.getScoreByType(lowS).getValue();
-		Score pValue = new Score(upP,Math.exp(-s));
-		Score spHpp = new Score(upS,s);
-		item.setScore(pValue);
+			s += subitem.getScoreByType(lowScore).getValue();
+		//Score pValue = new Score(upP,Math.exp(-s));
+		Score spHpp = new Score(upScore,s);
+		//item.setScore(pValue);
 		item.setScore(spHpp);
 	}
 	
