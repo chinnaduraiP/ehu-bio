@@ -172,7 +172,7 @@ public class Services {
 			StringBuilder str = new StringBuilder(item.getMatch().toLowerCase());
 			str.setCharAt(locus.getPosition()-item.getStart(), aa.letter);
 			try {
-				ResultEx result = new ResultEx(item.getResult());
+				ResultEx result = new ResultEx(item);
 				Fasta fasta = new Fasta(item.getFasta().getHeader(), str.toString(), SequenceType.PROTEIN);
 				List<ResultGroup> groups = wregex.searchGrouping(fasta);				
 				if( groups == null || groups.isEmpty() ) {
