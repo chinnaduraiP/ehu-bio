@@ -26,6 +26,23 @@ public class ResultEx implements Comparable<ResultEx> {
 	private Double mutScore;
 	private Wregex wregex;
 	private static final char separator = ',';
+	
+	public ResultEx( Result result ) {
+		this.result = result;
+	}
+	
+	public ResultEx( ResultEx result ) {
+		this.result = result.getResult();
+		setCosmicMissense(result.getCosmicMissense());
+		setCosmicUrl(result.getCosmicUrl());
+		setDbPtms(result.getDbPtms());
+		setDbPtmUrl(result.getDbPtmUrl());
+		setMotif(result.getMotif());
+		setMotifUrl(result.getMotifUrl());
+		setMutSequence(result.getMutSequence());
+		setMutScore(result.getMutScore());
+		setWregex(result.getWregex());
+	}
 
 	public int compareTo(ResultEx o) {
 		// 1. Mutation effect
@@ -152,11 +169,7 @@ public class ResultEx implements Comparable<ResultEx> {
 
 	public String toString() {
 		return result.toString();
-	}
-
-	public ResultEx( Result result ) {
-		this.result = result;
-	}
+	}	
 	
 	public static void saveAln(Writer wr, List<ResultEx> results) {
 		Result.saveAln(wr, getResults(results)); 		
@@ -281,6 +294,8 @@ public class ResultEx implements Comparable<ResultEx> {
 
 	public void setMutSequence(String mutSequence) {
 		this.mutSequence = mutSequence;
+		if( mutSequence == null )
+			return;
 		int i = 0;
 		int len = mutSequence.length();
 		for( i = 0; i < len; i++ )
