@@ -137,7 +137,9 @@
 					</p:column>
 					<p:column rendered="#{searchBean.cosmic and searchBean.usingPssm}">
 						<f:facet name="header">Mutant</f:facet>
-						<h:outputText value="#{item.mutSequence}"/>
+						<h:outputText value="#{item.mutLeft}"/>
+						<h:outputText value="#{item.mutAa}" style="color:red"/>
+						<h:outputText value="#{item.mutRight}"/>
 					</p:column>
 					<p:column styleClass="trn_pos">
 						<f:facet name="header">"!"</f:facet>
