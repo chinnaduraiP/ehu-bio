@@ -176,7 +176,7 @@ public class Services {
 				Fasta fasta = new Fasta(item.getFasta().getHeader(), str.toString(), SequenceType.PROTEIN);
 				List<ResultGroup> groups = wregex.searchGrouping(fasta);				
 				if( groups == null || groups.isEmpty() ) {
-					result.setMutSequence(String.format("No match! -> %s", fasta.getSequence()));
+					result.setMutSequence(String.format("lost! -> %s", fasta.getSequence()));
 					result.setMutScore(-item.getScore());
 				} else {
 					Result mut = groups.iterator().next().getRepresentative();

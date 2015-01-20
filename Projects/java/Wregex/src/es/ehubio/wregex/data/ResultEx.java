@@ -20,6 +20,9 @@ public class ResultEx implements Comparable<ResultEx> {
 	private String motif;
 	private String motifUrl;
 	private String mutSequence;
+	private String mutLeft;
+	private String mutRight;
+	private String mutAa;
 	private Double mutScore;
 	private Wregex wregex;
 	private static final char separator = ',';
@@ -162,13 +165,15 @@ public class ResultEx implements Comparable<ResultEx> {
 	public static void saveCsv(Writer wr, List<ResultEx> results, boolean assays, boolean cosmic, boolean dbPtm ) {
 		PrintWriter pw = new PrintWriter(wr);
 		List<String> fields = new ArrayList<>();
-		fields.addAll(Arrays.asList(new String[]{"ID","Entry","Motif","Begin","End","Combinations","Sequence","Alignment","Score"}));
+		fields.addAll(Arrays.asList(new String[]{"#","ID","Entry","Motif","Begin","End","Combinations","Sequence","Alignment","Score"}));
 		if( assays ) { fields.add("Assay"); fields.add("Assay"); }
-		if( cosmic ) { fields.add("Gene"); fields.add("COSMIC:Missense"); }
+		if( cosmic ) { fields.add("Gene"); fields.add("Mutant"); fields.add("Mutation effect"); fields.add("COSMIC:Missense"); }
 		if( dbPtm ) fields.add("dbPTM");
 		pw.println(CsvUtils.getCsv(separator, fields.toArray()));
+		long count = 1;
 		for( ResultEx result : results ) {
-			fields.clear();			
+			fields.clear();
+			fields.add(""+count++);
 			fields.add(result.getName());
 			fields.add(result.getEntry());
 			fields.add(result.getMotif());
@@ -184,6 +189,8 @@ public class ResultEx implements Comparable<ResultEx> {
 			}
 			if( cosmic ) {
 				fields.add(result.getGene());
+				fields.add(result.getMutSequence());
+				fields.add(result.getMutScore().toString());
 				fields.add(result.getCosmicMissenseAsString());
 			}
 			if( dbPtm )
@@ -274,6 +281,19 @@ public class ResultEx implements Comparable<ResultEx> {
 
 	public void setMutSequence(String mutSequence) {
 		this.mutSequence = mutSequence;
+		int i = 0;
+		int len = mutSequence.length();
+		for( i = 0; i < len; i++ )
+			if( Character.isUpperCase(mutSequence.charAt(i)) )
+				break;
+		mutLeft = mutSequence.substring(0, i);
+		if( i < len ) {
+			mutAa = mutSequence.charAt(i)+"";
+			mutRight = mutSequence.substring(i+1, len);
+		} else {
+			mutAa = "";
+			mutRight = "";
+		}
 	}
 
 	public Double getMutScore() {
@@ -300,5 +320,17 @@ public class ResultEx implements Comparable<ResultEx> {
 	
 	public Result getResult() {
 		return result;
+	}
+
+	public String getMutLeft() {
+		return mutLeft;
+	}
+
+	public String getMutRight() {
+		return mutRight;
+	}
+
+	public String getMutAa() {
+		return mutAa;
 	}
 }

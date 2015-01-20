@@ -2,6 +2,7 @@ package es.ehubio.wregex.view;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -232,6 +233,7 @@ public class SearchBean implements Serializable {
 			try {
 				inputGroups = databases.getFasta(targetInformation.getPath());
 				fastaFileName = null;
+				baseFileName = FilenameUtils.removeExtension(new File(targetInformation.getPath()).getName());
 			} catch( Exception e ) {
 				searchError = e.getMessage();
 			}
