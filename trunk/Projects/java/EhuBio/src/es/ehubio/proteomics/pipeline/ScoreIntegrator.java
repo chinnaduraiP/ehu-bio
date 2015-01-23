@@ -17,7 +17,14 @@ import es.ehubio.proteomics.Score;
 import es.ehubio.proteomics.ScoreType;
 
 public class ScoreIntegrator {
-	//private static final Logger logger = Logger.getLogger(ScoreIntegrator.class.getName());
+	public static class IterativeResult {
+		public IterativeResult(int iteration, Map<Protein, Map<Peptide,Double>> mapFactors) {
+			this.iteration = iteration;
+			this.mapFactors = mapFactors;
+		}
+		public final int iteration;
+		public final Map<Protein, Map<Peptide,Double>> mapFactors;
+	}
 	
 	public static void updatePsmScores( Collection<Psm> psms ) {
 		for( Psm psm : psms ) {
@@ -42,12 +49,12 @@ public class ScoreIntegrator {
 		}
 	}
 	
-	public static int peptideToProteinIterative( Collection<Protein> proteins, double epsilon, int maxIters ) {
+	public static IterativeResult peptideToProteinIterative( Collection<Protein> proteins, double epsilon, int maxIters ) {
 		Map<Protein, Map<Peptide,Double>> mapFactors = initFactors(proteins);
 		int iteration = 0;
 		while( iteration < maxIters && updateProteinScoresStep(proteins,mapFactors,epsilon) )
 			logger.info(String.format("Iteration = %d",++iteration));
-		return iteration;
+		return new IterativeResult(iteration, mapFactors);
 	}
 	
 	public static void proteinToGroup( Collection<ProteinGroup> groups ) {
@@ -57,7 +64,7 @@ public class ScoreIntegrator {
 	
 	public static void divideRandom( Collection<Protein> proteins, RandomMatcher random ) {
 		for( Protein protein : proteins ) {
-			double Nq = random.getNq(protein);
+			double Nq = random.getExpected(protein);
 			Score score = protein.getScoreByType(ScoreType.PROTEIN_SPHPP_SCORE);
 			score.setValue(score.getValue()/Nq);
 			//protein.setScore(new Score(ScoreType.PROTEIN_P_VALUE, Math.exp(-score.getValue())));
@@ -66,7 +73,7 @@ public class ScoreIntegrator {
 	
 	public static void modelRandom( Collection<Protein> proteins, RandomMatcher random ) {
 		for( Protein protein : proteins ) {
-			double Nq = random.getNq(protein);
+			double Nq = random.getExpected(protein);
 			PoissonDistribution pois = new PoissonDistribution(Nq);
 			//ExponentialDistribution exp = new ExponentialDistribution(Nq);
 			Score score = protein.getScoreByType(ScoreType.PROTEIN_SPHPP_SCORE);

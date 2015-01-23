@@ -430,7 +430,7 @@ public class MainModel {
 		//ScoreIntegrator.updateProteinScores(data.getProteins());
 		//ScoreIntegrator.updateProteinScoresPrefix(data.getProteins(),config.getDecoyRegex());
 		ScoreIntegrator.peptideToProteinEquitative(data.getProteins());
-		RandomMatcher random = new DecoyMatcher(data.getProteins(), config.getDecoyRegex());
+		RandomMatcher random = new DecoyMatcher(data.getProteins(), config.getDecoyRegex(), true);
 		ScoreIntegrator.divideRandom(data.getProteins(), random);
 		fdrCalc.updateProteinScores(data.getProteins(), ScoreType.PROTEIN_SPHPP_SCORE, false);
 		Filter filter = new Filter(data);
@@ -443,7 +443,7 @@ public class MainModel {
 			return;
 		
 		ScoreIntegrator.peptideToProteinEquitative(data.getProteins());
-		RandomMatcher random = new DecoyMatcher(data.getProteins(), config.getDecoyRegex());
+		RandomMatcher random = new DecoyMatcher(data.getProteins(), config.getDecoyRegex(), true);
 		ScoreIntegrator.divideRandom(data.getProteins(), random);
 		
 		PAnalyzer pAnalyzer = new PAnalyzer(data);		
