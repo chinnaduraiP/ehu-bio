@@ -6,7 +6,6 @@ import static org.junit.Assert.assertTrue;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.logging.Logger;
 
 import org.junit.Test;
 
@@ -14,7 +13,7 @@ import es.ehubio.proteomics.Enzyme;
 import es.ehubio.proteomics.pipeline.Digester;
 
 public class Digestion {
-	private static final Logger logger = Logger.getLogger(Digestion.class.getName());
+	//private static final Logger logger = Logger.getLogger(Digestion.class.getName());
 	
 	@Test
 	public void testTrypsine() {
@@ -51,8 +50,24 @@ public class Digestion {
 				return o1.compareTo(o2);
 			}
 		});
-		for( String pep : list )
-			logger.info("Peptide: "+pep);
+		/*for( String pep : list )
+			logger.info("Peptide: "+pep);*/
 		assertEquals(105, list.size());
 	}
+	
+	/*@Test
+	public void testDb() throws IOException, InvalidSequenceException {
+		PrintWriter pw = new PrintWriter("/home/gorka/iakes.csv");
+		List<Fasta> list = Fasta.readEntries("/home/gorka/Bio/Proyectos/Proteómica/spHPP/Work/Flow/letter/Pandey/Gencode20cds_TD_Jul14_TARGET.J.fasta.gz", SequenceType.PROTEIN);
+		list.addAll(Fasta.readEntries("/home/gorka/Bio/Proyectos/Proteómica/spHPP/Work/Flow/letter/Pandey/Gencode20cds_TD_Jul14_DECOY.J.fasta.gz", SequenceType.PROTEIN));
+		for( Fasta fasta : list ) {
+			pw.print(fasta.getAccession()+"\t");
+			List<String> peptides = Digester.digestSequence(fasta.getSequence(), Enzyme.TRYPSIN, 2);
+			for( String peptide : peptides )
+				if( peptide.length() >= 7 && peptide.length() <= 30 )
+					pw.print(peptide+",");
+			pw.println();
+		}
+		pw.close();
+	}*/
 }

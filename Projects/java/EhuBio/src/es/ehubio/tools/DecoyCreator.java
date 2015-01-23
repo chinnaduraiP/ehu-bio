@@ -22,6 +22,7 @@ public class DecoyCreator implements Command.Interface {
 
 	@Override
 	public void run(String[] args) throws Exception {
+		//DecoyDb.create(args[0], args[1], DecoyDb.Strategy.PSEUDO_REVERSE, Enzyme.TRYPSIN_P, args[2]);
 		DecoyDb.create(args[0], args[1], DecoyDb.Strategy.PSEUDO_REVERSE, Enzyme.TRYPSIN, args[2]);		
 	}
 
