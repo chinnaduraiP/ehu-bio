@@ -43,11 +43,11 @@ import es.ehubio.wregex.view.DatabasesBean.ReloadException;
 @SessionScoped
 public class SearchBean implements Serializable {
 	private static final long serialVersionUID = 1L;
-	private String motif;
-	private String definition;
+	private String motif, auxMotif;
+	private String definition, auxDefinition;
 	private String target;
-	private MotifInformation motifInformation;
-	private MotifDefinition motifDefinition;
+	private MotifInformation motifInformation, auxMotifInformation;
+	private MotifDefinition motifDefinition, auxMotifDefinition;
 	private DatabaseInformation targetInformation;
 	private boolean custom = false;
 	private String customRegex;
@@ -58,11 +58,12 @@ public class SearchBean implements Serializable {
 	private boolean grouping = true;
 	private boolean cosmic = false;
 	private boolean dbPtm = false;
+	private boolean useAuxMotif = false; 
 	private boolean allMotifs = false;
 	private String baseFileName, pssmFileName, fastaFileName;
 	private boolean assayScores = false;
 	private List<InputGroup> inputGroups = null;
-	private Pssm pssm = null;
+	private Pssm pssm = null, auxPssm = null;
 	@ManagedProperty(value="#{databasesBean}")
 	private DatabasesBean databases;
 	private final Services services;
@@ -87,6 +88,10 @@ public class SearchBean implements Serializable {
 		return motifInformation == null ? null : motifInformation.getDefinitions();
 	}
 	
+	public List<MotifDefinition> getAuxDefinitions() {
+		return auxMotifInformation == null ? null : auxMotifInformation.getDefinitions();
+	}
+	
 	public List<DatabaseInformation> getTargets() {
 		return databases.getTargets();
 	}
@@ -95,20 +100,40 @@ public class SearchBean implements Serializable {
 		return motifDefinition == null || motifInformation == null ? null : motifDefinition.getRegex();
 	}
 	
+	public String getAuxRegex() {
+		return auxMotifDefinition == null || auxMotifInformation == null ? null : auxMotifDefinition.getRegex();
+	}
+	
 	public String getPssm() {
 		return motifDefinition == null ? null : motifDefinition.getPssm();
+	}
+	
+	public String getAuxPssm() {
+		return auxMotifDefinition == null ? null : auxMotifDefinition.getPssm();
 	}
 	
 	public String getSummary() {
 		return motifDefinition == null || motifInformation == null ? null : motifInformation.getSummary();
 	}
 	
+	public String getAuxSummary() {
+		return auxMotifDefinition == null || auxMotifInformation == null ? null : auxMotifInformation.getSummary();
+	}
+	
 	public String getDescription() {
 		return motifDefinition == null || motifInformation == null ? null : motifDefinition.getDescription();
 	}
 	
+	public String getAuxDescription() {
+		return auxMotifDefinition == null || auxMotifInformation == null ? null : auxMotifDefinition.getDescription();
+	}
+	
 	public List<MotifReference> getReferences() {
 		return motifDefinition == null || motifInformation == null ? null : motifInformation.getReferences();
+	}
+	
+	public List<MotifReference> getAuxReferences() {
+		return auxMotifDefinition == null || auxMotifInformation == null ? null : auxMotifInformation.getReferences();
 	}
 
 	public String getMotif() {
@@ -213,11 +238,35 @@ public class SearchBean implements Serializable {
 		pssm = null;
 	}
 	
+	public void onChangeAuxMotif( ValueChangeEvent event ) {
+		Object value = event.getNewValue();
+		auxMotifInformation = null;
+		if( value != null )
+			auxMotifInformation = (MotifInformation)stringToMotif(event.getNewValue());
+		if( auxMotifInformation == null ) {
+			auxMotifDefinition = null;
+			setAuxConfiguration("Default");
+		} else {
+			auxMotifDefinition = auxMotifInformation.getDefinitions().get(0);
+			setAuxConfiguration(auxMotifDefinition.toString());
+		}
+		searchError = null;
+		results = null;
+		auxPssm = null;
+	}
+	
 	public void onChangeDefinition( ValueChangeEvent event ) {
 		motifDefinition = (MotifDefinition)stringToDefinition(event.getNewValue());
 		searchError = null;
 		results = null;
 		pssm = null;
+	}
+	
+	public void onChangeAuxDefinition( ValueChangeEvent event ) {
+		auxMotifDefinition = (MotifDefinition)stringToDefinition(event.getNewValue());
+		searchError = null;
+		results = null;
+		auxPssm = null;
 	}
 	
 	public void onChangeTarget( ValueChangeEvent event ) {
@@ -283,6 +332,12 @@ public class SearchBean implements Serializable {
 			if( motifDefinition == null )
 				return "A configuration must be selected for motif " + motif;
 		}
+		if( isUseAuxMotif() ) {
+			if( auxMotifInformation == null )
+				return "An aux motif must be selected";
+			if( auxMotifDefinition == null )
+				return "A configuration must be selected for aux motif " + auxMotif;
+		}
 		if( targetInformation == null )
 			return "A target must be selected";
 		if( inputGroups == null )
@@ -297,6 +352,8 @@ public class SearchBean implements Serializable {
 		try {						
 			List<ResultGroupEx> resultGroups = allMotifs == false ? singleSearch() : allSearch();
 			results = Services.expand(resultGroups, grouping);
+			if( useAuxMotif )
+				searchAux();
 			if( cosmic )
 				searchCosmic();
 			if( dbPtm )
@@ -339,6 +396,13 @@ public class SearchBean implements Serializable {
 	
 	private void searchDbPtm() throws ReloadException {
 		Services.searchDbPtm(databases.getMapDbPtm(), results);
+	}
+	
+	private void searchAux() throws Exception {
+		if( getAuxPssm() != null )
+			auxPssm = services.getPssm(getAuxPssm());
+		Wregex wregex = new Wregex(getAuxRegex(), auxPssm);		
+		Services.searchAux(wregex, results);
 	}
 
 	public void uploadPssm( FileUploadEvent event ) {
@@ -437,7 +501,7 @@ public class SearchBean implements Serializable {
 	    ec.setResponseHeader("Content-Disposition", "attachment; filename=\""+baseFileName+".csv\"");
 		try {
 			OutputStream output = ec.getResponseOutputStream();
-			ResultEx.saveCsv(new OutputStreamWriter(output), results, assayScores, cosmic, dbPtm );
+			ResultEx.saveCsv(new OutputStreamWriter(output), results, assayScores, useAuxMotif, cosmic, dbPtm );
 		} catch( Exception e ) {
 			e.printStackTrace();
 		}
@@ -458,11 +522,10 @@ public class SearchBean implements Serializable {
 			e.printStackTrace();
 		}
 		fc.responseComplete();
-	}
+	}	
 	
-	public void downloadPssm() {
-		String pssmName = getPssm();
-		if( pssmName == null )
+	private void downloadFile( String name ) {
+		if( name == null )
 			return;
 		
 		FacesContext fc = FacesContext.getCurrentInstance();
@@ -470,9 +533,9 @@ public class SearchBean implements Serializable {
 	    ec.responseReset();
 	    ec.setResponseContentType("text"); // Check http://www.iana.org/assignments/media-types for all types. Use if necessary ExternalContext#getMimeType() for auto-detection based on filename.
 	    //ec.setResponseContentLength(length);
-	    ec.setResponseHeader("Content-Disposition", "attachment; filename=\""+pssmName+"\"");
+	    ec.setResponseHeader("Content-Disposition", "attachment; filename=\""+name+"\"");
 		try {
-			BufferedReader rd = new BufferedReader(new InputStreamReader(ec.getResourceAsStream("/resources/data/"+pssmName)));
+			BufferedReader rd = new BufferedReader(new InputStreamReader(ec.getResourceAsStream("/resources/data/"+name)));
 			PrintWriter wr = new PrintWriter(ec.getResponseOutputStream());
 			String str;
 			while( (str = rd.readLine()) != null )
@@ -483,7 +546,15 @@ public class SearchBean implements Serializable {
 			e.printStackTrace();
 		}
 		fc.responseComplete();
-	}		
+	}
+	
+	public void downloadPssm() {
+		downloadFile(getPssm());
+	}
+	
+	public void downloadAuxPssm() {
+		downloadFile(getAuxPssm());
+	}
 
 	public boolean getAssayScores() {
 		return assayScores;
@@ -538,5 +609,45 @@ public class SearchBean implements Serializable {
 	
 	public boolean isInitialized() {
 		return databases.isInitialized();
+	}
+	
+	public String getAuxMotif() {
+		return auxMotif;
+	}
+
+	public void setAuxMotif(String auxMotif) {
+		this.auxMotif = auxMotif;
+	}
+
+	public String getAuxConfiguration() {
+		return auxDefinition;
+	}
+
+	public void setAuxConfiguration(String auxDefinition) {
+		this.auxDefinition = auxDefinition;
+	}
+
+	public MotifInformation getAuxMotifInformation() {
+		return auxMotifInformation;
+	}
+
+	public void setAuxMotifInformation(MotifInformation auxMotifInformation) {
+		this.auxMotifInformation = auxMotifInformation;
+	}
+
+	public MotifDefinition getAuxMotifDefinition() {
+		return auxMotifDefinition;
+	}
+
+	public void setAuxMotifDefinition(MotifDefinition auxMotifDefinition) {
+		this.auxMotifDefinition = auxMotifDefinition;
+	}
+
+	public boolean isUseAuxMotif() {
+		return useAuxMotif;
+	}
+
+	public void setUseAuxMotif(boolean useAuxMotif) {
+		this.useAuxMotif = useAuxMotif;
 	}
 }

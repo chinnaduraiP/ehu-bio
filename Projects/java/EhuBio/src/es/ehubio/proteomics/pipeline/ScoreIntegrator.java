@@ -72,6 +72,7 @@ public class ScoreIntegrator {
 	}
 	
 	public static void modelRandom( Collection<Protein> proteins, RandomMatcher random ) {
+		logger.info("Modelling random peptide-protein matching ...");
 		for( Protein protein : proteins ) {
 			double Nq = random.getExpected(protein);
 			PoissonDistribution pois = new PoissonDistribution(Nq);

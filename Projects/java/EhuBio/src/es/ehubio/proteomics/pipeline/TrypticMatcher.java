@@ -24,6 +24,7 @@ public class TrypticMatcher implements RandomMatcher {
 	}
 	
 	private long createNq(Collection<Protein> proteins) {
+		logger.info("Computing observable peptides ...");
 		long total = 0;		
 		for( Protein protein : proteins ) {
 			List<String> list = Digester.digestSequence(protein.getSequence(), enzyme, missCleavages);
@@ -51,6 +52,7 @@ public class TrypticMatcher implements RandomMatcher {
 	}
 	
 	private List<Protein> digestDb(Collection<Protein> proteins) {
+		logger.info("Building a dataset with all observable peptides ...");
 		Map<String,Peptide> mapPeptides = new HashMap<>();
 		List<Protein> list = new ArrayList<>();		
 		for( Protein protein : proteins ) {

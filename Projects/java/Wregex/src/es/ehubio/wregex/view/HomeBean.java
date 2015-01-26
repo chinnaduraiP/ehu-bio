@@ -67,6 +67,7 @@ public class HomeBean implements Serializable {
 		addPage(page);
 		
 		news = new ArrayList<>();
+		news.add(new LatestNew("Jan 26, 2015", "Included support for a second auxiliary motif"));
 		news.add(new LatestNew("Jan 20, 2015", "Mutation is displayed in red and mutation effect is also saved in the CSV"));
 		news.add(new LatestNew("Dec 29, 2014", "Included mutation effect score"));
 		news.add(new LatestNew("Apr 16, 2014", "Made more robust the training page to avoid denial of service to another users"));
@@ -116,7 +117,7 @@ public class HomeBean implements Serializable {
 	}
 	
 	public String getSignature() {
-		return "Wregex (v2.0-alpha5)";
+		return "Wregex (v2.0-alpha6)";
 		//return "Wregex (v1.1)";
 	}
 	
