@@ -88,6 +88,21 @@ public class Services {
 		return results;
 	}
 	
+	public static void searchAux(Wregex wregex, List<ResultEx> results) {
+		for( ResultEx result : results ) {
+			List<ResultGroup> groups = wregex.searchGrouping(result.getResult().getFasta());
+			if( wregex.getPssm() == null ) {
+				result.setAuxScore((double)groups.size());
+				continue;
+			}
+			double max = 0.0;
+			for( ResultGroup group : groups )
+				if( group.getScore() > max )
+					max = group.getScore();
+			result.setAuxScore(max);
+		}
+	}
+	
 	public static void searchCosmic(Map<String,CosmicStats> cosmic, List<ResultEx> results, boolean expand ) {
 		if( expand )
 			searchCosmicExt(cosmic, results);
@@ -224,5 +239,5 @@ public class Services {
 	
 	public long getInitNumber( String param ) {
 		return Long.parseLong(context.getInitParameter(param));
-	}
+	}	
 }

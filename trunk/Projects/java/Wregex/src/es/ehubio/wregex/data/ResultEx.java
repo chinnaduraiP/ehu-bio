@@ -25,6 +25,7 @@ public class ResultEx implements Comparable<ResultEx> {
 	private String mutAa;
 	private Double mutScore;
 	private Wregex wregex;
+	private Double auxScore;
 	private static final char separator = ',';
 	
 	public ResultEx( Result result ) {
@@ -42,6 +43,7 @@ public class ResultEx implements Comparable<ResultEx> {
 		setMutSequence(result.getMutSequence());
 		setMutScore(result.getMutScore());
 		setWregex(result.getWregex());
+		setAuxScore(result.getAuxScore());
 	}
 
 	public int compareTo(ResultEx o) {
@@ -65,18 +67,25 @@ public class ResultEx implements Comparable<ResultEx> {
 		if( getScore() > o.getScore() )
 			return -1;
 		if( getScore() < o.getScore() )
-			return 1;		
-		// 4. PTMs
+			return 1;
+		// 4. Aux Score
+		if( auxScore == null && o.auxScore != null )
+			return 1;
+		if( auxScore != null && o.auxScore == null )
+			return -1;
+		if( auxScore != null && o.auxScore != null )
+			return (int)Math.signum(o.auxScore - auxScore);
+		// 5. PTMs
 		if( dbPtms > o.dbPtms )
 			return -1;
 		if( dbPtms < o.dbPtms )
 			return 1;
-		// 5. Wregex Combinations
+		// 6. Wregex Combinations
 		if( getCombinations() > o.getCombinations() )
 			return -1;
 		if( getCombinations() < o.getCombinations() )
 			return 1;
-		// 6. Match length
+		// 7. Match length
 		if( getMatch().length() > o.getMatch().length() )
 			return -1;
 		if( getMatch().length() < o.getMatch().length() )
@@ -154,6 +163,12 @@ public class ResultEx implements Comparable<ResultEx> {
 			return "?";
 		return String.format("%.1f", getScore());
 	}
+	
+	public String getAuxScoreAsString() {
+		if( getAuxScore() == null )
+			return "?";
+		return String.format("%.1f", getAuxScore());
+	}
 
 	public int getStart() {
 		return result.getStart();
@@ -175,11 +190,12 @@ public class ResultEx implements Comparable<ResultEx> {
 		Result.saveAln(wr, getResults(results)); 		
 	}
 	
-	public static void saveCsv(Writer wr, List<ResultEx> results, boolean assays, boolean cosmic, boolean dbPtm ) {
+	public static void saveCsv(Writer wr, List<ResultEx> results, boolean assays, boolean aux, boolean cosmic, boolean dbPtm ) {
 		PrintWriter pw = new PrintWriter(wr);
 		List<String> fields = new ArrayList<>();
 		fields.addAll(Arrays.asList(new String[]{"#","ID","Entry","Motif","Begin","End","Combinations","Sequence","Alignment","Score"}));
 		if( assays ) { fields.add("Assay"); fields.add("Assay"); }
+		if( aux ) fields.add("Aux");
 		if( cosmic ) { fields.add("Gene"); fields.add("Mutant"); fields.add("Mutation effect"); fields.add("COSMIC:Missense"); }
 		if( dbPtm ) fields.add("dbPTM");
 		pw.println(CsvUtils.getCsv(separator, fields.toArray()));
@@ -200,6 +216,8 @@ public class ResultEx implements Comparable<ResultEx> {
 				fields.add(result.getGroupAssayAsString());
 				fields.add(""+result.getGroupAssay());
 			}
+			if( aux )
+				fields.add(result.getAuxScore().toString());
 			if( cosmic ) {
 				fields.add(result.getGene());
 				fields.add(result.getMutSequence());
@@ -347,5 +365,13 @@ public class ResultEx implements Comparable<ResultEx> {
 
 	public String getMutAa() {
 		return mutAa;
+	}
+
+	public Double getAuxScore() {
+		return auxScore;
+	}
+
+	public void setAuxScore(Double auxScore) {
+		this.auxScore = auxScore;
 	}
 }
