@@ -63,19 +63,19 @@
 						</p:column>
 					</p:row>
 					
-					<p:row rendered="#{searchBean.motifInformation != null or searchBean.auxMotifInformation != null}">
+					<p:row rendered="#{searchBean.showMotifDetails}">
 						<p:column>Summary:</p:column>
 						<p:column>#{searchBean.summary}</p:column>
 						<p:column rendered="#{searchBean.useAuxMotif}">#{searchBean.auxSummary}</p:column>
 					</p:row>
 					
-					<p:row rendered="#{searchBean.motifInformation != null or searchBean.auxMotifInformation != null}">
+					<p:row rendered="#{searchBean.showMotifDetails}">
 						<p:column>Description:</p:column>
 						<p:column>#{searchBean.description}</p:column>
 						<p:column rendered="#{searchBean.useAuxMotif}">#{searchBean.auxDescription}</p:column>
 					</p:row>
 					
-					<p:row rendered="#{searchBean.motifInformation != null or searchBean.auxMotifInformation != null}">
+					<p:row rendered="#{searchBean.showMotifDetails}">
 						<p:column>References:</p:column>
 						<p:column>					
 							<p:dataList value="#{searchBean.references}" var="ref" type="ordered" emptyMessage="">
@@ -93,7 +93,7 @@
 						</p:column>					
 					</p:row>
 					
-					<p:row rendered="#{searchBean.motifInformation != null or searchBean.auxMotifInformation != null or searchBean.custom}">
+					<p:row rendered="#{searchBean.showMotifDetails or searchBean.custom}">
 						<p:column>Regex:</p:column>
 						<p:column>
 							<h:outputText value="#{searchBean.regex}" rendered="#{!searchBean.custom and !searchBean.allMotifs}"/>
@@ -103,7 +103,7 @@
 						<p:column rendered="#{searchBean.useAuxMotif}">#{searchBean.auxRegex}</p:column>
 					</p:row>
 					
-					<p:row rendered="#{searchBean.motifInformation != null or searchBean.auxMotifInformation != null or searchBean.custom}">
+					<p:row rendered="#{searchBean.showMotifDetails or searchBean.custom}">
 						<p:column>PSSM file:</p:column>
 						<p:column>
 							<h:panelGroup rendered="#{!searchBean.custom and !searchBean.allMotifs}">
