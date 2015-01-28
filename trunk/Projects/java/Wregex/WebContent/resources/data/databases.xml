@@ -40,6 +40,12 @@
         <versionFile>/media/data/Sequences/Fasta/nature12912.version</versionFile>
     </database>
     <database>
+        <name>NESdb</name>
+        <type>fasta</type>
+        <path>/media/data/Sequences/NESdb/current/NESdb.fasta</path>
+        <versionFile>/media/data/Sequences/NESdb/current/NESdb.version</versionFile>
+    </database>
+    <database>
         <name>ValidNES</name>
         <type>fasta</type>
         <path>/media/data/Sequences/Fasta/ValidNES.fasta</path>

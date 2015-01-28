@@ -650,4 +650,8 @@ public class SearchBean implements Serializable {
 	public void setUseAuxMotif(boolean useAuxMotif) {
 		this.useAuxMotif = useAuxMotif;
 	}
+	
+	public boolean isShowMotifDetails() {
+		return motifInformation != null || (isUseAuxMotif() && auxMotifInformation != null);
+	}
 }
