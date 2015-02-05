@@ -79,7 +79,7 @@ public class ScoreIntegrator {
 			//ExponentialDistribution exp = new ExponentialDistribution(Nq);
 			Score score = protein.getScoreByType(ScoreType.PROTEIN_SPHPP_SCORE);
 			double pep = score.getValue();
-			double sum = 0.0;
+			double sum = 1.0e-300;
 			for( int n = 1; n <= 50; n++ ) {
 				GammaDistribution gamma = new GammaDistribution(n, 1);
 				sum += pois.probability(n)*(1-gamma.cumulativeProbability(pep));
