@@ -59,7 +59,7 @@ public class Digestion {
 	public void testDb() throws IOException, InvalidSequenceException {
 		PrintWriter pw = new PrintWriter("/home/gorka/iakes.csv");
 		List<Fasta> list = Fasta.readEntries("/home/gorka/Bio/Proyectos/Proteómica/spHPP/Work/Flow/letter/Pandey/Gencode20cds_TD_Jul14_TARGET.J.fasta.gz", SequenceType.PROTEIN);
-		list.addAll(Fasta.readEntries("/home/gorka/Bio/Proyectos/Proteómica/spHPP/Work/Flow/letter/Pandey/Gencode20cds_TD_Jul14_DECOY.J.fasta.gz", SequenceType.PROTEIN));
+		list.addAll(Fasta.readEntries("/home/gorka/Bio/Proyectos/Proteómica/spHPP/Work/Flow/letter/Pandey/Gencode20cds_DECOY_TRYPSIN.fasta.gz", SequenceType.PROTEIN));
 		for( Fasta fasta : list ) {
 			pw.print(fasta.getAccession()+"\t");
 			List<String> peptides = Digester.digestSequence(fasta.getSequence(), Enzyme.TRYPSIN, 2);

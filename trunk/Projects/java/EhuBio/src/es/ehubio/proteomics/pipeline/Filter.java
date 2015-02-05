@@ -27,6 +27,7 @@ public class Filter {
 	
 	private Score peptideScoreThreshold;
 	private int minPeptideLength = 0;
+	private int maxPeptideLength = 0;
 	private Boolean filterDecoyPeptides;
 	private boolean uniquePeptides = false;
 	private int minPeptideReplicates = 0;	
@@ -92,6 +93,14 @@ public class Filter {
 	
 	public void setMinPeptideLength(int minPeptideLength) {
 		this.minPeptideLength = minPeptideLength;
+	}
+	
+	public int getMaxPeptideLength() {
+		return maxPeptideLength;
+	}
+	
+	public void setMaxPeptideLength(int maxPeptideLength) {
+		this.maxPeptideLength = maxPeptideLength;
 	}
 
 	public boolean isFilterDecoyPeptides() {
@@ -248,6 +257,10 @@ public class Filter {
 				continue;
 			}
 			if( peptide.getSequence().length() < getMinPeptideLength() ) {
+				unlinkPeptide(peptide);
+				continue;
+			}
+			if( getMaxPeptideLength() > 0 && peptide.getSequence().length() > getMaxPeptideLength() ) {
 				unlinkPeptide(peptide);
 				continue;
 			}
