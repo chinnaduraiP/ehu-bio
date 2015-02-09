@@ -31,7 +31,6 @@ public class CosmicStats {
 	public static Map<String,CosmicStats> load( String path ) throws FileNotFoundException, IOException {
 		Map<String,CosmicStats> results = new HashMap<>();
 		CosmicStats result = null;
-		String gene = null;
 		
 		Cosmic cosmic = new Cosmic();
 		cosmic.openTsvGz(path);
@@ -42,11 +41,11 @@ public class CosmicStats {
 			ProteinMutation mut = Hgvs.parseProteinMutation(entry.getMutationAa());
 			if( mut == null || mut.getType() != ProteinMutation.Type.Missense )
 				continue;
-			if( gene == null || !entry.getGeneName().equals(gene) ) {				
-				gene = entry.getGeneName();
+			result = results.get(entry.getGeneName());
+			if( result == null ) {				
 				result = new CosmicStats();
-				result.setGene(gene);
-				results.put(gene, result);
+				result.setGene(entry.getGeneName());
+				results.put(entry.getGeneName(), result);
 			}
 			Locus locus = result.getLoci().get(mut.getPosition());
 			if( locus == null ) {
