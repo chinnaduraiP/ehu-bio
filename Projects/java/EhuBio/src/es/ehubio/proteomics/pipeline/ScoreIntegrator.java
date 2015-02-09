@@ -74,18 +74,24 @@ public class ScoreIntegrator {
 	public static void modelRandom( Collection<Protein> proteins, RandomMatcher random ) {
 		logger.info("Modelling random peptide-protein matching ...");
 		for( Protein protein : proteins ) {
-			double Nq = random.getExpected(protein);
-			PoissonDistribution pois = new PoissonDistribution(Nq);
+			double Mq = random.getExpected(protein);
+			if( Mq == 0 )
+				throw new AssertionError(String.format("Mq=0 for %s", protein.getAccession()));
+			PoissonDistribution poisson = new PoissonDistribution(Mq);
 			//ExponentialDistribution exp = new ExponentialDistribution(Nq);
 			Score score = protein.getScoreByType(ScoreType.PROTEIN_SPHPP_SCORE);
-			double pep = score.getValue();
+			double LPQ = score.getValue();
 			double sum = 1.0e-300;
 			for( int n = 1; n <= 50; n++ ) {
 				GammaDistribution gamma = new GammaDistribution(n, 1);
-				sum += pois.probability(n)*(1-gamma.cumulativeProbability(pep));
+				sum += poisson.probability(n)*(1-gamma.cumulativeProbability(LPQ));
 				//sum += exp.density(n)*(1-gamma.cumulativeProbability(pep));
-			}
-			score.setValue(-Math.log(sum));
+			}			
+			double LPQcorr = -Math.log(sum);
+			/*if( Mq > 1.0 && (LPQcorr > LPQ || LPQcorr < LPQ/Mq) )
+				//throw new AssertionError(String.format("Modelling error: %s <= %s <= %s not satisfied (Mq=%s)!!", LPQ/Mq, LPQcorr, LPQ, Mq));
+				logger.warning(String.format("Modelling error: %s <= %s <= %s not satisfied (Mq=%s)!!", LPQ/Mq, LPQcorr, LPQ, Mq));*/
+			score.setValue(LPQcorr);
 			//protein.setScore(new Score(ScoreType.PROTEIN_P_VALUE, sum));
 		}
 	}
