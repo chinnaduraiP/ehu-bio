@@ -55,6 +55,22 @@ public abstract class MsMsFile {
 	}
 	
 	public static MsMsData autoLoad( String path, boolean loadFragments ) throws Exception {
+		File dir = new File(path);		
+		if( !dir.isDirectory() )
+			return autoLoadFile(path, loadFragments);
+		
+		MsMsData data = null;
+		for( File file : dir.listFiles() ) {
+			MsMsData tmp = autoLoadFile(file.getAbsolutePath(), loadFragments);
+			if( data == null )
+				data = tmp;
+			else
+				data.merge(tmp);
+		}
+		return data;
+	}
+	
+	private static MsMsData autoLoadFile( String path, boolean loadFragments ) throws Exception {
 		MsMsFile file = autoDetect(path);
 		if( file == null )
 			return null;
