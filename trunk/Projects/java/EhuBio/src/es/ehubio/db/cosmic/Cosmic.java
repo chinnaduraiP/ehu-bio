@@ -26,7 +26,7 @@ public class Cosmic {
 			return null;
 		
 		Entry entry = new Entry();
-		entry.setGeneName(rd.getField("Gene name"));
+		entry.setGeneName(rd.getField("Gene name"));		
 		entry.setAccession(rd.getField("Accession Number"));
 		entry.setGeneCdsLength(rd.getField("Gene CDS length"));
 		entry.setHgncId(rd.getField("HGNC ID"));

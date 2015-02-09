@@ -13,7 +13,7 @@
     <database>
         <name>COSMIC</name>
         <type>cosmic</type>
-        <path>/media/data/Sequences/Cosmic/current/CosmicMutantExportIncFus.tsv.gz</path>
+        <path>/media/data/Sequences/Cosmic/current/CosmicMutantExport.tsv.gz</path>
         <versionFile>/media/data/Sequences/Cosmic/current/version.txt</versionFile>
     </database>
     <database>
