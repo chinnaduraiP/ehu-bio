@@ -29,7 +29,7 @@ public class ScoreIntegrator {
 	public static void updatePsmScores( Collection<Psm> psms ) {
 		for( Psm psm : psms ) {
 			Score pValue = psm.getScoreByType(ScoreType.PSM_P_VALUE);
-			Score spHpp = new Score(ScoreType.PSM_SPHPP_SCORE, -Math.log(pValue.getValue()));
+			Score spHpp = new Score(ScoreType.PSM_SPHPP_SCORE, -Math.log10(pValue.getValue()));
 			psm.addScore(spHpp);
 		}
 	}
@@ -45,7 +45,6 @@ public class ScoreIntegrator {
 			for( Peptide peptide : protein.getPeptides() )
 				s += peptide.getScoreByType(ScoreType.PEPTIDE_SPHPP_SCORE).getValue()/peptide.getProteins().size();
 			protein.setScore(new Score(ScoreType.PROTEIN_SPHPP_SCORE, s));
-			//protein.setScore(new Score(ScoreType.PROTEIN_P_VALUE, Math.exp(-s)));
 		}
 	}
 	
@@ -67,33 +66,69 @@ public class ScoreIntegrator {
 			double Nq = random.getExpected(protein);
 			Score score = protein.getScoreByType(ScoreType.PROTEIN_SPHPP_SCORE);
 			score.setValue(score.getValue()/Nq);
-			//protein.setScore(new Score(ScoreType.PROTEIN_P_VALUE, Math.exp(-score.getValue())));
 		}
 	}
 	
 	public static void modelRandom( Collection<Protein> proteins, RandomMatcher random ) {
 		logger.info("Modelling random peptide-protein matching ...");
+		double loge = Math.log(10.0);
+		//try{
+		//PrintWriter pw = new PrintWriter(String.format("/home/gorka/model%s.csv", proteins.hashCode()));
 		for( Protein protein : proteins ) {
 			double Mq = random.getExpected(protein);
 			if( Mq == 0 )
-				throw new AssertionError(String.format("Mq=0 for %s", protein.getAccession()));
-			PoissonDistribution poisson = new PoissonDistribution(Mq);
-			//ExponentialDistribution exp = new ExponentialDistribution(Nq);
+				throw new AssertionError(String.format("Mq=0 for %s", protein.getAccession()));			
 			Score score = protein.getScoreByType(ScoreType.PROTEIN_SPHPP_SCORE);
 			double LPQ = score.getValue();
-			double sum = 1.0e-300;
-			for( int n = 1; n <= 50; n++ ) {
+			
+			int[] range = getRange(Mq, LPQ);
+			double sum = 1.0e-300;			
+			PoissonDistribution poisson = new PoissonDistribution(Mq);
+			for( int n = range[0]; n <= range[1]; n++ ) {
 				GammaDistribution gamma = new GammaDistribution(n, 1);
-				sum += poisson.probability(n)*(1-gamma.cumulativeProbability(LPQ));
-				//sum += exp.density(n)*(1-gamma.cumulativeProbability(pep));
-			}			
-			double LPQcorr = -Math.log(sum);
-			/*if( Mq > 1.0 && (LPQcorr > LPQ || LPQcorr < LPQ/Mq) )
-				//throw new AssertionError(String.format("Modelling error: %s <= %s <= %s not satisfied (Mq=%s)!!", LPQ/Mq, LPQcorr, LPQ, Mq));
-				logger.warning(String.format("Modelling error: %s <= %s <= %s not satisfied (Mq=%s)!!", LPQ/Mq, LPQcorr, LPQ, Mq));*/
+				sum += poisson.probability(n)*(1-gamma.cumulativeProbability(LPQ*loge));
+			}
+			
+			double LPQcorr = -Math.log10(sum);
 			score.setValue(LPQcorr);
-			//protein.setScore(new Score(ScoreType.PROTEIN_P_VALUE, sum));
+			
+			//pw.println(String.format("%s,%s,%s,%s,%s,%s",protein.getAccession(),Mq,LPQ,LPQcorr,range[0],range[1]));
 		}
+		//pw.close();
+		//} catch( Exception e ) {};
+	}
+	
+	private static int[] getRange( double Mq, double LPQ ) {
+		//return new int[]{1,50};
+		
+		int p1, p2;
+		if( Mq < 7 ) {
+			p1 = 1;
+			p2 = 20;
+		} else {
+			double rangePoisson = 5.3*Math.pow(Mq,-0.55)*Mq; // Poisson > 0.00001
+			p1 = (int)Math.round(Mq-rangePoisson);
+			p2 = (int)Math.round(Mq+rangePoisson);		
+			if( p1 < 1 ) p1 = 1;
+		}
+		
+		int g1, g2;
+		if( LPQ < 8 ) {
+			g1 = 1;
+			g2 = 20;
+		} else {
+			double rangeGamma = 4.4*Math.pow(LPQ,-0.50)*LPQ; // Gamma > 0.00001
+			g1 = (int)Math.round(LPQ-rangeGamma);
+			g2 = (int)Math.round(LPQ+rangeGamma);		
+			if( g1 < 1 ) g1 = 1;
+		}
+		
+		if( p2 < g1 || p1 > g2 )
+			return new int[]{1,0};
+		int[] range = new int[2];
+		range[0] = p1 < g1 ? p1 : g1;
+		range[1] = p2 > g2 ? p2 : g2;
+		return range;
 	}
 	
 	private static Map<Protein, Map<Peptide,Double>> initFactors( Collection<Protein> proteins ) {
@@ -141,14 +176,11 @@ public class ScoreIntegrator {
 		}
 	}	
 	
-	//private static void basicIntegrator(Collection<? extends DecoyBase> subitems, ScoreType lowS, DecoyBase item, ScoreType upP, ScoreType upS) {
 	private static void sumIntegrator(DecoyBase item, Collection<? extends DecoyBase> subitems, ScoreType lowScore, ScoreType upScore) {
 		double s = 0.0;
 		for( DecoyBase subitem : subitems )
 			s += subitem.getScoreByType(lowScore).getValue();
-		//Score pValue = new Score(upP,Math.exp(-s));
 		Score spHpp = new Score(upScore,s);
-		//item.setScore(pValue);
 		item.setScore(spHpp);
 	}
 	
