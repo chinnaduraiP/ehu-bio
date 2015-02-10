@@ -34,6 +34,7 @@ public class TrypticMatcher implements RandomMatcher {
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}*/	
+		//System.out.println(String.format("%s - %s", decoys, total));
 	}
 	
 	private long createNq(List<Fasta> proteins) {
@@ -58,9 +59,9 @@ public class TrypticMatcher implements RandomMatcher {
 			for( Peptide peptide : protein.getPeptides() ) {
 				if( peptide.getProteins().isEmpty() )
 					throw new AssertionError("This should not happen"); 
-				tryptic += ((double)getTryptic(peptide.getSequence()))/peptide.getProteins().size();
-				total += tryptic;
+				tryptic += ((double)getTryptic(peptide.getSequence()))/peptide.getProteins().size();				
 			}
+			total += tryptic;
 			mapTryptic.put(protein.getAccession(), tryptic);
 		}
 		return Math.round(total);
@@ -90,10 +91,7 @@ public class TrypticMatcher implements RandomMatcher {
 
 	@Override
 	public double getExpected(Protein protein) {
-		double Nq = mapTryptic.get(protein.getAccession())/((double)total)*decoys;
-		if( Nq < minNq )
-			Nq = minNq;
-		return Nq;
+		return mapTryptic.get(protein.getAccession())/((double)total)*decoys;
 	}
 	
 	private long getTryptic( String peptide ) {
@@ -128,7 +126,6 @@ public class TrypticMatcher implements RandomMatcher {
 
 	private final static Logger logger = Logger.getLogger(TrypticMatcher.class.getName());
 	private final static int countWarning = 20;
-	private final static double minNq = 0.0;
 	private final Enzyme enzyme;
 	private final int missCleavages, minLength, maxLength;
 	private final Aminoacid[] varMods;	
