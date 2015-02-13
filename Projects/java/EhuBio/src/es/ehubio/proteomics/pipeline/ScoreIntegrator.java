@@ -100,6 +100,7 @@ public class ScoreIntegrator {
 	
 	private static int[] getRange( double Mq, double LPQ ) {
 		//return new int[]{1,50};
+		//return new int[]{1,1000};
 		
 		int p1, p2;
 		if( Mq < 7 ) {

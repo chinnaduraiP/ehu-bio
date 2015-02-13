@@ -1,6 +1,9 @@
 package es.ehubio.proteomics.pipeline;
 
+import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -10,6 +13,7 @@ import java.util.logging.Logger;
 import es.ehubio.db.fasta.Fasta;
 import es.ehubio.db.fasta.Fasta.InvalidSequenceException;
 import es.ehubio.db.fasta.Fasta.SequenceType;
+import es.ehubio.io.Streams;
 import es.ehubio.model.Aminoacid;
 import es.ehubio.proteomics.Enzyme;
 import es.ehubio.proteomics.Peptide;
@@ -23,18 +27,81 @@ public class TrypticMatcher implements RandomMatcher {
 		this.minLength = minLength;
 		this.maxLength = maxLength;
 		this.varMods = varMods;
-		List<Fasta> proteins = Fasta.readEntries(fastaPath, SequenceType.PROTEIN);
-		this.total = shared ? createMq(proteins) : createNq(proteins);
-		/*PrintWriter pw;
-		try {
-			pw = new PrintWriter(String.format("/home/gorka/map%s.csv", proteins.hashCode()));
-			for( Map.Entry<String, Double> entry : mapTryptic.entrySet() )
-				pw.println(entry.getKey()+","+entry.getValue());
-			pw.close();
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		}*/	
+		this.total = loadCache(fastaPath, shared);
 		//System.out.println(String.format("%s - %s", decoys, total));
+	}
+	
+	private long loadCache( String fastaPath, boolean shared ) throws IOException, InvalidSequenceException {
+		long total;
+		if( shared ) {
+			total = loadMq(getCacheName(fastaPath));
+			if( total >= 0 )
+				return total;
+		}
+		List<Fasta> proteins = Fasta.readEntries(fastaPath, SequenceType.PROTEIN);
+		if( shared ) {
+			total = createMq(proteins);
+			saveMq(getCacheName(fastaPath));
+		} else
+			total = createNq(proteins);
+		return total;
+	}
+	
+	private void saveMq( String cachePath ) throws IOException {
+		logger.info("Saving Mq values for future uses ...");
+		PrintWriter pw = new PrintWriter(Streams.getTextWriter(cachePath));		
+		pw.println("Mq version:1.0");
+		pw.println(String.format("enzyme:%s", enzyme.name()));
+		pw.println(String.format("missCleavages:%s", missCleavages));
+		pw.println(String.format("minLength:%s", minLength));
+		pw.println(String.format("maxLength:%s", maxLength));
+		pw.println(getModString());
+		for( Map.Entry<String, Double> entry : mapTryptic.entrySet() )
+			pw.println(entry.getKey()+","+entry.getValue());
+		pw.close();
+	}
+	
+	private String getModString() {
+		StringBuilder str = new StringBuilder();
+		str.append("varMods:");
+		for( Aminoacid aa : varMods )
+			str.append(aa.letter);
+		return str.toString();
+	}
+	
+	private String getCacheName( String fastaPath ) {
+		return fastaPath.replaceAll("\\.fasta(\\.gz)?$", ".Mq.gz");
+	}
+
+	private long loadMq( String cachePath ) throws IOException {
+		File file = new File(cachePath);
+		if( !file.exists() )
+			return -1;		
+		
+		double total = 0.0;
+		BufferedReader rd = new BufferedReader(Streams.getTextReader(file));
+		if( "Mq version:1.0".equals(rd.readLine()) &&
+			String.format("enzyme:%s", enzyme.name()).equals(rd.readLine()) &&
+			String.format("missCleavages:%s", missCleavages).equals(rd.readLine()) &&
+			String.format("minLength:%s", minLength).equals(rd.readLine()) &&
+			String.format("maxLength:%s", maxLength).equals(rd.readLine()) &&
+			getModString().equals(rd.readLine()) ) {
+			logger.info("Loading saved Mq values ...");
+			String line;
+			String[] fields;
+			while( (line=rd.readLine()) != null ) {
+				fields = line.split(",");
+				double tryptic = Double.parseDouble(fields[1]);
+				total += tryptic;
+				mapTryptic.put(fields[0], tryptic);
+			}
+		} else {
+			logger.info("Discarded saved Mq values");
+			rd.close();
+			return -1;
+		}
+		rd.close();
+		return Math.round(total);
 	}
 	
 	private long createNq(List<Fasta> proteins) {
