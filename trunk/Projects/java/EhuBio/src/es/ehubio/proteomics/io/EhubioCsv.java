@@ -55,7 +55,7 @@ public class EhubioCsv extends MsMsFile {
 			ScoreType.PSM_LOCAL_FDR.getName(),
 			ScoreType.PSM_Q_VALUE.getName(),
 			ScoreType.PSM_FDR_SCORE.getName(),
-			ScoreType.PSM_SPHPP_SCORE.getName(),
+			ScoreType.LPS_SCORE.getName(),
 			"passThreshold"
 			));
 		for( Psm psm : data.getPsms() )
@@ -67,7 +67,7 @@ public class EhubioCsv extends MsMsFile {
 				getScore(psm,ScoreType.PSM_LOCAL_FDR),
 				getScore(psm,ScoreType.PSM_Q_VALUE),
 				getScore(psm,ScoreType.PSM_FDR_SCORE),
-				getScore(psm,ScoreType.PSM_SPHPP_SCORE),
+				getScore(psm,ScoreType.LPS_SCORE),
 				psm.isPassThreshold()
 				));
 		pw.close();
@@ -81,7 +81,7 @@ public class EhubioCsv extends MsMsFile {
 			ScoreType.PEPTIDE_LOCAL_FDR.getName(),
 			ScoreType.PEPTIDE_Q_VALUE.getName(),
 			ScoreType.PEPTIDE_FDR_SCORE.getName(),
-			ScoreType.PEPTIDE_SPHPP_SCORE.getName(),
+			ScoreType.LPP_SCORE.getName(),
 			"passThreshold"
 			));
 		for( Peptide peptide : data.getPeptides() )
@@ -92,7 +92,7 @@ public class EhubioCsv extends MsMsFile {
 				getScore(peptide,ScoreType.PEPTIDE_LOCAL_FDR),
 				getScore(peptide,ScoreType.PEPTIDE_Q_VALUE),
 				getScore(peptide,ScoreType.PEPTIDE_FDR_SCORE),
-				getScore(peptide,ScoreType.PEPTIDE_SPHPP_SCORE),
+				getScore(peptide,ScoreType.LPP_SCORE),
 				peptide.isPassThreshold()
 				));
 		pw.close();
@@ -101,23 +101,28 @@ public class EhubioCsv extends MsMsFile {
 	private void saveProteins(String path) throws IOException {
 		PrintWriter pw = new PrintWriter(path);
 		pw.println(CsvUtils.getCsv(SEP,
-			"accession","decoy","confidence","peptides",
+			"accession","decoy","confidence","peptides","#peptides",
 			ScoreType.PROTEIN_P_VALUE.getName(),
 			ScoreType.PROTEIN_LOCAL_FDR.getName(),
 			ScoreType.PROTEIN_Q_VALUE.getName(),
 			ScoreType.PROTEIN_FDR_SCORE.getName(),
-			ScoreType.PROTEIN_SPHPP_SCORE.getName(),
+			ScoreType.LPQCORR_SCORE.getName(),
+			ScoreType.LPQ_SCORE.getName(),
+			ScoreType.MQ_VALUE.getName(),
 			"passThreshold"
 			));
 		for( Protein protein : data.getProteins() )
 			pw.println(CsvUtils.getCsv(SEP,
 				protein.getAccession(), Boolean.TRUE.equals(protein.getDecoy()), protein.getConfidence(),
 				CsvUtils.getCsv(INTER, protein.getPeptides().toArray()),
+				protein.getPeptides().size(),
 				getScore(protein,ScoreType.PROTEIN_P_VALUE),
 				getScore(protein,ScoreType.PROTEIN_LOCAL_FDR),
 				getScore(protein,ScoreType.PROTEIN_Q_VALUE),
 				getScore(protein,ScoreType.PROTEIN_FDR_SCORE),
-				getScore(protein,ScoreType.PROTEIN_SPHPP_SCORE),
+				getScore(protein,ScoreType.LPQCORR_SCORE),
+				getScore(protein,ScoreType.LPQ_SCORE),
+				getScore(protein,ScoreType.MQ_VALUE),
 				protein.isPassThreshold()
 				));
 		pw.close();
@@ -126,24 +131,26 @@ public class EhubioCsv extends MsMsFile {
 	private void saveGroups(String path) throws IOException {
 		PrintWriter pw = new PrintWriter(path);
 		pw.println(CsvUtils.getCsv(SEP,
-			"id","name","decoy","confidence","proteins","peptides",
+			"id","name","decoy","confidence","proteins","#proteins","peptides","#peptides",
 			ScoreType.GROUP_P_VALUE.getName(),
 			ScoreType.GROUP_LOCAL_FDR.getName(),
 			ScoreType.GROUP_Q_VALUE.getName(),
 			ScoreType.GROUP_FDR_SCORE.getName(),
-			ScoreType.GROUP_SPHPP_SCORE.getName(),
+			ScoreType.LPG_SCORE.getName(),
 			"passThreshold"
 			));
 		for( ProteinGroup group : data.getGroups() )
 			pw.println(CsvUtils.getCsv(SEP,
 				group.getId(), group.buildName(), Boolean.TRUE.equals(group.getDecoy()), group.getConfidence(),
 				CsvUtils.getCsv(INTER, group.getProteins().toArray()),
+				group.getProteins().size(),
 				CsvUtils.getCsv(INTER, group.getPeptides().toArray()),
+				group.getPeptides().size(),
 				getScore(group,ScoreType.GROUP_P_VALUE),
 				getScore(group,ScoreType.GROUP_LOCAL_FDR),
 				getScore(group,ScoreType.GROUP_Q_VALUE),
 				getScore(group,ScoreType.GROUP_FDR_SCORE),
-				getScore(group,ScoreType.GROUP_SPHPP_SCORE),
+				getScore(group,ScoreType.LPG_SCORE),
 				group.isPassThreshold()
 				));
 		pw.close();
