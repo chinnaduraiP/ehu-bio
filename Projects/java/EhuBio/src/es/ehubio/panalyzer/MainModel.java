@@ -415,7 +415,7 @@ public class MainModel {
 	private void processPeptideFdr(MsMsData data) {
 		if( config.getPeptideFdr() != null || config.getProteinFdr() != null || config.getGroupFdr() != null ) {			
 			ScoreIntegrator.psmToPeptide(data.getPeptides());
-			fdrCalc.updatePeptideScores(data.getPeptides(), ScoreType.PEPTIDE_SPHPP_SCORE, false);
+			fdrCalc.updatePeptideScores(data.getPeptides(), ScoreType.LPP_SCORE, false);
 		}
 		if( config.getPeptideFdr() == null )
 			return;
@@ -432,7 +432,7 @@ public class MainModel {
 		ScoreIntegrator.peptideToProteinEquitative(data.getProteins());
 		RandomMatcher random = new DecoyMatcher(data.getProteins(), config.getDecoyRegex(), true);
 		ScoreIntegrator.divideRandom(data.getProteins(), random);
-		fdrCalc.updateProteinScores(data.getProteins(), ScoreType.PROTEIN_SPHPP_SCORE, false);
+		fdrCalc.updateProteinScores(data.getProteins(), ScoreType.LPQCORR_SCORE, false);
 		Filter filter = new Filter(data);
 		filter.setProteinScoreThreshold(new Score(ScoreType.PROTEIN_Q_VALUE, config.getProteinFdr()));
 		filterAndGroup(filter,String.format("Protein FDR=%s filter",config.getProteinFdr()));
@@ -454,7 +454,7 @@ public class MainModel {
 		do {
 			i++;
 			ScoreIntegrator.proteinToGroup(data.getGroups());
-			fdrCalc.updateGroupScores(data.getGroups(), ScoreType.GROUP_SPHPP_SCORE, false);
+			fdrCalc.updateGroupScores(data.getGroups(), ScoreType.LPG_SCORE, false);
 			filterAndGroup(filter,String.format("Group FDR=%s filter, iteration %s",config.getGroupFdr(),i));
 			prevCount = curCount;
 			curCount = pAnalyzer.getCounts();
@@ -463,7 +463,7 @@ public class MainModel {
 			logger.warning("Maximum number of iterations reached!");
 		
 		ScoreIntegrator.proteinToGroup(data.getGroups());
-		fdrCalc.updateGroupScores(data.getGroups(), ScoreType.GROUP_SPHPP_SCORE, false);
+		fdrCalc.updateGroupScores(data.getGroups(), ScoreType.LPG_SCORE, false);
 	}
 
 	public String getProgressMessage() {
