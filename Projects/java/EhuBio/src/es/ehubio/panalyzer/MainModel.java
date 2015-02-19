@@ -430,8 +430,8 @@ public class MainModel {
 		//ScoreIntegrator.updateProteinScores(data.getProteins());
 		//ScoreIntegrator.updateProteinScoresPrefix(data.getProteins(),config.getDecoyRegex());
 		ScoreIntegrator.peptideToProteinEquitative(data.getProteins());
-		RandomMatcher random = new DecoyMatcher(data.getProteins(), config.getDecoyRegex(), true);
-		ScoreIntegrator.divideRandom(data.getProteins(), random);
+		RandomMatcher random = new DecoyMatcher(data.getProteins(), config.getDecoyRegex());
+		ScoreIntegrator.divideRandom(data.getProteins(), random, true);
 		fdrCalc.updateProteinScores(data.getProteins(), ScoreType.LPQCORR_SCORE, false);
 		Filter filter = new Filter(data);
 		filter.setProteinScoreThreshold(new Score(ScoreType.PROTEIN_Q_VALUE, config.getProteinFdr()));
@@ -443,8 +443,8 @@ public class MainModel {
 			return;
 		
 		ScoreIntegrator.peptideToProteinEquitative(data.getProteins());
-		RandomMatcher random = new DecoyMatcher(data.getProteins(), config.getDecoyRegex(), true);
-		ScoreIntegrator.divideRandom(data.getProteins(), random);
+		RandomMatcher random = new DecoyMatcher(data.getProteins(), config.getDecoyRegex());
+		ScoreIntegrator.divideRandom(data.getProteins(), random, true);
 		
 		PAnalyzer pAnalyzer = new PAnalyzer(data);		
 		PAnalyzer.Counts curCount = pAnalyzer.getCounts(), prevCount;

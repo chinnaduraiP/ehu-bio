@@ -108,7 +108,10 @@ public class EhubioCsv extends MsMsFile {
 			ScoreType.PROTEIN_FDR_SCORE.getName(),
 			ScoreType.LPQCORR_SCORE.getName(),
 			ScoreType.LPQ_SCORE.getName(),
-			ScoreType.MQ_VALUE.getName(),
+			ScoreType.MQ_EVALUE.getName(),
+			ScoreType.MQ_OVALUE.getName(),
+			ScoreType.NQ_EVALUE.getName(),
+			ScoreType.NQ_OVALUE.getName(),
 			"passThreshold"
 			));
 		for( Protein protein : data.getProteins() )
@@ -122,7 +125,10 @@ public class EhubioCsv extends MsMsFile {
 				getScore(protein,ScoreType.PROTEIN_FDR_SCORE),
 				getScore(protein,ScoreType.LPQCORR_SCORE),
 				getScore(protein,ScoreType.LPQ_SCORE),
-				getScore(protein,ScoreType.MQ_VALUE),
+				getScore(protein,ScoreType.MQ_EVALUE),
+				getScore(protein,ScoreType.MQ_OVALUE),
+				getScore(protein,ScoreType.NQ_EVALUE),
+				getScore(protein,ScoreType.NQ_OVALUE),
 				protein.isPassThreshold()
 				));
 		pw.close();

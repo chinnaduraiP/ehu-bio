@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,44 +21,53 @@ import es.ehubio.proteomics.Peptide;
 import es.ehubio.proteomics.Protein;
 
 public class TrypticMatcher implements RandomMatcher {
-	public TrypticMatcher( String fastaPath, boolean shared, long decoys, Enzyme enzyme, int missCleavages, int minLength, int maxLength, Aminoacid... varMods ) throws IOException, InvalidSequenceException {
-		this.decoys = decoys;
+	private TrypticMatcher( long decoys, long redundantDecoys, Enzyme enzyme, int missCleavages, int minLength, int maxLength, Aminoacid... varMods ) throws IOException, InvalidSequenceException {
+		this.decoys = decoys;		
+		//this.decoys = (long)Math.round(decoys*2.1);
+		this.redundantDecoys = redundantDecoys;
 		this.enzyme = enzyme;
 		this.missCleavages = missCleavages;
 		this.minLength = minLength;
 		this.maxLength = maxLength;
 		this.varMods = varMods;
-		this.total = loadCache(fastaPath, shared);
+	}
+	
+	public TrypticMatcher( String fastaPath, long decoys, long redundantDecoys, Enzyme enzyme, int missCleavages, int minLength, int maxLength, Aminoacid... varMods ) throws IOException, InvalidSequenceException {
+		this(decoys,redundantDecoys,enzyme,missCleavages,minLength,maxLength,varMods);
+		loadCache(fastaPath);
 		//System.out.println(String.format("%s - %s", decoys, total));
 	}
 	
-	private long loadCache( String fastaPath, boolean shared ) throws IOException, InvalidSequenceException {
-		long total;
-		if( shared ) {
-			total = loadMq(getCacheName(fastaPath));
-			if( total >= 0 )
-				return total;
+	public TrypticMatcher( Collection<Protein> proteins, long decoys, long redundantDecoys, Enzyme enzyme, int missCleavages, int minLength, int maxLength, Aminoacid... varMods ) throws IOException, InvalidSequenceException {
+		this(decoys,redundantDecoys,enzyme,missCleavages,minLength,maxLength,varMods);		
+		List<Fasta> fastas = new ArrayList<>();
+		for( Protein protein : proteins ) {
+			Fasta fasta = new Fasta(protein.getAccession(), protein.getDescription(), protein.getSequence(), SequenceType.PROTEIN);
+			fastas.add(fasta);
 		}
+		createMq(fastas);
+		//System.out.println(String.format("%s - %s", decoys, total));
+	}
+	
+	private void loadCache( String fastaPath ) throws IOException, InvalidSequenceException {
+		if( loadMq(getCacheName(fastaPath)) )
+				return;
 		List<Fasta> proteins = Fasta.readEntries(fastaPath, SequenceType.PROTEIN);
-		if( shared ) {
-			total = createMq(proteins);
-			saveMq(getCacheName(fastaPath));
-		} else
-			total = createNq(proteins);
-		return total;
+		createMq(proteins);
+		saveMq(getCacheName(fastaPath));
 	}
 	
 	private void saveMq( String cachePath ) throws IOException {
 		logger.info("Saving Mq values for future uses ...");
 		PrintWriter pw = new PrintWriter(Streams.getTextWriter(cachePath));		
-		pw.println("Mq version:1.0");
+		pw.println("Mq version:2.0");
 		pw.println(String.format("enzyme:%s", enzyme.name()));
 		pw.println(String.format("missCleavages:%s", missCleavages));
 		pw.println(String.format("minLength:%s", minLength));
 		pw.println(String.format("maxLength:%s", maxLength));
 		pw.println(getModString());
-		for( Map.Entry<String, Double> entry : mapTryptic.entrySet() )
-			pw.println(entry.getKey()+","+entry.getValue());
+		for( Map.Entry<String, Result> entry : mapTryptic.entrySet() )
+			pw.println(String.format("%s,%s,%s", entry.getKey(), entry.getValue().getNq(), entry.getValue().getMq()));
 		pw.close();
 	}
 	
@@ -73,14 +83,14 @@ public class TrypticMatcher implements RandomMatcher {
 		return fastaPath.replaceAll("\\.fasta(\\.gz)?$", ".Mq.gz");
 	}
 
-	private long loadMq( String cachePath ) throws IOException {
+	private boolean loadMq( String cachePath ) throws IOException {
 		File file = new File(cachePath);
 		if( !file.exists() )
-			return -1;		
+			return false;		
 		
-		double total = 0.0;
+		totalNq = totalMq = 0.0;
 		BufferedReader rd = new BufferedReader(Streams.getTextReader(file));
-		if( "Mq version:1.0".equals(rd.readLine()) &&
+		if( "Mq version:2.0".equals(rd.readLine()) &&
 			String.format("enzyme:%s", enzyme.name()).equals(rd.readLine()) &&
 			String.format("missCleavages:%s", missCleavages).equals(rd.readLine()) &&
 			String.format("minLength:%s", minLength).equals(rd.readLine()) &&
@@ -91,47 +101,38 @@ public class TrypticMatcher implements RandomMatcher {
 			String[] fields;
 			while( (line=rd.readLine()) != null ) {
 				fields = line.split(",");
-				double tryptic = Double.parseDouble(fields[1]);
-				total += tryptic;
-				mapTryptic.put(fields[0], tryptic);
+				double Nq = Double.parseDouble(fields[1]);
+				double Mq = Double.parseDouble(fields[2]);
+				totalNq += Nq;
+				totalMq += Mq;
+				mapTryptic.put(fields[0], new Result(Nq, Mq));
 			}
 		} else {
 			logger.info("Discarded saved Mq values");
 			rd.close();
-			return -1;
+			return false;
 		}
 		rd.close();
-		return Math.round(total);
+		return true;
 	}
 	
-	private long createNq(List<Fasta> proteins) {
-		logger.info("Computing observable peptides ...");
-		long total = 0;		
-		for( Fasta protein : proteins ) {
-			List<String> list = Digester.digestSequence(protein.getSequence(), enzyme, missCleavages);
-			long tryptic = 0;
-			for( String peptide : list )
-				tryptic += getTryptic(peptide);
-			total += tryptic;
-			mapTryptic.put(protein.getAccession(), (double)tryptic);
-		}
-		return total;
-	}
-	
-	private long createMq(List<Fasta> proteins) {
+	private void createMq(List<Fasta> proteins) {
 		List<Protein> list = digestDb(proteins);
-		double total = 0.0;			
+		totalNq = totalMq = 0.0;			
 		for( Protein protein : list ) {
-			double tryptic = 0.0;
+			double Mq = 0.0;
+			double Nq = 0.0;
 			for( Peptide peptide : protein.getPeptides() ) {
 				if( peptide.getProteins().isEmpty() )
-					throw new AssertionError("This should not happen"); 
-				tryptic += ((double)getTryptic(peptide.getSequence()))/peptide.getProteins().size();				
+					throw new AssertionError("This should not happen");
+				double tryptic =(double)getTryptic(peptide.getSequence());
+				Nq += tryptic;
+				Mq += tryptic/peptide.getProteins().size();				
 			}
-			total += tryptic;
-			mapTryptic.put(protein.getAccession(), tryptic);
+			totalNq += Nq;
+			totalMq += Mq;
+			mapTryptic.put(protein.getAccession(), new Result(Nq, Mq));
 		}
-		return Math.round(total);
 	}
 	
 	private List<Protein> digestDb(List<Fasta> proteins) {
@@ -157,8 +158,12 @@ public class TrypticMatcher implements RandomMatcher {
 	}
 
 	@Override
-	public double getExpected(Protein protein) {
-		return mapTryptic.get(protein.getAccession())/((double)total)*decoys;
+	public Result getExpected(Protein protein) {
+		Result tryptic = mapTryptic.get(protein.getAccession());
+		return new Result(
+			tryptic.getNq()/totalNq*redundantDecoys,
+			tryptic.getMq()/totalMq*decoys
+		);
 	}
 	
 	private long getTryptic( String peptide ) {
@@ -196,7 +201,7 @@ public class TrypticMatcher implements RandomMatcher {
 	private final Enzyme enzyme;
 	private final int missCleavages, minLength, maxLength;
 	private final Aminoacid[] varMods;	
-	private final long total;
-	private final long decoys;
-	private final Map<String, Double> mapTryptic = new HashMap<>();
+	private double totalNq, totalMq;
+	private final long decoys, redundantDecoys;
+	private final Map<String, Result> mapTryptic = new HashMap<>();
 }
