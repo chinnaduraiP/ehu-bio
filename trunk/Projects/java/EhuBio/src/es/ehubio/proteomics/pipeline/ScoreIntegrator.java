@@ -28,7 +28,7 @@ public class ScoreIntegrator {
 	}
 	
 	public static void updatePsmScores( Collection<Psm> psms ) {
-		for( Psm psm : psms ) {
+		for( Psm psm : psms ) {			
 			Score pValue = psm.getScoreByType(ScoreType.PSM_P_VALUE);
 			Score spHpp = new Score(ScoreType.LPS_SCORE, -Math.log10(pValue.getValue()));
 			psm.addScore(spHpp);
@@ -89,7 +89,7 @@ public class ScoreIntegrator {
 			Result expected = random.getExpected(protein);
 			double Mq = shared ? expected.getMq() : expected.getNq();
 			if( Mq == 0 )
-				throw new AssertionError(String.format("Mq=0 for %s", protein.getAccession()));			
+				Mq=0.1;//throw new AssertionError(String.format("Mq=0 for %s", protein.getAccession()));			
 			double LPQ = protein.getScoreByType(ScoreType.LPQ_SCORE).getValue()*loge;
 			
 			int n1 = searchInf(Mq, LPQ, 1, (int)Math.round(Mq), 1, epsilon);

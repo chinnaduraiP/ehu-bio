@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import org.apache.commons.math3.util.CombinatoricsUtils;
+
 import es.ehubio.db.fasta.Fasta;
 import es.ehubio.db.fasta.Fasta.InvalidSequenceException;
 import es.ehubio.db.fasta.Fasta.SequenceType;
@@ -21,7 +23,7 @@ import es.ehubio.proteomics.Peptide;
 import es.ehubio.proteomics.Protein;
 
 public class TrypticMatcher implements RandomMatcher {
-	private TrypticMatcher( long decoys, long redundantDecoys, Enzyme enzyme, int missCleavages, int minLength, int maxLength, Aminoacid... varMods ) throws IOException, InvalidSequenceException {
+	private TrypticMatcher( long decoys, long redundantDecoys, Enzyme enzyme, int missCleavages, int minLength, int maxLength, int maxMods, Aminoacid... varMods ) throws IOException, InvalidSequenceException {
 		this.decoys = decoys;		
 		//this.decoys = (long)Math.round(decoys*2.1);
 		this.redundantDecoys = redundantDecoys;
@@ -29,17 +31,18 @@ public class TrypticMatcher implements RandomMatcher {
 		this.missCleavages = missCleavages;
 		this.minLength = minLength;
 		this.maxLength = maxLength;
+		this.maxMods = maxMods;
 		this.varMods = varMods;
 	}
 	
-	public TrypticMatcher( String fastaPath, long decoys, long redundantDecoys, Enzyme enzyme, int missCleavages, int minLength, int maxLength, Aminoacid... varMods ) throws IOException, InvalidSequenceException {
-		this(decoys,redundantDecoys,enzyme,missCleavages,minLength,maxLength,varMods);
+	public TrypticMatcher( String fastaPath, long decoys, long redundantDecoys, Enzyme enzyme, int missCleavages, int minLength, int maxLength, int maxMods, Aminoacid... varMods ) throws IOException, InvalidSequenceException {
+		this(decoys,redundantDecoys,enzyme,missCleavages,minLength,maxLength,maxMods,varMods);
 		loadCache(fastaPath);
 		//System.out.println(String.format("%s - %s", decoys, total));
 	}
 	
-	public TrypticMatcher( Collection<Protein> proteins, long decoys, long redundantDecoys, Enzyme enzyme, int missCleavages, int minLength, int maxLength, Aminoacid... varMods ) throws IOException, InvalidSequenceException {
-		this(decoys,redundantDecoys,enzyme,missCleavages,minLength,maxLength,varMods);		
+	public TrypticMatcher( Collection<Protein> proteins, long decoys, long redundantDecoys, Enzyme enzyme, int missCleavages, int minLength, int maxLength, int maxMods, Aminoacid... varMods ) throws IOException, InvalidSequenceException {
+		this(decoys,redundantDecoys,enzyme,missCleavages,minLength,maxLength,maxMods,varMods);		
 		List<Fasta> fastas = new ArrayList<>();
 		for( Protein protein : proteins ) {
 			Fasta fasta = new Fasta(protein.getAccession(), protein.getDescription(), protein.getSequence(), SequenceType.PROTEIN);
@@ -60,11 +63,12 @@ public class TrypticMatcher implements RandomMatcher {
 	private void saveMq( String cachePath ) throws IOException {
 		logger.info("Saving Mq values for future uses ...");
 		PrintWriter pw = new PrintWriter(Streams.getTextWriter(cachePath));		
-		pw.println("Mq version:2.0");
+		pw.println("Mq version:2.1");
 		pw.println(String.format("enzyme:%s", enzyme.name()));
 		pw.println(String.format("missCleavages:%s", missCleavages));
 		pw.println(String.format("minLength:%s", minLength));
 		pw.println(String.format("maxLength:%s", maxLength));
+		pw.println(String.format("maxMods:%s", maxMods));
 		pw.println(getModString());
 		for( Map.Entry<String, Result> entry : mapTryptic.entrySet() )
 			pw.println(String.format("%s,%s,%s", entry.getKey(), entry.getValue().getNq(), entry.getValue().getMq()));
@@ -90,11 +94,12 @@ public class TrypticMatcher implements RandomMatcher {
 		
 		totalNq = totalMq = 0.0;
 		BufferedReader rd = new BufferedReader(Streams.getTextReader(file));
-		if( "Mq version:2.0".equals(rd.readLine()) &&
+		if( "Mq version:2.1".equals(rd.readLine()) &&
 			String.format("enzyme:%s", enzyme.name()).equals(rd.readLine()) &&
 			String.format("missCleavages:%s", missCleavages).equals(rd.readLine()) &&
 			String.format("minLength:%s", minLength).equals(rd.readLine()) &&
 			String.format("maxLength:%s", maxLength).equals(rd.readLine()) &&
+			String.format("maxMods:%s", maxMods).equals(rd.readLine()) &&
 			getModString().equals(rd.readLine()) ) {
 			logger.info("Loading saved Mq values ...");
 			String line;
@@ -171,10 +176,10 @@ public class TrypticMatcher implements RandomMatcher {
 			return 0;
 		if( varMods.length == 0 )
 			return 1;
-		long count = 0;
+		int n = 0;
 		for( Aminoacid aa : varMods )
-			count += getCombinations(countChars(peptide, aa));
-		return count;
+			n += countChars(peptide, aa);
+		return getCombinations(n);
 	}
 	
 	private long countChars( String seq, Aminoacid aa ) {
@@ -189,17 +194,18 @@ public class TrypticMatcher implements RandomMatcher {
 		return count;
 	}
 	
-	private long getCombinations( long n ) {
+	private long getCombinations( int n ) {
 		long result = 1;
-		for(;n>0;n--)
-			result *= 2;
+		int kmax = n < maxMods ? n : maxMods;
+		for( int k = 1; k <= kmax; k++ )			
+			result += CombinatoricsUtils.binomialCoefficient(n, k);
 		return result;
 	}
 
 	private final static Logger logger = Logger.getLogger(TrypticMatcher.class.getName());
 	private final static int countWarning = 20;
 	private final Enzyme enzyme;
-	private final int missCleavages, minLength, maxLength;
+	private final int missCleavages, minLength, maxLength, maxMods;
 	private final Aminoacid[] varMods;	
 	private double totalNq, totalMq;
 	private final long decoys, redundantDecoys;
