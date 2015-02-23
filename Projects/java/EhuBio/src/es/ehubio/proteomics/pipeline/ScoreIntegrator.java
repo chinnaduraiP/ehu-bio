@@ -68,10 +68,35 @@ public class ScoreIntegrator {
 			sumIntegrator(group, group.getProteins(), ScoreType.LPQCORR_SCORE, ScoreType.LPG_SCORE);
 	}
 	
-	public static void divideRandom( Collection<Protein> proteins, RandomMatcher random, boolean shared ) {
+	private static void setExpectedValues( Collection<Protein> proteins, RandomMatcher random ) {
+		/*List<Double> listNq = new ArrayList<>();
+		List<Double> listMq = new ArrayList<>();
+		for( Protein protein : proteins ) {			
+			Result expected = random.getExpected(protein);
+			if( expected.getNq() == 0 || expected.getMq() == 0 )
+				throw new AssertionError(String.format("Mq=0 for %s, correct your search parameters", protein.getAccession()));
+			listNq.add(protein.getScoreByType(ScoreType.NQ_OVALUE).getValue()/expected.getNq());
+			listMq.add(protein.getScoreByType(ScoreType.MQ_OVALUE).getValue()/expected.getMq());
+		}
+		double Nr = Util.median(listNq);
+		double Mr = Util.median(listMq);
+		logger.info(String.format("Using correction factors: Nr=%s, Mr=%s",Nr,Mr));*/
 		for( Protein protein : proteins ) {
 			Result expected = random.getExpected(protein);
-			double Mq = shared ? expected.getMq() : expected.getNq();
+			if( expected.getNq() == 0 || expected.getMq() == 0 )
+				throw new AssertionError(String.format("Mq=0 for %s, correct your search parameters", protein.getAccession()));
+			/*protein.setScore(new Score(ScoreType.NQ_EVALUE, expected.getNq()*Nr));
+			protein.setScore(new Score(ScoreType.MQ_EVALUE, expected.getMq()*Mr));*/
+			protein.setScore(new Score(ScoreType.NQ_EVALUE, expected.getNq()));
+			protein.setScore(new Score(ScoreType.MQ_EVALUE, expected.getMq()));
+		}
+	}
+	
+	public static void divideRandom( Collection<Protein> proteins, RandomMatcher random, boolean shared ) {
+		setExpectedValues(proteins, random);
+		for( Protein protein : proteins ) {
+			Result expected = random.getExpected(protein);
+			double Mq = shared ? protein.getScoreByType(ScoreType.MQ_EVALUE).getValue() : protein.getScoreByType(ScoreType.NQ_EVALUE).getValue();
 			double LPQ = protein.getScoreByType(ScoreType.LPQ_SCORE).getValue();
 			protein.setScore(new Score(ScoreType.LPQCORR_SCORE, LPQ/Mq));
 			protein.setScore(new Score(ScoreType.MQ_EVALUE, expected.getMq()));
@@ -81,15 +106,13 @@ public class ScoreIntegrator {
 	
 	public static void modelRandom( Collection<Protein> proteins, RandomMatcher random, boolean shared ) {
 		logger.info("Modelling random peptide-protein matching ...");
+		setExpectedValues(proteins, random);
 		double loge = Math.log(10.0);
 		double epsilon = 1e-30;
 		for( Protein protein : proteins ) {
 			/*if( protein.getAccession().equals("decoy-genCDS_ENST00000296755_5_72107532-72205239_1"))
 				System.out.println("Breakpoint");*/
-			Result expected = random.getExpected(protein);
-			double Mq = shared ? expected.getMq() : expected.getNq();
-			if( Mq == 0 )
-				Mq=0.1;//throw new AssertionError(String.format("Mq=0 for %s", protein.getAccession()));			
+			double Mq = shared ? protein.getScoreByType(ScoreType.MQ_EVALUE).getValue() : protein.getScoreByType(ScoreType.NQ_EVALUE).getValue();			
 			double LPQ = protein.getScoreByType(ScoreType.LPQ_SCORE).getValue()*loge;
 			
 			int n1 = searchInf(Mq, LPQ, 1, (int)Math.round(Mq), 1, epsilon);
@@ -103,8 +126,6 @@ public class ScoreIntegrator {
 			
 			double LPQcorr = -Math.log10(sum);
 			protein.setScore(new Score(ScoreType.LPQCORR_SCORE, LPQcorr));
-			protein.setScore(new Score(ScoreType.MQ_EVALUE, expected.getMq()));
-			protein.setScore(new Score(ScoreType.NQ_EVALUE, expected.getNq()));
 		}
 	}
 	
@@ -207,5 +228,5 @@ public class ScoreIntegrator {
 		item.setScore(spHpp);
 	}
 	
-	private static final Logger logger = Logger.getLogger(ScoreIntegrator.class.getName());
+	private static final Logger logger = Logger.getLogger(ScoreIntegrator.class.getName()); 
 }

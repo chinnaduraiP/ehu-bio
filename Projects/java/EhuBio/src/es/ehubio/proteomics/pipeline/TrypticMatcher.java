@@ -11,8 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import org.apache.commons.math3.util.CombinatoricsUtils;
-
 import es.ehubio.db.fasta.Fasta;
 import es.ehubio.db.fasta.Fasta.InvalidSequenceException;
 import es.ehubio.db.fasta.Fasta.SequenceType;
@@ -63,7 +61,7 @@ public class TrypticMatcher implements RandomMatcher {
 	private void saveMq( String cachePath ) throws IOException {
 		logger.info("Saving Mq values for future uses ...");
 		PrintWriter pw = new PrintWriter(Streams.getTextWriter(cachePath));		
-		pw.println("Mq version:2.1");
+		pw.println("Mq version:2.1.1");
 		pw.println(String.format("enzyme:%s", enzyme.name()));
 		pw.println(String.format("missCleavages:%s", missCleavages));
 		pw.println(String.format("minLength:%s", minLength));
@@ -94,7 +92,7 @@ public class TrypticMatcher implements RandomMatcher {
 		
 		totalNq = totalMq = 0.0;
 		BufferedReader rd = new BufferedReader(Streams.getTextReader(file));
-		if( "Mq version:2.1".equals(rd.readLine()) &&
+		if( "Mq version:2.1.1".equals(rd.readLine()) &&
 			String.format("enzyme:%s", enzyme.name()).equals(rd.readLine()) &&
 			String.format("missCleavages:%s", missCleavages).equals(rd.readLine()) &&
 			String.format("minLength:%s", minLength).equals(rd.readLine()) &&
@@ -121,10 +119,10 @@ public class TrypticMatcher implements RandomMatcher {
 		return true;
 	}
 	
-	private void createMq(List<Fasta> proteins) {
-		List<Protein> list = digestDb(proteins);
+	private void createMq(List<Fasta> fastas) {
+		List<Protein> proteins = digestDb(fastas);		
 		totalNq = totalMq = 0.0;			
-		for( Protein protein : list ) {
+		for( Protein protein : proteins ) {
 			double Mq = 0.0;
 			double Nq = 0.0;
 			for( Peptide peptide : protein.getPeptides() ) {
@@ -136,8 +134,8 @@ public class TrypticMatcher implements RandomMatcher {
 			}
 			totalNq += Nq;
 			totalMq += Mq;
-			mapTryptic.put(protein.getAccession(), new Result(Nq, Mq));
-		}
+			mapTryptic.put(protein.getAccession(), new Result(Nq, Mq));			
+		}		
 	}
 	
 	private List<Protein> digestDb(List<Fasta> proteins) {
@@ -178,8 +176,9 @@ public class TrypticMatcher implements RandomMatcher {
 			return 1;
 		int n = 0;
 		for( Aminoacid aa : varMods )
-			n += countChars(peptide, aa);
-		return getCombinations(n);
+			n += Math.min(countChars(peptide, aa), maxMods)+1;
+		//return getCombinations(n);
+		return n;
 	}
 	
 	private long countChars( String seq, Aminoacid aa ) {
@@ -194,13 +193,13 @@ public class TrypticMatcher implements RandomMatcher {
 		return count;
 	}
 	
-	private long getCombinations( int n ) {
+	/*private long getCombinations( int n ) {
 		long result = 1;
 		int kmax = n < maxMods ? n : maxMods;
 		for( int k = 1; k <= kmax; k++ )			
 			result += CombinatoricsUtils.binomialCoefficient(n, k);
 		return result;
-	}
+	}*/
 
 	private final static Logger logger = Logger.getLogger(TrypticMatcher.class.getName());
 	private final static int countWarning = 20;
