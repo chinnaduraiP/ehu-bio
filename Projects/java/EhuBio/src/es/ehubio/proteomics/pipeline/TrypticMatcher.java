@@ -62,7 +62,7 @@ public class TrypticMatcher implements RandomMatcher {
 		logger.info("Saving Mq values for future uses ...");
 		PrintWriter pw = new PrintWriter(Streams.getTextWriter(cachePath));		
 		pw.println("Mq version:2.1.1");
-		pw.println(String.format("enzyme:%s", enzyme.name()));
+		pw.println(String.format("enzyme:%s", enzyme.getDescription()));
 		pw.println(String.format("missCleavages:%s", missCleavages));
 		pw.println(String.format("minLength:%s", minLength));
 		pw.println(String.format("maxLength:%s", maxLength));
@@ -93,7 +93,7 @@ public class TrypticMatcher implements RandomMatcher {
 		totalNq = totalMq = 0.0;
 		BufferedReader rd = new BufferedReader(Streams.getTextReader(file));
 		if( "Mq version:2.1.1".equals(rd.readLine()) &&
-			String.format("enzyme:%s", enzyme.name()).equals(rd.readLine()) &&
+			String.format("enzyme:%s", enzyme.getDescription()).equals(rd.readLine()) &&
 			String.format("missCleavages:%s", missCleavages).equals(rd.readLine()) &&
 			String.format("minLength:%s", minLength).equals(rd.readLine()) &&
 			String.format("maxLength:%s", maxLength).equals(rd.readLine()) &&
