@@ -137,7 +137,17 @@ public class ConfigDetector {
 		if( missedCleavages == -1 )
 			return null;
 		
-		return new Digester.Config(enzyme, missedCleavages, dp, cut);
+		Digester.Config config = new Digester.Config(enzyme, missedCleavages, dp, cut);
+		count = proteinSubset <= 0 ? data.getProteins().size() : proteinSubset;		
+		for( Protein protein : data.getProteins() ) {
+			Set<String> peptides = Digester.digestSequence(protein.getSequence().toLowerCase(), config);
+			for( Peptide peptide : protein.getPeptides() )
+				if( !peptides.contains(peptide.getSequence().toLowerCase()) )
+					return null;
+			if( --count == 0 ) break;
+		}
+		
+		return config;
 	}
 	
 	private int getNtermCut( Protein protein ) {
