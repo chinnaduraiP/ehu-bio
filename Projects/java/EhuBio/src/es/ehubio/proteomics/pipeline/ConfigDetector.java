@@ -1,6 +1,7 @@
 package es.ehubio.proteomics.pipeline;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -54,12 +55,11 @@ public class ConfigDetector {
 	}
 	
 	public ConfigDetector() {
-		this(100,2);
+		this(0);
 	}
 	
-	public ConfigDetector( int proteinSubset, int maxMissedCleavages ) {
+	public ConfigDetector( int proteinSubset ) {
 		this.proteinSubset = proteinSubset;
-		this.maxMissedCleavages = maxMissedCleavages;
 	}
 	
 	public int getMinPeptideLength( MsMsData data ) {
@@ -82,46 +82,99 @@ public class ConfigDetector {
 		return maxPeptideLength;
 	}
 	
-	public Enzyme getEnzyme( MsMsData data ) {
-		Enzyme result = null;
+	private Enzyme getEnzyme( MsMsData data, boolean useDP, int cutNterm ) {
 		for( Enzyme enzyme : Enzyme.values() ) {
-			int count = proteinSubset;
+			int count = proteinSubset <= 0 ? data.getProteins().size() : proteinSubset;
+			boolean valid = true;
 			for( Protein protein : data.getProteins() ) {
-				List<String> peptides = new ArrayList<String>();
-				for( String peptide : Digester.digestSequence(protein.getSequence(),enzyme,maxMissedCleavages) )
-					peptides.add(peptide.toLowerCase());
-				for( Peptide peptide : protein.getPeptides() )
-					if( !peptides.contains(peptide.getSequence().toLowerCase()) ) {
-						enzyme = null;
+				String protSeq = protein.getSequence().toLowerCase();
+				Set<String> peptides = new HashSet<>(Arrays.asList(Digester.digestSequence(protSeq,enzyme)));
+				for( Peptide peptide : protein.getPeptides() ) {
+					String pepSeq = peptide.getSequence().toLowerCase();
+					if( useDP && (pepSeq.indexOf("dp") != -1 || pepSeq.charAt(0)=='p' || pepSeq.endsWith("d")) )
+						continue;
+					if( cutNterm > 0 && protSeq.charAt(0) == 'm' && protSeq.indexOf(pepSeq) <= cutNterm )
+						continue;
+					if( Digester.digestSequence(pepSeq,enzyme).length > 1 )
+						continue;
+					if( !peptides.contains(pepSeq) ) {
+						valid = false;
 						break;
 					}
-				if( --count == 0 || enzyme == null )
+				}
+				if( valid == false )
 					break;
-			}
-			if( enzyme != null ) {
-				result = enzyme;
-				break;
+				if( --count == 0 )
+					return enzyme;
 			}
 		}
-		return result;
+		return null;
 	}
 	
-	public int getMissedCleavages(MsMsData data, Enzyme enzyme) {
-		int missedCleavages = 0;
-		int count = proteinSubset;
+	public Digester.Config getDigestion( MsMsData data ) {
+		int cut = 0;		
+		int count = proteinSubset <= 0 ? data.getProteins().size() : proteinSubset;
 		for( Protein protein : data.getProteins() ) {
-			List<String> peptides = new ArrayList<String>();
-			for( String peptide : Digester.digestSequence(protein.getSequence(),enzyme,missedCleavages) )
-				peptides.add(peptide.toLowerCase());
+			cut = Math.max(cut, getNtermCut(protein));			
+			if( cut == 2 || --count == 0 ) break;
+		}
+		
+		boolean dp = false;
+		count = proteinSubset <= 0 ? data.getProteins().size() : proteinSubset;		
+		for( Protein protein : data.getProteins() ) {
+			if( usesDP(protein) ) {
+				dp = true;
+				break;
+			}
+			if( --count == 0 ) break;
+		}
+		
+		Enzyme enzyme = getEnzyme(data, dp, cut);
+		if( enzyme == null )
+			return null;
+		
+		int missedCleavages = getMissedCleavages(data, enzyme);
+		if( missedCleavages == -1 )
+			return null;
+		
+		return new Digester.Config(enzyme, missedCleavages, dp, cut);
+	}
+	
+	private int getNtermCut( Protein protein ) {
+		if( Character.toLowerCase(protein.getSequence().charAt(0)) != 'm' )
+			return 0;
+		String cut1 = protein.getSequence().substring(1);
+		String cut2 = protein.getSequence().substring(2);
+		int cut = 0;
+		for( Peptide peptide : protein.getPeptides() ) {
+			if( cut2.startsWith(peptide.getSequence()) )
+				return 2;
+			if( cut1.startsWith(peptide.getSequence()) )
+				cut = 1;
+		}
+		return cut;
+	}
+	
+	private boolean usesDP( Protein protein ) {
+		for( Peptide peptide : protein.getPeptides() )
+			if( peptide.getSequence().toLowerCase().endsWith("d") ) {
+				int i = protein.getSequence().indexOf(peptide.getSequence())+peptide.getSequence().length();
+				if( i < protein.getSequence().length() && Character.toLowerCase(protein.getSequence().charAt(i))=='p' )
+					return true;
+			}
+		return false;
+	}
+	
+	private int getMissedCleavages(MsMsData data, Enzyme enzyme) {
+		int missedCleavages = 0;
+		int count = proteinSubset <= 0 ? data.getProteins().size() : proteinSubset;
+		for( Protein protein : data.getProteins() ) {
 			for( Peptide peptide : protein.getPeptides() )
-				if( !peptides.contains(peptide.getSequence().toLowerCase()) ) {
-					missedCleavages++;
-					break;
-				}
-			if( --count == 0 || missedCleavages > maxMissedCleavages )
+				missedCleavages = Math.max(missedCleavages, Digester.digestSequence(peptide.getSequence(),enzyme).length-1);
+			if( --count == 0 )
 				break;
 		}
-		return missedCleavages <= maxMissedCleavages ? missedCleavages : -1;
+		return missedCleavages;
 	}
 	
 	public int getMaxModsPerPeptide(MsMsData data, Aminoacid[] varMods) {
@@ -198,5 +251,4 @@ public class ConfigDetector {
 	}
 	
 	private final int proteinSubset;
-	private final int maxMissedCleavages;	
 }

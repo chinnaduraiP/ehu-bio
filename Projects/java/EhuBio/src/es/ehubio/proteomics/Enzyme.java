@@ -4,7 +4,8 @@ import java.util.regex.Pattern;
 
 public enum Enzyme {
 	TRYPSIN("Trypsin","Trypsin (C-term to K/R, except before P)","(?<=[KR])(?!P)"),
-	TRYPSIN_P("Trypsin-P","Trypsin (C-term to K/R, even before P)","(?<=[KR])");
+	TRYPSINP("TrypsinP","Trypsin (C-term to K/R, even before P)","(?<=[KR])"),
+	ASP_PRO("Asp-Pro","Adventitious cleavage at Asp-Pro residues","(?<=D)(?=P)");
 	
 	private final String name;
 	private final String description;
