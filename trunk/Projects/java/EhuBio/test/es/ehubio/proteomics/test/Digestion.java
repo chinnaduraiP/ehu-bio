@@ -3,9 +3,7 @@ package es.ehubio.proteomics.test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.Set;
 
 import org.junit.Test;
 
@@ -29,7 +27,7 @@ public class Digestion {
 	@Test
 	public void testTrypsineP() {
 		String seq = "ASDFKFDSARQWERPQWE";
-		String[] list = Digester.digestSequence(seq, Enzyme.TRYPSIN_P);
+		String[] list = Digester.digestSequence(seq, Enzyme.TRYPSINP);
 		/*logger.info("Sequence: "+seq);
 		for( String pep : list )
 			logger.info("Peptide: "+pep);*/
@@ -40,8 +38,8 @@ public class Digestion {
 	@Test
 	public void testProtein() {
 		String seq = "MGKVKVGVNGFGRIGRLVTRAAFNSGKVDIVAINDPFIDLNYMVYMFQYDSTHGKFHGTVKAENGKLVINGNPITIFQERDPSKIKWGDAGAEYVVESTGVFTTMEKAGAHLQGGAKRVIISAPSADAPMFVMGVNHEKYDNSLKIISNASCTTNCLAPLAKVIHDNFGIVEGLMTTVHAITATQKTVDGPSGKLWRDGRGALQNIIPASTGAAKAVGKVIPELNGKLTGMAFRVPTANVSVVDLTCRLEKPAKYDDIKKVVKQASEGPLKGILGYTEHQVVSSDFNSDTHSSTFDAGAGIALNDHFVKLISWYDNEFGYSNRVVDLMAHMASKE";
-		List<String> list = Digester.digestSequence(seq, Enzyme.TRYPSIN, 2);
-		Collections.sort(list, new Comparator<String>() {
+		Set<String> list = Digester.digestSequence(seq, Enzyme.TRYPSIN, 2);
+		/*Collections.sort(list, new Comparator<String>() {
 			@Override
 			public int compare(String o1, String o2) {
 				int dif = o2.length()-o1.length();
@@ -50,9 +48,18 @@ public class Digestion {
 				return o1.compareTo(o2);
 			}
 		});
-		/*for( String pep : list )
+		for( String pep : list )
 			logger.info("Peptide: "+pep);*/
 		assertEquals(105, list.size());
+	}
+	
+	@Test
+	public void testFull() {
+		String seq = "MASDFKFDSARIIIDPLLL";
+		Set<String> list = Digester.digestSequence(seq, new Digester.Config(Enzyme.TRYPSINP, 1, true, 2));
+		/*for( String pep : list )
+			logger.info("Peptide: "+pep);*/
+		assertEquals(12, list.size());
 	}
 	
 	/*@Test
