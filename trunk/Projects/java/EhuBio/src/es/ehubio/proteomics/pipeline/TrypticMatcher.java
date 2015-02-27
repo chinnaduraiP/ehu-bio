@@ -150,6 +150,8 @@ public class TrypticMatcher implements RandomMatcher {
 			Protein protein2 = new Protein();
 			protein2.setAccession(protein.getAccession());
 			for( String pepSequence : pepSequences ) {
+				if( pepSequence.length() < minLength || pepSequence.length() > maxLength )
+					continue;
 				Peptide peptide = mapPeptides.get(pepSequence);
 				if( peptide == null ) {
 					peptide = new Peptide();
