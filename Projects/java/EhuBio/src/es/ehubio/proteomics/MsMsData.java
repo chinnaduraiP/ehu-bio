@@ -134,6 +134,13 @@ public class MsMsData {
 		return this;
 	}
 	
+	public long getRedundantPeptidesCount() {
+		long count = 0;
+		for( Protein protein : proteins )
+			count += protein.getPeptides().size();
+		return count;
+	}
+		
 	public void clear() {
 		spectra.clear();
 		psms.clear();
