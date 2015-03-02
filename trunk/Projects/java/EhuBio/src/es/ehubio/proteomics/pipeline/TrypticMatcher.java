@@ -21,9 +21,8 @@ import es.ehubio.proteomics.Peptide;
 import es.ehubio.proteomics.Protein;
 
 public class TrypticMatcher implements RandomMatcher {
-	private TrypticMatcher( long decoys, long redundantDecoys, Digester.Config digestion, int minLength, int maxLength, int maxMods, Aminoacid... varMods ) throws IOException, InvalidSequenceException {
+	private TrypticMatcher( double decoys, double redundantDecoys, Digester.Config digestion, int minLength, int maxLength, int maxMods, Aminoacid... varMods ) throws IOException, InvalidSequenceException {
 		this.decoys = decoys;		
-		//this.decoys = (long)Math.round(decoys*2.1);
 		this.redundantDecoys = redundantDecoys;
 		this.digestion = digestion;
 		this.minLength = minLength;
@@ -32,13 +31,13 @@ public class TrypticMatcher implements RandomMatcher {
 		this.varMods = varMods;
 	}
 	
-	public TrypticMatcher( String fastaPath, long decoys, long redundantDecoys, Digester.Config digestion, int minLength, int maxLength, int maxMods, Aminoacid... varMods ) throws IOException, InvalidSequenceException {
+	public TrypticMatcher( String fastaPath, double decoys, double redundantDecoys, Digester.Config digestion, int minLength, int maxLength, int maxMods, Aminoacid... varMods ) throws IOException, InvalidSequenceException {
 		this(decoys,redundantDecoys,digestion,minLength,maxLength,maxMods,varMods);
 		loadCache(fastaPath);
 		//System.out.println(String.format("%s - %s", decoys, total));
 	}
 	
-	public TrypticMatcher( Collection<Protein> proteins, long decoys, long redundantDecoys, Digester.Config digestion, int minLength, int maxLength, int maxMods, Aminoacid... varMods ) throws IOException, InvalidSequenceException {
+	public TrypticMatcher( Collection<Protein> proteins, double decoys, double redundantDecoys, Digester.Config digestion, int minLength, int maxLength, int maxMods, Aminoacid... varMods ) throws IOException, InvalidSequenceException {
 		this(decoys,redundantDecoys,digestion,minLength,maxLength,maxMods,varMods);		
 		List<Fasta> fastas = new ArrayList<>();
 		for( Protein protein : proteins ) {
@@ -131,7 +130,7 @@ public class TrypticMatcher implements RandomMatcher {
 			for( Peptide peptide : protein.getPeptides() ) {
 				if( peptide.getProteins().isEmpty() )
 					throw new AssertionError("This should not happen");
-				double tryptic =(double)getTryptic(peptide.getSequence());
+				double tryptic = (double)getTryptic(peptide.getSequence());
 				Nq += tryptic;
 				Mq += tryptic/peptide.getProteins().size();				
 			}
@@ -212,6 +211,6 @@ public class TrypticMatcher implements RandomMatcher {
 	private final int minLength, maxLength, maxMods;
 	private final Aminoacid[] varMods;	
 	private double totalNq, totalMq;
-	private final long decoys, redundantDecoys;
+	private final double decoys, redundantDecoys;
 	private final Map<String, Result> mapTryptic = new HashMap<>();
 }

@@ -101,7 +101,7 @@ public class ScoreIntegrator {
 	}
 	
 	private static ModelFitness setExpectedValues( Collection<Protein> proteins, RandomMatcher random, ModelFitness fitness ) {
-		double Nf, Mf, Nm = 0.0, Mm = 0.0;		
+		double Nf, Mf, Nm = 0.0, Mm = 0.0;
 		if( fitness == null ) { 
 			List<Double> listNq = new ArrayList<>();
 			List<Double> listMq = new ArrayList<>();
@@ -117,8 +117,8 @@ public class ScoreIntegrator {
 				Nm += Ny;
 				Mm += My;
 			}
-			Nf = MathUtil.median(listNq);
-			Mf = MathUtil.median(listMq);
+			Nf = 1.0;//MathUtil.median(listNq);
+			Mf = 1.0;//MathUtil.median(listMq);
 			Nm /= proteins.size();
 			Mm /= proteins.size();
 			logger.info(String.format("Using correction factors: Nf=%s, Mf=%s",Nf,Mf));
@@ -146,6 +146,18 @@ public class ScoreIntegrator {
 			}
 		}
 		
+		double obsNqCount = 0.0, expNqCount = 0.0;
+		double obsMqCount = 0.0, expMqCount = 0.0;		
+		for( Protein protein : proteins ) {
+			obsNqCount += protein.getScoreByType(ScoreType.NQ_OVALUE).getValue();
+			expNqCount += protein.getScoreByType(ScoreType.NQ_EVALUE).getValue();
+			obsMqCount += protein.getScoreByType(ScoreType.MQ_OVALUE).getValue();
+			expMqCount += protein.getScoreByType(ScoreType.MQ_EVALUE).getValue();
+		}
+		logger.info(String.format("Expected/Observed: Nq=%d/%d, Mq=%d/%d",
+			Math.round(expNqCount), Math.round(obsNqCount),
+			Math.round(expMqCount), Math.round(obsMqCount)));
+		
 		if( fitness == null ) {
 			fitness = new ModelFitness(Nf, Mf, 1-Nr/Nt, 1-Mr/Mt);
 			logger.info(String.format("Random matching model fit: R²(Nq)=%s, R²(Mq)=%s", fitness.getR2n(), fitness.getR2m()));
@@ -170,7 +182,8 @@ public class ScoreIntegrator {
 	
 	public static ModelFitness divideRandom( Collection<Protein> target, RandomMatcher rndTarget, Collection<Protein> decoy, RandomMatcher rndDecoy, boolean shared) {
 		ModelFitness fitness = divideRandom(decoy, rndDecoy, shared, null);
-		divideRandom(target, rndTarget, shared, fitness);
+		//divideRandom(target, rndTarget, shared, fitness);
+		divideRandom(target, rndTarget, shared, null);
 		return fitness;
 	}
 	
