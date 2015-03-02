@@ -1,9 +1,7 @@
 package es.ehubio.proteomics.pipeline;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -100,52 +98,56 @@ public class ScoreIntegrator {
 			sumIntegrator(group, group.getProteins(), ScoreType.LPQCORR_SCORE, ScoreType.LPG_SCORE);
 	}
 	
-	private static ModelFitness setExpectedValues( Collection<Protein> proteins, RandomMatcher random, ModelFitness fitness ) {
-		double Nf, Mf, Nm = 0.0, Mm = 0.0;
-		if( fitness == null ) { 
-			List<Double> listNq = new ArrayList<>();
-			List<Double> listMq = new ArrayList<>();
-			double Ny, My;
-			for( Protein protein : proteins ) {			
-				Result expected = random.getExpected(protein);
-				if( expected.getNq() == 0 || expected.getMq() == 0 )
-					throw new AssertionError(String.format("Mq=0 for %s, correct your search parameters", protein.getAccession()));
-				Ny = protein.getScoreByType(ScoreType.NQ_OVALUE).getValue();
-				My = protein.getScoreByType(ScoreType.MQ_OVALUE).getValue();
-				listNq.add(Ny/expected.getNq());				
-				listMq.add(My/expected.getMq());
-				Nm += Ny;
-				Mm += My;
-			}
-			Nf = 1.0;//MathUtil.median(listNq);
-			Mf = 1.0;//MathUtil.median(listMq);
-			Nm /= proteins.size();
-			Mm /= proteins.size();
-			logger.info(String.format("Using correction factors: Nf=%s, Mf=%s",Nf,Mf));
-		} else {
-			Nf = fitness.getNf();
-			Mf = fitness.getMf();
-		}
-		
-		double Nt = 0.0, Nr = 0.0, Ny;
-		double Mt = 0.0, Mr = 0.0, My;
-		for( Protein protein : proteins ) {
+	private static ModelFitness setExpectedValues( Collection<Protein> proteins, RandomMatcher random ) {		
+		Result factor = getCorrectionFactors(proteins, random);
+		logger.info(String.format("Using correction factors: Nf=%s, Mf=%s",factor.getNq(),factor.getMq()));
+		applyCorrectionFactors(proteins, random, factor);		
+		showEspected(proteins);		
+		ModelFitness fitness = getFitness(proteins);
+		logger.info(String.format("Random matching model fit: R²(Nq)=%s, R²(Mq)=%s", fitness.getR2n(), fitness.getR2m()));
+		return new ModelFitness(factor.getNq(), factor.getMq(), fitness.getR2n(), fitness.getR2m());
+	}
+	
+	/*private static Result getCorrectionFactors(Collection<Protein> proteins, RandomMatcher random) {
+		List<Double> listNq = new ArrayList<>();
+		List<Double> listMq = new ArrayList<>();
+		double Ny, My;
+		for( Protein protein : proteins ) {			
 			Result expected = random.getExpected(protein);
 			if( expected.getNq() == 0 || expected.getMq() == 0 )
 				throw new AssertionError(String.format("Mq=0 for %s, correct your search parameters", protein.getAccession()));
-			protein.setScore(new Score(ScoreType.NQ_EVALUE, expected.getNq()*Nf));
-			protein.setScore(new Score(ScoreType.MQ_EVALUE, expected.getMq()*Mf));
-		
-			if( fitness == null ) {
-				Ny = protein.getScoreByType(ScoreType.NQ_OVALUE).getValue();			
-				Nt += MathUtil.pow2(Ny-Nm);
-				Nr += MathUtil.pow2(Ny-expected.getNq()*Nf); 
-				My = protein.getScoreByType(ScoreType.MQ_OVALUE).getValue();
-				Mt += MathUtil.pow2(My-Mm);
-				Mr += MathUtil.pow2(My-expected.getMq()*Mf);
-			}
+			Ny = protein.getScoreByType(ScoreType.NQ_OVALUE).getValue();
+			My = protein.getScoreByType(ScoreType.MQ_OVALUE).getValue();
+			listNq.add(Ny/expected.getNq());				
+			listMq.add(My/expected.getMq());
 		}
-		
+		return new Result(MathUtil.median(listNq), MathUtil.median(listMq));
+	}*/
+	
+	private static Result getCorrectionFactors(Collection<Protein> proteins, RandomMatcher random) {
+		return new Result(1.0, 1.0);
+	}
+	
+	/*private static Result getCorrectionFactors(Collection<Protein> proteins, RandomMatcher random) {
+		double Nt = 0.0, Mt = 0.0;
+		for( Protein protein : proteins ) {			
+			Result expected = random.getExpected(protein);
+			Nt += expected.getNq();
+			Mt += expected.getMq();
+		}
+		TrypticMatcher tryptic = (TrypticMatcher)random;
+		return new Result(tryptic.getRedundantDecoys()/Nt, tryptic.getDecoys()/Mt);
+	}*/
+	
+	private static void applyCorrectionFactors(Collection<Protein> proteins, RandomMatcher random, Result factor) {
+		for( Protein protein : proteins ) {
+			Result expected = random.getExpected(protein);
+			protein.setScore(new Score(ScoreType.NQ_EVALUE, expected.getNq()*factor.getNq()));
+			protein.setScore(new Score(ScoreType.MQ_EVALUE, expected.getMq()*factor.getMq()));
+		}
+	}
+	
+	private static void showEspected(Collection<Protein> proteins) {
 		double obsNqCount = 0.0, expNqCount = 0.0;
 		double obsMqCount = 0.0, expMqCount = 0.0;		
 		for( Protein protein : proteins ) {
@@ -157,18 +159,34 @@ public class ScoreIntegrator {
 		logger.info(String.format("Expected/Observed: Nq=%d/%d, Mq=%d/%d",
 			Math.round(expNqCount), Math.round(obsNqCount),
 			Math.round(expMqCount), Math.round(obsMqCount)));
-		
-		if( fitness == null ) {
-			fitness = new ModelFitness(Nf, Mf, 1-Nr/Nt, 1-Mr/Mt);
-			logger.info(String.format("Random matching model fit: R²(Nq)=%s, R²(Mq)=%s", fitness.getR2n(), fitness.getR2m()));
-			return fitness;
-		}
-		
-		return null;
 	}
 	
-	public static ModelFitness divideRandom( Collection<Protein> proteins, RandomMatcher random, boolean shared, ModelFitness fitness ) {
-		ModelFitness result = setExpectedValues(proteins, random, fitness);
+	private static ModelFitness getFitness(Collection<Protein> proteins) {
+		double Nm = 0.0, Mm = 0.0;
+		for( Protein protein : proteins ) {			
+			Nm += protein.getScoreByType(ScoreType.NQ_OVALUE).getValue();
+			Mm += protein.getScoreByType(ScoreType.MQ_OVALUE).getValue();
+		}
+		Nm /= proteins.size();
+		Mm /= proteins.size();
+		
+		double Nt = 0.0, Nr = 0.0;
+		double Mt = 0.0, Mr = 0.0;
+		double Ny, My;
+		for( Protein protein : proteins ) {
+			Ny = protein.getScoreByType(ScoreType.NQ_OVALUE).getValue();			
+			Nt += MathUtil.pow2(Ny-Nm);
+			Nr += MathUtil.pow2(Ny-protein.getScoreByType(ScoreType.NQ_EVALUE).getValue()); 
+			My = protein.getScoreByType(ScoreType.MQ_OVALUE).getValue();
+			Mt += MathUtil.pow2(My-Mm);
+			Mr += MathUtil.pow2(My-protein.getScoreByType(ScoreType.MQ_EVALUE).getValue());
+		}
+		
+		return new ModelFitness(1.0, 1.0, 1-Nr/Nt, 1-Mr/Mt);
+	}
+	
+	public static ModelFitness divideRandom( Collection<Protein> proteins, RandomMatcher random, boolean shared ) {
+		ModelFitness result = setExpectedValues(proteins, random);
 		for( Protein protein : proteins ) {
 			Result expected = random.getExpected(protein);
 			double Mq = shared ? protein.getScoreByType(ScoreType.MQ_EVALUE).getValue() : protein.getScoreByType(ScoreType.NQ_EVALUE).getValue();
@@ -180,16 +198,9 @@ public class ScoreIntegrator {
 		return result;
 	}
 	
-	public static ModelFitness divideRandom( Collection<Protein> target, RandomMatcher rndTarget, Collection<Protein> decoy, RandomMatcher rndDecoy, boolean shared) {
-		ModelFitness fitness = divideRandom(decoy, rndDecoy, shared, null);
-		//divideRandom(target, rndTarget, shared, fitness);
-		divideRandom(target, rndTarget, shared, null);
-		return fitness;
-	}
-	
-	public static ModelFitness modelRandom( Collection<Protein> proteins, RandomMatcher random, boolean shared, ModelFitness fitness ) {
-		logger.info(String.format("Modelling %s random peptide-protein matching ...",fitness==null?"decoy":"target"));
-		ModelFitness result = setExpectedValues(proteins, random, fitness);
+	public static ModelFitness modelRandom( Collection<Protein> proteins, RandomMatcher random, boolean shared) {
+		logger.info("Modelling random peptide-protein matching ...");
+		ModelFitness result = setExpectedValues(proteins, random);
 		double loge = Math.log(10.0);
 		double epsilon = 1e-30;
 		for( Protein protein : proteins ) {
@@ -211,12 +222,6 @@ public class ScoreIntegrator {
 			protein.setScore(new Score(ScoreType.LPQCORR_SCORE, LPQcorr));
 		}
 		return result;
-	}
-	
-	public static ModelFitness modelRandom( Collection<Protein> target, RandomMatcher rndTarget, Collection<Protein> decoy, RandomMatcher rndDecoy, boolean shared ) {
-		ModelFitness fitness = modelRandom(decoy, rndDecoy, shared, null);
-		modelRandom(target, rndTarget, shared, fitness);
-		return fitness;
 	}
 	
 	private static int searchInf( double Mq, double LPQ, int n1, int n2, int dn, double epsilon ) {

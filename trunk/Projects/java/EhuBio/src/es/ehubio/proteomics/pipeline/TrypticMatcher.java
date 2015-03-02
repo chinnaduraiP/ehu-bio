@@ -20,7 +20,7 @@ import es.ehubio.model.Aminoacid;
 import es.ehubio.proteomics.Peptide;
 import es.ehubio.proteomics.Protein;
 
-public class TrypticMatcher implements RandomMatcher {
+public class TrypticMatcher implements RandomMatcher {	
 	private TrypticMatcher( double decoys, double redundantDecoys, Digester.Config digestion, int minLength, int maxLength, int maxMods, Aminoacid... varMods ) throws IOException, InvalidSequenceException {
 		this.decoys = decoys;		
 		this.redundantDecoys = redundantDecoys;
@@ -46,6 +46,14 @@ public class TrypticMatcher implements RandomMatcher {
 		}
 		createMq(fastas);
 		//System.out.println(String.format("%s - %s", decoys, total));
+	}
+	
+	public double getDecoys() {
+		return decoys;
+	}
+
+	public double getRedundantDecoys() {
+		return redundantDecoys;
 	}
 	
 	private void loadCache( String fastaPath ) throws IOException, InvalidSequenceException {
