@@ -89,8 +89,11 @@ public abstract class MsMsFile {
 		solveIssues();
 		if( data == null )
 			logger.warning("Not loaded!");
-		else
+		else {
 			logger.info("Loaded!");
+			if( data.getTitle() == null )
+				data.setTitle(new File(path).getName());
+		}
 		return data;
 	}
 	

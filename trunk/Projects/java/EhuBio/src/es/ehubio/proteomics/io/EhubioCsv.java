@@ -1,6 +1,13 @@
 package es.ehubio.proteomics.io;
 
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.Rectangle;
+import java.awt.print.PageFormat;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 
@@ -13,6 +20,8 @@ import es.ehubio.proteomics.ProteinGroup;
 import es.ehubio.proteomics.Psm;
 import es.ehubio.proteomics.Score;
 import es.ehubio.proteomics.ScoreType;
+import es.ehubio.proteomics.pipeline.ScoreIntegrator.ModelFitness;
+import gnu.jpdf.PDFJob;
 
 public class EhubioCsv extends MsMsFile {
 	//private final static Logger logger = Logger.getLogger(EhubioCsv.class.getName());
@@ -44,7 +53,7 @@ public class EhubioCsv extends MsMsFile {
 		saveProteins(new File(dir,"proteins.csv").getAbsolutePath());
 		saveGroups(new File(dir,"groups.csv").getAbsolutePath());
 		return true;
-	}	
+	}		
 
 	private void savePsms( String path ) throws IOException {		
 		PrintWriter pw = new PrintWriter(path);
@@ -160,6 +169,83 @@ public class EhubioCsv extends MsMsFile {
 				group.isPassThreshold()
 				));
 		pw.close();
+	}
+	
+	public static void saveModel(MsMsData data, String dirPath, ModelFitness fitness) throws IOException {
+		saveModel(data, new File(dirPath, "modelNq.pdf").getAbsolutePath(), fitness, false);
+		saveModel(data, new File(dirPath, "modelMq.pdf").getAbsolutePath(), fitness, true);
+	}
+	
+	public static void saveModel(MsMsData data, String path, ModelFitness fitness, boolean shared) throws IOException {
+		PDFJob job = new PDFJob(new FileOutputStream(path),data.getTitle());
+		Graphics g = job.getGraphics(PageFormat.LANDSCAPE);
+		
+		double[] x = new double[data.getProteins().size()];
+		double[] y = new double[x.length];
+		int i = 0;
+		for( Protein protein : data.getProteins() ) {
+			x[i] = protein.getScoreByType(shared?ScoreType.MQ_EVALUE:ScoreType.NQ_EVALUE).getValue();
+			y[i++] = protein.getScoreByType(shared?ScoreType.MQ_OVALUE:ScoreType.NQ_OVALUE).getValue();
+		}
+		if( shared )
+			drawPlot(g, data.getTitle(), "Mq(exp)", x, "Mq(obs)", y, fitness.getMm(), fitness.getR2m());
+		else
+			drawPlot(g, data.getTitle(), "Nq(exp)", x, "Nq(obs)", y, fitness.getNm(), fitness.getR2n());
+		
+		g.dispose();
+		job.end();
+	}
+	
+	private static void drawPlot(Graphics g, String title, String xlabel, double[] x, String ylabel, double[] y, double mean, double r2 ) {
+		Color cAxes = Color.BLACK;
+		Color cExp = Color.MAGENTA;
+		Color cMean = Color.RED;
+		Color cData = Color.BLUE;
+		
+		Rectangle bounds = g.getClipBounds();
+		g.setClip(new Rectangle(0, 0, bounds.x+bounds.width, bounds.y+bounds.height));
+		bounds = g.getClipBounds();
+		int w = bounds.width;
+		int h = bounds.height;
+		
+		Font f = new Font("TimesRoman", Font.PLAIN, 16);
+		g.setFont(f);
+		FontMetrics fm = g.getFontMetrics(f);
+		int x0 = fm.stringWidth(ylabel);
+		int y0 = h-1-fm.getHeight();
+		
+		double max = x[0];
+		for( int i = 1; i < x.length; i++ ) {
+			if( x[i] > max )
+				max = x[i];
+			if( y[i] > max )
+				max = y[i];
+		}
+		double xmax = max/(w-x0);
+		double ymax = max/y0;
+				
+		g.setColor(cAxes);		
+		g.drawLine(x0, 0, x0, y0);
+		g.drawLine(x0, y0, w-1, y0);
+		g.drawString(xlabel,(w-fm.stringWidth(xlabel))/2,h-1);
+		g.drawString(ylabel, 0, (h-fm.getHeight())/2);
+		g.drawString(title, x0+(w-x0-fm.stringWidth(title))/2, fm.getHeight());
+
+		g.setColor(cMean);
+		int yMean = y0-(int)Math.round(mean/ymax);
+		g.drawLine(x0, yMean, w-1, yMean);
+		String strMean = String.format("mean=%.1f", mean);
+		g.drawString(strMean, w-fm.stringWidth(strMean), yMean-1);
+		g.setColor(cExp);
+		g.drawLine(x0, y0, w-1, 0);
+		
+		g.setColor(cData);				
+		String strMax = String.format("%.0f", max);
+		g.drawString(strMax, x0-fm.stringWidth(strMax), fm.getHeight());
+		g.drawString(strMax, w-fm.stringWidth(strMax)-1, h-1);		
+		for( int i = 0; i < x.length; i++ )
+			g.fillRect((int)Math.round(x[i]/xmax)+x0-2, y0-(int)Math.round(y[i]/ymax)-2, 4, 4);
+		g.drawString(String.format("R^2=%.2f", r2), x0+10, 3*fm.getHeight());
 	}
 	
 	private static Object getScore( DecoyBase item, ScoreType type ) {

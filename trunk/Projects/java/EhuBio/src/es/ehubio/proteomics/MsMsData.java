@@ -38,6 +38,7 @@ public class MsMsData {
 	private Set<Protein> proteins = new HashSet<>();
 	private Set<ProteinGroup> groups = new HashSet<>();
 	
+	private String title;
 	private OrganizationType organization;
 	private PersonType author;
 	private AnalysisSoftwareType software;
@@ -366,5 +367,13 @@ public class MsMsData {
 		
 		peptides.clear();
 		peptides.addAll(map.values());
+	}
+
+	public String getTitle() {
+		return title;
+	}
+
+	public void setTitle(String title) {
+		this.title = title;
 	}
 }
