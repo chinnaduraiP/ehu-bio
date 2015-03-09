@@ -1,7 +1,9 @@
 package es.ehubio.proteomics.pipeline;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -35,9 +37,11 @@ public class ScoreIntegrator {
 	}
 	
 	public static class ModelFitness {
-		public ModelFitness( double nf, double mf, double r2n, double r2m ) {
+		public ModelFitness( double nf, double mf, double nm, double mm, double r2n, double r2m ) {
 			this.nf = nf;
 			this.mf = mf;
+			this.nm = nm;
+			this.mm = mm;
 			this.r2n = r2n;
 			this.r2m = r2m;
 		}
@@ -53,7 +57,14 @@ public class ScoreIntegrator {
 		public double getMf() {
 			return mf;
 		}		
+		public double getMm() {
+			return mm;
+		}
+		public double getNm() {
+			return nm;
+		}
 		private final double nf, mf;
+		private final double nm, mm;
 		private final double r2n, r2m;
 	}
 	
@@ -105,10 +116,10 @@ public class ScoreIntegrator {
 		showEspected(proteins);		
 		ModelFitness fitness = getFitness(proteins);
 		logger.info(String.format("Random matching model fit: R²(Nq)=%s, R²(Mq)=%s", fitness.getR2n(), fitness.getR2m()));
-		return new ModelFitness(factor.getNq(), factor.getMq(), fitness.getR2n(), fitness.getR2m());
+		return new ModelFitness(factor.getNq(), factor.getMq(), fitness.getNm(), fitness.getMm(), fitness.getR2n(), fitness.getR2m());
 	}
 	
-	/*private static Result getCorrectionFactors(Collection<Protein> proteins, RandomMatcher random) {
+	private static Result getCorrectionFactors(Collection<Protein> proteins, RandomMatcher random) {
 		List<Double> listNq = new ArrayList<>();
 		List<Double> listMq = new ArrayList<>();
 		double Ny, My;
@@ -122,11 +133,13 @@ public class ScoreIntegrator {
 			listMq.add(My/expected.getMq());
 		}
 		return new Result(MathUtil.median(listNq), MathUtil.median(listMq));
-	}*/
-	
-	private static Result getCorrectionFactors(Collection<Protein> proteins, RandomMatcher random) {
-		return new Result(1.0, 1.0);
+		//return new Result(MathUtil.percentile(50.0, listNq), MathUtil.percentile(50.0, listMq));
+		//return new Result(MathUtil.percentile(30.0, listNq), MathUtil.percentile(30.0, listMq));
 	}
+	
+	/*private static Result getCorrectionFactors(Collection<Protein> proteins, RandomMatcher random) {
+		return new Result(1.0, 1.0);
+	}*/
 	
 	/*private static Result getCorrectionFactors(Collection<Protein> proteins, RandomMatcher random) {
 		double Nt = 0.0, Mt = 0.0;
@@ -182,7 +195,7 @@ public class ScoreIntegrator {
 			Mr += MathUtil.pow2(My-protein.getScoreByType(ScoreType.MQ_EVALUE).getValue());
 		}
 		
-		return new ModelFitness(1.0, 1.0, 1-Nr/Nt, 1-Mr/Mt);
+		return new ModelFitness(1.0, 1.0, Nm, Mm, 1-Nr/Nt, 1-Mr/Mt);
 	}
 	
 	public static ModelFitness divideRandom( Collection<Protein> proteins, RandomMatcher random, boolean shared ) {
@@ -302,16 +315,16 @@ public class ScoreIntegrator {
 	private static void updateFactors( Collection<Protein> proteins, Map<Protein, Map<Peptide,Double>> mapFactors ) {
 		for( Protein protein : proteins ) {
 			double num = protein.getScoreByType(ScoreType.LPQ_SCORE).getValue();
-			double Mq = 0.0;
+			//double Mq = 0.0;
 			for( Peptide peptide : protein.getPeptides() ) {
 				double den = 0.0;
 				for( Protein protein2 : peptide.getProteins() )
 					den += protein2.getScoreByType(ScoreType.LPQ_SCORE).getValue();
 				double factor = num/den;
-				Mq += factor;
+				//Mq += factor;
 				mapFactors.get(protein).put(peptide, factor);
 			}
-			protein.getScoreByType(ScoreType.MQ_OVALUE).setValue(Mq);
+			//protein.getScoreByType(ScoreType.MQ_OVALUE).setValue(Mq);
 		}
 	}	
 	
