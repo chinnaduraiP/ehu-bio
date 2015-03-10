@@ -339,6 +339,8 @@ public class MsMsData {
 	}
 	
 	public MsMsData updateProteinInformation( String fastaPath ) throws IOException, InvalidSequenceException {
+		if( fastaPath == null )
+			return this;
 		List<Fasta> list = Fasta.readEntries(fastaPath, SequenceType.PROTEIN);
 		Map<String,Fasta> map = new HashMap<>();
 		for( Fasta fasta : list )
