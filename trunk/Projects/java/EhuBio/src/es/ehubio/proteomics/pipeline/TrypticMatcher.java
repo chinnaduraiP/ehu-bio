@@ -34,7 +34,6 @@ public class TrypticMatcher implements RandomMatcher {
 	public TrypticMatcher( String fastaPath, double decoys, double redundantDecoys, Digester.Config digestion, int minLength, int maxLength, int maxMods, Aminoacid... varMods ) throws IOException, InvalidSequenceException {
 		this(decoys,redundantDecoys,digestion,minLength,maxLength,maxMods,varMods);
 		loadCache(fastaPath);
-		//System.out.println(String.format("%s - %s", decoys, total));
 	}
 	
 	public TrypticMatcher( Collection<Protein> proteins, double decoys, double redundantDecoys, Digester.Config digestion, int minLength, int maxLength, int maxMods, Aminoacid... varMods ) throws IOException, InvalidSequenceException {
@@ -45,7 +44,6 @@ public class TrypticMatcher implements RandomMatcher {
 			fastas.add(fasta);
 		}
 		createMq(fastas);
-		//System.out.println(String.format("%s - %s", decoys, total));
 	}
 	
 	public double getDecoys() {

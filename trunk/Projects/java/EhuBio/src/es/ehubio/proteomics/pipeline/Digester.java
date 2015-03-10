@@ -36,7 +36,7 @@ public class Digester {
 		// http://sourceforge.net/p/open-ms/tickets/580/
 		public int getCutNterm() {
 			return cutNterm;
-		}		
+		}
 		private final Enzyme enzyme;
 		private final int missedCleavages;
 		private final boolean usingDP;
