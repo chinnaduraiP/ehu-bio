@@ -15,7 +15,7 @@ public class MsExperiment {
 				data = rep.getData();
 				continue;
 			}
-			data.merge(rep.getData());
+			data.mergeFromPeptide(rep.getData());
 		}
 	}
 	
@@ -50,7 +50,7 @@ public class MsExperiment {
 				data = fraction;
 				return;
 			}
-			data.merge(fraction);
+			data.mergeFromPeptide(fraction);
 		}
 		
 		public MsMsData getData() {

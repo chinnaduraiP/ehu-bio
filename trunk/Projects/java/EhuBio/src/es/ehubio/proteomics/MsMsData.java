@@ -54,16 +54,71 @@ public class MsMsData {
 		return psms;
 	}
 	
+	public Set<Psm> getDecoyPsms() {
+		return getDecoys(psms, true);
+	}
+	
+	public Set<Psm> getTargetPsms() {
+		return getDecoys(psms, false);
+	}
+		
 	public Set<Peptide> getPeptides() {
 		return peptides;
+	}
+	
+	public Set<Peptide> getDecoyPeptides() {
+		return getDecoys(peptides, true);
+	}
+	
+	public Set<Peptide> getTargetPeptides() {
+		return getDecoys(peptides, false);
 	}
 	
 	public Set<Protein> getProteins() {
 		return proteins;
 	}
 	
+	public Set<Protein> getDecoyProteins() {
+		return getDecoys(proteins, true);
+	}
+	
+	public Set<Protein> getTargetProteins() {
+		return getDecoys(proteins, false);
+	}
+	
 	public Set<ProteinGroup> getGroups() {
 		return groups;
+	}
+	
+	public Set<ProteinGroup> getDecoyGroups() {
+		return getDecoys(groups, true);
+	}
+	
+	public Set<ProteinGroup> getTargetGroups() {
+		return getDecoys(groups, false);
+	}
+	
+	private static <T extends DecoyBase> Set<T> getDecoys( Set<T> set, boolean decoy ) {
+		Set<T> result = new HashSet<>();
+		for( T item : set )
+			if( item.isDecoy() == decoy )
+				result.add(item);
+		return result;
+	}
+	
+	public MsMsData getDecoy() {
+		return getDecoy(true);
+	}
+	
+	public MsMsData getTarget() {
+		return getDecoy(false);
+	}
+	
+	private MsMsData getDecoy( boolean decoy ) {
+		Set<Peptide> peptides = decoy ? getDecoyPeptides() : getTargetPeptides();
+		MsMsData data = new MsMsData();
+		data.loadFromPeptides(peptides);
+		return data;
 	}
 	
 	public void loadFromSpectra( Collection<Spectrum> spectra ) {
@@ -71,8 +126,10 @@ public class MsMsData {
 		peptides.clear();
 		proteins.clear();
 		groups.clear();
-		this.spectra.clear();
-		this.spectra.addAll(spectra);		
+		if( this.spectra != spectra ) {
+			this.spectra.clear();
+			this.spectra.addAll(spectra);
+		}
 		for( Spectrum spectrum : spectra )			
 			for( Psm psm : spectrum.getPsms() ) {				
 				psms.add(psm);
@@ -214,8 +271,35 @@ public class MsMsData {
 	
 	@Override
 	public String toString() {
+		return toString(getGroups().size(), getProteins().size(), getPeptides().size(), getPsms().size(), getSpectra().size());
+	}
+	
+	public String toTargetString() {
+		return toString(true);
+	}
+	
+	public String toDecoyString() {
+		return toString(false);
+	}
+	
+	private String toString( boolean target ) {
+		int groups = 0, proteins = 0, peptides = 0, psms = 0, spectra = 0;
+		for( Spectrum spectrum : getSpectra() )
+			for( Psm psm : spectrum.getPsms() )
+				if( psm.isTarget() == target ) {
+					spectra++;
+					break;
+				}
+		for( Psm psm : getPsms() ) if( psm.isTarget() == target ) psms++;
+		for( Peptide peptide : getPeptides() ) if( peptide.isTarget() == target ) peptides++;
+		for( Protein protein : getProteins() ) if( protein.isTarget() == target ) proteins++;
+		for( ProteinGroup group : getGroups() ) if( group.isTarget() == target ) groups++;
+		return toString(groups, proteins, peptides, psms, spectra);
+	}
+	
+	private static String toString( int groups, int proteins, int peptides, int psms, int spectra ) {
 		return String.format("%d groups, %d proteins, %d peptides, %d psms, %d spectra",
-			getGroups().size(), getProteins().size(), getPeptides().size(), getPsms().size(), getSpectra().size());
+			groups, proteins, peptides, psms, spectra);
 	}
 	
 	private void setParam(List<AbstractParamType> list, AbstractParamType param) {
@@ -240,7 +324,16 @@ public class MsMsData {
 	public void merge( MsMsData data2 ) {
 		clearMetaData();
 		groups.clear();
-		//mergeSpectra(data2.getSpectra());
+		mergeSpectra(data2.getSpectra());
+		psms.addAll(data2.getPsms());
+		mergePeptides(data2.getPeptides());
+		mergeProteins(data2.getProteins());
+		data2.clear();
+	}
+	
+	public void mergeFromPeptide( MsMsData data2 ) {
+		clearMetaData();
+		groups.clear();
 		spectra.addAll(data2.getSpectra());
 		psms.addAll(data2.getPsms());
 		mergePeptides(data2.getPeptides());
@@ -270,64 +363,58 @@ public class MsMsData {
 		}
 	}
 	
-	/*private void mergeSpectra(Set<Spectrum> spectra2) {
+	private void mergeSpectra(Set<Spectrum> spectra2) {
 		Map<String,Spectrum> map = new HashMap<>();
 		for( Spectrum spectrum : spectra )
 			map.put(spectrum.getUniqueString(), spectrum);
 		for( Spectrum spectrum2 : spectra2 ) {
 			Spectrum spectrum = map.get(spectrum2.getUniqueString());
-			if( spectrum == null ) {
-				map.put(spectrum2.getUniqueString(), spectrum2);
+			if( spectrum != null )				
+				for( Psm psm2 : spectrum2.getPsms() )
+					psm2.linkSpectrum(spectrum);
+			else
 				spectra.add(spectrum2);
-			} else
-				for( Psm psm : spectrum2.getPsms() )
-					psm.linkSpectrum(spectrum);
-		}
-	}*/
-
-	private void mergePeptides(Set<Peptide> peptides2) {
-		List<Peptide> listPeptides = new ArrayList<>(peptides);
-		peptides.clear();
-		listPeptides.addAll(peptides2);		
-		Map<String,Peptide> mapPeptide = new HashMap<>();
-		for( Peptide peptide : listPeptides ) {
-			peptide.getPsms().clear();
-			peptide.getScores().clear();
-			mapPeptide.put(peptide.getUniqueString(), peptide);
-		}		
-				
-		for( Psm psm : psms ) {
-			if( psm.getPeptide() == null )
-				continue;
-			Peptide peptide = mapPeptide.get(psm.getPeptide().getUniqueString()); 
-			psm.linkPeptide(peptide);
-			peptides.add(peptide);
 		}
 	}
 	
-	private void mergeProteins(Set<Protein> proteins2) {
-		List<Protein> listProteins = new ArrayList<>(proteins);
-		proteins.clear();
-		listProteins.addAll(proteins2);
-		Map<String,Protein> mapProtein = new HashMap<>();
-		for( Protein protein : listProteins ) {
-			protein.getPeptides().clear();
-			protein.setGroup(null);
-			protein.getScores().clear();
-			mapProtein.put(protein.getUniqueString(), protein);
-		}
-		
+	private void mergePeptides(Set<Peptide> peptides2) {
+		Map<String,Peptide> map = new HashMap<>();
 		for( Peptide peptide : peptides ) {
-			List<Protein> tmp = new ArrayList<>(peptide.getProteins());
-			peptide.getProteins().clear();
-			for( Protein protein : tmp ) {
-				Protein protein2 = mapProtein.get(protein.getUniqueString());
-				peptide.addProtein(protein2);
-				proteins.add(protein2);
+			map.put(peptide.getUniqueString(), peptide);
+			peptide.getScores().clear();
+		}
+		for( Peptide peptide2 : peptides2 ) {
+			Peptide peptide = map.get(peptide2.getUniqueString());
+			if( peptide != null )
+				for( Psm psm2 : peptide2.getPsms() )
+					psm2.linkPeptide(peptide);
+			else {
+				peptides.add(peptide2);
+				peptide2.getScores().clear();
 			}
 		}
 	}
 	
+	private void mergeProteins(Set<Protein> proteins2) {
+		Map<String,Protein> map = new HashMap<>();
+		for( Protein protein : proteins ) {
+			map.put(protein.getUniqueString(), protein);
+			protein.getScores().clear();
+		}
+		for( Protein protein2 : proteins2 ) {
+			Protein protein = map.get(protein2.getUniqueString());
+			if( protein != null )
+				for( Peptide peptide2 : protein2.getPeptides() ) {
+					peptide2.getProteins().remove(protein2);
+					protein.addPeptide(peptide2);
+				}
+			else {
+				proteins.add(protein2);
+				protein2.getScores().clear();
+			}
+		}
+	}
+		
 	public void checkIntegrity() throws AssertionError {
 		for( Peptide peptide : getPeptides() ) {
 			if( peptide.getProteins().size() == 0 )

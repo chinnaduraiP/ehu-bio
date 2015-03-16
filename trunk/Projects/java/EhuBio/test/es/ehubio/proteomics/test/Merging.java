@@ -29,7 +29,7 @@ public class Merging {
 		MsMsData data2 = file2.load(PATH1,false).markDecoys("decoy");
 		logger.info("Data2: "+data2.toString());
 		
-		data1.merge(data2);
+		data1.mergeFromPeptide(data2);
 		int spectraMerge = data1.getSpectra().size();
 		int psmsMerge = data1.getPsms().size();
 		int peptidesMerge = data1.getPeptides().size();
@@ -60,7 +60,7 @@ public class Merging {
 		int proteins2 = data2.getProteins().size();
 		logger.info("Data2: "+data2.toString());
 		
-		data1.merge(data2);
+		data1.mergeFromPeptide(data2);
 		int spectraMerge = data1.getSpectra().size();
 		int psmsMerge = data1.getPsms().size();
 		int peptidesMerge = data1.getPeptides().size();

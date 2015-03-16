@@ -16,16 +16,21 @@ import es.ehubio.proteomics.Peptide;
 import es.ehubio.proteomics.Protein;
 
 public class AidedMatcher implements RandomMatcher {
-	public AidedMatcher(String relationsPath, double decoys, double redundantDecoys, int maxMods, Aminoacid... varMods) throws FileNotFoundException, IOException {
+	private static class Total {
+		public double Nq = 0.0, Mq = 0.0;
+	}
+	
+	public AidedMatcher(String targetRelationsPath, String decoyRelationsPath, double decoys, double redundantDecoys, int maxMods, Collection<Aminoacid> varMods) throws FileNotFoundException, IOException {
 		this.decoys = decoys;
 		this.redundantDecoys = redundantDecoys;
 		this.maxMods = maxMods;
 		this.varMods = varMods;
-		createMq(loadProteins(relationsPath));
+		this.totalTarget = createMq(loadProteins(targetRelationsPath));
+		this.totalDecoy = createMq(loadProteins(decoyRelationsPath));
 	}
 	
 	private Collection<Protein> loadProteins(String relationsPath) throws FileNotFoundException, IOException {
-		logger.info("Loading peptides used in the search engine ...");
+		logger.info("Loading peptides used by the search engine ...");
 		Map<String,Protein> map = new HashMap<>();
 		CsvReader csv = new CsvReader(" ", false, true);
 		csv.open(Streams.getTextReader(relationsPath));
@@ -47,8 +52,8 @@ public class AidedMatcher implements RandomMatcher {
 		return map.values();
 	}
 	
-	private void createMq( Collection<Protein> proteins ) {
-		totalNq = totalMq = 0;
+	private Total createMq( Collection<Protein> proteins ) {
+		Total total = new Total();
 		for( Protein protein : proteins ) {
 			double Mq = 0.0;
 			double Nq = 0.0;
@@ -60,14 +65,15 @@ public class AidedMatcher implements RandomMatcher {
 				Nq += tryptic;
 				Mq += tryptic/peptide.getProteins().size();				
 			}
-			totalNq += Nq;
-			totalMq += Mq;
+			total.Nq += Nq;
+			total.Mq += Mq;
 			results.put(protein.getAccession(), new Result(Nq, Mq));
 		}
+		return total;
 	}
 	
 	private long getTryptic( String peptide ) {
-		if( varMods.length == 0 )
+		if( varMods.isEmpty() )
 			return 1;
 		int n = 0;
 		for( Aminoacid aa : varMods )
@@ -87,17 +93,16 @@ public class AidedMatcher implements RandomMatcher {
 
 	@Override
 	public Result getExpected(Protein protein) {
-		Result tryptic = results.get(protein.getAccession());
-		return new Result(
-			tryptic.getNq()/totalNq*redundantDecoys,
-			tryptic.getMq()/totalMq*decoys
-		);
+		Result result = results.get(protein.getAccession());
+		if( protein.isTarget() )
+			return new Result(result.getNq()/totalTarget.Nq*redundantDecoys, result.getMq()/totalTarget.Mq*decoys);
+		return new Result( result.getNq()/totalDecoy.Nq*redundantDecoys, result.getMq()/totalDecoy.Mq*decoys);
 	}
 
 	private final static Logger logger = Logger.getLogger(AidedMatcher.class.getName());
 	private final Map<String, Result> results = new HashMap<>();
-	private double totalNq, totalMq;
+	private final Total totalTarget, totalDecoy;
 	private final double decoys, redundantDecoys;
 	private final int maxMods;
-	private final Aminoacid[] varMods;
+	private final Collection<Aminoacid> varMods;
 }

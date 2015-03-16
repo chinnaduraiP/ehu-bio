@@ -47,6 +47,22 @@ public abstract class DecoyBase implements Decoyable {
 	public Boolean getDecoy() {
 		return decoy;
 	}
+	
+	/**
+	 * 
+	 * @return true if decoy and false if not or unknown
+	 */
+	public boolean isDecoy() {
+		return Boolean.TRUE.equals(getDecoy());
+	}
+	
+	/**
+	 * 
+	 * @return true if not decoy or unknown
+	 */
+	public boolean isTarget() {
+		return !isDecoy();
+	}
 
 	@Override
 	public void setDecoy(Boolean decoy) {
