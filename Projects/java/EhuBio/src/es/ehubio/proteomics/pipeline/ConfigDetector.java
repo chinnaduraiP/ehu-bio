@@ -2,6 +2,7 @@ package es.ehubio.proteomics.pipeline;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -187,8 +188,8 @@ public class ConfigDetector {
 		return missedCleavages;
 	}
 	
-	public int getMaxModsPerPeptide(MsMsData data, Aminoacid[] varMods) {
-		if( varMods == null || varMods.length == 0 )
+	public int getMaxModsPerPeptide(MsMsData data, Collection<Aminoacid> varMods) {
+		if( varMods == null || varMods.isEmpty() )
 			return 0;
 		
 		Set<Character> chars = new HashSet<>();

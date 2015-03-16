@@ -65,7 +65,7 @@ public abstract class MsMsFile {
 			if( data == null )
 				data = tmp;
 			else
-				data.merge(tmp);
+				data.mergeFromPeptide(tmp);
 		}
 		return data;
 	}
@@ -90,7 +90,7 @@ public abstract class MsMsFile {
 		if( data == null )
 			logger.warning("Not loaded!");
 		else {
-			logger.info("Loaded!");
+			logger.info(String.format("Loaded! %s",data.toString()));
 			if( data.getTitle() == null )
 				data.setTitle(new File(path).getName());
 		}

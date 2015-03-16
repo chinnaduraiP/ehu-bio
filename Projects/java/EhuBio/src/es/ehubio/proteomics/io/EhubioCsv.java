@@ -184,6 +184,8 @@ public class EhubioCsv extends MsMsFile {
 		double[] y = new double[x.length];
 		int i = 0;
 		for( Protein protein : data.getProteins() ) {
+			if( protein.isTarget() )
+				continue;
 			x[i] = protein.getScoreByType(shared?ScoreType.MQ_EVALUE:ScoreType.NQ_EVALUE).getValue();
 			y[i++] = protein.getScoreByType(shared?ScoreType.MQ_OVALUE:ScoreType.NQ_OVALUE).getValue();
 		}
